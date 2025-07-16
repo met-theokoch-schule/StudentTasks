@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 @Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
@@ -33,7 +34,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     private OAuth2User processOAuth2User(OAuth2User oauth2User) {
-        Map<String, Object> attributes = oauth2User.getAttributes();
+        Map<String, Object> attributes = new HashMap<>(oauth2User.getAttributes());
         String subject = oauth2User.getAttribute("sub");
         String email = oauth2User.getAttribute("email");
         String name = oauth2User.getAttribute("name");
@@ -41,7 +42,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String givenName = oauth2User.getAttribute("given_name");
         String familyName = oauth2User.getAttribute("family_name");
 
-        System.out.println("OAuth2 Attributes: " + attributes);
+        System.out.println("=== OAuth2 User Processing ===");
         System.out.println("Subject: " + subject);
         System.out.println("Name: " + name);
         System.out.println("Email: " + email);
@@ -51,41 +52,19 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         System.out.println("Groups from 'groups' attribute: " + attributes.get("groups"));
         System.out.println("Roles from 'roles' attribute: " + attributes.get("roles"));
 
-        User user = userRepository.findByOpenIdSubject(subject)
-            .orElseGet(() -> {
-                User newUser = new User(subject, name, email, preferredUsername, givenName, familyName);
-                return userService.createUser(newUser);
-            });
-
-        // Update user info if changed
-        boolean userChanged = false;
-        if (name != null && !name.equals(user.getName())) {
-            user.setName(name);
-            userChanged = true;
-        }
-        if (email != null && !email.equals(user.getEmail())) {
-            user.setEmail(email);
-            userChanged = true;
-        }
-        if (preferredUsername != null && !preferredUsername.equals(user.getPreferredUsername())) {
-            user.setPreferredUsername(preferredUsername);
-            userChanged = true;
-        }
-        if (givenName != null && !givenName.equals(user.getGivenName())) {
-            user.setGivenName(givenName);
-            userChanged = true;
-        }
-        if (familyName != null && !familyName.equals(user.getFamilyName())) {
-            user.setFamilyName(familyName);
-            userChanged = true;
-        }
-        
-        if (userChanged) {
-            userRepository.save(user);
+        User user = null;
+        try {
+            // Create or update user
+            user = userService.createOrUpdateUser(subject, email, name, preferredUsername, givenName, familyName, attributes);
+            System.out.println("User created/updated successfully: " + user.getId());
+        } catch (Exception e) {
+            System.err.println("Error creating/updating user: " + e.getMessage());
+            e.printStackTrace();
         }
 
-        // Build authorities from user roles and groups
-        Collection<String> authorities = new ArrayList<>();
+        // Extract authorities
+        List<String> authorities = new ArrayList<>();
+        authorities.add("OIDC_USER");
 
         // Extract roles from OAuth2 attributes
         Object rolesObj = attributes.get("roles");
@@ -121,7 +100,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }
 
         // Create custom attributes including our user entity
-        attributes.put("user", user);
+        if (user != null) {
+            attributes.put("user", user);
+            System.out.println("User added to attributes: " + user.getName());
+        } else {
+            System.err.println("WARNING: User object is null, not adding to attributes");
+        }
+
+        System.out.println("=== End OAuth2 User Processing ===");
 
         return new DefaultOAuth2User(
             authorities.stream().map(auth -> (org.springframework.security.core.GrantedAuthority) () -> auth).collect(Collectors.toList()),
@@ -130,5 +116,5 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         );
     }
 
-    
+
 }

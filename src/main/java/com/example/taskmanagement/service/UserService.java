@@ -1,4 +1,3 @@
-
 package com.example.taskmanagement.service;
 
 import com.example.taskmanagement.model.Group;
@@ -44,10 +43,10 @@ public class UserService {
     public User addRoleToUser(Long userId, String roleName) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         Role role = roleRepository.findByName(roleName)
             .orElseThrow(() -> new RuntimeException("Role not found"));
-        
+
         user.getRoles().add(role);
         return userRepository.save(user);
     }
@@ -55,11 +54,45 @@ public class UserService {
     public User addGroupToUser(Long userId, String groupName) {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         Group group = groupRepository.findByName(groupName)
             .orElseThrow(() -> new RuntimeException("Group not found"));
-        
+
         user.getGroups().add(group);
         return userRepository.save(user);
+    }
+
+    @Transactional
+    public User createOrUpdateUser(String subject, String email, String name, String preferredUsername, String givenName, String familyName, java.util.Map<String, Object> attributes) {
+        System.out.println("=== UserService.createOrUpdateUser ===");
+        System.out.println("Subject: " + subject);
+
+        User user = userRepository.findByOpenIdSubject(subject);
+
+        if (user == null) {
+            System.out.println("Creating new user");
+            user = new User();
+            user.setOpenIdSubject(subject);
+        } else {
+            System.out.println("Updating existing user: " + user.getId());
+        }
+
+        user.setEmail(email);
+        user.setName(name);
+        user.setPreferredUsername(preferredUsername);
+        user.setGivenName(givenName);
+        user.setFamilyName(familyName);
+
+        // Process roles
+        //processRoles(user, attributes); // Assuming processRoles is defined elsewhere
+
+        // Process groups
+        //processGroups(user, attributes); // Assuming processGroups is defined elsewhere
+
+        User savedUser = userRepository.save(user);
+        System.out.println("User saved with ID: " + savedUser.getId());
+        System.out.println("=== End UserService.createOrUpdateUser ===");
+
+        return savedUser;
     }
 }
