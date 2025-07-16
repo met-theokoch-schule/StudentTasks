@@ -26,6 +26,20 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Debug-Information falls user null ist -->
+            <div class="card" th:if="${!user and oauth2User}">
+                <div class="card-body">
+                    <h5 class="card-title text-warning">Debug: User-Objekt ist null</h5>
+                    <p><strong>OAuth2 Name:</strong> <span th:text="${oauth2User.name}">Name</span></p>
+                    <p><strong>OAuth2 Attributes:</strong></p>
+                    <pre th:text="${attributes}">Attributes</pre>
+                    <div class="alert alert-warning">
+                        Das User-Objekt konnte nicht aus den OAuth2-Attributen geladen werden.
+                        <a href="/test/login" class="btn btn-info btn-sm ms-2">Zur Debug-Seite</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
