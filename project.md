@@ -1,4 +1,3 @@
-
 # Schüler-Aufgaben-Verwaltungssystem
 
 ## 1. Projektübersicht
@@ -140,6 +139,7 @@ src/
 │   │   │   └── DatabaseConfig.java
 │   │   ├── controller/
 │   │   │   ├── HomeController.java
+│   │   │   ├── LoginTestController.java
 │   │   │   ├── TaskController.java
 │   │   │   ├── SubmissionController.java
 │   │   │   ├── TeacherController.java
@@ -223,6 +223,8 @@ src/
   - OAuth2 Client Setup
   - User Entity mit Gruppen/Rollen
   - Login/Logout Flow
+  - **Login-Testseite:** Eine Testseite wird erstellt, die nach erfolgreichem Login alle übermittelten Benutzerdaten anzeigt, um die korrekte Konfiguration der Berechtigungen im IDM zu überprüfen.
+  - **Login/Logout-Tests:** Es wird eine Möglichkeit geschaffen, den Login/Logout-Prozess generell zu testen, inklusive detaillierter Fehlerausgabe bei gescheitertem Login.
 - [x] **Sprint 1.3:** Grundlegende Templates
   - Layout Template
   - Login/Dashboard Views
@@ -314,7 +316,7 @@ src/
 1. **Gruppenübersicht:** `/teacher/groups`
    - Zeigt Liste aller Gruppen, die momentan aktive Aufgaben haben
    - Jede Gruppe zeigt Anzahl der zugeordneten SuS und aktiven Aufgaben
-   
+
 2. **Gruppen-Detail:** `/teacher/groups/{groupId}`
    - Klick auf Gruppe öffnet Detail-View
    - Zeigt alle SuS der Gruppe mit ihren jeweils zugeordneten Aufgaben
@@ -325,7 +327,7 @@ src/
 1. **Aufgabenübersicht:** `/teacher/tasks`
    - Liste aller vom Lehrer erstellten Aufgaben
    - Filter: Aktive/Inaktive Aufgaben, nach Gruppen
-   
+
 2. **Aufgaben-Detail:** `/teacher/tasks/{taskId}/submissions`
    - Klick auf Aufgabe zeigt alle SuS, die diese Aufgabe bearbeitet haben
    - Gruppiert nach Gruppen (falls Aufgabe mehreren Gruppen zugeordnet)
