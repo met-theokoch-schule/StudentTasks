@@ -1,4 +1,3 @@
-
 package com.example.taskmanagement.config;
 
 import com.example.taskmanagement.service.CustomOAuth2UserService;
@@ -20,8 +19,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/", "/login", "/error", "/webjars/**", "/css/**", "/js/**").permitAll()
+            .authorizeHttpRequests(authorize -> authorize
+                .requestMatchers("/", "/login", "/error", "/webjars/**", "/css/**", "/js/**", "/images/**").permitAll()
                 .requestMatchers("/test/login").permitAll()
                 .requestMatchers("/teacher/**").hasRole("TEACHER")
                 .requestMatchers("/student/**").hasRole("STUDENT")
@@ -29,10 +28,10 @@ public class SecurityConfig {
             )
             .oauth2Login(oauth2 -> oauth2
                 .loginPage("/login")
+                .defaultSuccessUrl("/dashboard", true)
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(customOAuth2UserService)
                 )
-                .successHandler(authenticationSuccessHandler())
             )
             .logout(logout -> logout
                 .logoutSuccessUrl("/")
