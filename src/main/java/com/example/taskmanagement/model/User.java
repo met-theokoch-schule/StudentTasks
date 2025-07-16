@@ -22,6 +22,15 @@ public class User {
     @Column(nullable = false)
     private String email;
 
+    @Column
+    private String preferredUsername;
+
+    @Column
+    private String givenName;
+
+    @Column
+    private String familyName;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "user_roles",
@@ -47,6 +56,15 @@ public class User {
         this.email = email;
     }
 
+    public User(String openIdSubject, String name, String email, String preferredUsername, String givenName, String familyName) {
+        this.openIdSubject = openIdSubject;
+        this.name = name;
+        this.email = email;
+        this.preferredUsername = preferredUsername;
+        this.givenName = givenName;
+        this.familyName = familyName;
+    }
+
     // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -65,6 +83,15 @@ public class User {
 
     public Set<Group> getGroups() { return groups; }
     public void setGroups(Set<Group> groups) { this.groups = groups; }
+
+    public String getPreferredUsername() { return preferredUsername; }
+    public void setPreferredUsername(String preferredUsername) { this.preferredUsername = preferredUsername; }
+
+    public String getGivenName() { return givenName; }
+    public void setGivenName(String givenName) { this.givenName = givenName; }
+
+    public String getFamilyName() { return familyName; }
+    public void setFamilyName(String familyName) { this.familyName = familyName; }
 
     // Helper methods
     public boolean hasRole(String roleName) {
