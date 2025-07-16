@@ -1,12 +1,7 @@
 com/example/taskmanagement/config/SecurityConfig.class
-com/example/taskmanagement/repository/GroupRepository.class
 com/example/taskmanagement/repository/UserRepository.class
 com/example/taskmanagement/model/User.class
 com/example/taskmanagement/service/CustomOAuth2UserService.class
 com/example/taskmanagement/model/Group.class
-com/example/taskmanagement/service/UserService.class
-com/example/taskmanagement/controller/LoginTestController.class
 com/example/taskmanagement/model/Role.class
-com/example/taskmanagement/repository/RoleRepository.class
 com/example/taskmanagement/TaskManagementApplication.class
-com/example/taskmanagement/controller/HomeController.class
