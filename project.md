@@ -77,7 +77,15 @@ Task
 ├── dueDate (LocalDateTime)
 ├── assignedGroups (Set<Group>)
 ├── isActive (Boolean)
-└── editorHtml (Text)
+├── viewType (String) // References to available task views (foreign key to TaskView.id)
+└── initialContent (Text) // Initial task content/template (JSON/XML)
+
+TaskView
+├── id (String, Primary Key) // e.g., "html-editor", "math-exercise", "code-editor"
+├── name (String) // Display name for dropdown selection
+├── description (String)
+├── templatePath (String) // Path to Thymeleaf template file
+└── isActive (Boolean)
 
 TaskStatus
 ├── id (Long, Primary Key)
@@ -94,12 +102,20 @@ UserTask
 ├── startedAt (LocalDateTime)
 └── lastModified (LocalDateTime)
 
+TaskContent
+├── id (Long, Primary Key)
+├── userTask (UserTask)
+├── content (Text) // Serialized content (JSON/XML)
+├── version (Integer) // Auto-incrementing version number
+├── savedAt (LocalDateTime)
+└── isSubmitted (Boolean) // false = draft, true = submitted
+
 Submission
 ├── id (Long, Primary Key)
 ├── userTask (UserTask)
-├── content (Text)
+├── taskContent (TaskContent) // Reference to submitted content version
 ├── submittedAt (LocalDateTime)
-└── version (Integer)
+└── version (Integer) // Reference to TaskContent.version
 
 TaskReview
 ├── id (Long, Primary Key)
@@ -132,6 +148,8 @@ src/
 │   │   ├── model/
 │   │   │   ├── User.java
 │   │   │   ├── Task.java
+│   │   │   ├── TaskView.java
+│   │   │   ├── TaskContent.java
 │   │   │   ├── UserTask.java
 │   │   │   ├── Submission.java
 │   │   │   ├── TaskStatus.java
@@ -141,12 +159,16 @@ src/
 │   │   ├── repository/
 │   │   │   ├── UserRepository.java
 │   │   │   ├── TaskRepository.java
+│   │   │   ├── TaskViewRepository.java
+│   │   │   ├── TaskContentRepository.java
 │   │   │   ├── SubmissionRepository.java
 │   │   │   ├── TaskStatusRepository.java
 │   │   │   └── UserTaskRepository.java
 │   │   ├── service/
 │   │   │   ├── UserService.java
 │   │   │   ├── TaskService.java
+│   │   │   ├── TaskViewService.java
+│   │   │   ├── TaskContentService.java
 │   │   │   ├── SubmissionService.java
 │   │   │   └── AuthenticationService.java
 │   │   ├── dto/
@@ -162,16 +184,26 @@ src/
 │       ├── templates/
 │       │   ├── fragments/
 │       │   ├── student/
+│       │   │   ├── dashboard.html
+│       │   │   ├── tasks-list.html
+│       │   │   └── task-detail.html
 │       │   ├── teacher/
 │       │   │   ├── dashboard.html
 │       │   │   ├── groups-list.html
 │       │   │   ├── group-detail.html
 │       │   │   ├── tasks-list.html
+│       │   │   ├── task-create.html
 │       │   │   ├── task-submissions.html
 │       │   │   └── submission-history.html
+│       │   ├── taskviews/
+│       │   │   ├── html-editor.html
+│       │   │   ├── math-exercise.html
+│       │   │   ├── code-editor.html
+│       │   │   └── text-editor.html
 │       │   └── layout.html
 │       ├── application.properties
-│       └── data.sql
+│       ├── data.sql
+│       └── taskviews.properties
 └── test/
     └── java/
         ├── controller/
@@ -197,16 +229,18 @@ src/
 
 ### Phase 2: Datenmodell und Core Services (Woche 3-4)
 - [x] **Sprint 2.1:** Datenbankentitäten implementieren
-  - JPA Entities für alle Modelle
+  - JPA Entities für alle Modelle (User, Task, TaskView, TaskContent, etc.)
   - Repository Layer
   - Database Migrations
 - [x] **Sprint 2.2:** Core Services
   - UserService (Gruppen/Rollen-Management)
-  - TaskService (CRUD für Aufgaben)
-  - SubmissionService (Abgaben-Management)
+  - TaskService (CRUD für Aufgaben mit View-Auswahl)
+  - TaskViewService (Verfügbare Views verwalten)
+  - TaskContentService (Serialisierte Content-Speicherung)
 - [x] **Sprint 2.3:** Task Status System
   - Flexibles Status-System
   - Status-Übergänge definieren
+  - TaskContent Versionierung
 
 ### Phase 3: Schüler-Interface (Woche 5)
 - [x] **Sprint 3.1:** Schüler Dashboard
@@ -307,9 +341,12 @@ src/
 
 ### Schüler Endpoints
 - `GET /student/dashboard` - Schüler Dashboard
-- `GET /student/tasks` - Verfügbare Aufgaben
-- `GET /student/tasks/{id}` - Aufgaben-Details
-- `POST /api/submissions` - Aufgabe einreichen
+- `GET /student/tasks` - Verfügbare Aufgaben (aktive + in Bearbeitung)
+- `GET /student/tasks/{id}` - Aufgaben-Details mit spezifischem View
+- `GET /api/tasks/{taskId}/content` - Aktueller Bearbeitungsstand (letzter Speicherstand)
+- `GET /api/tasks/{taskId}/content/{version}` - Spezifischer Speicherstand
+- `POST /api/tasks/{taskId}/content` - Serialisierten Content speichern (JSON/XML)
+- `POST /api/tasks/{taskId}/submit` - Aufgabe als abgegeben markieren
 - `GET /student/submissions/{taskId}` - Submission-Historie
 
 ### Lehrer Endpoints
@@ -327,7 +364,48 @@ src/
 - `GET /admin/status` - Status-Verwaltung
 - `POST /admin/status` - Neuen Status erstellen
 
-## 8. Deployment-Konfiguration
+## 8. Task View System
+
+### Verfügbare Task Views
+Die verfügbaren Task Views werden in der Datei `taskviews.properties` definiert:
+
+```properties
+# Verfügbare Task Views für Dropdown-Auswahl
+taskview.html-editor.name=HTML Editor
+taskview.html-editor.description=Rich-Text HTML Editor für Textaufgaben
+taskview.html-editor.template=taskviews/html-editor.html
+taskview.html-editor.active=true
+
+taskview.math-exercise.name=Mathematik Übung
+taskview.math-exercise.description=Interaktive Mathematik-Aufgaben mit LaTeX
+taskview.math-exercise.template=taskviews/math-exercise.html
+taskview.math-exercise.active=true
+
+taskview.code-editor.name=Code Editor
+taskview.code-editor.description=Syntax-highlightender Code-Editor
+taskview.code-editor.template=taskviews/code-editor.html
+taskview.code-editor.active=true
+
+taskview.text-editor.name=Text Editor
+taskview.text-editor.description=Einfacher Texteditor für Aufsätze
+taskview.text-editor.template=taskviews/text-editor.html
+taskview.text-editor.active=true
+```
+
+### Content Serialisierung
+- **Frontend:** Jeder Task View muss seinen Zustand als JSON/XML serialisieren
+- **Backend:** Speichert serialisierten Content als Text in TaskContent Entity
+- **Versionierung:** Jeder Speichervorgang erstellt eine neue Version
+- **API:** GET/POST Endpoints für Content-Abruf und -Speicherung
+
+### Task View Templates
+Jeder Task View hat eine eigene Thymeleaf-Template-Datei:
+- `taskviews/html-editor.html` - Rich-Text Editor
+- `taskviews/math-exercise.html` - Mathematik-Aufgaben
+- `taskviews/code-editor.html` - Code-Editor
+- `taskviews/text-editor.html` - Einfacher Texteditor
+
+## 9. Deployment-Konfiguration
 
 ### Replit Spezifisch
 - Port 5000 für Webserver
@@ -339,7 +417,7 @@ src/
 - Database Migration Scripts
 - Logging und Monitoring
 
-## 9. Meilensteine
+## 10. Meilensteine
 
 | Meilenstein | Beschreibung | Zieldatum | Status |
 |-------------|--------------|-----------|--------|
@@ -350,7 +428,7 @@ src/
 | M5 | Testing abgeschlossen | Woche 7 | ⏳ |
 | M6 | Deployment erfolgreich | Woche 8 | ⏳ |
 
-## 10. Erweiterte Features (Optional)
+## 11. Erweiterte Features (Optional)
 
 ### Zukünftige Erweiterungen
 - [ ] Datei-Upload für Aufgaben
