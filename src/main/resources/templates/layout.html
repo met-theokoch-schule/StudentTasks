@@ -1,6 +1,5 @@
-
 <!DOCTYPE html>
-<html lang="de" xmlns:th="http://www.thymeleaf.org" th:fragment="layout (content)">
+<html lang="de" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:fragment="layout (content)">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,8 +11,8 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" href="/">Task Management</a>
-            
-            <div class="navbar-nav ms-auto" th:if="${#authorization.expression('isAuthenticated()')}">
+
+            <div class="navbar-nav ms-auto" sec:authorize="isAuthenticated()">
                 <div class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <span th:text="${user?.name ?: 'Benutzer'}">Benutzer</span>
@@ -25,8 +24,8 @@
                     </ul>
                 </div>
             </div>
-            
-            <div class="navbar-nav ms-auto" th:unless="${#authorization.expression('isAuthenticated()')}">
+
+            <div class="navbar-nav ms-auto" sec:authorize="!isAuthenticated()">
                 <a class="nav-link" href="/oauth2/authorization/oidc">Anmelden</a>
             </div>
         </div>
