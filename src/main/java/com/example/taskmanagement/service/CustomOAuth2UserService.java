@@ -59,7 +59,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         attributes.put("user", user);
 
         return new DefaultOAuth2User(
-            authorities.stream().map(auth -> () -> auth).toList(),
+            authorities.stream().map(auth -> (org.springframework.security.core.GrantedAuthority) () -> auth).toList(),
             attributes,
             "sub"
         );
