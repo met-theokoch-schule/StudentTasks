@@ -220,8 +220,8 @@ src/
   - Thymeleaf
   - SQLite Dialect Integration
 - [x] **Sprint 1.2:** OpenID Connect Konfiguration
-  - OAuth2 Client Setup
-  - User Entity mit Gruppen/Rollen
+  - OAuth2 Client Setup mit Scopes: 'groups' und 'roles'
+  - User Entity mit Gruppen/Rollen aus Claims
   - Login/Logout Flow
   - **Login-Testseite:** Eine Testseite wird erstellt, die nach erfolgreichem Login alle übermittelten Benutzerdaten anzeigt, um die korrekte Konfiguration der Berechtigungen im IDM zu überprüfen.
   - **Login/Logout-Tests:** Es wird eine Möglichkeit geschaffen, den Login/Logout-Prozess generell zu testen, inklusive detaillierter Fehlerausgabe bei gescheitertem Login.
@@ -295,8 +295,8 @@ src/
 
 ### Authentifizierung
 - OpenID Connect mit externem Provider
-- JWT Token Handling
-- Session Management
+- JWT Token Handling mit Scopes: 'groups' und 'roles'
+- Session Management mit Gruppen- und Rollenmapping
 
 ### Autorisierung
 - Rollenbasierte Zugriffskontrolle (RBAC)
@@ -452,8 +452,9 @@ Jeder Task View hat eine eigene Thymeleaf-Template-Datei:
 
 ### OAuth2 Claims Mapping
 ```java
-// Gruppen aus OpenID Connect Claims extrahieren
-// Rollen-Mapping konfigurieren
+// Gruppen aus OpenID Connect Claims extrahieren (scope: 'groups')
+// Rollen-Mapping konfigurieren (scope: 'roles')
+// Beispiel Claims: "groups": ["10a", "10b"], "roles": ["student", "teacher"]
 ```
 
 ### Status-System Design
