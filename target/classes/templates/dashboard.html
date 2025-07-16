@@ -1,0 +1,32 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="layout :: layout(~{::content})">
+<div th:fragment="content">
+    <div class="row">
+        <div class="col-12">
+            <h1>Dashboard</h1>
+            <div class="card" th:if="${user}">
+                <div class="card-body">
+                    <h5 class="card-title">Benutzerinformationen</h5>
+                    <p><strong>Name:</strong> <span th:text="${user.name}">Name</span></p>
+                    <p><strong>E-Mail:</strong> <span th:text="${user.email}">Email</span></p>
+                    
+                    <div th:if="${user.isTeacher()}">
+                        <div class="alert alert-info">
+                            Sie sind als <strong>Lehrer</strong> angemeldet.
+                            <a href="/teacher/dashboard" class="btn btn-primary btn-sm ms-2">Zum Lehrer-Dashboard</a>
+                        </div>
+                    </div>
+                    
+                    <div th:if="${user.isStudent()}">
+                        <div class="alert alert-success">
+                            Sie sind als <strong>Schüler</strong> angemeldet.
+                            <a href="/student/dashboard" class="btn btn-primary btn-sm ms-2">Zum Schüler-Dashboard</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</html>

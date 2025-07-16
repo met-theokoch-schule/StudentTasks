@@ -1,0 +1,77 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="layout :: layout(~{::content})">
+<div th:fragment="content">
+    <div class="row">
+        <div class="col-12">
+            <h1>Login Test - Benutzerdaten</h1>
+            
+            <div class="alert alert-info">
+                Diese Seite zeigt alle vom OpenID Connect Provider übermittelten Daten an.
+            </div>
+
+            <div class="card mb-3" th:if="${user}">
+                <div class="card-header">
+                    <h5>Benutzer-Entity (aus Datenbank)</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>ID:</strong> <span th:text="${user.id}">ID</span></p>
+                    <p><strong>OpenID Subject:</strong> <span th:text="${user.openIdSubject}">Subject</span></p>
+                    <p><strong>Name:</strong> <span th:text="${user.name}">Name</span></p>
+                    <p><strong>E-Mail:</strong> <span th:text="${user.email}">Email</span></p>
+                    
+                    <h6>Rollen:</h6>
+                    <ul th:if="${user.roles}">
+                        <li th:each="role : ${user.roles}" th:text="${role.name}">Role</li>
+                    </ul>
+                    <p th:unless="${user.roles}">Keine Rollen zugewiesen</p>
+                    
+                    <h6>Gruppen:</h6>
+                    <ul th:if="${user.groups}">
+                        <li th:each="group : ${user.groups}" th:text="${group.name}">Group</li>
+                    </ul>
+                    <p th:unless="${user.groups}">Keine Gruppen zugewiesen</p>
+                </div>
+            </div>
+
+            <div class="card mb-3" th:if="${oauth2User}">
+                <div class="card-header">
+                    <h5>OAuth2 User Principal</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Name:</strong> <span th:text="${oauth2User.name}">Name</span></p>
+                    
+                    <h6>Authorities:</h6>
+                    <ul th:if="${authorities}">
+                        <li th:each="authority : ${authorities}" th:text="${authority.authority}">Authority</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card" th:if="${attributes}">
+                <div class="card-header">
+                    <h5>OAuth2 Attributes (vom Provider)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Attribut</th>
+                                    <th>Wert</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="entry : ${attributes}">
+                                    <td th:text="${entry.key}">Key</td>
+                                    <td th:text="${entry.value}">Value</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</html>
