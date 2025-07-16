@@ -27,10 +27,17 @@ public class HomeController {
             User user = (User) principal.getAttribute("user");
             model.addAttribute("user", user);
             
-            if (user.isTeacher()) {
-                return "redirect:/teacher/dashboard";
-            } else if (user.isStudent()) {
-                return "redirect:/student/dashboard";
+            // Null-Prüfung für user-Objekt
+            if (user != null) {
+                if (user.isTeacher()) {
+                    return "redirect:/teacher/dashboard";
+                } else if (user.isStudent()) {
+                    return "redirect:/student/dashboard";
+                }
+            } else {
+                // Debugging: OAuth2User-Attribute hinzufügen für Fehleranalyse
+                model.addAttribute("oauth2User", principal);
+                model.addAttribute("attributes", principal.getAttributes());
             }
         }
         return "dashboard";
