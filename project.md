@@ -126,7 +126,9 @@ src/
 │   │   │   ├── HomeController.java
 │   │   │   ├── TaskController.java
 │   │   │   ├── SubmissionController.java
-│   │   │   └── TeacherController.java
+│   │   │   ├── TeacherController.java
+│   │   │   ├── TeacherGroupController.java
+│   │   │   └── TeacherTaskController.java
 │   │   ├── model/
 │   │   │   ├── User.java
 │   │   │   ├── Task.java
@@ -161,6 +163,12 @@ src/
 │       │   ├── fragments/
 │       │   ├── student/
 │       │   ├── teacher/
+│       │   │   ├── dashboard.html
+│       │   │   ├── groups-list.html
+│       │   │   ├── group-detail.html
+│       │   │   ├── tasks-list.html
+│       │   │   ├── task-submissions.html
+│       │   │   └── submission-history.html
 │       │   └── layout.html
 │       ├── application.properties
 │       └── data.sql
@@ -215,10 +223,18 @@ src/
   - Aufgaben erstellen/bearbeiten
   - Gruppenauswahl
   - Aufgaben-Übersicht
-- [x] **Sprint 4.2:** Bewertungssystem
-  - Submission Review Interface
+- [x] **Sprint 4.2:** Gruppen-basierte Übersicht
+  - Liste aller Gruppen mit aktiven Aufgaben anzeigen
+  - Gruppen-Detail-View: Klickbare Gruppen zeigen alle SuS mit ihren zugeordneten Aufgaben
+  - Multi-Gruppen-Unterstützung: Eine Aufgabe kann mehreren Gruppen zugänglich sein
+- [x] **Sprint 4.3:** Aufgaben-basierte Übersicht
+  - Liste aller Aufgaben für Lehrer anzeigen
+  - Aufgaben-Detail-View: Klick auf Aufgabe zeigt alle SuS, die diese bearbeitet haben
+  - Aufklappbare Submission-Historie pro Schüler mit allen Speicherständen/Versionen
+- [x] **Sprint 4.4:** Bewertungssystem
+  - Submission Review Interface mit Historie
   - Status-Änderungen mit Kommentaren
-  - Feedback-System
+  - Feedback-System pro Submission-Version
 
 ### Phase 5: Testing und Optimierung (Woche 7)
 - [x] **Sprint 5.1:** Unit Tests
@@ -256,7 +272,38 @@ src/
 - DSGVO-konforme Datenspeicherung
 - Audit-Logs für Änderungen
 
-## 7. API Endpoints
+## 7. Detaillierte UI-Flows
+
+### Lehrer-Interface Flows
+
+#### Gruppen-basierte Sicht
+1. **Gruppenübersicht:** `/teacher/groups`
+   - Zeigt Liste aller Gruppen, die momentan aktive Aufgaben haben
+   - Jede Gruppe zeigt Anzahl der zugeordneten SuS und aktiven Aufgaben
+   
+2. **Gruppen-Detail:** `/teacher/groups/{groupId}`
+   - Klick auf Gruppe öffnet Detail-View
+   - Zeigt alle SuS der Gruppe mit ihren jeweils zugeordneten Aufgaben
+   - Status-Übersicht pro Schüler-Aufgaben-Kombination
+   - Direktlinks zu einzelnen Submissions
+
+#### Aufgaben-basierte Sicht
+1. **Aufgabenübersicht:** `/teacher/tasks`
+   - Liste aller vom Lehrer erstellten Aufgaben
+   - Filter: Aktive/Inaktive Aufgaben, nach Gruppen
+   
+2. **Aufgaben-Detail:** `/teacher/tasks/{taskId}/submissions`
+   - Klick auf Aufgabe zeigt alle SuS, die diese Aufgabe bearbeitet haben
+   - Gruppiert nach Gruppen (falls Aufgabe mehreren Gruppen zugeordnet)
+   - Pro Schüler: Aufklappbare Submission-Historie mit allen Versionen
+   - Schnelle Status-Änderung und Kommentar-Funktion
+
+#### Multi-Gruppen-Aufgaben
+- Eine Aufgabe kann mehreren Gruppen gleichzeitig zugeordnet werden
+- Lehrer sehen in der Aufgaben-Detail-View alle betroffenen Gruppen
+- Gruppierung der Submissions nach Gruppen für bessere Übersicht
+
+## 8. API Endpoints
 
 ### Schüler Endpoints
 - `GET /student/dashboard` - Schüler Dashboard
@@ -269,6 +316,10 @@ src/
 - `GET /teacher/dashboard` - Lehrer Dashboard
 - `GET /teacher/tasks` - Aufgaben-Verwaltung
 - `POST /teacher/tasks` - Aufgabe erstellen
+- `GET /teacher/groups` - Liste aller Gruppen mit aktiven Aufgaben
+- `GET /teacher/groups/{groupId}` - Alle SuS einer Gruppe mit ihren zugeordneten Aufgaben
+- `GET /teacher/tasks/{taskId}/submissions` - Alle SuS mit Speicherständen für eine spezifische Aufgabe
+- `GET /teacher/submissions/{userTaskId}/history` - Aufklappbare Submission-Historie eines Schülers
 - `GET /teacher/reviews` - Bewertungen verwalten
 - `POST /api/reviews` - Bewertung abgeben
 
