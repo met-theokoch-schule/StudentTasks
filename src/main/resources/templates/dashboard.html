@@ -28,7 +28,7 @@
             </div>
             
             <!-- Debug-Information falls user null ist -->
-            <div class="card" th:if="${!user and oauth2User}">
+            <div class="card" th:if="${user == null and oauth2User != null}">
                 <div class="card-body">
                     <h5 class="card-title text-warning">Debug: User-Objekt ist null</h5>
                     <p><strong>OAuth2 Name:</strong> <span th:text="${oauth2User.name}">Name</span></p>

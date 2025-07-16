@@ -30,9 +30,9 @@ public class HomeController {
             // Null-Prüfung für user-Objekt
             if (user != null) {
                 if (user.isTeacher()) {
-                    return "redirect:/teacher/dashboard";
+                    return "redirect:http://0.0.0.0:5000/teacher/dashboard";
                 } else if (user.isStudent()) {
-                    return "redirect:/student/dashboard";
+                    return "redirect:http://0.0.0.0:5000/student/dashboard";
                 }
             } else {
                 // Debugging: OAuth2User-Attribute hinzufügen für Fehleranalyse
