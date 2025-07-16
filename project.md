@@ -51,11 +51,14 @@ Ein webbasiertes System, das es Lehrern ermöglicht, Aufgaben für Schülergrupp
 ```
 User
 ├── id (Long, Primary Key)
-├── openIdSubject (String, Unique)
-├── name (String)
-├── email (String)
-├── roles (Set<Role>)
-└── groups (Set<Group>)
+├── openIdSubject (String, Unique) // aus "sub" Claim
+├── name (String) // aus "name" Claim
+├── email (String) // aus "email" Claim
+├── preferredUsername (String) // aus "preferred_username" Claim
+├── givenName (String) // aus "given_name" Claim (Vorname)
+├── familyName (String) // aus "family_name" Claim (Nachname)
+├── roles (Set<Role>) // abgeleitet aus "roles" Array mit "id" Feld
+└── groups (Set<Group>) // abgeleitet aus "groups" Map mit "act" Feld als Gruppennamen
 
 Group
 ├── id (Long, Primary Key)
@@ -452,9 +455,18 @@ Jeder Task View hat eine eigene Thymeleaf-Template-Datei:
 
 ### OAuth2 Claims Mapping
 ```java
-// Gruppen aus OpenID Connect Claims extrahieren (scope: 'groups')
-// Rollen-Mapping konfigurieren (scope: 'roles')
-// Beispiel Claims: "groups": ["10a", "10b"], "roles": ["student", "teacher"]
+// OAuth2 Claims Struktur basierend auf IServ Provider:
+// - "sub": "9cd9395e-e45d-458d-9d25-938246496133" (eindeutige User-ID)
+// - "email": "user@domain.com"
+// - "name": "Vor- und Nachname"
+// - "preferred_username": "username"
+// - "given_name": "Vorname"
+// - "family_name": "Nachname"
+// - "roles": [{"id": "ROLE_TEACHER", "displayName": "Lehrer"}, {"id": "ROLE_STUDENT", "displayName": "Schüler"}]
+// - "groups": {"1013": {"act": "kollegium", "name": "Kollegium"}, "16220": {"act": "j11-inf-1", "name": "J11-Inf-1"}}
+//
+// Rollen-Extraktion: roles[].id (z.B. "ROLE_TEACHER" -> Authority "ROLE_TEACHER")
+// Gruppen-Extraktion: groups[].act (z.B. "kollegium" -> Authority "GROUP_kollegium")
 ```
 
 ### Status-System Design
