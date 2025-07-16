@@ -1,6 +1,8 @@
 package com.example.taskmanagement.service;
 
 import com.example.taskmanagement.model.User;
+import com.example.taskmanagement.model.Role;
+import com.example.taskmanagement.model.Group;
 import com.example.taskmanagement.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -12,8 +14,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.HashMap;
 
@@ -52,21 +56,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         System.out.println("Groups from 'groups' attribute: " + attributes.get("groups"));
         System.out.println("Roles from 'roles' attribute: " + attributes.get("roles"));
 
-        User user = null;
-        try {
-            // Create or update user
-            user = userService.createOrUpdateUser(subject, email, name, preferredUsername, givenName, familyName, attributes);
-            System.out.println("User created/updated successfully: " + user.getId());
-        } catch (Exception e) {
-            System.err.println("Error creating/updating user: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        // Extract authorities
-        List<String> authorities = new ArrayList<>();
-        authorities.add("OIDC_USER");
-
-        // Extract roles from OAuth2 attributes
+        // Extract role names from OAuth2 attributes
+        Set<String> roleNames = new HashSet<>();
         Object rolesObj = attributes.get("roles");
         if (rolesObj instanceof List<?>) {
             for (Object roleObj : (List<?>) rolesObj) {
@@ -74,16 +65,17 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     Map<?, ?> roleMap = (Map<?, ?>) roleObj;
                     String roleId = (String) roleMap.get("id");
                     if (roleId != null) {
-                        // Extrahiere nur den Rollennamen (z.B. "TEACHER" aus "ROLE_TEACHER")
+                        // Extract role name (e.g., "TEACHER" from "ROLE_TEACHER")
                         String roleName = roleId.startsWith("ROLE_") ? roleId.substring(5) : roleId;
-                        authorities.add("ROLE_" + roleName);
-                        System.out.println("Added role authority: ROLE_" + roleName);
+                        roleNames.add(roleName);
+                        System.out.println("Extracted role: " + roleName);
                     }
                 }
             }
         }
 
-        // Extract group names from attributes (verwende "act" als Gruppennamen)
+        // Extract group names from OAuth2 attributes
+        Set<String> groupNames = new HashSet<>();
         Object groupsObj = attributes.get("groups");
         if (groupsObj instanceof Map<?, ?>) {
             Map<?, ?> groupsMap = (Map<?, ?>) groupsObj;
@@ -92,10 +84,40 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     Map<?, ?> groupMap = (Map<?, ?>) groupObj;
                     String actName = (String) groupMap.get("act");
                     if (actName != null) {
-                        authorities.add("GROUP_" + actName);
-                        System.out.println("Added group authority: GROUP_" + actName);
+                        groupNames.add(actName);
+                        System.out.println("Extracted group: " + actName);
                     }
                 }
+            }
+        }
+
+        User user = null;
+        try {
+            // Create or update user with extracted role and group names
+            user = userService.createOrUpdateUser(subject, name, email, preferredUsername, givenName, familyName, roleNames, groupNames);
+            System.out.println("User created/updated successfully: " + user.getId());
+        } catch (Exception e) {
+            System.err.println("Error creating/updating user: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        // Extract authorities from the created user
+        List<String> authorities = new ArrayList<>();
+        authorities.add("OIDC_USER");
+
+        // Add role authorities
+        if (user != null && user.getRoles() != null) {
+            for (Role role : user.getRoles()) {
+                authorities.add("ROLE_" + role.getName());
+                System.out.println("Added role authority: ROLE_" + role.getName());
+            }
+        }
+
+        // Add group authorities
+        if (user != null && user.getGroups() != null) {
+            for (Group group : user.getGroups()) {
+                authorities.add("GROUP_" + group.getName());
+                System.out.println("Added group authority: GROUP_" + group.getName());
             }
         }
 
