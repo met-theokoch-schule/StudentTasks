@@ -1,13 +1,18 @@
-
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::content})}">
 <div th:fragment="content">
     <div class="row">
         <div class="col-12">
             <h1>Login Test - Benutzerdaten</h1>
-            
+
             <div class="alert alert-info">
                 Diese Seite zeigt alle vom OpenID Connect Provider übermittelten Daten an.
+            </div>
+
+            <div class="alert alert-info">
+                <h6>Debug-Aktionen:</h6>
+                <a href="/test/force-logout" class="btn btn-warning btn-sm">Kompletten Logout erzwingen</a>
+                <small class="d-block mt-2">Dies löscht die Session und erzwingt einen neuen Login-Prozess.</small>
             </div>
 
             <div class="card mb-3" th:if="${user}">
@@ -19,13 +24,13 @@
                     <p><strong>OpenID Subject:</strong> <span th:text="${user.openIdSubject}">Subject</span></p>
                     <p><strong>Name:</strong> <span th:text="${user.name}">Name</span></p>
                     <p><strong>E-Mail:</strong> <span th:text="${user.email}">Email</span></p>
-                    
+
                     <h6>Rollen:</h6>
                     <ul th:if="${user.roles}">
                         <li th:each="role : ${user.roles}" th:text="${role.name}">Role</li>
                     </ul>
                     <p th:unless="${user.roles}">Keine Rollen zugewiesen</p>
-                    
+
                     <h6>Gruppen:</h6>
                     <ul th:if="${user.groups}">
                         <li th:each="group : ${user.groups}" th:text="${group.name}">Group</li>
@@ -40,7 +45,7 @@
                 </div>
                 <div class="card-body">
                     <p><strong>Name:</strong> <span th:text="${oauth2User.name}">Name</span></p>
-                    
+
                     <h6>Authorities:</h6>
                     <ul th:if="${authorities}">
                         <li th:each="authority : ${authorities}" th:text="${authority.authority}">Authority</li>
