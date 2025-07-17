@@ -112,4 +112,140 @@ public class UserService {
     public User findUserByOpenIdSubject(String openIdSubject) {
         return userRepository.findByOpenIdSubject(openIdSubject).orElse(null);
     }
+
+    public User createOrUpdateUserFromOAuth2(OAuth2User oauth2User) {
+        System.out.println("🔍 === DEBUG: OAuth2 User Creation/Update Process START ===");
+
+        // Extract OAuth2 attributes with detailed logging
+        String openIdSubject = oauth2User.getAttribute("sub");
+        String name = oauth2User.getAttribute("name");
+        String email = oauth2User.getAttribute("email");
+        String givenName = oauth2User.getAttribute("given_name");
+        String familyName = oauth2User.getAttribute("family_name");
+        String preferredUsername = oauth2User.getAttribute("preferred_username");
+
+        System.out.println("📋 OAuth2 Attributes extracted:");
+        System.out.println("   - OpenID Subject: " + openIdSubject);
+        System.out.println("   - Name: " + name);
+        System.out.println("   - Email: " + email);
+        System.out.println("   - Given Name: " + givenName);
+        System.out.println("   - Family Name: " + familyName);
+        System.out.println("   - Preferred Username: " + preferredUsername);
+
+        // Check if user exists
+        System.out.println("🔍 Checking if user exists in database...");
+        User user = userRepository.findByOpenIdSubject(openIdSubject);
+
+        if (user == null) {
+            System.out.println("✨ User NOT found - creating NEW user");
+            user = new User();
+            user.setOpenIdSubject(openIdSubject);
+        } else {
+            System.out.println("📝 User FOUND - updating existing user with ID: " + user.getId());
+        }
+
+        // Set basic user attributes
+        System.out.println("📝 Setting user attributes...");
+        user.setName(name);
+        user.setEmail(email);
+        user.setGivenName(givenName);
+        user.setFamilyName(familyName);
+        user.setPreferredUsername(preferredUsername);
+
+        // Handle roles from OAuth2 attributes
+        System.out.println("🎭 Processing roles...");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> rolesList = oauth2User.getAttribute("roles");
+        System.out.println("   - Roles raw data: " + rolesList);
+
+        if (rolesList != null) {
+            Set<Role> roles = new HashSet<>();
+            System.out.println("   - Processing " + rolesList.size() + " role(s)");
+
+            for (Map<String, Object> roleData : rolesList) {
+                String roleId = (String) roleData.get("id");
+                System.out.println("   - Processing role ID: " + roleId);
+
+                if (roleId != null) {
+                    Role role = roleRepository.findByName(roleId);
+                    if (role == null) {
+                        System.out.println("   - Creating NEW role: " + roleId);
+                        role = new Role();
+                        role.setName(roleId);
+                        role.setDescription("Role from OAuth2: " + roleId);
+                        role = roleRepository.save(role);
+                        System.out.println("   - Role saved with ID: " + role.getId());
+                    } else {
+                        System.out.println("   - Using existing role: " + role.getName() + " (ID: " + role.getId() + ")");
+                    }
+                    roles.add(role);
+                }
+            }
+            user.setRoles(roles);
+            System.out.println("   - Total roles assigned: " + roles.size());
+        } else {
+            System.out.println("   - No roles data received from OAuth2");
+        }
+
+        // Handle groups from OAuth2 attributes
+        System.out.println("👥 Processing groups...");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> groupsData = oauth2User.getAttribute("groups");
+        System.out.println("   - Groups raw data: " + groupsData);
+
+        if (groupsData != null) {
+            Set<Group> groups = new HashSet<>();
+            System.out.println("   - Processing " + groupsData.size() + " group(s)");
+
+            for (Map.Entry<String, Object> entry : groupsData.entrySet()) {
+                System.out.println("   - Processing group key: " + entry.getKey());
+                @SuppressWarnings("unchecked")
+                Map<String, Object> groupInfo = (Map<String, Object>) entry.getValue();
+                String groupName = (String) groupInfo.get("act");
+                System.out.println("   - Group name (act): " + groupName);
+
+                if (groupName != null) {
+                    Group group = groupRepository.findByName(groupName);
+                    if (group == null) {
+                        System.out.println("   - Creating NEW group: " + groupName);
+                        group = new Group();
+                        group.setName(groupName);
+                        group.setDescription("Group from OAuth2: " + groupName);
+                        group = groupRepository.save(group);
+                        System.out.println("   - Group saved with ID: " + group.getId());
+                    } else {
+                        System.out.println("   - Using existing group: " + group.getName() + " (ID: " + group.getId() + ")");
+                    }
+                    groups.add(group);
+                }
+            }
+            user.setGroups(groups);
+            System.out.println("   - Total groups assigned: " + groups.size());
+        } else {
+            System.out.println("   - No groups data received from OAuth2");
+        }
+
+        // Save user to database
+        System.out.println("💾 Saving user to database...");
+        try {
+            User savedUser = userRepository.save(user);
+            System.out.println("✅ User successfully saved!");
+            System.out.println("   - User ID: " + savedUser.getId());
+            System.out.println("   - OpenID Subject: " + savedUser.getOpenIdSubject());
+            System.out.println("   - Name: " + savedUser.getName());
+            System.out.println("   - Email: " + savedUser.getEmail());
+            System.out.println("   - Roles count: " + (savedUser.getRoles() != null ? savedUser.getRoles().size() : 0));
+            System.out.println("   - Groups count: " + (savedUser.getGroups() != null ? savedUser.getGroups().size() : 0));
+
+            System.out.println("🔍 === DEBUG: OAuth2 User Creation/Update Process END ===");
+            return savedUser;
+
+        } catch (Exception e) {
+            System.err.println("❌ ERROR saving user to database!");
+            System.err.println("   - Error message: " + e.getMessage());
+            System.err.println("   - Error class: " + e.getClass().getSimpleName());
+            e.printStackTrace();
+            throw e;
+        }
+    }
 }
