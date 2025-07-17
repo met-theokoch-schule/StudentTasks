@@ -13,6 +13,7 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -32,7 +33,10 @@ public class SecurityConfig {
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(oauth2UserService())
                 )
-                .defaultSuccessUrl("/dashboard", true)
+                .successHandler((request, response, authentication) -> {
+                    System.out.println("🔄 OAuth2 Success Handler called");
+                    response.sendRedirect("/dashboard");
+                })
                 .failureUrl("/login?error=true")
             )
             .logout(logout -> logout
@@ -42,6 +46,12 @@ public class SecurityConfig {
             )
             .headers(headers -> headers
                 .frameOptions().sameOrigin()
+                .and()
+            )
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED)
+                .maximumSessions(1)
+                .maxSessionsPreventsLogins(false)
             );
         
         return http.build();
