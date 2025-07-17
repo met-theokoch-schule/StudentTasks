@@ -107,6 +107,7 @@ public class HomeController {
             subject, 
             name != null ? name : preferredUsername, 
             email, 
+            preferredUsername,
             givenName, 
             familyName, 
             roleNames, 
