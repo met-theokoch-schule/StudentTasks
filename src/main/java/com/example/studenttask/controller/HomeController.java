@@ -20,29 +20,31 @@ public class HomeController {
         return "home";
     }
 
-    @GetMapping("/dashboard")
-    public String dashboard(@AuthenticationPrincipal OAuth2User principal, Model model) {
-        if (principal != null) {
-            String openIdSubject = principal.getAttribute("sub");
-            User user = userService.findByOpenIdSubject(openIdSubject);
-
-            model.addAttribute("name", principal.getAttribute("name"));
-            model.addAttribute("email", principal.getAttribute("email"));
-            model.addAttribute("attributes", principal.getAttributes());
-            model.addAttribute("user", user);
-
-            if (user != null) {
-                model.addAttribute("roles", user.getRoles());
-                model.addAttribute("groups", user.getGroups());
-                model.addAttribute("isTeacher", user.isTeacher());
-                model.addAttribute("isStudent", user.isStudent());
-            }
-        }
-        return "dashboard";
-    }
-
     @GetMapping("/login")
     public String login() {
         return "login";
+    }
+
+    @GetMapping("/dashboard")
+    public String dashboard(@AuthenticationPrincipal OAuth2User principal, Model model) {
+        if (principal != null) {
+            // OAuth2 Daten für das Template
+            model.addAttribute("name", principal.getAttribute("name"));
+            model.addAttribute("email", principal.getAttribute("email"));
+            model.addAttribute("attributes", principal.getAttributes());
+
+            // User Entity aus der Datenbank laden
+            String openIdSubject = principal.getAttribute("sub");
+            if (openIdSubject != null) {
+                User user = userService.findUserByOpenIdSubject(openIdSubject);
+                model.addAttribute("user", user);
+
+                if (user != null) {
+                    model.addAttribute("userRoles", user.getRoles());
+                    model.addAttribute("userGroups", user.getGroups());
+                }
+            }
+        }
+        return "dashboard";
     }
 }
