@@ -1,9 +1,0 @@
-com/example/taskmanagement/config/SecurityConfig.class
-com/example/taskmanagement/repository/GroupRepository.class
-com/example/taskmanagement/repository/UserRepository.class
-com/example/taskmanagement/model/User.class
-com/example/taskmanagement/model/Group.class
-com/example/taskmanagement/model/Role.class
-com/example/taskmanagement/config/DataInitializer.class
-com/example/taskmanagement/repository/RoleRepository.class
-com/example/taskmanagement/TaskManagementApplication.class
