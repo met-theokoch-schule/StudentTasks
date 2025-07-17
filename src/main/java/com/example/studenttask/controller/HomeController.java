@@ -43,7 +43,7 @@ public class HomeController {
         String openIdSubject = oauth2User.getAttribute("sub");
         System.out.println("🔍 Looking for user with OpenID Subject: " + openIdSubject);
 
-        User user = userService.findByOpenIdSubject(openIdSubject);
+        User user = userService.findUserByOpenIdSubject(openIdSubject);
 
         if (user == null) {
             System.out.println("❌ User NOT found in database - triggering creation process");
