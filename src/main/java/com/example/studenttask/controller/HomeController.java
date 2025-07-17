@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import com.example.studenttask.model.Role;
+import java.util.Set;
+import com.example.studenttask.model.Group;
 
 @Controller
 public class HomeController {
@@ -85,5 +87,57 @@ public class HomeController {
 
         System.out.println("🌐 === DEBUG: Dashboard Controller END ===");
         return "dashboard";
+    }
+
+    @GetMapping("/debug")
+    public String debug(Model model, OAuth2AuthenticationToken token) {
+        System.out.println("🔧 === DEBUG: Debug Controller START ===");
+
+        if (token == null) {
+            System.out.println("❌ No OAuth2 token found");
+            return "redirect:/login";
+        }
+
+        OAuth2User principal = token.getPrincipal();
+
+        // Benutzerinformationen aus OAuth2
+        String name = principal.getAttribute("name");
+        String email = principal.getAttribute("email");
+
+        System.out.println("📧 OAuth2 User: " + name + " (" + email + ")");
+
+        // User aus Datenbank laden
+        String openIdSubject = principal.getAttribute("sub");
+        User user = userService.findUserByOpenIdSubject(openIdSubject);
+
+        if (user != null) {
+            System.out.println("✅ User found in database: " + user.getId());
+
+            // Rollen und Gruppen laden
+            Set<Role> roles = user.getRoles();
+            Set<Group> groups = user.getGroups();
+
+            // Role-basierte Flags setzen
+            boolean isTeacher = roles.stream().anyMatch(role -> role.getName().equals("ROLE_TEACHER"));
+            boolean isStudent = roles.stream().anyMatch(role -> role.getName().equals("ROLE_STUDENT"));
+
+            model.addAttribute("user", user);
+            model.addAttribute("roles", roles);
+            model.addAttribute("groups", groups);
+            model.addAttribute("isTeacher", isTeacher);
+            model.addAttribute("isStudent", isStudent);
+
+            System.out.println("🎭 Role evaluation: isTeacher=" + isTeacher + ", isStudent=" + isStudent);
+        } else {
+            System.out.println("❌ User not found in database");
+            model.addAttribute("user", null);
+        }
+
+        model.addAttribute("name", name);
+        model.addAttribute("email", email);
+        model.addAttribute("attributes", principal.getAttributes());
+
+        System.out.println("🔧 === DEBUG: Debug Controller END ===");
+        return "debug";
     }
 }
