@@ -17,29 +17,32 @@ public class SecurityConfig {
 
     public SecurityConfig(CustomOAuth2UserService customOAuth2UserService) {
         this.customOAuth2UserService = customOAuth2UserService;
+        System.out.println("===>>> SecurityConfig created with CustomOAuth2UserService: " + customOAuth2UserService);
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        System.out.println("===>>> Configuring SecurityFilterChain with userService: " + customOAuth2UserService);
+
         http
-            .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/", "/login", "/error", "/webjars/**", "/css/**", "/js/**", "/images/**").permitAll()
+            .authorizeHttpRequests(authz -> authz
+                .requestMatchers("/", "/login", "/error", "/webjars/**", "/css/**", "/js/**").permitAll()
                 .requestMatchers("/test/login").permitAll()
                 .requestMatchers("/teacher/**").hasRole("TEACHER")
                 .requestMatchers("/student/**").hasRole("STUDENT")
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2
-                    .loginPage("/login")
-                    .defaultSuccessUrl("/dashboard", true)
-                    .userInfoEndpoint(userInfo -> userInfo
-                        .userService(customOAuth2UserService)
-                    )
+                .loginPage("/login")
+                .defaultSuccessUrl("/dashboard", true)
+                .userInfoEndpoint(userInfo -> userInfo
+                    .userService(customOAuth2UserService)
                 )
+            )
             .logout(logout -> logout
                 .logoutSuccessUrl("/")
                 .invalidateHttpSession(true)
-                .clearAuthentication(true)
+                .deleteCookies("JSESSIONID")
             );
 
         return http.build();
@@ -48,8 +51,12 @@ public class SecurityConfig {
     @Bean
     public AuthenticationSuccessHandler authenticationSuccessHandler() {
         return (request, response, authentication) -> {
-            String redirectUrl = "/dashboard";
-            response.sendRedirect(redirectUrl);
+            System.out.println("=== AUTHENTICATION SUCCESS ===");
+            System.out.println("Authentication: " + authentication);
+            System.out.println("Principal: " + authentication.getPrincipal());
+            System.out.println("Authorities: " + authentication.getAuthorities());
+            System.out.println("===============================");
+            response.sendRedirect("/dashboard");
         };
     }
 }
