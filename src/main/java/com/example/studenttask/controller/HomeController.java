@@ -70,9 +70,9 @@ public class HomeController {
 
         // Role-based flags
         boolean isTeacher = user != null && user.getRoles().stream()
-            .anyMatch(role -> "TEACHER".equals(role.getName()));
+            .anyMatch(role -> "ROLE_TEACHER".equals(role.getName()));
         boolean isStudent = user != null && user.getRoles().stream()
-            .anyMatch(role -> "STUDENT".equals(role.getName()));
+            .anyMatch(role -> "ROLE_STUDENT".equals(role.getName()));
 
         System.out.println("🎭 Role evaluation:");
         System.out.println("   - Is Teacher: " + isTeacher);
