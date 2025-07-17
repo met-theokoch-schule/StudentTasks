@@ -96,7 +96,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         User user = null;
         try {
             // Create or update user with extracted role and group names
-            user = userService.createOrUpdateUser(subject, name, email, preferredUsername, givenName, familyName, roleNames, groupNames);
+            User user = userService.createOrUpdateUser(subject, email, name, preferredUsername, givenName, familyName, new ArrayList<>(roleNames), new ArrayList<>(groupNames));
             System.out.println("User created/updated successfully: " + user.getId());
         } catch (Exception e) {
             System.err.println("Error creating/updating user: " + e.getMessage());

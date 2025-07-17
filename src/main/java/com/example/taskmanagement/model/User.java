@@ -1,4 +1,3 @@
-
 package com.example.taskmanagement.model;
 
 import jakarta.persistence.*;
@@ -105,4 +104,9 @@ public class User {
     public boolean isStudent() {
         return hasRole("STUDENT");
     }
+
+    public void setSubject(String subject) {
+        this.openIdSubject = subject;
+    }
 }
+`
