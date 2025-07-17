@@ -6,7 +6,7 @@ MERGE INTO roles (id, name, description) VALUES
 (3, 'ADMIN', 'Administrator-Rolle für Systemverwaltung');
 
 -- Insert default groups
-INSERT OR IGNORE INTO groups (id, name, description) VALUES 
+MERGE INTO groups (id, name, description) VALUES 
 (1, 'Klasse 10A', 'Mathematik Klasse 10A'),
 (2, 'Klasse 10B', 'Mathematik Klasse 10B'),
 (3, 'Informatik AG', 'Informatik Arbeitsgemeinschaft');
