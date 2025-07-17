@@ -1,0 +1,10 @@
+com/example/studenttask/config/SecurityConfig.class
+com/example/studenttask/repository/RoleRepository.class
+com/example/studenttask/repository/GroupRepository.class
+com/example/studenttask/model/Role.class
+com/example/studenttask/model/User.class
+com/example/studenttask/model/Group.class
+com/example/studenttask/service/UserService.class
+com/example/studenttask/StudentTaskApplication.class
+com/example/studenttask/repository/UserRepository.class
+com/example/studenttask/config/SecurityConfig$1.class
