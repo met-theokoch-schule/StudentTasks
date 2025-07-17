@@ -25,7 +25,7 @@ Ein webbasiertes System, das es Lehrern ermöglicht, Aufgaben für Schülergrupp
 ### Technologie-Stack
 - **Backend:** Spring Boot 3.x mit Spring Security (OAuth2/OpenID Connect)
 - **Frontend:** Thymeleaf Templates mit Bootstrap CSS
-- **Datenbank:** SQLite mit Hibernate (custom SQLite dialect)
+- **Datenbank:** H2 In-Memory Database mit Hibernate
 - **Authentifizierung:** OpenID Connect Provider
 - **Build-Tool:** Maven (bereits konfiguriert)
 
@@ -178,7 +178,7 @@ src/
 │   │   │   ├── SubmissionRequest.java
 │   │   │   └── TaskReviewRequest.java
 │   │   └── util/
-│   │       └── SQLiteDialect.java
+│   │       └── DatabaseUtils.java
 │   └── resources/
 │       ├── static/
 │       │   ├── css/
@@ -219,9 +219,9 @@ src/
 ### Phase 1: Setup und Authentifizierung (Woche 1-2)
 - [x] **Sprint 1.1:** Spring Boot Setup mit Dependencies
   - Spring Security OAuth2 Client
-  - Spring Data JPA mit SQLite
+  - Spring Data JPA mit H2
   - Thymeleaf
-  - SQLite Dialect Integration
+  - H2 Database Integration
 - [x] **Sprint 1.2:** OpenID Connect Konfiguration
   - OAuth2 Client Setup mit Scopes: 'groups' und 'roles'
   - User Entity mit Gruppen/Rollen aus Claims
@@ -414,7 +414,7 @@ Jeder Task View hat eine eigene Thymeleaf-Template-Datei:
 
 ### Replit Spezifisch
 - Port 5000 für Webserver
-- SQLite Database im Repl Storage
+- H2 In-Memory Database (Data verliert sich bei Neustart)
 - Environment Variables für OAuth2
 
 ### Produktionsumgebung
@@ -447,10 +447,10 @@ Jeder Task View hat eine eigene Thymeleaf-Template-Datei:
 
 ## Implementierungsnotizen
 
-### SQLite Dialect
+### H2 Database
 ```java
-// Custom SQLite Dialect für Hibernate
-// Quelle: https://github.com/gwenn/sqlite-dialect
+// H2 In-Memory Database für Development
+// Automatische Schema-Erstellung mit spring.jpa.hibernate.ddl-auto=create-drop
 ```
 
 ### OAuth2 Claims Mapping
