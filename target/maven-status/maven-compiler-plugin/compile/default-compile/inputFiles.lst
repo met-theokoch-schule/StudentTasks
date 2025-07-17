@@ -1,3 +1,10 @@
+/home/runner/workspace/src/main/java/com/example/studenttask/repository/RoleRepository.java
 /home/runner/workspace/src/main/java/com/example/studenttask/config/SecurityConfig.java
+/home/runner/workspace/src/main/java/com/example/studenttask/model/Role.java
+/home/runner/workspace/src/main/java/com/example/studenttask/model/Group.java
+/home/runner/workspace/src/main/java/com/example/studenttask/service/UserService.java
+/home/runner/workspace/src/main/java/com/example/studenttask/repository/GroupRepository.java
 /home/runner/workspace/src/main/java/com/example/studenttask/controller/HomeController.java
 /home/runner/workspace/src/main/java/com/example/studenttask/StudentTaskApplication.java
+/home/runner/workspace/src/main/java/com/example/studenttask/model/User.java
+/home/runner/workspace/src/main/java/com/example/studenttask/repository/UserRepository.java
