@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -110,7 +111,17 @@ public class UserService {
     }
 
     public User findUserByOpenIdSubject(String openIdSubject) {
-        return userRepository.findByOpenIdSubject(openIdSubject).orElse(null);
+        System.out.println("🔍 DEBUG: Looking for user with OpenID Subject: " + openIdSubject);
+        Optional<User> userOpt = userRepository.findByOpenIdSubject(openIdSubject);
+
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            System.out.println("✅ DEBUG: User found in database: " + user.getName());
+            return user;
+        } else {
+            System.out.println("❌ DEBUG: User NOT found in database");
+            return null;
+        }
     }
 
     public User createOrUpdateUserFromOAuth2(OAuth2User oauth2User) {
@@ -134,14 +145,17 @@ public class UserService {
 
         // Check if user exists
         System.out.println("🔍 Checking if user exists in database...");
-        User user = userRepository.findByOpenIdSubject(openIdSubject);
+        Optional<User> userOpt = userRepository.findByOpenIdSubject(openIdSubject);
+        User user = null;
 
-        if (user == null) {
+        if (userOpt.isPresent()) {
+            user = userOpt.get();
+            System.out.println("📝 User FOUND - updating existing user with ID: " + user.getId());
+
+        } else {
             System.out.println("✨ User NOT found - creating NEW user");
             user = new User();
             user.setOpenIdSubject(openIdSubject);
-        } else {
-            System.out.println("📝 User FOUND - updating existing user with ID: " + user.getId());
         }
 
         // Set basic user attributes
@@ -167,7 +181,13 @@ public class UserService {
                 System.out.println("   - Processing role ID: " + roleId);
 
                 if (roleId != null) {
-                    Role role = roleRepository.findByName(roleId);
+                    Optional<Role> roleOpt = roleRepository.findByName(roleId);
+                    Role role = null;
+
+                    if (roleOpt.isPresent()) {
+                        role = roleOpt.get();
+                    }
+
                     if (role == null) {
                         System.out.println("   - Creating NEW role: " + roleId);
                         role = new Role();
@@ -205,7 +225,12 @@ public class UserService {
                 System.out.println("   - Group name (act): " + groupName);
 
                 if (groupName != null) {
-                    Group group = groupRepository.findByName(groupName);
+                    Optional<Group> groupOpt = groupRepository.findByName(groupName);
+                    Group group = null;
+
+                    if (groupOpt.isPresent()) {
+                        group = groupOpt.get();
+                    }
                     if (group == null) {
                         System.out.println("   - Creating NEW group: " + groupName);
                         group = new Group();
@@ -249,3 +274,4 @@ public class UserService {
         }
     }
 }
+```
