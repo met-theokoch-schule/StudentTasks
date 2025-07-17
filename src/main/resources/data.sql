@@ -1,6 +1,6 @@
 
 -- Insert default roles
-INSERT OR IGNORE INTO roles (id, name, description) VALUES 
+MERGE INTO roles (id, name, description) VALUES 
 (1, 'STUDENT', 'Schüler-Rolle für Aufgabenbearbeitung'),
 (2, 'TEACHER', 'Lehrer-Rolle für Aufgabenverwaltung'),
 (3, 'ADMIN', 'Administrator-Rolle für Systemverwaltung');
