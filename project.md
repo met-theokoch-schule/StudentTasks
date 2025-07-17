@@ -25,11 +25,17 @@ Ein webbasiertes System, das es Lehrern ermöglicht, Aufgaben für Schülergrupp
 ### Technologie-Stack
 - **Backend:** Spring Boot 3.x mit Spring Security (OAuth2/OpenID Connect)
 - **Frontend:** Thymeleaf Templates mit Bootstrap CSS
-- **Datenbank:** H2 In-Memory Database mit Hibernate
+- **Datenbank:** SQLite mit Hibernate (Community Dialect erforderlich)
 - **Authentifizierung:** OpenID Connect Provider
 - **Build-Tool:** Maven (bereits konfiguriert)
 
 ### Systemanforderungen
+- [x] **Technische Voraussetzungen:**
+  - SQLite JDBC Driver (org.xerial:sqlite-jdbc)
+  - Hibernate Community Dialects (org.hibernate.orm:hibernate-community-dialects)
+  - Datei-basierte SQLite Database mit Persistierung
+  - Automatische Schema-Generierung bei erstem Start
+
 - [x] **Funktionale Anforderungen:**
   - OpenID Connect Integration mit Gruppen- und Rollenerkennung
   - Aufgaben-CRUD für Lehrer
@@ -139,7 +145,8 @@ src/
 │   │   ├── config/
 │   │   │   ├── SecurityConfig.java
 │   │   │   ├── OAuth2Config.java
-│   │   │   └── DatabaseConfig.java
+│   │   │   ├── DatabaseConfig.java
+│   │   │   └── SQLiteConfig.java
 │   │   ├── controller/
 │   │   │   ├── HomeController.java
 │   │   │   ├── LoginTestController.java
@@ -219,9 +226,10 @@ src/
 ### Phase 1: Setup und Authentifizierung (Woche 1-2)
 - [x] **Sprint 1.1:** Spring Boot Setup mit Dependencies
   - Spring Security OAuth2 Client
-  - Spring Data JPA mit H2
+  - Spring Data JPA mit SQLite
   - Thymeleaf
-  - H2 Database Integration
+  - SQLite JDBC Driver
+  - Hibernate Community SQLite Dialect (GitHub Dependency)
 - [x] **Sprint 1.2:** OpenID Connect Konfiguration
   - OAuth2 Client Setup mit Scopes: 'groups' und 'roles'
   - User Entity mit Gruppen/Rollen aus Claims
@@ -414,8 +422,10 @@ Jeder Task View hat eine eigene Thymeleaf-Template-Datei:
 
 ### Replit Spezifisch
 - Port 5000 für Webserver
-- H2 In-Memory Database (Data verliert sich bei Neustart)
+- SQLite Datei-basierte Database (./data/student_tasks.db)
+- Persistente Datenspeicherung (überlebt Neustarts)
 - Environment Variables für OAuth2
+- Automatische data/ Verzeichnis-Erstellung
 
 ### Produktionsumgebung
 - OpenID Connect Provider Konfiguration
@@ -447,10 +457,27 @@ Jeder Task View hat eine eigene Thymeleaf-Template-Datei:
 
 ## Implementierungsnotizen
 
-### H2 Database
-```java
-// H2 In-Memory Database für Development
-// Automatische Schema-Erstellung mit spring.jpa.hibernate.ddl-auto=create-drop
+### SQLite Database
+```xml
+<!-- SQLite-spezifische Dependencies in pom.xml -->
+<dependency>
+    <groupId>org.xerial</groupId>
+    <artifactId>sqlite-jdbc</artifactId>
+</dependency>
+
+<!-- Hibernate Community SQLite Dialect (von GitHub) -->
+<dependency>
+    <groupId>org.hibernate.orm</groupId>
+    <artifactId>hibernate-community-dialects</artifactId>
+</dependency>
+```
+
+```properties
+# SQLite Konfiguration in application.properties
+spring.datasource.url=jdbc:sqlite:./data/student_tasks.db
+spring.datasource.driver-class-name=org.sqlite.JDBC
+spring.jpa.database-platform=org.hibernate.community.dialect.SQLiteDialect
+spring.jpa.hibernate.ddl-auto=create-drop
 ```
 
 ### OAuth2 Claims Mapping
@@ -467,6 +494,20 @@ Jeder Task View hat eine eigene Thymeleaf-Template-Datei:
 //
 // Rollen-Extraktion: roles[].id (z.B. "ROLE_TEACHER" -> Authority "ROLE_TEACHER")
 // Gruppen-Extraktion: groups[].act (z.B. "kollegium" -> Authority "GROUP_kollegium")
+```
+
+### SQLite Konfiguration
+```java
+// SQLite-spezifische Konfiguration
+// Hibernate Community Dialect erforderlich da Spring Boot keinen SQLite-Support mitbringt
+// Dependency: org.hibernate.orm:hibernate-community-dialects
+
+@Configuration
+public class SQLiteConfig {
+    // SQLite-spezifische JPA Konfiguration
+    // Foreign Key Constraints aktivieren
+    // WAL-Mode für bessere Concurrency
+}
 ```
 
 ### Status-System Design
