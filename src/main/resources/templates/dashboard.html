@@ -11,7 +11,7 @@
         <div class="container">
             <a class="navbar-brand" th:href="@{/}">Aufgaben-System</a>
             <div class="navbar-nav ms-auto">
-                <span class="navbar-text me-3" th:text="${user?.attributes?.name ?: 'Unbekannter Benutzer'}"></span>
+                <span class="navbar-text me-3" th:text="${user?.name ?: name ?: 'Unbekannter Benutzer'}"></span>
                 <a class="btn btn-outline-light" th:href="@{/logout}">Abmelden</a>
             </div>
         </div>
