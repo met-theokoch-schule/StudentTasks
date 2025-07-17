@@ -1,0 +1,22 @@
+
+/* Custom CSS for Student Task Management System */
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+.card {
+    margin-bottom: 1rem;
+}
+
+pre {
+    background-color: #f8f9fa;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.alert {
+    margin-top: 1rem;
+}
