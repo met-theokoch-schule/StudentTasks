@@ -1,4 +1,3 @@
-
 package com.example.taskmanagement.controller;
 
 import com.example.taskmanagement.model.User;
@@ -11,6 +10,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import javax.servlet.http.HttpSession;
+import java.util.ArrayList;
 import java.util.*;
 
 @Controller
@@ -32,30 +33,30 @@ public class HomeController {
     @GetMapping("/dashboard")
     public String dashboard(@AuthenticationPrincipal OAuth2User principal, Model model, HttpSession session) {
         System.out.println("=== DASHBOARD CONTROLLER CALLED ===");
-        
+
         if (principal != null) {
             System.out.println("OAuth2User: " + principal.getName());
             System.out.println("Attributes: " + principal.getAttributes());
-            
+
             // Create or get user directly here
             User user = createOrGetUser(principal);
-            
+
             // Store user in session
             session.setAttribute("user", user);
-            
+
             model.addAttribute("user", user);
             model.addAttribute("oauth2User", principal);
             model.addAttribute("attributes", principal.getAttributes());
-            
+
             System.out.println("User object created/retrieved: " + (user != null ? user.getName() : "NULL"));
         }
-        
+
         return "dashboard";
     }
 
     private User createOrGetUser(OAuth2User oauth2User) {
         System.out.println("=== CREATING/GETTING USER ===");
-        
+
         Map<String, Object> attributes = oauth2User.getAttributes();
         String subject = oauth2User.getAttribute("sub");
         String email = oauth2User.getAttribute("email");
@@ -63,11 +64,11 @@ public class HomeController {
         String preferredUsername = oauth2User.getAttribute("preferred_username");
         String givenName = oauth2User.getAttribute("given_name");
         String familyName = oauth2User.getAttribute("family_name");
-        
+
         System.out.println("Subject: " + subject);
         System.out.println("Name: " + name);
         System.out.println("Email: " + email);
-        
+
         // Extract role names from OAuth2 attributes
         Set<String> roleNames = new HashSet<>();
         Object rolesObj = attributes.get("roles");
@@ -104,19 +105,19 @@ public class HomeController {
 
         // Create or update user using UserService
         User user = userService.createOrUpdateUser(
-            subject, 
-            name != null ? name : preferredUsername, 
-            email, 
+            subject,
+            email,
+            name,
             preferredUsername,
-            givenName, 
-            familyName, 
-            roleNames, 
-            groupNames
+            givenName,
+            familyName,
+            new ArrayList<>(roleNames),
+            new ArrayList<>(groupNames)
         );
-        
+
         System.out.println("User service returned: " + (user != null ? user.getName() : "NULL"));
         System.out.println("=== END USER CREATION ===");
-        
+
         return user;
     }
 }
