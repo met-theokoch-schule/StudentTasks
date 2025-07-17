@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="de" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -20,7 +19,7 @@
 
     <div class="container mt-4">
         <h1>Dashboard</h1>
-        
+
         <div class="row">
             <div class="col-md-6">
                 <div class="card">
@@ -28,15 +27,59 @@
                         <h5>Benutzerinformationen</h5>
                     </div>
                     <div class="card-body">
-                        <p><strong>Name:</strong> <span th:text="${user?.attributes?.name ?: 'N/A'}"></span></p>
-                        <p><strong>E-Mail:</strong> <span th:text="${user?.attributes?.email ?: 'N/A'}"></span></p>
-                        <p><strong>Benutzername:</strong> <span th:text="${user?.attributes?.preferred_username ?: 'N/A'}"></span></p>
-                        <p><strong>Subject ID:</strong> <span th:text="${user?.attributes?.sub ?: 'N/A'}"></span></p>
+                        <p><strong>Name:</strong> <span th:text="${name}">Nicht verfügbar</span></p>
+                        <p><strong>E-Mail:</strong> <span th:text="${email}">Nicht verfügbar</span></p>
+                        <div th:if="${user}">
+                            <hr>
+                            <p><strong>Vorname:</strong> <span th:text="${user.givenName}">-</span></p>
+                            <p><strong>Nachname:</strong> <span th:text="${user.familyName}">-</span></p>
+                            <p><strong>Benutzername:</strong> <span th:text="${user.preferredUsername}">-</span></p>
+                            <p><strong>OpenID Subject:</strong> <span th:text="${user.openIdSubject}" class="text-muted small">-</span></p>
+                        </div>
                     </div>
                 </div>
             </div>
-            
+
             <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Rollen und Gruppen</h5>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${user}">
+                            <div class="mb-3">
+                                <strong>Rollen:</strong>
+                                <div th:if="${#lists.isEmpty(roles)}" class="text-muted">Keine Rollen zugewiesen</div>
+                                <div th:unless="${#lists.isEmpty(roles)}">
+                                    <span th:each="role : ${roles}" class="badge bg-primary me-1" th:text="${role.name}">Role</span>
+                                </div>
+                                <div class="mt-2">
+                                    <span th:if="${isTeacher}" class="badge bg-success">Lehrer</span>
+                                    <span th:if="${isStudent}" class="badge bg-info">Schüler</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <strong>Gruppen:</strong>
+                                <div th:if="${#lists.isEmpty(groups)}" class="text-muted">Keine Gruppen zugewiesen</div>
+                                <div th:unless="${#lists.isEmpty(groups)}">
+                                    <div th:each="group : ${groups}" class="mb-1">
+                                        <span class="badge bg-secondary me-1" th:text="${group.name}">Group</span>
+                                        <small class="text-muted" th:text="${group.description}">Description</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div th:unless="${user}" class="text-muted">
+                            Benutzerdaten werden geladen...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
                 <div class="card">
                     <div class="card-header">
                         <h5>OAuth2 Test - Alle Attribute</h5>
