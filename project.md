@@ -258,33 +258,33 @@ src/
   - Status-Übergänge definieren
   - TaskContent Versionierung
 
-### Phase 3: Schüler-Interface (Woche 5)
-- [x] **Sprint 3.1:** Schüler Dashboard
-  - Aufgaben nach Gruppe anzeigen
-  - Aufgaben-Details View
-  - Status-Anzeige
-- [x] **Sprint 3.2:** Aufgaben-Editor Integration
-  - HTML Editor einbinden
-  - Submission API (HTTP POST)
-  - Versions-Historie
-
-### Phase 4: Lehrer-Interface (Woche 6)
-- [x] **Sprint 4.1:** Lehrer Dashboard
+### Phase 3: Lehrer-Interface (Woche 5)
+- [ ] **Sprint 3.1:** Lehrer Dashboard
   - Aufgaben erstellen/bearbeiten
   - Gruppenauswahl
   - Aufgaben-Übersicht
-- [x] **Sprint 4.2:** Gruppen-basierte Übersicht
+- [ ] **Sprint 3.2:** Gruppen-basierte Übersicht
   - Liste aller Gruppen mit aktiven Aufgaben anzeigen
   - Gruppen-Detail-View: Klickbare Gruppen zeigen alle SuS mit ihren zugeordneten Aufgaben
   - Multi-Gruppen-Unterstützung: Eine Aufgabe kann mehreren Gruppen zugänglich sein
-- [x] **Sprint 4.3:** Aufgaben-basierte Übersicht
+- [ ] **Sprint 3.3:** Aufgaben-basierte Übersicht
   - Liste aller Aufgaben für Lehrer anzeigen
   - Aufgaben-Detail-View: Klick auf Aufgabe zeigt alle SuS, die diese bearbeitet haben
   - Aufklappbare Submission-Historie pro Schüler mit allen Speicherständen/Versionen
-- [x] **Sprint 4.4:** Bewertungssystem
+- [ ] **Sprint 3.4:** Bewertungssystem
   - Submission Review Interface mit Historie
   - Status-Änderungen mit Kommentaren
   - Feedback-System pro Submission-Version
+
+### Phase 4: Schüler-Interface (Woche 6)
+- [ ] **Sprint 4.1:** Schüler Dashboard
+  - Aufgaben nach Gruppe anzeigen
+  - Aufgaben-Details View
+  - Status-Anzeige
+- [ ] **Sprint 4.2:** Aufgaben-Editor Integration
+  - HTML Editor einbinden
+  - Submission API (HTTP POST)
+  - Versions-Historie
 
 ### Phase 5: Testing und Optimierung (Woche 7)
 - [x] **Sprint 5.1:** Unit Tests
@@ -494,8 +494,8 @@ Jeder Task View hat eine eigene Thymeleaf-Template-Datei:
 |-------------|--------------|-----------|--------|
 | M1 | OAuth2 + Spring Security Setup | Woche 2 | ⏳ |
 | M2 | Datenmodell komplett | Woche 4 | ⏳ |
-| M3 | Schüler-Interface MVP | Woche 5 | ⏳ |
-| M4 | Lehrer-Interface MVP | Woche 6 | ⏳ |
+| M3 | Lehrer-Interface MVP | Woche 5 | ⏳ |
+| M4 | Schüler-Interface MVP | Woche 6 | ⏳ |
 | M5 | Testing abgeschlossen | Woche 7 | ⏳ |
 | M6 | Deployment erfolgreich | Woche 8 | ⏳ |
 
