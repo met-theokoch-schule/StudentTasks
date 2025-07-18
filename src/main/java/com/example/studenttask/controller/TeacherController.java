@@ -108,19 +108,26 @@ public class TeacherController {
                 }
             }
 
-            // Ausgewählte Gruppen zuweisen
-            Set<Group> assignedGroups = new HashSet<>();
+            // selectedGroups von String zu Long konvertieren
+            List<Long> groupIds = new ArrayList<>();
             if (selectedGroups != null && !selectedGroups.isEmpty()) {
                 for (String groupIdStr : selectedGroups) {
                     try {
-                        Long groupId = Long.parseLong(groupIdStr);
-                        teacher.getGroups().stream()
-                            .filter(group -> group.getId().equals(groupId))
-                            .findFirst()
-                            .ifPresent(assignedGroups::add);
+                        groupIds.add(Long.parseLong(groupIdStr));
                     } catch (NumberFormatException e) {
                         // Ignoriere ungültige IDs
                     }
+                }
+            }
+
+            // Ausgewählte Gruppen zuweisen
+            Set<Group> assignedGroups = new HashSet<>();
+            if (!groupIds.isEmpty()) {
+                for (Long groupId : groupIds) {
+                    teacher.getGroups().stream()
+                        .filter(group -> group.getId().equals(groupId))
+                        .findFirst()
+                        .ifPresent(assignedGroups::add);
                 }
             }
             task.setAssignedGroups(assignedGroups);
