@@ -111,7 +111,7 @@ public class TeacherController {
             // Ausgewählte Gruppen zuweisen
             if (selectedGroups != null && !selectedGroups.isEmpty()) {
                 Set<Group> assignedGroups = teacher.getGroups().stream()
-                    .filter(group -> selectedGroups.contains(group.getId().toString()))
+                    .filter(group -> selectedGroups.contains(String.valueOf(group.getId())))
                     .collect(Collectors.toSet());
                 task.setAssignedGroups(assignedGroups);
             }
