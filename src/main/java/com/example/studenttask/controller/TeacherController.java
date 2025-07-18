@@ -216,34 +216,4 @@ public class TeacherController {
 
         return "teacher/groups-list";
     }
-
-    /**
-     * Zeigt Details einer Gruppe mit allen Schülern und deren Aufgaben
-     */
-    @GetMapping("/groups/{groupId}")
-    public String groupDetail(@PathVariable Long groupId, Model model, Principal principal) {
-        User teacher = userService.findByOpenIdSubject(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-
-        // Gruppe finden
-        Group group = teacher.getGroups().stream()
-            .filter(g -> g.getId().equals(groupId))
-            .findFirst()
-            .orElseThrow(() -> new RuntimeException("Gruppe nicht gefunden oder Zugriff verweigert"));
-
-        // Alle Schüler der Gruppe laden
-        Set<User> students = group.getUsers();
-
-        // Alle Aufgaben des Lehrers für diese Gruppe laden
-        List<Task> tasks = taskService.findByCreatedBy(teacher).stream()
-            .filter(task -> task.getAssignedGroups().contains(group))
-            .collect(Collectors.toList());
-
-        model.addAttribute("group", group);
-        model.addAttribute("students", students);
-        model.addAttribute("tasks", tasks);
-        model.addAttribute("teacher", teacher);
-
-        return "teacher/group-detail";
-    }
 }
