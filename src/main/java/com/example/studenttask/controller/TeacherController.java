@@ -4,12 +4,13 @@ package com.example.studenttask.controller;
 import com.example.studenttask.model.*;
 import com.example.studenttask.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import jakarta.validation.Valid;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -42,12 +43,10 @@ public class TeacherController {
         User teacher = userService.findByOpenIdSubject(principal.getName())
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
         
-        List<Task> recentTasks = taskService.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher);
-        List<GroupInfo> groupsWithTasks = groupService.getGroupsWithActiveTasksByTeacher(teacher);
+        List<Task> recentTasks = taskService.findByCreatedBy(teacher);
         
         model.addAttribute("teacher", teacher);
         model.addAttribute("recentTasks", recentTasks);
-        model.addAttribute("groupsWithTasks", groupsWithTasks);
         
         return "teacher/dashboard";
     }
@@ -60,7 +59,7 @@ public class TeacherController {
         User teacher = userService.findByOpenIdSubject(principal.getName())
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
         
-        List<Task> tasks = taskService.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher);
+        List<Task> tasks = taskService.findByCreatedBy(teacher);
         
         model.addAttribute("tasks", tasks);
         model.addAttribute("teacher", teacher);
@@ -89,28 +88,39 @@ public class TeacherController {
     }
 
     /**
-     * Verarbeitet das Erstellen einer neuen Aufgabe
+     * Verarbeitung der Aufgabenerstellung
      */
     @PostMapping("/tasks/create")
-    public String createTask(
-            @ModelAttribute Task task,
-            @RequestParam("taskViewId") Long taskViewId,
-            @RequestParam(value = "selectedGroups", required = false) List<String> selectedGroups,
-            @RequestParam("dueDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime dueDate,
-            Principal principal,
-            RedirectAttributes redirectAttributes) {
-        
+    public String createTask(@Valid @ModelAttribute Task task,
+                           BindingResult result,
+                           @RequestParam(value = "taskViewId", required = false) Long taskViewId,
+                           @RequestParam(value = "selectedGroups", required = false) List<String> selectedGroups,
+                           RedirectAttributes redirectAttributes,
+                           Principal principal,
+                           Model model) {
+
+        User teacher = userService.findByOpenIdSubject(principal.getName())
+            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+
+        if (result.hasErrors()) {
+            List<TaskView> taskViews = taskViewService.findActiveTaskViews();
+            List<Group> teacherGroups = new ArrayList<>(teacher.getGroups());
+            
+            model.addAttribute("taskViews", taskViews);
+            model.addAttribute("teacherGroups", teacherGroups);
+            model.addAttribute("teacher", teacher);
+            
+            return "teacher/task-create";
+        }
+
         try {
-            User teacher = userService.findByOpenIdSubject(principal.getName())
-                .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-
-            // TaskView setzen
-            TaskView taskView = taskViewService.findById(taskViewId)
-                .orElseThrow(() -> new RuntimeException("TaskView nicht gefunden"));
-            task.setTaskView(taskView);
-
-            // Due Date setzen
-            task.setDueDate(dueDate);
+            // TaskView setzen falls ausgewählt
+            if (taskViewId != null) {
+                Optional<TaskView> taskViewOpt = taskViewService.findById(taskViewId);
+                if (taskViewOpt.isPresent()) {
+                    task.setTaskView(taskViewOpt.get());
+                }
+            }
 
             // selectedGroups von String zu Long konvertieren
             List<Long> groupIds = new ArrayList<>();
@@ -148,74 +158,77 @@ public class TeacherController {
     }
 
     /**
-     * Zeigt Abgaben für eine bestimmte Aufgabe
+     * Aufgabe bearbeiten
      */
-    @GetMapping("/tasks/{taskId}/submissions")
+    @GetMapping("/tasks/{taskId}/edit")
+    public String editTaskForm(@PathVariable Long taskId, Model model, Principal principal) {
+        User teacher = userService.findByOpenIdSubject(principal.getName())
+            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+
+        Optional<Task> taskOpt = taskService.findById(taskId);
+        if (taskOpt.isEmpty() || !taskOpt.get().getCreatedBy().equals(teacher)) {
+            return "redirect:/teacher/tasks";
+        }
+
+        Task task = taskOpt.get();
+        List<TaskView> taskViews = taskViewService.findActiveTaskViews();
+        List<Group> teacherGroups = new ArrayList<>(teacher.getGroups());
+
+        model.addAttribute("task", task);
+        model.addAttribute("taskViews", taskViews);
+        model.addAttribute("teacherGroups", teacherGroups);
+        model.addAttribute("teacher", teacher);
+
+        return "teacher/task-edit";
+    }
+
+    /**
+     * Aufgabe löschen
+     */
+    @PostMapping("/tasks/{taskId}/delete")
+    public String deleteTask(@PathVariable Long taskId, 
+                           RedirectAttributes redirectAttributes, 
+                           Principal principal) {
+        User teacher = userService.findByOpenIdSubject(principal.getName())
+            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+
+        Optional<Task> taskOpt = taskService.findById(taskId);
+        if (taskOpt.isEmpty() || !taskOpt.get().getCreatedBy().equals(teacher)) {
+            redirectAttributes.addFlashAttribute("error", "Aufgabe nicht gefunden oder keine Berechtigung.");
+            return "redirect:/teacher/tasks";
+        }
+
+        try {
+            taskService.deleteTask(taskId);
+            redirectAttributes.addFlashAttribute("success", "Aufgabe wurde erfolgreich gelöscht.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Fehler beim Löschen der Aufgabe: " + e.getMessage());
+        }
+
+        return "redirect:/teacher/tasks";
+    }
+
+    /**
+     * Aufgaben-Details mit Abgaben
+     */
+    @GetMapping("/tasks/{taskId}")
     public String viewTaskSubmissions(@PathVariable Long taskId, Model model, Principal principal) {
         User teacher = userService.findByOpenIdSubject(principal.getName())
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-        
-        Task task = taskService.findById(taskId)
-            .orElseThrow(() -> new RuntimeException("Aufgabe nicht gefunden"));
-        
-        // Sicherheitsprüfung: Aufgabe gehört dem Lehrer
-        if (!task.getCreatedBy().equals(teacher)) {
+
+        Optional<Task> taskOpt = taskService.findById(taskId);
+        if (taskOpt.isEmpty() || !taskOpt.get().getCreatedBy().equals(teacher)) {
             return "redirect:/teacher/tasks";
         }
-        
-        List<UserTask> userTasks = userTaskService.findByTask(task);
-        
-        model.addAttribute("task", task);
-        model.addAttribute("userTasks", userTasks);
+
+        Task task = taskOpt.get();
+        List<UserTask> submissions = userTaskService.findByTask(task);
+
         model.addAttribute("teacher", teacher);
-        
+        model.addAttribute("task", task);
+        model.addAttribute("submissions", submissions);
+
         return "teacher/task-submissions";
-    }
-
-    /**
-     * Deaktiviert eine Aufgabe
-     */
-    @PostMapping("/tasks/{taskId}/deactivate")
-    public String deactivateTask(@PathVariable Long taskId, Principal principal, RedirectAttributes redirectAttributes) {
-        User teacher = userService.findByOpenIdSubject(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-        
-        Task task = taskService.findById(taskId)
-            .orElseThrow(() -> new RuntimeException("Aufgabe nicht gefunden"));
-        
-        // Sicherheitsprüfung
-        if (!task.getCreatedBy().equals(teacher)) {
-            redirectAttributes.addFlashAttribute("error", "Sie sind nicht berechtigt, diese Aufgabe zu deaktivieren.");
-            return "redirect:/teacher/tasks";
-        }
-        
-        taskService.deactivateTask(taskId);
-        redirectAttributes.addFlashAttribute("success", "Aufgabe wurde deaktiviert.");
-        
-        return "redirect:/teacher/tasks";
-    }
-
-    /**
-     * Reaktiviert eine Aufgabe
-     */
-    @PostMapping("/tasks/{taskId}/activate")
-    public String activateTask(@PathVariable Long taskId, Principal principal, RedirectAttributes redirectAttributes) {
-        User teacher = userService.findByOpenIdSubject(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-        
-        Task task = taskService.findById(taskId)
-            .orElseThrow(() -> new RuntimeException("Aufgabe nicht gefunden"));
-        
-        // Sicherheitsprüfung
-        if (!task.getCreatedBy().equals(teacher)) {
-            redirectAttributes.addFlashAttribute("error", "Sie sind nicht berechtigt, diese Aufgabe zu aktivieren.");
-            return "redirect:/teacher/tasks";
-        }
-        
-        taskService.activateTask(taskId);
-        redirectAttributes.addFlashAttribute("success", "Aufgabe wurde aktiviert.");
-        
-        return "redirect:/teacher/tasks";
     }
 
     /**
@@ -226,36 +239,42 @@ public class TeacherController {
         User teacher = userService.findByOpenIdSubject(principal.getName())
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
         
-        List<GroupInfo> groupsWithTasks = groupService.getGroupsWithActiveTasksByTeacher(teacher);
+        List<Group> groups = new ArrayList<>(teacher.getGroups());
         
-        model.addAttribute("groupsWithTasks", groupsWithTasks);
+        model.addAttribute("groups", groups);
         model.addAttribute("teacher", teacher);
         
         return "teacher/groups-list";
     }
 
     /**
-     * Zeigt Details einer Gruppe
+     * Gruppen-Details mit Schülern und ihren Aufgaben
      */
     @GetMapping("/groups/{groupId}")
     public String viewGroupDetail(@PathVariable Long groupId, Model model, Principal principal) {
         User teacher = userService.findByOpenIdSubject(principal.getName())
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+
+        Optional<Group> groupOpt = groupService.findById(groupId);
+        if (groupOpt.isEmpty()) {
+            return "redirect:/teacher/groups";
+        }
+
+        Group group = groupOpt.get();
         
-        Group group = groupService.findById(groupId)
-            .orElseThrow(() -> new RuntimeException("Gruppe nicht gefunden"));
-        
-        // Sicherheitsprüfung: Lehrer ist der Gruppe zugeordnet
+        // Sicherheitsprüfung: Lehrer muss der Gruppe angehören
         if (!teacher.getGroups().contains(group)) {
             return "redirect:/teacher/groups";
         }
-        
-        List<StudentTaskInfo> studentTasks = groupService.getStudentTasksForGroup(group, teacher);
-        
-        model.addAttribute("group", group);
-        model.addAttribute("studentTasks", studentTasks);
+
+        List<User> students = new ArrayList<>(group.getMembers());
+        List<Task> groupTasks = taskService.findByAssignedGroupsContaining(group);
+
         model.addAttribute("teacher", teacher);
-        
+        model.addAttribute("group", group);
+        model.addAttribute("students", students);
+        model.addAttribute("groupTasks", groupTasks);
+
         return "teacher/group-detail";
     }
 }
