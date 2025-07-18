@@ -61,8 +61,8 @@
 
                             <!-- Aufgabentyp -->
                             <div class="mb-3">
-                                <label for="taskView" class="form-label">Aufgabentyp *</label>
-                                <select class="form-select" id="taskView" th:field="*{taskView}" required>
+                                <label for="taskViewId" class="form-label">Aufgabentyp *</label>
+                                <select class="form-select" id="taskViewId" name="taskViewId" required>
                                     <option value="">-- Aufgabentyp wählen --</option>
                                     <option th:each="view : ${taskViews}" 
                                             th:value="${view.id}" 
@@ -151,7 +151,7 @@
     <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
     <script>
         // TaskView Beschreibung anzeigen
-        document.getElementById('taskView').addEventListener('change', function() {
+        document.getElementById('taskViewId').addEventListener('change', function() {
             const selectedOption = this.options[this.selectedIndex];
             const description = selectedOption.getAttribute('data-description') || 'Wählen Sie den Typ der Aufgabe aus.';
             document.getElementById('taskViewDescription').textContent = description;
