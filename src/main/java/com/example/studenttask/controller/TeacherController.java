@@ -123,12 +123,9 @@ public class TeacherController {
             // Ausgewählte Gruppen zuweisen
             Set<Group> assignedGroups = new HashSet<>();
             if (!groupIds.isEmpty()) {
-                for (Long groupId : groupIds) {
-                    teacher.getGroups().stream()
-                        .filter(group -> group.getId().equals(groupId))
-                        .findFirst()
-                        .ifPresent(assignedGroups::add);
-                }
+                assignedGroups = teacher.getGroups().stream()
+                    .filter(group -> groupIds.contains(group.getId()))
+                    .collect(Collectors.toSet());
             }
             task.setAssignedGroups(assignedGroups);
 
