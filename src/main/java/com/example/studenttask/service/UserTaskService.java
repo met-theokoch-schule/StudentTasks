@@ -20,6 +20,13 @@ public class UserTaskService {
     private TaskStatusService taskStatusService;
 
     /**
+     * Alle UserTasks für eine bestimmte Task finden
+     */
+    public List<UserTask> findByTask(Task task) {
+        return userTaskRepository.findByTask(task);
+    }
+
+    /**
      * UserTask für User und Task finden oder erstellen
      */
     public UserTask findOrCreateUserTask(User user, Task task) {
