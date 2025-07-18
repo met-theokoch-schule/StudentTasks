@@ -1,4 +1,3 @@
-
 package com.example.studenttask.service;
 
 import com.example.studenttask.model.TaskContent;
@@ -25,14 +24,14 @@ public class TaskContentService {
     public TaskContent saveContent(UserTask userTask, String content, boolean isSubmitted) {
         // Get the latest version number for this user task
         int nextVersion = getNextVersionNumber(userTask);
-        
+
         TaskContent taskContent = new TaskContent();
         taskContent.setUserTask(userTask);
         taskContent.setContent(content);
         taskContent.setVersion(nextVersion);
         taskContent.setSavedAt(LocalDateTime.now());
         taskContent.setSubmitted(isSubmitted);
-        
+
         return taskContentRepository.save(taskContent);
     }
 
@@ -149,7 +148,7 @@ public class TaskContentService {
         long totalVersions = countVersions(userTask);
         long submittedVersions = countSubmittedVersions(userTask);
         Optional<TaskContent> latestOpt = getLatestContent(userTask);
-        
+
         return new ContentStatistics(
             totalVersions,
             submittedVersions,

@@ -1,4 +1,3 @@
-
 package com.example.studenttask.config;
 
 import com.example.studenttask.model.Role;
@@ -52,6 +51,7 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     private void initializeTaskViews() {
+        // Initialize Task Views if they don't exist
         if (taskViewRepository.count() == 0) {
             TaskView simpleText = new TaskView("simple-text", "Einfacher Texteditor", "taskviews/simple-text");
             simpleText.setDescription("Einfaches Textfeld für Text-Abgaben");
