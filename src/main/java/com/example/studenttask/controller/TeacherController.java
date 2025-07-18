@@ -74,8 +74,14 @@ public class TeacherController {
                            Principal principal) {
 
         User teacher = userService.findByUsername(principal.getName());
-        TaskView taskView = taskViewService.findById(taskViewId);
-
+        Optional<TaskView> taskViewOpt = taskViewService.findById(taskViewId);
+        
+        if (taskViewOpt.isEmpty()) {
+            // Handle case where TaskView is not found
+            return "redirect:/teacher/tasks/create?error=invalid_view";
+        }
+        
+        TaskView taskView = taskViewOpt.get();
         task.setCreatedBy(teacher);
         task.setTaskView(taskView);
 

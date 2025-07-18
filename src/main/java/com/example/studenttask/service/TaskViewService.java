@@ -55,10 +55,6 @@ public class TaskViewService {
         return taskViewRepository.findAll();
     }
 
-    public TaskView findById(String id) {
-        return taskViewRepository.findById(id).orElse(null);
-    }
-
     /**
      * Create a new task view
      */
