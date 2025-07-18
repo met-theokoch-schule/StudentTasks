@@ -44,16 +44,7 @@ public class TeacherController {
         return "teacher/dashboard";
     }
 
-    @GetMapping("/tasks")
-    public String tasksList(Model model, Principal principal) {
-        User teacher = userService.findByPreferredUsername(principal.getName());
-        List<Task> tasks = taskService.findByCreatedBy(teacher);
-
-        model.addAttribute("teacher", teacher);
-        model.addAttribute("tasks", tasks);
-
-        return "teacher/tasks-list";
-    }
+    
 
     @GetMapping("/tasks/create")
     public String createTaskForm(Model model, Principal principal) {
