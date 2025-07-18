@@ -1,29 +1,18 @@
 package com.example.studenttask.controller;
 
-import com.example.studenttask.model.Group;
-import com.example.studenttask.model.User;
-import com.example.studenttask.model.Task;
-import com.example.studenttask.model.TaskView;
-import com.example.studenttask.service.UserService;
-import com.example.studenttask.service.TaskService;
-import com.example.studenttask.service.TaskViewService;
+import com.example.studenttask.model.*;
+import com.example.studenttask.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/teacher")
@@ -118,18 +107,6 @@ public class TeacherController {
                 }
             }
 
-            // Gruppen IDs konvertieren
-            List<Long> groupIds = new ArrayList<>();
-            if (selectedGroups != null) {
-                for (String groupId : selectedGroups) {
-                    try {
-                        groupIds.add(Long.parseLong(groupId));
-                    } catch (NumberFormatException e) {
-                        // Ignoriere ungültige IDs
-                    }
-                }
-            }
-
             // Ausgewählte Gruppen zuweisen
             if (selectedGroups != null && !selectedGroups.isEmpty()) {
                 Set<Group> assignedGroups = teacher.getGroups().stream()
@@ -139,7 +116,7 @@ public class TeacherController {
             }
 
             // Aufgabe speichern
-            Task savedTask = taskService.createTask(task, groupIds);
+            Task savedTask = taskService.createTask(task);
 
             redirectAttributes.addFlashAttribute("success", "Aufgabe '" + savedTask.getTitle() + "' wurde erfolgreich erstellt.");
             return "redirect:/teacher/tasks";
