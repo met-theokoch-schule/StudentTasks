@@ -77,6 +77,14 @@ public class TaskView {
         this.isActive = isActive;
     }
     
+    public Boolean isActive() {
+        return isActive;
+    }
+    
+    public void setActive(Boolean active) {
+        this.isActive = active;
+    }
+    
     public Set<Task> getTasks() {
         return tasks;
     }
