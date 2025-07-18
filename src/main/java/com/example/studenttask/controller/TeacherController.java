@@ -3,6 +3,7 @@ package com.example.studenttask.controller;
 import com.example.studenttask.model.*;
 import com.example.studenttask.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -116,7 +117,9 @@ public class TeacherController {
             }
 
             // Aufgabe speichern
-            Task savedTask = taskService.createTask(task);
+            Task savedTask = taskService.createTask(task.getTitle(), task.getDescription(), 
+                task.getDefaultSubmission(), teacher, task.getDueDate(), task.getTaskView(), 
+                task.getAssignedGroups());
 
             redirectAttributes.addFlashAttribute("success", "Aufgabe '" + savedTask.getTitle() + "' wurde erfolgreich erstellt.");
             return "redirect:/teacher/tasks";
