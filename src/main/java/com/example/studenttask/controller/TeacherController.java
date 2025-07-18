@@ -112,14 +112,5 @@ public class TeacherController {
         return "teacher/task-detail";
     }
 
-    @GetMapping("/groups")
-    public String groupsList(Model model, Principal principal) {
-        User teacher = userService.findByPreferredUsername(principal.getName());
-        // Hier würden wir später die Gruppen-Logik implementieren
-
-        model.addAttribute("teacher", teacher);
-        // model.addAttribute("groups", groups);
-
-        return "teacher/groups-list";
-    }
+    
 }
