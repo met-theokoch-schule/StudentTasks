@@ -116,4 +116,3 @@ public class TeacherController {
         return "teacher/groups-list";
     }
 }
-```
