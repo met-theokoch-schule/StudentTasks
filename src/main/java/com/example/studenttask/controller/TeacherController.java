@@ -109,26 +109,26 @@ public class TeacherController {
             }
 
             // Ausgewählte Gruppen zuweisen
+            Set<Group> assignedGroups = new HashSet<>();
             if (selectedGroups != null && !selectedGroups.isEmpty()) {
-                List<Long> groupIds = new ArrayList<>();
                 for (String groupIdStr : selectedGroups) {
                     try {
-                        groupIds.add(Long.parseLong(groupIdStr));
+                        Long groupId = Long.parseLong(groupIdStr);
+                        teacher.getGroups().stream()
+                            .filter(group -> group.getId().equals(groupId))
+                            .findFirst()
+                            .ifPresent(assignedGroups::add);
                     } catch (NumberFormatException e) {
                         // Ignoriere ungültige IDs
                     }
                 }
-                
-                Set<Group> assignedGroups = teacher.getGroups().stream()
-                    .filter(group -> groupIds.contains(group.getId()))
-                    .collect(Collectors.toSet());
-                task.setAssignedGroups(assignedGroups);
             }
+            task.setAssignedGroups(assignedGroups);
 
             // Aufgabe speichern
             Task savedTask = taskService.createTask(task.getTitle(), task.getDescription(), 
                 task.getDefaultSubmission(), teacher, task.getDueDate(), task.getTaskView(), 
-                task.getAssignedGroups());
+                assignedGroups);
 
             redirectAttributes.addFlashAttribute("success", "Aufgabe '" + savedTask.getTitle() + "' wurde erfolgreich erstellt.");
             return "redirect:/teacher/tasks";
