@@ -5,8 +5,8 @@
 /home/runner/workspace/src/main/java/com/example/studenttask/repository/TaskReviewRepository.java
 /home/runner/workspace/src/main/java/com/example/studenttask/service/UserService.java
 /home/runner/workspace/src/main/java/com/example/studenttask/repository/TaskContentRepository.java
-/home/runner/workspace/src/main/java/com/example/studenttask/model/TaskView.java
 /home/runner/workspace/src/main/java/com/example/studenttask/model/Group.java
+/home/runner/workspace/src/main/java/com/example/studenttask/model/TaskView.java
 /home/runner/workspace/src/main/java/com/example/studenttask/repository/TaskViewRepository.java
 /home/runner/workspace/src/main/java/com/example/studenttask/repository/GroupRepository.java
 /home/runner/workspace/src/main/java/com/example/studenttask/repository/SubmissionRepository.java
