@@ -11,9 +11,14 @@ import java.util.Optional;
 public interface UserTaskRepository extends JpaRepository<UserTask, Long> {
 
     /**
-     * UserTask für spezifischen User und Task finden
+     * Find UserTask by user and task
      */
     UserTask findByUserAndTask(User user, Task task);
+
+    /**
+     * Find all UserTasks for a specific task
+     */
+    List<UserTask> findByTask(Task task);
 
     /**
      * Alle UserTasks für einen User
