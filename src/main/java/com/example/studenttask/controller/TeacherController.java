@@ -79,7 +79,9 @@ public class TeacherController {
     }
 
     @PostMapping("/tasks/create")
-    public String createTask(@ModelAttribute Task task, @RequestParam(required = false) List<String> selectedGroups,
+    public String createTask(@ModelAttribute Task task, 
+                            @RequestParam(required = false) Long taskViewId,
+                            @RequestParam(required = false) List<String> selectedGroups,
                             BindingResult bindingResult, Model model, Principal principal,
                             RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
@@ -92,6 +94,14 @@ public class TeacherController {
                 .orElseThrow(() -> new RuntimeException("Lehrer nicht gefunden"));
             task.setCreatedBy(teacher);
             task.setCreatedAt(LocalDateTime.now());
+
+            // TaskView basierend auf ID setzen
+            if (taskViewId != null) {
+                Optional<TaskView> taskViewOpt = taskViewService.findById(taskViewId);
+                if (taskViewOpt.isPresent()) {
+                    task.setTaskView(taskViewOpt.get());
+                }
+            }
 
             // Basisaufgabe: Wenn keine View ausgewählt, setze "Basisaufgabe"
             if (task.getTaskView() == null) {
