@@ -23,10 +23,10 @@ public class UserTaskService {
      * UserTask für User und Task finden oder erstellen
      */
     public UserTask findOrCreateUserTask(User user, Task task) {
-        Optional<UserTask> existing = userTaskRepository.findByUserAndTask(user, task);
+        UserTask existing = userTaskRepository.findByUserAndTask(user, task);
         
-        if (existing.isPresent()) {
-            return existing.get();
+        if (existing != null) {
+            return existing;
         }
         
         // Neue UserTask erstellen mit Default-Status
