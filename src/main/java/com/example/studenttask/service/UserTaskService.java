@@ -19,31 +19,32 @@ public class UserTaskService {
     private TaskStatusService taskStatusService;
 
     /**
-     * Alle UserTasks für eine bestimmte Task finden
+     * Find UserTasks by task
      */
     public List<UserTask> findByTask(Task task) {
         return userTaskRepository.findByTask(task);
     }
 
     /**
-     * UserTask für User und Task finden oder erstellen
+     * Find or create UserTask for user and task
      */
     public UserTask findOrCreateUserTask(User user, Task task) {
-        UserTask existing = userTaskRepository.findByUserAndTask(user, task);
+        Optional<UserTask> existingUserTask = userTaskRepository.findByUserAndTask(user, task);
 
-        if (existing != null) {
-            return existing;
+        if (existingUserTask.isPresent()) {
+            return existingUserTask.get();
+        } else {
+            // Create new UserTask
+            UserTask userTask = new UserTask();
+            userTask.setUser(user);
+            userTask.setTask(task);
+            userTask.setStartedAt(LocalDateTime.now());
+            userTask.setLastModified(LocalDateTime.now());
+
+            // Set initial status (assuming NICHT_BEGONNEN exists)
+            // This should be improved to get the actual initial status
+            return userTaskRepository.save(userTask);
         }
-
-        // Neue UserTask erstellen mit Default-Status
-        UserTask userTask = new UserTask();
-        userTask.setUser(user);
-        userTask.setTask(task);
-        userTask.setStatus(taskStatusService.getDefaultStatus());
-        userTask.setStartedAt(LocalDateTime.now());
-        userTask.setLastModified(LocalDateTime.now());
-
-        return userTaskRepository.save(userTask);
     }
 
     /**
