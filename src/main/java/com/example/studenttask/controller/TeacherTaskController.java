@@ -49,12 +49,14 @@ public class TeacherTaskController {
     @GetMapping("/tasks/{taskId}/submissions")
     public String viewTaskSubmissions(@PathVariable Long taskId, Model model, Principal principal) {
         User teacher = userService.findByPreferredUsername(principal.getName());
-        Task task = taskService.findById(taskId);
+        Optional<Task> taskOpt = taskService.findById(taskId);
 
         // Sicherheit: Prüfen ob Aufgabe existiert und dem Lehrer gehört
-        if (task == null || !task.getCreatedBy().equals(teacher)) {
+        if (taskOpt.isEmpty() || !taskOpt.get().getCreatedBy().equals(teacher)) {
             return "redirect:/teacher/tasks";
         }
+
+        Task task = taskOpt.get();
 
         List<UserTask> submissions = userTaskService.findByTask(task);
 
