@@ -8,9 +8,9 @@
 /home/runner/workspace/src/main/java/com/example/studenttask/controller/HomeController.java
 /home/runner/workspace/src/main/java/com/example/studenttask/repository/UserTaskRepository.java
 /home/runner/workspace/src/main/java/com/example/studenttask/repository/TaskContentRepository.java
-/home/runner/workspace/src/main/java/com/example/studenttask/model/Group.java
-/home/runner/workspace/src/main/java/com/example/studenttask/model/Role.java
 /home/runner/workspace/src/main/java/com/example/studenttask/model/TaskView.java
+/home/runner/workspace/src/main/java/com/example/studenttask/model/Role.java
+/home/runner/workspace/src/main/java/com/example/studenttask/model/Group.java
 /home/runner/workspace/src/main/java/com/example/studenttask/repository/TaskRepository.java
 /home/runner/workspace/src/main/java/com/example/studenttask/repository/TaskViewRepository.java
 /home/runner/workspace/src/main/java/com/example/studenttask/model/Submission.java
