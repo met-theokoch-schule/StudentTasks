@@ -46,12 +46,11 @@ public class SecurityConfig {
             )
             .headers(headers -> headers
                 .frameOptions().sameOrigin()
-                .and()
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED)
                 .maximumSessions(1)
-                .maxSessionsPreventsLogins(false)
+                .expiredUrl("/login?expired=true")
             );
         
         return http.build();
