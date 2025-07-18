@@ -1,4 +1,3 @@
-
 package com.example.studenttask.service;
 
 import com.example.studenttask.model.Task;
@@ -22,7 +21,7 @@ public class TaskService {
 
     @Autowired
     private TaskRepository taskRepository;
-    
+
     @Autowired
     private TaskViewRepository taskViewRepository;
 
@@ -42,7 +41,7 @@ public class TaskService {
         task.setViewType(viewType);
         task.setAssignedGroups(assignedGroups);
         task.setActive(true);
-        
+
         return taskRepository.save(task);
     }
 
@@ -61,7 +60,7 @@ public class TaskService {
             task.setDueDate(dueDate);
             task.setViewType(viewType);
             task.setAssignedGroups(assignedGroups);
-            
+
             return taskRepository.save(task);
         }
         throw new RuntimeException("Task not found with ID: " + taskId);
@@ -171,7 +170,7 @@ public class TaskService {
         if (task.getCreatedBy().getId().equals(user.getId())) {
             return true;
         }
-        
+
         // Check if user is in any of the assigned groups
         return task.getAssignedGroups().stream()
                 .anyMatch(group -> user.getGroups().contains(group));
@@ -183,7 +182,7 @@ public class TaskService {
     public TaskStatistics getTaskStatistics(User creator) {
         List<Task> allTasks = findTasksByCreator(creator);
         List<Task> activeTasks = findActiveTasksByCreator(creator);
-        
+
         return new TaskStatistics(
             allTasks.size(),
             activeTasks.size(),
@@ -208,5 +207,23 @@ public class TaskService {
         public int getTotalTasks() { return totalTasks; }
         public int getActiveTasks() { return activeTasks; }
         public int getInactiveTasks() { return inactiveTasks; }
+    }
+
+    public List<Task> findByCreatedBy(User creator) {
+        return taskRepository.findByCreatedByOrderByCreatedAtDesc(creator);
+    }
+
+    public Task createTask(Task task, List<Long> groupIds) {
+        // Erst die Task speichern
+        Task savedTask = taskRepository.save(task);
+
+        // Dann die Gruppen zuweisen (wird später implementiert)
+        // TODO: Implement group assignment
+
+        return savedTask;
+    }
+
+    public Task findById(Long id) {
+        return taskRepository.findById(id).orElse(null);
     }
 }

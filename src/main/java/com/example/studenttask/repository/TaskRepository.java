@@ -34,4 +34,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     List<Task> findByDueDateBetweenAndIsActiveOrderByDueDateAsc(LocalDateTime start, LocalDateTime end, Boolean isActive);
 
     List<Task> findByIsActiveOrderByCreatedAtDesc(Boolean isActive);
+    List<Task> findByActiveTrue();
+    List<Task> findByActiveFalse();
 }
