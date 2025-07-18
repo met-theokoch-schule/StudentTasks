@@ -46,6 +46,10 @@ public class Task {
     @Column(columnDefinition = "TEXT")
     private String defaultSubmission; // Default content for submissions in the format expected by the task view
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "task_view_id")
+    private TaskView taskView;
+
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL)
     private Set<UserTask> userTasks = new HashSet<>();
 
@@ -136,7 +140,7 @@ public class Task {
     }
 
     public TaskView getViewType() {
-        return this.taskView;
+        return this.viewType;
     }
 
     public void setViewType(TaskView viewType) {
@@ -151,12 +155,12 @@ public class Task {
         this.defaultSubmission = defaultSubmission;
     }
 
-    public Set<UserTask> getUserTasks() {
-        return userTasks;
+    public TaskView getTaskView() {
+        return taskView;
     }
 
-    public void setUserTasks(Set<UserTask> userTasks) {
-        this.userTasks = userTasks;
+    public void setTaskView(TaskView taskView) {
+        this.taskView = taskView;
     }
 
     @Override

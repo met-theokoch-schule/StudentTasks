@@ -69,12 +69,12 @@ public class TeacherController {
 
     @PostMapping("/tasks/create")
     public String createTask(@ModelAttribute Task task, 
-                           @RequestParam("taskViewId") Long taskViewId,
+                           @RequestParam("taskViewId") String taskViewId,
                            @RequestParam("groupIds") List<Long> groupIds,
                            Principal principal) {
 
         User teacher = userService.findByUsername(principal.getName());
-        TaskView taskView = taskViewService.findById(Long.valueOf(taskViewId));
+        TaskView taskView = taskViewService.findById(taskViewId);
 
         task.setCreatedBy(teacher);
         task.setTaskView(taskView);
