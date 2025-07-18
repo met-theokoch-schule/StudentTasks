@@ -1,5 +1,6 @@
 package com.example.studenttask.controller;
 
+import com.example.studenttask.model.Group;
 import com.example.studenttask.model.User;
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskView;
