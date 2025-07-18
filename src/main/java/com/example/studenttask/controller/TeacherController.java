@@ -17,6 +17,10 @@ import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/teacher")
@@ -44,41 +48,60 @@ public class TeacherController {
         return "teacher/dashboard";
     }
 
-    
+
 
     @GetMapping("/tasks/create")
     public String createTaskForm(Model model, Principal principal) {
         User teacher = userService.findByPreferredUsername(principal.getName());
-        List<TaskView> taskViews = taskViewService.findAll();
+
+        // Neue Task für Formular erstellen
+        Task task = new Task();
+        task.setActive(true); // Standard: aktiv
+
+        // Verfügbare TaskViews laden
+        List<TaskView> taskViews = taskViewService.findActiveTaskViews();
+
+        // Verfügbare Gruppen laden (alle Gruppen des Lehrers)
+        List<Group> groups = teacher.getGroups().stream().collect(Collectors.toList());
 
         model.addAttribute("teacher", teacher);
+        model.addAttribute("task", task);
         model.addAttribute("taskViews", taskViews);
-        model.addAttribute("task", new Task());
+        model.addAttribute("groups", groups);
 
         return "teacher/task-create";
     }
 
-    @PostMapping("/tasks/create")
-    public String createTask(@ModelAttribute Task task, 
-                           @RequestParam("taskViewId") String taskViewId,
-                           @RequestParam("groupIds") List<Long> groupIds,
-                           Principal principal) {
+    @PostMapping("/tasks")
+    public String createTask(@ModelAttribute("task") Task task, Principal principal, RedirectAttributes redirectAttributes) {
+        try {
+            User teacher = userService.findByPreferredUsername(principal.getName());
 
-        User teacher = userService.findByPreferredUsername(principal.getName());
-        Optional<TaskView> taskViewOpt = taskViewService.findById(taskViewId);
+            // Aufgabe konfigurieren
+            task.setCreatedBy(teacher);
+            task.setCreatedAt(LocalDateTime.now());
 
-        if (taskViewOpt.isEmpty()) {
-            // Handle case where TaskView is not found
-            return "redirect:/teacher/tasks/create?error=invalid_view";
+            // TaskView setzen
+            if (task.getTaskView() != null && task.getTaskView().getId() != null) {
+                Optional<TaskView> taskViewOpt = taskViewService.findById(task.getTaskView().getId());
+                if (taskViewOpt.isPresent()) {
+                    task.setTaskView(taskViewOpt.get());
+                } else {
+                    redirectAttributes.addFlashAttribute("error", "Ungültiger Aufgabentyp ausgewählt.");
+                    return "redirect:/teacher/tasks/create";
+                }
+            }
+
+            // Aufgabe speichern
+            Task savedTask = taskService.saveTask(task);
+
+            redirectAttributes.addFlashAttribute("success", "Aufgabe '" + savedTask.getTitle() + "' wurde erfolgreich erstellt.");
+            return "redirect:/teacher/tasks";
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Fehler beim Erstellen der Aufgabe: " + e.getMessage());
+            return "redirect:/teacher/tasks/create";
         }
-
-        TaskView taskView = taskViewOpt.get();
-        task.setCreatedBy(teacher);
-        task.setTaskView(taskView);
-
-        Task savedTask = taskService.createTask(task, groupIds);
-
-        return "redirect:/teacher/tasks/" + savedTask.getId();
     }
 
     @GetMapping("/tasks/{taskId}")
@@ -103,5 +126,5 @@ public class TeacherController {
         return "teacher/task-detail";
     }
 
-    
+
 }
