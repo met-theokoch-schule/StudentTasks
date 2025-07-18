@@ -92,8 +92,9 @@ public class TeacherController {
 
             // Basisaufgabe: Wenn keine View ausgewählt, setze "Basisaufgabe"
             if (task.getTaskView() == null) {
-                TaskView baseTaskView = taskViewService.findByName("Basisaufgabe");
-                if (baseTaskView != null) {
+                Optional<TaskView> baseTaskViewOpt = taskViewService.findByName("Basisaufgabe");
+                if (baseTaskViewOpt.isPresent()) {
+                    TaskView baseTaskView = baseTaskViewOpt.get();
                     task.setTaskView(baseTaskView);
                 } else {
                     // Fallback: Erste verfügbare TaskView verwenden
