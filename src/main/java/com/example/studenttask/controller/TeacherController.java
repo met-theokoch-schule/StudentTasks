@@ -22,6 +22,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
@@ -74,28 +75,49 @@ public class TeacherController {
         return "teacher/task-create";
     }
 
-    @PostMapping("/tasks")
-    public String createTask(@ModelAttribute("task") Task task, Principal principal, RedirectAttributes redirectAttributes) {
-        try {
-            User teacher = userService.findByPreferredUsername(principal.getName());
+    @PostMapping("/tasks/create")
+    public String createTask(@ModelAttribute Task task, @RequestParam(required = false) List<String> selectedGroups,
+                            BindingResult bindingResult, Model model, Principal principal,
+                            RedirectAttributes redirectAttributes) {
+        if (bindingResult.hasErrors()) {
+            return "teacher/task-create";
+        }
 
-            // Aufgabe konfigurieren
+        try {
+            // Lehrer laden
+            User teacher = userService.findByOpenIdSubject(principal.getName())
+                .orElseThrow(() -> new RuntimeException("Lehrer nicht gefunden"));
             task.setCreatedBy(teacher);
             task.setCreatedAt(LocalDateTime.now());
 
-            // TaskView setzen
-            if (task.getTaskView() != null && task.getTaskView().getId() != null) {
-                Optional<TaskView> taskViewOpt = taskViewService.findById(task.getTaskView().getId());
-                if (taskViewOpt.isPresent()) {
-                    task.setTaskView(taskViewOpt.get());
+            // Basisaufgabe: Wenn keine View ausgewählt, setze "Basisaufgabe"
+            if (task.getTaskView() == null) {
+                TaskView baseTaskView = taskViewService.findByName("Basisaufgabe");
+                if (baseTaskView != null) {
+                    task.setTaskView(baseTaskView);
                 } else {
-                    redirectAttributes.addFlashAttribute("error", "Ungültiger Aufgabentyp ausgewählt.");
-                    return "redirect:/teacher/tasks/create";
+                    // Fallback: Erste verfügbare TaskView verwenden
+                    List<TaskView> taskViews = taskViewService.findActiveTaskViews();
+                    if (!taskViews.isEmpty()) {
+                        task.setTaskView(taskViews.get(0));
+                    }
+                }
+            }
+
+            // Gruppen IDs konvertieren
+            List<Long> groupIds = new ArrayList<>();
+            if (selectedGroups != null) {
+                for (String groupId : selectedGroups) {
+                    try {
+                        groupIds.add(Long.parseLong(groupId));
+                    } catch (NumberFormatException e) {
+                        // Ignoriere ungültige IDs
+                    }
                 }
             }
 
             // Aufgabe speichern
-            Task savedTask = taskService.createTask(task, new ArrayList<>());
+            Task savedTask = taskService.createTask(task, groupIds);
 
             redirectAttributes.addFlashAttribute("success", "Aufgabe '" + savedTask.getTitle() + "' wurde erfolgreich erstellt.");
             return "redirect:/teacher/tasks";
