@@ -101,7 +101,7 @@ public class TeacherController {
                 .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
             // Task View setzen
-            TaskView taskView = taskViewService.findById(taskViewId)
+            TaskView taskView = taskViewService.findById(Long.toString(taskViewId))
                 .orElseThrow(() -> new RuntimeException("TaskView nicht gefunden"));
             task.setTaskView(taskView);
 
