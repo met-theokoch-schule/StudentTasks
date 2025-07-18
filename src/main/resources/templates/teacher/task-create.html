@@ -1,0 +1,102 @@
+
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neue Aufgabe erstellen</title>
+    <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/custom.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1><i class="fas fa-plus"></i> Neue Aufgabe erstellen</h1>
+                    <a th:href="@{/teacher/tasks}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Zurück zur Übersicht
+                    </a>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <form th:action="@{/teacher/tasks}" method="post" th:object="${task}">
+                            <!-- Titel -->
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Aufgabentitel *</label>
+                                <input type="text" class="form-control" id="title" th:field="*{title}" required>
+                            </div>
+
+                            <!-- Beschreibung (Markdown) -->
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Aufgabenbeschreibung (Markdown) *</label>
+                                <textarea class="form-control" id="description" th:field="*{description}" rows="8" required
+                                    placeholder="Beschreiben Sie die Aufgabe in Markdown-Format..."></textarea>
+                                <div class="form-text">Sie können Markdown-Syntax verwenden für Formatierung.</div>
+                            </div>
+
+                            <!-- View Type Auswahl -->
+                            <div class="mb-3">
+                                <label for="viewType" class="form-label">Aufgaben-Typ *</label>
+                                <select class="form-select" id="viewType" th:field="*{viewType}" required>
+                                    <option value="">-- Bitte wählen --</option>
+                                    <option th:each="view : ${availableViews}" 
+                                            th:value="${view.id}" 
+                                            th:text="${view.name}">View Name</option>
+                                </select>
+                            </div>
+
+                            <!-- Default Submission -->
+                            <div class="mb-3">
+                                <label for="defaultSubmission" class="form-label">Standard-Vorlage</label>
+                                <textarea class="form-control" id="defaultSubmission" th:field="*{defaultSubmission}" rows="5"
+                                    placeholder="Optional: Vorlage für Schüler-Abgaben..."></textarea>
+                                <div class="form-text">Diese Vorlage wird als Ausgangspunkt für Schüler angezeigt.</div>
+                            </div>
+
+                            <!-- Gruppen-Auswahl -->
+                            <div class="mb-3">
+                                <label class="form-label">Zielgruppen *</label>
+                                <div th:if="${availableGroups != null and !availableGroups.isEmpty()}">
+                                    <div th:each="group : ${availableGroups}" class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               th:id="'group_' + ${group.id}" 
+                                               th:value="${group.id}" 
+                                               name="assignedGroupIds">
+                                        <label class="form-check-label" th:for="'group_' + ${group.id}" th:text="${group.name}">
+                                            Gruppenname
+                                        </label>
+                                    </div>
+                                </div>
+                                <div th:if="${availableGroups == null or availableGroups.isEmpty()}" class="text-muted">
+                                    Keine Gruppen verfügbar
+                                </div>
+                            </div>
+
+                            <!-- Fälligkeitsdatum -->
+                            <div class="mb-3">
+                                <label for="dueDate" class="form-label">Fälligkeitsdatum</label>
+                                <input type="datetime-local" class="form-control" id="dueDate" th:field="*{dueDate}">
+                            </div>
+
+                            <!-- Submit Buttons -->
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save"></i> Aufgabe erstellen
+                                </button>
+                                <a th:href="@{/teacher/tasks}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Abbrechen
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>
