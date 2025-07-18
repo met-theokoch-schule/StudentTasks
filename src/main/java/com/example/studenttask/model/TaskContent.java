@@ -132,10 +132,6 @@ public class TaskContent {
         this.isSubmitted = isSubmitted;
     }
     
-    public Submission getSubmission() {
-        return submission;
-    }
-    
     public void setSubmission(Submission submission) {
         this.submission = submission;
     }
