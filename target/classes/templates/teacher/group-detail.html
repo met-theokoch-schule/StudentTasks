@@ -1,0 +1,155 @@
+
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Gruppe: ' + ${group.name}">Gruppe Details</title>
+    <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/custom.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1><i class="fas fa-users"></i> <span th:text="${group.name}">Gruppenname</span></h1>
+                        <p class="text-muted mb-0" th:text="${group.description}">Gruppenbeschreibung</p>
+                    </div>
+                    <div>
+                        <a th:href="@{/teacher/groups}" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-arrow-left"></i> Alle Gruppen
+                        </a>
+                        <a th:href="@{/teacher/tasks/create}" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Neue Aufgabe
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Statistik-Übersicht -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body text-center">
+                                <div class="fs-2 fw-bold" th:text="${statistics.totalStudents}">12</div>
+                                <div>Schüler gesamt</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body text-center">
+                                <div class="fs-2 fw-bold" th:text="${statistics.activeTasks}">5</div>
+                                <div>Aktive Aufgaben</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body text-center">
+                                <div class="fs-2 fw-bold" th:text="${statistics.pendingSubmissions}">23</div>
+                                <div>Offene Abgaben</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body text-center">
+                                <div class="fs-2 fw-bold" th:text="${statistics.completedSubmissions}">17</div>
+                                <div>Abgeschlossen</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Schüler und ihre Aufgaben -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-graduation-cap"></i> Schüler und zugeordnete Aufgaben</h5>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${studentTasks != null and !studentTasks.isEmpty()}">
+                            <div th:each="studentTask : ${studentTasks}" class="border rounded p-3 mb-3">
+                                <!-- Schüler-Header -->
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-user"></i> 
+                                        <span th:text="${studentTask.student.name}">Max Mustermann</span>
+                                        <small class="text-muted" th:text="'(' + ${studentTask.student.email} + ')'">
+                                            (max@school.de)
+                                        </small>
+                                    </h6>
+                                    <span class="badge bg-secondary" 
+                                          th:text="${studentTask.tasks.size()} + ' Aufgaben'">3 Aufgaben</span>
+                                </div>
+
+                                <!-- Aufgaben-Liste für diesen Schüler -->
+                                <div class="row">
+                                    <div th:each="taskInfo : ${studentTask.tasks}" class="col-md-6 col-lg-4 mb-2">
+                                        <div class="card card-sm">
+                                            <div class="card-body p-2">
+                                                <div class="d-flex justify-content-between align-items-start mb-1">
+                                                    <h6 class="card-title mb-1 small" th:text="${taskInfo.task.title}">
+                                                        Aufgabentitel
+                                                    </h6>
+                                                    <span th:class="'badge badge-sm ' + ${taskInfo.statusBadgeClass}" 
+                                                          th:text="${taskInfo.status.name}">Status</span>
+                                                </div>
+                                                <p class="card-text small text-muted mb-2">
+                                                    <i class="fas fa-calendar"></i> 
+                                                    Fällig: <span th:text="${#temporals.format(taskInfo.task.dueDate, 'dd.MM.yyyy')}">
+                                                        31.12.2024
+                                                    </span>
+                                                </p>
+                                                <div class="d-flex gap-1">
+                                                    <a th:href="@{/teacher/tasks/{taskId}/submissions(taskId=${taskInfo.task.id})}" 
+                                                       class="btn btn-outline-primary btn-sm flex-fill">
+                                                        <i class="fas fa-eye"></i> Details
+                                                    </a>
+                                                    <a th:if="${taskInfo.hasSubmissions}" 
+                                                       th:href="@{/teacher/submissions/{userTaskId}/history(userTaskId=${taskInfo.userTaskId})}" 
+                                                       class="btn btn-outline-info btn-sm">
+                                                        <i class="fas fa-history"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Keine Schüler mit Aufgaben -->
+                        <div th:if="${studentTasks == null or studentTasks.isEmpty()}" class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Keine aktiven Aufgaben für diese Gruppe</h5>
+                            <p class="text-muted">Erstellen Sie Aufgaben und weisen Sie diese der Gruppe zu.</p>
+                            <a th:href="@{/teacher/tasks/create}" class="btn btn-success">
+                                <i class="fas fa-plus"></i> Aufgabe erstellen
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+    
+    <style>
+        .card-sm .card-body {
+            padding: 0.75rem;
+        }
+        .badge-sm {
+            font-size: 0.7em;
+        }
+        .bg-primary { background-color: #0d6efd !important; }
+        .bg-success { background-color: #198754 !important; }
+        .bg-warning { background-color: #ffc107 !important; }
+        .bg-danger { background-color: #dc3545 !important; }
+        .bg-info { background-color: #0dcaf0 !important; }
+    </style>
+</body>
+</html>
