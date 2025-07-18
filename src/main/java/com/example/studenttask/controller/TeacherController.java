@@ -121,4 +121,12 @@ public class TeacherController {
 
         return "teacher/groups-list";
     }
+
+    /**
+     * Weiterleitung zur Gruppen-Übersicht
+     */
+    @GetMapping("/groups")
+    public String redirectToGroups() {
+        return "redirect:/teacher/groups";
+    }
 }
