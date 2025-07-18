@@ -273,105 +273,6 @@ public class UserService {
             throw e;
         }
     }
-}
-package com.example.studenttask.service;
-
-import com.example.studenttask.model.User;
-import com.example.studenttask.model.Group;
-import com.example.studenttask.model.Role;
-import com.example.studenttask.repository.UserRepository;
-import com.example.studenttask.repository.GroupRepository;
-import com.example.studenttask.repository.RoleRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
-@Service
-@Transactional
-public class UserService {
-
-    @Autowired
-    private UserRepository userRepository;
-    
-    @Autowired
-    private GroupRepository groupRepository;
-    
-    @Autowired
-    private RoleRepository roleRepository;
-
-    /**
-     * Find user by OpenID Connect subject
-     */
-    public Optional<User> findByOpenIdSubject(String openIdSubject) {
-        return userRepository.findByOpenIdSubject(openIdSubject);
-    }
-
-    /**
-     * Find user by email
-     */
-    public Optional<User> findByEmail(String email) {
-        return userRepository.findByEmail(email);
-    }
-
-    /**
-     * Get all users with a specific role
-     */
-    public List<User> findUsersByRoleName(String roleName) {
-        return userRepository.findByRoleName(roleName);
-    }
-
-    /**
-     * Get all teachers
-     */
-    public List<User> findTeachers() {
-        return findUsersByRoleName("TEACHER");
-    }
-
-    /**
-     * Get all students
-     */
-    public List<User> findStudents() {
-        return findUsersByRoleName("STUDENT");
-    }
-
-    /**
-     * Get all users in a specific group
-     */
-    public List<User> findUsersByGroupName(String groupName) {
-        return userRepository.findByGroupName(groupName);
-    }
-
-    /**
-     * Save or update user
-     */
-    public User saveUser(User user) {
-        return userRepository.save(user);
-    }
-
-    /**
-     * Update user's last login time
-     */
-    public void updateLastLogin(Long userId) {
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            user.setLastLogin(LocalDateTime.now());
-            userRepository.save(user);
-        }
-    }
-
-    /**
-     * Check if user has a specific role
-     */
-    public boolean hasRole(User user, String roleName) {
-        return user.getRoles().stream()
-                .anyMatch(role -> role.getName().equals(roleName));
-    }
 
     /**
      * Check if user is in a specific group
@@ -382,46 +283,41 @@ public class UserService {
     }
 
     /**
-     * Add role to user
-     */
-    public void addRoleToUser(Long userId, String roleName) {
-        Optional<User> userOpt = userRepository.findById(userId);
-        Optional<Role> roleOpt = roleRepository.findByName(roleName);
-        
-        if (userOpt.isPresent() && roleOpt.isPresent()) {
-            User user = userOpt.get();
-            Role role = roleOpt.get();
-            user.getRoles().add(role);
-            userRepository.save(user);
-        }
-    }
-
-    /**
      * Add user to group
      */
-    public void addUserToGroup(Long userId, String groupName) {
-        Optional<User> userOpt = userRepository.findById(userId);
-        Optional<Group> groupOpt = groupRepository.findByName(groupName);
-        
-        if (userOpt.isPresent() && groupOpt.isPresent()) {
-            User user = userOpt.get();
-            Group group = groupOpt.get();
-            user.getGroups().add(group);
-            userRepository.save(user);
-        }
+    public void addUserToGroup(User user, Group group) {
+        user.getGroups().add(group);
+        group.getUsers().add(user);
+        userRepository.save(user);
     }
 
     /**
-     * Get all users
+     * Remove user from group
      */
-    public List<User> findAllUsers() {
-        return userRepository.findAll();
+    public void removeUserFromGroup(User user, Group group) {
+        user.getGroups().remove(group);
+        group.getUsers().remove(user);
+        userRepository.save(user);
     }
 
     /**
-     * Find user by ID
+     * Get all teachers
      */
-    public Optional<User> findById(Long id) {
-        return userRepository.findById(id);
+    public List<User> getAllTeachers() {
+        return userRepository.findByRoleName("TEACHER");
+    }
+
+    /**
+     * Get all students
+     */
+    public List<User> getAllStudents() {
+        return userRepository.findByRoleName("STUDENT");
+    }
+
+    /**
+     * Get users by group
+     */
+    public List<User> getUsersByGroupName(String groupName) {
+        return userRepository.findByGroupName(groupName);
     }
 }
