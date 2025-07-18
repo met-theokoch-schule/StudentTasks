@@ -22,5 +22,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u JOIN u.groups g WHERE g.name = :groupName")
     List<User> findByGroupName(String groupName);
 
-    User findByUsername(String username);
+    User findByPreferredUsername(String preferredUsername);
 }

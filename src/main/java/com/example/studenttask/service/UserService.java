@@ -340,7 +340,7 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public User findByUsername(String username) {
-        return userRepository.findByUsername(username);
+    public User findByPreferredUsername(String preferredUsername) {
+        return userRepository.findByPreferredUsername(preferredUsername);
     }
 }
