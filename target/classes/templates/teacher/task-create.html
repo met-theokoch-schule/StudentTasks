@@ -52,134 +52,94 @@
                 <div class="card">
                     <div class="card-body">
                         <form th:action="@{/teacher/tasks}" method="post" th:object="${task}">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <!-- Titel -->
-                                    <div class="mb-3">
-                                        <label for="title" class="form-label">Aufgabentitel *</label>
-                                        <input type="text" class="form-control" id="title" th:field="*{title}" required>
-                                        <div class="form-text">Geben Sie einen aussagekräftigen Titel für die Aufgabe ein.</div>
-                                    </div>
+                            <!-- Titel -->
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Aufgabentitel *</label>
+                                <input type="text" class="form-control" id="title" th:field="*{title}" required>
+                                <div class="form-text">Geben Sie einen aussagekräftigen Titel für die Aufgabe ein.</div>
+                            </div>
 
-                                    <!-- Beschreibung (Markdown) -->
-                                    <div class="mb-3">
-                                        <label for="description" class="form-label">Aufgabenbeschreibung *</label>
-                                        <div class="row">
-                                            <div class="col-12">
-                                                <ul class="nav nav-tabs" id="descriptionTabs" role="tablist">
-                                                    <li class="nav-item" role="presentation">
-                                                        <button class="nav-link active" id="markdown-tab" data-bs-toggle="tab" data-bs-target="#markdown-content" type="button" role="tab">Markdown</button>
-                                                    </li>
-                                                    <li class="nav-item" role="presentation">
-                                                        <button class="nav-link" id="preview-tab" data-bs-toggle="tab" data-bs-target="#preview-content" type="button" role="tab">Vorschau</button>
-                                                    </li>
-                                                </ul>
-                                                <div class="tab-content border border-top-0 p-3" id="descriptionTabContent">
-                                                    <div class="tab-pane fade show active" id="markdown-content" role="tabpanel">
-                                                        <textarea class="form-control" id="description" th:field="*{description}" rows="8" required
-                                                                  placeholder="Geben Sie hier die Aufgabenbeschreibung in Markdown-Format ein..."></textarea>
-                                                        <div class="form-text">
-                                                            Sie können Markdown-Syntax verwenden: **fett**, *kursiv*, `code`, [Links](url), etc.
-                                                        </div>
-                                                    </div>
-                                                    <div class="tab-pane fade" id="preview-content" role="tabpanel">
-                                                        <div id="preview-area" class="border rounded p-3 bg-light" style="min-height: 200px;">
-                                                            <em class="text-muted">Vorschau wird hier angezeigt...</em>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <!-- Task View Auswahl -->
-                                    <div class="mb-3">
-                                        <label for="taskView" class="form-label">Aufgabentyp *</label>
-                                        <select class="form-select" id="taskView" th:field="*{taskView}" required>
-                                            <option value="">-- Aufgabentyp wählen --</option>
-                                            <option th:each="view : ${taskViews}" 
-                                                    th:value="${view.id}" 
-                                                    th:text="${view.name}"
-                                                    th:attr="data-description=${view.description}">
-                                                TaskView Name
-                                            </option>
-                                        </select>
-                                        <div class="form-text" id="taskViewDescription">
-                                            Wählen Sie den Typ der Aufgabe aus.
-                                        </div>
-                                    </div>
-
-                                    <!-- Fälligkeitsdatum -->
-                                    <div class="mb-3">
-                                        <label for="dueDate" class="form-label">Fälligkeitsdatum</label>
-                                        <input type="datetime-local" class="form-control" id="dueDate" th:field="*{dueDate}">
-                                        <div class="form-text">Optional: Datum und Uhrzeit der Fälligkeit</div>
-                                    </div>
-
-                                    <!-- Gruppen-Auswahl -->
-                                    <div class="mb-3">
-                                        <label for="groups" class="form-label">Gruppen zuweisen</label>
-                                        <div class="form-text mb-2">Wählen Sie die Gruppen aus, die diese Aufgabe erhalten sollen.</div>
-                                        <div class="row">
-                                            <div th:each="group : ${groups}" class="col-md-6 mb-2">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" 
-                                                           th:id="'group-' + ${group.id}" 
-                                                           name="selectedGroups" 
-                                                           th:value="${group.id}">
-                                                    <label class="form-check-label" th:for="'group-' + ${group.id}">
-                                                        <span th:text="${group.name}">Gruppe</span>
-                                                        <small class="text-muted" th:text="'(' + ${#lists.size(group.students)} + ' Schüler)'"></small>
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div th:if="${groups == null or groups.isEmpty()}" class="alert alert-info">
-                                            <i class="fas fa-info-circle"></i> Sie sind noch keinen Gruppen zugeordnet. Wenden Sie sich an den Administrator.
-                                        </div>
-                                    </div>
-
-                                    <!-- Status -->
-                                    <div class="mb-3">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="isActive" th:field="*{active}" checked>
-                                            <label class="form-check-label" for="isActive">
-                                                Aufgabe ist aktiv
-                                            </label>
-                                        </div>
-                                        <div class="form-text">Nur aktive Aufgaben sind für Schüler sichtbar.</div>
-                                    </div>
+                            <!-- Aufgabentyp -->
+                            <div class="mb-3">
+                                <label for="taskView" class="form-label">Aufgabentyp *</label>
+                                <select class="form-select" id="taskView" th:field="*{taskView}" required>
+                                    <option value="">-- Aufgabentyp wählen --</option>
+                                    <option th:each="view : ${taskViews}" 
+                                            th:value="${view.id}" 
+                                            th:text="${view.name}"
+                                            th:attr="data-description=${view.description}">
+                                        TaskView Name
+                                    </option>
+                                </select>
+                                <div class="form-text" id="taskViewDescription">
+                                    Wählen Sie den Typ der Aufgabe aus.
                                 </div>
                             </div>
 
-                            <!-- Default Submission -->
-                            <div class="row">
-                                <div class="col-12">
-                                    <div class="mb-3">
-                                        <label for="defaultSubmission" class="form-label">Standard-Abgabe (optional)</label>
-                                        <textarea class="form-control" id="defaultSubmission" th:field="*{defaultSubmission}" rows="4"
-                                                  placeholder="Geben Sie hier den Standard-Inhalt ein, mit dem die Aufgabe vorausgefüllt werden soll..."></textarea>
-                                        <div class="form-text">
-                                            Dieser Text wird als Ausgangsbasis in der Aufgabe angezeigt. Format abhängig vom gewählten Aufgabentyp.
-                                        </div>
-                                    </div>
+                            <!-- Beschreibung -->
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Aufgabenbeschreibung *</label>
+                                <textarea class="form-control" id="description" th:field="*{description}" rows="8" required
+                                          placeholder="Geben Sie hier die Aufgabenbeschreibung ein..."></textarea>
+                                <div class="form-text">
+                                    Beschreiben Sie die Aufgabe ausführlich. Markdown-Syntax wird unterstützt.
                                 </div>
+                            </div>
+
+                            <!-- Standard-Vorlage -->
+                            <div class="mb-3">
+                                <label for="defaultSubmission" class="form-label">Standard-Vorlage (optional)</label>
+                                <textarea class="form-control" id="defaultSubmission" th:field="*{defaultSubmission}" rows="4"
+                                          placeholder="Geben Sie hier den Standard-Inhalt ein, mit dem die Aufgabe vorausgefüllt werden soll..."></textarea>
+                                <div class="form-text">
+                                    Dieser Text wird als Ausgangsbasis in der Aufgabe angezeigt. Format abhängig vom gewählten Aufgabentyp.
+                                </div>
+                            </div>
+
+                            <!-- Fälligkeitsdatum -->
+                            <div class="mb-3">
+                                <label for="dueDate" class="form-label">Fälligkeitsdatum (optional)</label>
+                                <input type="datetime-local" class="form-control" id="dueDate" th:field="*{dueDate}">
+                                <div class="form-text">Optional: Datum und Uhrzeit der Fälligkeit</div>
+                            </div>
+
+                            <!-- Gruppen-Auswahl -->
+                            <div class="mb-3">
+                                <label for="selectedGroups" class="form-label">Gruppen zuweisen</label>
+                                <select class="form-select" id="selectedGroups" name="selectedGroups" multiple size="5">
+                                    <option th:each="group : ${groups}" 
+                                            th:value="${group.id}" 
+                                            th:text="${group.name + ' (' + #lists.size(group.students) + ' Schüler)'}">
+                                        Gruppe
+                                    </option>
+                                </select>
+                                <div class="form-text">
+                                    Halten Sie Ctrl/Cmd gedrückt, um mehrere Gruppen auszuwählen. 
+                                    <span th:if="${groups == null or groups.isEmpty()}" class="text-warning">
+                                        Sie sind noch keinen Gruppen zugeordnet. Wenden Sie sich an den Administrator.
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Status -->
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="isActive" th:field="*{active}" checked>
+                                    <label class="form-check-label" for="isActive">
+                                        Aufgabe ist aktiv
+                                    </label>
+                                </div>
+                                <div class="form-text">Nur aktive Aufgaben sind für Schüler sichtbar.</div>
                             </div>
 
                             <!-- Buttons -->
-                            <div class="row">
-                                <div class="col-12">
-                                    <div class="d-flex justify-content-between">
-                                        <a th:href="@{/teacher/tasks}" class="btn btn-secondary">
-                                            <i class="fas fa-times"></i> Abbrechen
-                                        </a>
-                                        <button type="submit" class="btn btn-success">
-                                            <i class="fas fa-save"></i> Aufgabe erstellen
-                                        </button>
-                                    </div>
-                                </div>
+                            <div class="d-flex justify-content-between">
+                                <a th:href="@{/teacher/tasks}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Abbrechen
+                                </a>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save"></i> Aufgabe erstellen
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -195,26 +155,6 @@
             const selectedOption = this.options[this.selectedIndex];
             const description = selectedOption.getAttribute('data-description') || 'Wählen Sie den Typ der Aufgabe aus.';
             document.getElementById('taskViewDescription').textContent = description;
-        });
-
-        // Markdown Vorschau (vereinfacht)
-        document.getElementById('preview-tab').addEventListener('click', function() {
-            const markdownText = document.getElementById('description').value;
-            const previewArea = document.getElementById('preview-area');
-
-            if (markdownText.trim() === '') {
-                previewArea.innerHTML = '<em class="text-muted">Keine Beschreibung eingegeben...</em>';
-                return;
-            }
-
-            // Einfache Markdown-zu-HTML Konvertierung (für Demo)
-            let html = markdownText
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                .replace(/`(.*?)`/g, '<code>$1</code>')
-                .replace(/\n/g, '<br>');
-
-            previewArea.innerHTML = html;
         });
     </script>
 </body>
