@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -94,7 +95,7 @@ public class TeacherController {
             }
 
             // Aufgabe speichern
-            Task savedTask = taskService.save(task);
+            Task savedTask = taskService.createTask(task, new ArrayList<>());
 
             redirectAttributes.addFlashAttribute("success", "Aufgabe '" + savedTask.getTitle() + "' wurde erfolgreich erstellt.");
             return "redirect:/teacher/tasks";
