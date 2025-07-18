@@ -20,4 +20,20 @@ public interface TaskContentRepository extends JpaRepository<TaskContent, Long> 
     Optional<TaskContent> findLatestByUserTask(@Param("userTask") UserTask userTask);
     
     Optional<TaskContent> findByUserTaskAndVersion(UserTask userTask, Integer version);
+    
+    Optional<TaskContent> findTopByUserTaskOrderByVersionDesc(UserTask userTask);
+    
+    Optional<TaskContent> findTopByUserTaskAndIsSubmittedOrderByVersionDesc(UserTask userTask, Boolean isSubmitted);
+    
+    List<TaskContent> findByUserTaskAndIsSubmittedOrderByVersionDesc(UserTask userTask, Boolean isSubmitted);
+    
+    Long countByUserTask(UserTask userTask);
+    
+    Long countByUserTaskAndIsSubmitted(UserTask userTask, Boolean isSubmitted);
+    
+    void deleteByUserTask(UserTask userTask);
+    
+    boolean existsByUserTask(UserTask userTask);
+    
+    boolean existsByUserTaskAndIsSubmitted(UserTask userTask, Boolean isSubmitted);
 }
