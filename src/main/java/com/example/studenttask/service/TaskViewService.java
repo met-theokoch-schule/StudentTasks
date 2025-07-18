@@ -51,6 +51,14 @@ public class TaskViewService {
     public TaskView saveTaskView(TaskView taskView) {
         return taskViewRepository.save(taskView);
     }
+    
+    public List<TaskView> findAll() {
+        return taskViewRepository.findAll();
+    }
+    
+    public TaskView findById(Long id) {
+        return taskViewRepository.findById(id).orElse(null);
+    }
 
     /**
      * Create a new task view

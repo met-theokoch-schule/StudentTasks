@@ -222,8 +222,4 @@ public class TaskService {
 
         return savedTask;
     }
-
-    public Task findById(Long id) {
-        return taskRepository.findById(id).orElse(null);
-    }
 }
