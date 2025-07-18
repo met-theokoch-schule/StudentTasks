@@ -167,8 +167,8 @@ public class Task {
         this.userTasks = userTasks;
     }
 
-    public TaskView getTaskView() {
-        return taskView;
+    public void setTaskView(TaskView taskView) {
+        this.taskView = taskView;
     }
 
     @Override
