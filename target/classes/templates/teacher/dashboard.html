@@ -1,0 +1,184 @@
+
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lehrer Dashboard - Aufgaben-System</title>
+    <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/custom.css}" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand" th:href="@{/teacher/dashboard}">
+                <i class="fas fa-chalkboard-teacher"></i> Lehrer-Bereich
+            </a>
+            <div class="navbar-nav me-auto">
+                <a class="nav-link" th:href="@{/teacher/dashboard}">Dashboard</a>
+                <a class="nav-link" th:href="@{/teacher/tasks}">Aufgaben</a>
+                <a class="nav-link" th:href="@{/teacher/groups}">Gruppen</a>
+            </div>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3" th:text="${teacher?.name ?: 'Lehrer'}"></span>
+                <a class="btn btn-outline-light" th:href="@{/dashboard}">Hauptmenü</a>
+                <a class="btn btn-outline-light ms-2" th:href="@{/logout}">Abmelden</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h1>Lehrer Dashboard</h1>
+                <p class="lead" th:text="'Willkommen zurück, ' + ${teacher?.name ?: 'Lehrer'} + '!'"></p>
+            </div>
+        </div>
+
+        <!-- Schnellzugriff Cards -->
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h5 class="card-title">Aufgaben</h5>
+                                <h2 th:text="${totalTasks ?: 0}">0</h2>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-tasks fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h5 class="card-title">Aktive Aufgaben</h5>
+                                <h2>0</h2>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-play-circle fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h5 class="card-title">Zu bewerten</h5>
+                                <h2>0</h2>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-check-circle fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h5 class="card-title">Gruppen</h5>
+                                <h2>0</h2>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-users fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aktionen -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-plus-circle"></i> Schnellaktionen</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <a th:href="@{/teacher/tasks/create}" class="btn btn-success btn-lg w-100 mb-3">
+                                    <i class="fas fa-plus"></i> Neue Aufgabe erstellen
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <a th:href="@{/teacher/tasks}" class="btn btn-primary btn-lg w-100 mb-3">
+                                    <i class="fas fa-list"></i> Alle Aufgaben anzeigen
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Letzte Aufgaben -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-clock"></i> Letzte Aufgaben</h5>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${recentTasks != null and !recentTasks.isEmpty()}">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Titel</th>
+                                            <th>Erstellt</th>
+                                            <th>Fälligkeitsdatum</th>
+                                            <th>Status</th>
+                                            <th>Aktionen</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="task : ${recentTasks}">
+                                            <td th:text="${task.title}">Aufgabentitel</td>
+                                            <td th:text="${#temporals.format(task.createdAt, 'dd.MM.yyyy HH:mm')}">01.01.2024 10:00</td>
+                                            <td th:text="${task.dueDate != null ? #temporals.format(task.dueDate, 'dd.MM.yyyy') : 'Kein Datum'}">31.12.2024</td>
+                                            <td>
+                                                <span class="badge bg-success" th:if="${task.active}">Aktiv</span>
+                                                <span class="badge bg-secondary" th:unless="${task.active}">Inaktiv</span>
+                                            </td>
+                                            <td>
+                                                <a th:href="@{'/teacher/tasks/' + ${task.id}}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i> Anzeigen
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div th:if="${recentTasks == null or recentTasks.isEmpty()}" class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Noch keine Aufgaben erstellt.</p>
+                            <a th:href="@{/teacher/tasks/create}" class="btn btn-success">
+                                <i class="fas fa-plus"></i> Erste Aufgabe erstellen
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>

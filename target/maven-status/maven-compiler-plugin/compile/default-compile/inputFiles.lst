@@ -10,6 +10,7 @@
 /home/runner/workspace/src/main/java/com/example/studenttask/repository/TaskViewRepository.java
 /home/runner/workspace/src/main/java/com/example/studenttask/repository/GroupRepository.java
 /home/runner/workspace/src/main/java/com/example/studenttask/service/TaskStatusService.java
+/home/runner/workspace/src/main/java/com/example/studenttask/controller/TeacherController.java
 /home/runner/workspace/src/main/java/com/example/studenttask/repository/SubmissionRepository.java
 /home/runner/workspace/src/main/java/com/example/studenttask/model/TaskReview.java
 /home/runner/workspace/src/main/java/com/example/studenttask/repository/TaskStatusRepository.java
