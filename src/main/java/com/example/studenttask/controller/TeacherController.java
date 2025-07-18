@@ -94,7 +94,7 @@ public class TeacherController {
             }
 
             // Aufgabe speichern
-            Task savedTask = taskService.saveTask(task);
+            Task savedTask = taskService.save(task);
 
             redirectAttributes.addFlashAttribute("success", "Aufgabe '" + savedTask.getTitle() + "' wurde erfolgreich erstellt.");
             return "redirect:/teacher/tasks";
