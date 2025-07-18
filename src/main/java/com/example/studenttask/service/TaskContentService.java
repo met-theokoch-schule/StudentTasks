@@ -179,4 +179,26 @@ public class TaskContentService {
         public LocalDateTime getLastSaved() { return lastSaved; }
         public boolean isLatestIsSubmitted() { return latestIsSubmitted; }
     }
+
+    public TaskContent saveContent(UserTask userTask, String content) {
+        TaskContent taskContent = new TaskContent();
+        taskContent.setUserTask(userTask);
+        taskContent.setContent(content);
+        taskContent.setVersion(getNextVersionNumber(userTask));
+        taskContent.setSavedAt(LocalDateTime.now());
+        taskContent.setSubmitted(false);
+
+        return taskContentRepository.save(taskContent);
+    }
+
+    public TaskContent submitContent(UserTask userTask, String content) {
+        TaskContent taskContent = new TaskContent();
+        taskContent.setUserTask(userTask);
+        taskContent.setContent(content);
+        taskContent.setVersion(getNextVersionNumber(userTask));
+        taskContent.setSavedAt(LocalDateTime.now());
+        taskContent.setSubmitted(true);
+
+        return taskContentRepository.save(taskContent);
+    }
 }
