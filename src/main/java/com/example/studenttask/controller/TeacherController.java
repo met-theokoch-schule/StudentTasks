@@ -74,7 +74,7 @@ public class TeacherController {
                            Principal principal) {
 
         User teacher = userService.findByUsername(principal.getName());
-        TaskView taskView = taskViewService.findById(taskViewId);
+        TaskView taskView = taskViewService.findById(Long.valueOf(taskViewId));
 
         task.setCreatedBy(teacher);
         task.setTaskView(taskView);
