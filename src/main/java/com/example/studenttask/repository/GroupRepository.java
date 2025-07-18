@@ -24,25 +24,12 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
     List<Group> findAllWithUsers();
 
     /**
+     * Find all groups ordered by name
+     */
+    List<Group> findAllByOrderByName();
+
+    /**
      * Check if group exists by name
      */
-    boolean existsByName(String name);
-}
-package com.example.studenttask.repository;
-
-import com.example.studenttask.model.Group;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.Optional;
-
-@Repository
-public interface GroupRepository extends JpaRepository<Group, Long> {
-
-    Optional<Group> findByName(String name);
-    
-    List<Group> findAllByOrderByName();
-    
     boolean existsByName(String name);
 }
