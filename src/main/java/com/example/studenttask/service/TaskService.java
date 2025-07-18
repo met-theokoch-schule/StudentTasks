@@ -40,7 +40,7 @@ public class TaskService {
         task.setDueDate(dueDate);
         task.setViewType(viewType);
         task.setAssignedGroups(assignedGroups);
-        task.setActive(true);
+        task.setIsActive(true);
 
         return taskRepository.save(task);
     }
@@ -138,7 +138,7 @@ public class TaskService {
         Optional<Task> taskOpt = taskRepository.findById(taskId);
         if (taskOpt.isPresent()) {
             Task task = taskOpt.get();
-            task.setActive(false);
+            task.setIsActive(false);
             taskRepository.save(task);
         }
     }
@@ -150,7 +150,7 @@ public class TaskService {
         Optional<Task> taskOpt = taskRepository.findById(taskId);
         if (taskOpt.isPresent()) {
             Task task = taskOpt.get();
-            task.setActive(true);
+            task.setIsActive(true);
             taskRepository.save(task);
         }
     }
@@ -221,5 +221,19 @@ public class TaskService {
         // TODO: Implement group assignment
 
         return savedTask;
+    }
+    
+    /**
+     * Find all active tasks
+     */
+    public List<Task> findActiveTasks() {
+        return taskRepository.findByIsActiveTrue();
+    }
+
+    /**
+     * Find all inactive tasks
+     */
+    public List<Task> findInactiveTasks() {
+        return taskRepository.findByIsActiveFalse();
     }
 }
