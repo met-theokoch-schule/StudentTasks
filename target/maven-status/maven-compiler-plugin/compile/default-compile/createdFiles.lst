@@ -4,6 +4,7 @@ com/example/studenttask/service/TaskContentService.class
 com/example/studenttask/model/TaskStatus.class
 com/example/studenttask/service/TaskService.class
 com/example/studenttask/model/Submission.class
+com/example/studenttask/service/TaskStatusService.class
 com/example/studenttask/repository/TaskRepository.class
 com/example/studenttask/repository/TaskContentRepository.class
 com/example/studenttask/model/Task.class
@@ -17,5 +18,6 @@ com/example/studenttask/model/TaskReview.class
 com/example/studenttask/model/UserTask.class
 com/example/studenttask/service/TaskViewService.class
 com/example/studenttask/repository/TaskViewRepository.class
+com/example/studenttask/service/UserTaskService.class
 com/example/studenttask/repository/TaskReviewRepository.class
 com/example/studenttask/repository/SubmissionRepository.class
