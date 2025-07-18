@@ -8,12 +8,14 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 import java.util.List;
+import com.example.studenttask.model.Group;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByOpenIdSubject(String openIdSubject);
-
+    List<User> findByGroupsContaining(Group group);
+    int countByGroupsContaining(Group group);
     Optional<User> findByEmail(String email);
 
     @Query("SELECT u FROM User u JOIN u.roles r WHERE r.name = :roleName")

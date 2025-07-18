@@ -36,4 +36,5 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     List<Task> findByIsActiveOrderByCreatedAtDesc(Boolean isActive);
     List<Task> findByIsActiveTrue();
     List<Task> findByIsActiveFalse();
+    List<Task> findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(User createdBy);
 }

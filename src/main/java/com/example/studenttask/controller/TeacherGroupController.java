@@ -33,7 +33,8 @@ public class TeacherGroupController {
      */
     @GetMapping
     public String listGroups(Model model, Principal principal) {
-        User teacher = userService.findByOpenIdSubject(principal.getName());
+        User teacher = userService.findByOpenIdSubject(principal.getName())
+            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
         
         // Lade Gruppen mit aktiven Aufgaben des Lehrers
         List<GroupInfo> groups = groupService.getGroupsWithActiveTasksByTeacher(teacher);
@@ -49,7 +50,8 @@ public class TeacherGroupController {
      */
     @GetMapping("/{groupId}")
     public String showGroupDetail(@PathVariable Long groupId, Model model, Principal principal) {
-        User teacher = userService.findByOpenIdSubject(principal.getName());
+        User teacher = userService.findByOpenIdSubject(principal.getName())
+            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
         
         // Lade Gruppe
         Group group = groupService.findById(groupId);
