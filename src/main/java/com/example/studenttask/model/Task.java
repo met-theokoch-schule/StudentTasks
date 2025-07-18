@@ -167,10 +167,6 @@ public class Task {
         this.userTasks = userTasks;
     }
 
-    public void setTaskView(TaskView taskView) {
-        this.taskView = taskView;
-    }
-
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
