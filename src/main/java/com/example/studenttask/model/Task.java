@@ -128,6 +128,10 @@ public class Task {
         this.isActive = isActive;
     }
     
+    public void setActive(Boolean active) {
+        this.isActive = active;
+    }
+    
     public TaskView getViewType() {
         return viewType;
     }

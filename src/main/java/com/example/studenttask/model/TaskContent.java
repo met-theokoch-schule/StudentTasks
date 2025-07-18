@@ -92,6 +92,46 @@ public class TaskContent {
         this.isSubmitted = isSubmitted;
     }
     
+    public Boolean isSubmitted() {
+        return isSubmitted;
+    }
+    
+    public void setSubmitted(Boolean submitted) {
+        this.isSubmitted = submitted;
+    }
+    
+    public Submission getSubmission() {
+        return submission;
+    }
+    
+    public void setSubmission(Submission submission) {
+        this.submission = submission;
+    }
+    
+    public Integer getVersion() {
+        return version;
+    }
+    
+    public void setVersion(Integer version) {
+        this.version = version;
+    }
+    
+    public LocalDateTime getSavedAt() {
+        return savedAt;
+    }
+    
+    public void setSavedAt(LocalDateTime savedAt) {
+        this.savedAt = savedAt;
+    }
+    
+    public Boolean getIsSubmitted() {
+        return isSubmitted;
+    }
+    
+    public void setIsSubmitted(Boolean isSubmitted) {
+        this.isSubmitted = isSubmitted;
+    }
+    
     public Submission getSubmission() {
         return submission;
     }
