@@ -159,8 +159,16 @@ public class Task {
         return taskView;
     }
 
-    public void setTaskView(TaskView taskView) {
-        this.taskView = taskView;
+    public Set<UserTask> getUserTasks() {
+        return userTasks;
+    }
+
+    public void setUserTasks(Set<UserTask> userTasks) {
+        this.userTasks = userTasks;
+    }
+
+    public TaskView getTaskView() {
+        return taskView;
     }
 
     @Override
