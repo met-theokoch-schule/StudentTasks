@@ -4,6 +4,7 @@
 /home/runner/workspace/src/main/java/com/example/studenttask/model/TaskContent.java
 /home/runner/workspace/src/main/java/com/example/studenttask/repository/TaskReviewRepository.java
 /home/runner/workspace/src/main/java/com/example/studenttask/service/UserService.java
+/home/runner/workspace/src/main/java/com/example/studenttask/controller/TaskContentController.java
 /home/runner/workspace/src/main/java/com/example/studenttask/repository/TaskContentRepository.java
 /home/runner/workspace/src/main/java/com/example/studenttask/model/Group.java
 /home/runner/workspace/src/main/java/com/example/studenttask/model/TaskView.java
