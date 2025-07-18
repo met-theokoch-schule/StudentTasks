@@ -34,7 +34,7 @@ public class TeacherController {
 
     @GetMapping("/dashboard")
     public String teacherDashboard(Model model, Principal principal) {
-        User teacher = userService.findByUsername(principal.getName());
+        User teacher = userService.findByPreferredUsername(principal.getName());
         List<Task> recentTasks = taskService.findByCreatedBy(teacher);
 
         model.addAttribute("teacher", teacher);
@@ -46,7 +46,7 @@ public class TeacherController {
 
     @GetMapping("/tasks")
     public String tasksList(Model model, Principal principal) {
-        User teacher = userService.findByUsername(principal.getName());
+        User teacher = userService.findByPreferredUsername(principal.getName());
         List<Task> tasks = taskService.findByCreatedBy(teacher);
 
         model.addAttribute("teacher", teacher);
@@ -57,7 +57,7 @@ public class TeacherController {
 
     @GetMapping("/tasks/create")
     public String createTaskForm(Model model, Principal principal) {
-        User teacher = userService.findByUsername(principal.getName());
+        User teacher = userService.findByPreferredUsername(principal.getName());
         List<TaskView> taskViews = taskViewService.findAll();
 
         model.addAttribute("teacher", teacher);
@@ -73,14 +73,14 @@ public class TeacherController {
                            @RequestParam("groupIds") List<Long> groupIds,
                            Principal principal) {
 
-        User teacher = userService.findByUsername(principal.getName());
+        User teacher = userService.findByPreferredUsername(principal.getName());
         Optional<TaskView> taskViewOpt = taskViewService.findById(taskViewId);
-        
+
         if (taskViewOpt.isEmpty()) {
             // Handle case where TaskView is not found
             return "redirect:/teacher/tasks/create?error=invalid_view";
         }
-        
+
         TaskView taskView = taskViewOpt.get();
         task.setCreatedBy(teacher);
         task.setTaskView(taskView);
@@ -92,7 +92,7 @@ public class TeacherController {
 
     @GetMapping("/tasks/{taskId}")
     public String taskDetail(@PathVariable Long taskId, Model model, Principal principal) {
-        User teacher = userService.findByUsername(principal.getName());
+        User teacher = userService.findByPreferredUsername(principal.getName());
         Optional<Task> taskOpt = taskService.findById(taskId);
 
         if (taskOpt.isEmpty()) {
@@ -114,7 +114,7 @@ public class TeacherController {
 
     @GetMapping("/groups")
     public String groupsList(Model model, Principal principal) {
-        User teacher = userService.findByUsername(principal.getName());
+        User teacher = userService.findByPreferredUsername(principal.getName());
 
         model.addAttribute("teacher", teacher);
         // TODO: Implement group listing
