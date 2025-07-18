@@ -55,7 +55,8 @@ public class TeacherController {
 
     @GetMapping("/tasks/create")
     public String createTaskForm(Model model, Principal principal) {
-        User teacher = userService.findByPreferredUsername(principal.getName());
+        User teacher = userService.findByOpenIdSubject(principal.getName())
+            .orElseThrow(() -> new RuntimeException("Lehrer nicht gefunden"));
 
         // Neue Task für Formular erstellen
         Task task = new Task();
@@ -65,7 +66,9 @@ public class TeacherController {
         List<TaskView> taskViews = taskViewService.findActiveTaskViews();
 
         // Verfügbare Gruppen laden (alle Gruppen des Lehrers)
-        List<Group> groups = teacher.getGroups().stream().collect(Collectors.toList());
+        List<Group> groups = teacher.getGroups() != null ? 
+            teacher.getGroups().stream().collect(Collectors.toList()) : 
+            new ArrayList<>();
 
         model.addAttribute("teacher", teacher);
         model.addAttribute("task", task);
