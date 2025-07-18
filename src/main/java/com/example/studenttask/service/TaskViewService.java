@@ -1,4 +1,3 @@
-
 package com.example.studenttask.service;
 
 import com.example.studenttask.model.TaskView;
@@ -51,13 +50,9 @@ public class TaskViewService {
     public TaskView saveTaskView(TaskView taskView) {
         return taskViewRepository.save(taskView);
     }
-    
+
     public List<TaskView> findAll() {
         return taskViewRepository.findAll();
-    }
-    
-    public TaskView findById(String id) {
-        return taskViewRepository.findById(id).orElse(null);
     }
 
     /**
@@ -71,7 +66,7 @@ public class TaskViewService {
         taskView.setDescription(description);
         taskView.setTemplatePath(templatePath);
         taskView.setActive(isActive);
-        
+
         return taskViewRepository.save(taskView);
     }
 
