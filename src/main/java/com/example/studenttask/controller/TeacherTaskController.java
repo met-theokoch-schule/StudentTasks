@@ -51,8 +51,8 @@ public class TeacherTaskController {
         User teacher = userService.findByPreferredUsername(principal.getName());
         Task task = taskService.findById(taskId);
 
-        // Sicherheit: Prüfen ob Aufgabe dem Lehrer gehört
-        if (!task.getCreatedBy().equals(teacher)) {
+        // Sicherheit: Prüfen ob Aufgabe existiert und dem Lehrer gehört
+        if (task == null || !task.getCreatedBy().equals(teacher)) {
             return "redirect:/teacher/tasks";
         }
 

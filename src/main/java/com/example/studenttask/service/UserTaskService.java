@@ -1,4 +1,3 @@
-
 package com.example.studenttask.service;
 
 import com.example.studenttask.model.*;
@@ -15,7 +14,7 @@ public class UserTaskService {
 
     @Autowired
     private UserTaskRepository userTaskRepository;
-    
+
     @Autowired
     private TaskStatusService taskStatusService;
 
@@ -31,11 +30,11 @@ public class UserTaskService {
      */
     public UserTask findOrCreateUserTask(User user, Task task) {
         UserTask existing = userTaskRepository.findByUserAndTask(user, task);
-        
+
         if (existing != null) {
             return existing;
         }
-        
+
         // Neue UserTask erstellen mit Default-Status
         UserTask userTask = new UserTask();
         userTask.setUser(user);
@@ -43,7 +42,7 @@ public class UserTaskService {
         userTask.setStatus(taskStatusService.getDefaultStatus());
         userTask.setStartedAt(LocalDateTime.now());
         userTask.setLastModified(LocalDateTime.now());
-        
+
         return userTaskRepository.save(userTask);
     }
 
@@ -54,15 +53,15 @@ public class UserTaskService {
         if (!taskStatusService.canTransitionTo(userTask.getStatus(), newStatus)) {
             return false; // Übergang nicht erlaubt
         }
-        
+
         userTask.setStatus(newStatus);
         userTask.setLastModified(LocalDateTime.now());
-        
+
         // Wenn zum ersten Mal begonnen wird
         if ("IN_BEARBEITUNG".equals(newStatus.getName()) && userTask.getStartedAt() == null) {
             userTask.setStartedAt(LocalDateTime.now());
         }
-        
+
         userTaskRepository.save(userTask);
         return true;
     }
@@ -72,13 +71,6 @@ public class UserTaskService {
      */
     public List<UserTask> findByUser(User user) {
         return userTaskRepository.findByUser(user);
-    }
-
-    /**
-     * Alle UserTasks für eine Task
-     */
-    public List<UserTask> findByTask(Task task) {
-        return userTaskRepository.findByTask(task);
     }
 
     /**

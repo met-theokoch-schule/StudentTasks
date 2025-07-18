@@ -26,11 +26,6 @@ public interface UserTaskRepository extends JpaRepository<UserTask, Long> {
     List<UserTask> findByUser(User user);
 
     /**
-     * Alle UserTasks für eine Task
-     */
-    List<UserTask> findByTask(Task task);
-
-    /**
      * UserTasks nach User und Status
      */
     List<UserTask> findByUserAndStatus(User user, TaskStatus status);
