@@ -75,3 +75,99 @@ public class Group {
         return name != null ? name.hashCode() : 0;
     }
 }
+package com.example.studenttask.model;
+
+import jakarta.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
+
+@Entity
+@Table(name = "groups")
+public class Group {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(unique = true, nullable = false)
+    private String name;
+    
+    @Column
+    private String description;
+    
+    @ManyToMany(mappedBy = "groups")
+    private Set<User> users = new HashSet<>();
+    
+    @ManyToMany(mappedBy = "assignedGroups")
+    private Set<Task> tasks = new HashSet<>();
+    
+    public Group() {}
+    
+    public Group(String name, String description) {
+        this.name = name;
+        this.description = description;
+    }
+    
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+    
+    public void setId(Long id) {
+        this.id = id;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    public String getDescription() {
+        return description;
+    }
+    
+    public void setDescription(String description) {
+        this.description = description;
+    }
+    
+    public Set<User> getUsers() {
+        return users;
+    }
+    
+    public void setUsers(Set<User> users) {
+        this.users = users;
+    }
+    
+    public Set<Task> getTasks() {
+        return tasks;
+    }
+    
+    public void setTasks(Set<Task> tasks) {
+        this.tasks = tasks;
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Group group = (Group) obj;
+        return id != null ? id.equals(group.id) : group.id == null;
+    }
+    
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
+    }
+    
+    @Override
+    public String toString() {
+        return "Group{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                '}';
+    }
+}
