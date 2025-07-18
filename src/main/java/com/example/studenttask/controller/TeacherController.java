@@ -86,7 +86,13 @@ public class TeacherController {
     @GetMapping("/tasks/{taskId}")
     public String taskDetail(@PathVariable Long taskId, Model model, Principal principal) {
         User teacher = userService.findByUsername(principal.getName());
-        Task task = taskService.findById(taskId);
+        Optional<Task> taskOpt = taskService.findById(taskId);
+        
+        if (taskOpt.isEmpty()) {
+            return "redirect:/teacher/tasks";
+        }
+        
+        Task task = taskOpt.get();
         
         // Sicherheitscheck: Nur Ersteller kann Task anzeigen
         if (!task.getCreatedBy().equals(teacher)) {

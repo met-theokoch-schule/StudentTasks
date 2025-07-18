@@ -320,19 +320,27 @@ public class UserService {
     public List<User> getUsersByGroupName(String groupName) {
         return userRepository.findByGroupName(groupName);
     }
-    
+
     /**
      * Find user by OpenID Connect subject
      */
     public Optional<User> findByOpenIdSubject(String openIdSubject) {
         return userRepository.findByOpenIdSubject(openIdSubject);
     }
-    
+
     /**
      * Check if user has a specific role
      */
     public boolean hasRole(User user, String roleName) {
         return user.getRoles().stream()
                 .anyMatch(role -> role.getName().equals(roleName));
+    }
+
+    public List<User> findAll() {
+        return userRepository.findAll();
+    }
+
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username);
     }
 }

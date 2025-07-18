@@ -96,6 +96,10 @@ public class Task {
         this.createdBy = createdBy;
     }
     
+    public void setTaskView(TaskView taskView) {
+        this.taskView = taskView;
+    }
+    
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
