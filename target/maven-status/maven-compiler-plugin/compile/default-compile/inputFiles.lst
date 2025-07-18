@@ -1,5 +1,6 @@
 /home/runner/workspace/src/main/java/com/example/studenttask/repository/RoleRepository.java
 /home/runner/workspace/src/main/java/com/example/studenttask/model/Task.java
+/home/runner/workspace/src/main/java/com/example/studenttask/service/TaskContentService.java
 /home/runner/workspace/src/main/java/com/example/studenttask/model/TaskContent.java
 /home/runner/workspace/src/main/java/com/example/studenttask/repository/TaskReviewRepository.java
 /home/runner/workspace/src/main/java/com/example/studenttask/service/UserService.java
@@ -15,10 +16,13 @@
 /home/runner/workspace/src/main/java/com/example/studenttask/config/SecurityConfig.java
 /home/runner/workspace/src/main/java/com/example/studenttask/config/DataInitializer.java
 /home/runner/workspace/src/main/java/com/example/studenttask/model/TaskStatus.java
+/home/runner/workspace/src/main/java/com/example/studenttask/service/AuthenticationService.java
 /home/runner/workspace/src/main/java/com/example/studenttask/controller/HomeController.java
 /home/runner/workspace/src/main/java/com/example/studenttask/repository/UserTaskRepository.java
+/home/runner/workspace/src/main/java/com/example/studenttask/service/TaskViewService.java
 /home/runner/workspace/src/main/java/com/example/studenttask/model/Role.java
 /home/runner/workspace/src/main/java/com/example/studenttask/repository/TaskRepository.java
+/home/runner/workspace/src/main/java/com/example/studenttask/service/TaskService.java
 /home/runner/workspace/src/main/java/com/example/studenttask/model/Submission.java
 /home/runner/workspace/src/main/java/com/example/studenttask/model/UserTask.java
 /home/runner/workspace/src/main/java/com/example/studenttask/StudentTaskApplication.java
