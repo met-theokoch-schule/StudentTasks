@@ -27,6 +27,7 @@ Ein webbasiertes System, das es Lehrern ermöglicht, Aufgaben für Schülergrupp
 - **Frontend:** Thymeleaf Templates mit Bootstrap CSS
 - **Datenbank:** SQLite mit Hibernate (Community Dialect erforderlich)
 - **Authentifizierung:** OpenID Connect Provider
+- **Markdown:** CommonMark Java Library für Markdown-zu-HTML Konvertierung
 - **Build-Tool:** Maven (bereits konfiguriert)
 
 ### Systemanforderungen
@@ -79,14 +80,14 @@ Role
 Task
 ├── id (Long, Primary Key)
 ├── title (String)
-├── description (Text)
+├── description (Text) // Markdown-formatted task description
 ├── createdBy (User)
 ├── createdAt (LocalDateTime)
 ├── dueDate (LocalDateTime)
 ├── assignedGroups (Set<Group>)
 ├── isActive (Boolean)
 ├── viewType (String) // References to available task views (foreign key to TaskView.id)
-└── initialContent (Text) // Initial task content/template (JSON/XML)
+└── defaultSubmission (Text) // Default content for submissions in the format expected by the task view
 
 TaskView
 ├── id (String, Primary Key) // e.g., "html-editor", "math-exercise", "code-editor"
@@ -241,10 +242,12 @@ src/
   - Login/Dashboard Views
 
 ### Phase 2: Datenmodell und Core Services (Woche 3-4)
-- [x] **Sprint 2.1:** Datenbankentitäten implementieren
+- [ ] **Sprint 2.1:** Datenbankentitäten implementieren
   - JPA Entities für alle Modelle (User, Task, TaskView, TaskContent, etc.)
+  - Task Entity mit Markdown-Description und Default-Submission Feldern
   - Repository Layer
   - Database Migrations
+  - Markdown-Processor Service (CommonMark Library)
 - [x] **Sprint 2.2:** Core Services
   - UserService (Gruppen/Rollen-Management)
   - TaskService (CRUD für Aufgaben mit View-Auswahl)
@@ -338,8 +341,21 @@ src/
 1. **Aufgabenübersicht:** `/teacher/tasks`
    - Liste aller vom Lehrer erstellten Aufgaben
    - Filter: Aktive/Inaktive Aufgaben, nach Gruppen
+   - "Neue Aufgabe erstellen" Button
 
-2. **Aufgaben-Detail:** `/teacher/tasks/{taskId}/submissions`
+2. **Aufgaben-Erstellung:** `/teacher/tasks/create`
+   - **Titel-Feld:** Eingabe des Aufgabentitels
+   - **Markdown-Editor:** Aufgabentext mit folgenden Features:
+     - Raw Markdown-Eingabe mit Syntax-Highlighting
+     - Live-Vorschau-Modus (Split-View oder Tab-Umschaltung)
+     - WYSIWYG-Modus mit Markdown-Kompatibilität
+     - Umschaltung zwischen Raw/Preview/WYSIWYG Modi
+   - **View-Auswahl:** Dropdown mit verfügbaren Task Views
+   - **Default-Submission:** Textfeld für Basis-Befüllung im erwarteten Format des gewählten Views
+   - **Gruppen-Auswahl:** Multi-Select für Zielgruppen
+   - **Fälligkeitsdatum:** Datepicker
+
+3. **Aufgaben-Detail:** `/teacher/tasks/{taskId}/submissions`
    - Klick auf Aufgabe zeigt alle SuS, die diese Aufgabe bearbeitet haben
    - Gruppiert nach Gruppen (falls Aufgabe mehreren Gruppen zugeordnet)
    - Pro Schüler: Aufklappbare Submission-Historie mit allen Versionen
@@ -355,17 +371,21 @@ src/
 ### Schüler Endpoints
 - `GET /student/dashboard` - Schüler Dashboard
 - `GET /student/tasks` - Verfügbare Aufgaben (aktive + in Bearbeitung)
-- `GET /student/tasks/{id}` - Aufgaben-Details mit spezifischem View
-- `GET /api/tasks/{taskId}/content` - Aktueller Bearbeitungsstand (letzter Speicherstand)
+- `GET /student/tasks/{id}` - Aufgaben-Details mit spezifischem View und gerenderten Markdown-Aufgabentext
+- `GET /api/tasks/{taskId}/content` - Aktueller Bearbeitungsstand (letzter Speicherstand oder Default vom Lehrer)
 - `GET /api/tasks/{taskId}/content/{version}` - Spezifischer Speicherstand
-- `POST /api/tasks/{taskId}/content` - Serialisierten Content speichern (JSON/XML)
+- `POST /api/tasks/{taskId}/content` - Content speichern (Format abhängig vom Task View)
 - `POST /api/tasks/{taskId}/submit` - Aufgabe als abgegeben markieren
 - `GET /student/submissions/{taskId}` - Submission-Historie
 
 ### Lehrer Endpoints
 - `GET /teacher/dashboard` - Lehrer Dashboard
 - `GET /teacher/tasks` - Aufgaben-Verwaltung
-- `POST /teacher/tasks` - Aufgabe erstellen
+- `GET /teacher/tasks/create` - Aufgaben-Erstellungsformular mit Markdown-Editor und View-Auswahl
+- `POST /teacher/tasks` - Aufgabe erstellen (mit Markdown-Description und Default-Submission)
+- `GET /teacher/tasks/{taskId}/edit` - Aufgabe bearbeiten
+- `PUT /teacher/tasks/{taskId}` - Aufgabe aktualisieren
+- `POST /api/markdown/preview` - Markdown zu HTML konvertieren (für Live-Vorschau)
 - `GET /teacher/groups` - Liste aller Gruppen mit aktiven Aufgaben
 - `GET /teacher/groups/{groupId}` - Alle SuS einer Gruppe mit ihren zugeordneten Aufgaben
 - `GET /teacher/tasks/{taskId}/submissions` - Alle SuS mit Speicherständen für eine spezifische Aufgabe
@@ -384,6 +404,11 @@ Die verfügbaren Task Views werden in der Datei `taskviews.properties` definiert
 
 ```properties
 # Verfügbare Task Views für Dropdown-Auswahl
+taskview.simple-text.name=Einfacher Texteditor
+taskview.simple-text.description=Einfaches Textfeld für Text-Abgaben
+taskview.simple-text.template=taskviews/simple-text.html
+taskview.simple-text.active=true
+
 taskview.html-editor.name=HTML Editor
 taskview.html-editor.description=Rich-Text HTML Editor für Textaufgaben
 taskview.html-editor.template=taskviews/html-editor.html
@@ -413,10 +438,41 @@ taskview.text-editor.active=true
 
 ### Task View Templates
 Jeder Task View hat eine eigene Thymeleaf-Template-Datei:
+- `taskviews/simple-text.html` - **Beispiel-Implementation:** Einfaches Textfeld mit Auto-Save
 - `taskviews/html-editor.html` - Rich-Text Editor
 - `taskviews/math-exercise.html` - Mathematik-Aufgaben
 - `taskviews/code-editor.html` - Code-Editor
 - `taskviews/text-editor.html` - Einfacher Texteditor
+
+### Beispiel Task View: Simple Text Editor
+
+**Template:** `taskviews/simple-text.html`
+```html
+<!-- Zeigt Aufgabentitel und gerenderten Markdown-Aufgabentext an -->
+<div class="task-header">
+    <h2 th:text="${task.title}">Aufgabentitel</h2>
+    <div class="task-description" th:utext="${renderedDescription}">
+        <!-- Hier wird der Markdown-Text als HTML gerendert -->
+    </div>
+</div>
+
+<!-- Einfaches Textfeld für die Abgabe -->
+<div class="submission-area">
+    <textarea id="submission-content" rows="10" cols="80">
+        <!-- Wird mit Default-Submission oder letztem Speicherstand befüllt -->
+    </textarea>
+    <button onclick="saveContent()">Speichern</button>
+    <button onclick="submitTask()">Abgeben</button>
+</div>
+
+<script>
+// GET /api/tasks/${taskId}/content - lädt aktuellen Stand
+// POST /api/tasks/${taskId}/content - speichert Content als Plain Text
+// POST /api/tasks/${taskId}/submit - markiert als abgegeben
+</script>
+```
+
+**Content-Format:** Plain Text (wird direkt im Textfeld angezeigt)
 
 ## 9. Deployment-Konfiguration
 
