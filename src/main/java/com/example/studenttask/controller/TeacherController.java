@@ -260,7 +260,7 @@ public class TeacherController {
             // Daten aktualisieren
             existingTask.setTitle(task.getTitle());
             existingTask.setDescription(task.getDescription());
-            existingTask.setActive(task.isActive());
+            existingTask.setActive(task.getActive());
 
             taskService.save(existingTask);
 
