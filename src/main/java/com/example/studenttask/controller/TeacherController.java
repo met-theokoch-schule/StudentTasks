@@ -104,7 +104,7 @@ public class TeacherController {
                 .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
             // Task View aus dem Service laden
-            TaskView taskView = taskViewService.findById(taskViewId.toString())
+            TaskView taskView = taskViewService.findById(taskViewId)
                 .orElseThrow(() -> new RuntimeException("TaskView nicht gefunden"));
             task.setTaskView(taskView);
 
@@ -189,6 +189,90 @@ public class TeacherController {
         return "redirect:/teacher/tasks";
     }
 
+     /**
+     * Zeigt das Formular zum Bearbeiten einer Aufgabe
+     */
+    @GetMapping("/tasks/{taskId}/edit")
+    public String editTaskForm(@PathVariable Long taskId, Model model, Principal principal) {
+        User teacher = userService.findByOpenIdSubject(principal.getName())
+            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+
+        Optional<Task> taskOpt = taskService.findById(taskId);
+        if (taskOpt.isEmpty() || !taskOpt.get().getCreatedBy().equals(teacher)) {
+            return "redirect:/teacher/tasks";
+        }
+
+        Task task = taskOpt.get();
+        List<TaskView> taskViews = taskViewService.findActiveTaskViews();
+        List<Group> allGroups = groupService.findAll();
+
+        // Set current taskViewId for form
+        Long currentTaskViewId = task.getTaskView() != null ? task.getTaskView().getId() : null;
+
+        model.addAttribute("task", task);
+        model.addAttribute("taskViews", taskViews);
+        model.addAttribute("groups", allGroups);
+        model.addAttribute("selectedGroups", task.getAssignedGroups().stream().map(Group::getId).collect(Collectors.toList()));
+        model.addAttribute("currentTaskViewId", currentTaskViewId);
+
+        return "teacher/task-edit";
+    }
+
+    @PostMapping("/tasks/{taskId}/edit")
+    public String editTask(@PathVariable Long taskId,
+                         @ModelAttribute Task task,
+                         @RequestParam("taskViewId") Long taskViewId,
+                         @RequestParam(value = "selectedGroups", required = false) List<Long> selectedGroups,
+                         RedirectAttributes redirectAttributes,
+                         Principal principal) {
+        try {
+            User teacher = userService.findByOpenIdSubject(principal.getName())
+                .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+
+            Task existingTask = taskService.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Aufgabe nicht gefunden"));
+
+            // Sicherheitscheck: Nur eigene Aufgaben bearbeiten
+            if (!existingTask.getCreatedBy().equals(teacher)) {
+                throw new RuntimeException("Zugriff verweigert");
+            }
+
+            // TaskView laden
+            TaskView taskView = taskViewService.findById(taskViewId)
+                .orElseThrow(() -> new RuntimeException("TaskView nicht gefunden"));
+            task.setTaskView(taskView);
+            existingTask.setTaskView(taskView);
+
+            // Gruppen aktualisieren
+            if (selectedGroups != null && !selectedGroups.isEmpty()) {
+                Set<Group> assignedGroups = new HashSet<>();
+                for (Long groupId : selectedGroups) {
+                    Group group = groupService.findById(groupId);
+                    if (group != null) {
+                        assignedGroups.add(group);
+                    }
+                }
+                existingTask.setAssignedGroups(assignedGroups);
+            } else {
+                existingTask.setAssignedGroups(new HashSet<>());
+            }
+
+            // Daten aktualisieren
+            existingTask.setTitle(task.getTitle());
+            existingTask.setDescription(task.getDescription());
+            existingTask.setActive(task.isActive());
+
+            taskService.save(existingTask);
+
+            redirectAttributes.addFlashAttribute("success", "Aufgabe '" + existingTask.getTitle() + "' wurde erfolgreich aktualisiert.");
+            return "redirect:/teacher/tasks";
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Fehler beim Aktualisieren der Aufgabe: " + e.getMessage());
+            return "redirect:/teacher/tasks/edit/" + taskId;
+        }
+    }
+
     /**
      * Speichert eine Aufgabe als Entwurf
      */
@@ -202,7 +286,7 @@ public class TeacherController {
                 .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
             // Task View aus dem Service laden
-            TaskView taskView = taskViewService.findById(taskViewId.toString())
+            TaskView taskView = taskViewService.findById(taskViewId)
                 .orElseThrow(() -> new RuntimeException("TaskView nicht gefunden"));
             task.setTaskView(taskView);
 
