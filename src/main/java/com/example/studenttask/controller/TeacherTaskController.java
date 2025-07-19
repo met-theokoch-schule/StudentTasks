@@ -70,16 +70,4 @@ public class TeacherTaskController {
 
         return "teacher/task-submissions";
     }
-
-    @PostMapping("/tasks")
-    public String createTask(@ModelAttribute Task task,
-                           @RequestParam("taskViewId") String taskViewId,
-                           @RequestParam("selectedGroups") List<Long> selectedGroups,
-                           Principal principal) {
-
-        // Find TaskView
-        Optional<TaskView> taskViewOpt = taskViewService.findById(taskViewId);
-
-        return "teacher/tasks-list";
-    }
 }
