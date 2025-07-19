@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <title>Neue Aufgabe erstellen - Lehrer Dashboard</title>
     <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
     <link th:href="@{/css/custom.css}" rel="stylesheet">
@@ -164,19 +166,32 @@
 
         // Entwurf speichern
         function saveDraft() {
-            const formData = new FormData(document.querySelector('form'));
-            formData.append('isDraft', 'true');
+            const form = document.querySelector('form');
+            const formData = new FormData(form);
+            
+            // CSRF Token hinzufügen falls vorhanden
+            const csrfToken = document.querySelector('meta[name="_csrf"]');
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]');
+            
+            const headers = {};
+            if (csrfToken && csrfHeader) {
+                headers[csrfHeader.getAttribute('content')] = csrfToken.getAttribute('content');
+            }
             
             fetch('/teacher/tasks/draft', {
                 method: 'POST',
+                headers: headers,
                 body: formData
             })
             .then(response => {
                 if (response.ok) {
-                    showMessage('Entwurf erfolgreich gespeichert!', 'success');
+                    return response.text();
                 } else {
-                    showMessage('Fehler beim Speichern des Entwurfs', 'error');
+                    throw new Error('Failed to save draft');
                 }
+            })
+            .then(message => {
+                showMessage('Entwurf erfolgreich gespeichert!', 'success');
             })
             .catch(error => {
                 console.error('Error:', error);
