@@ -137,9 +137,14 @@
                                 <a th:href="@{/teacher/tasks}" class="btn btn-secondary">
                                     <i class="fas fa-times"></i> Abbrechen
                                 </a>
-                                <button type="submit" class="btn btn-success">
-                                    <i class="fas fa-save"></i> Aufgabe erstellen
-                                </button>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-outline-primary" onclick="saveDraft()">
+                                        <i class="fas fa-save"></i> Als Entwurf speichern
+                                    </button>
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-check"></i> Aufgabe erstellen
+                                    </button>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -156,6 +161,51 @@
             const description = selectedOption.getAttribute('data-description') || 'Wählen Sie den Typ der Aufgabe aus.';
             document.getElementById('taskViewDescription').textContent = description;
         });
+
+        // Entwurf speichern
+        function saveDraft() {
+            const formData = new FormData(document.querySelector('form'));
+            formData.append('isDraft', 'true');
+            
+            fetch('/teacher/tasks/draft', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    showMessage('Entwurf erfolgreich gespeichert!', 'success');
+                } else {
+                    showMessage('Fehler beim Speichern des Entwurfs', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showMessage('Fehler beim Speichern des Entwurfs', 'error');
+            });
+        }
+
+        // Status-Nachrichten anzeigen
+        function showMessage(message, type) {
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const alertHtml = `
+                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            // Nachricht vor dem Formular einfügen
+            const form = document.querySelector('form');
+            form.insertAdjacentHTML('beforebegin', alertHtml);
+            
+            // Nachricht nach 3 Sekunden automatisch ausblenden
+            setTimeout(() => {
+                const alert = document.querySelector('.alert');
+                if (alert) {
+                    alert.remove();
+                }
+            }, 3000);
+        }
     </script>
 </body>
 </html>
