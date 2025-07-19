@@ -1,17 +1,17 @@
 package com.example.studenttask.controller;
 
 import com.example.studenttask.model.Task;
+import com.example.studenttask.model.TaskView;
 import com.example.studenttask.model.User;
 import com.example.studenttask.model.UserTask;
 import com.example.studenttask.service.TaskService;
+import com.example.studenttask.service.TaskViewService;
 import com.example.studenttask.service.UserService;
 import com.example.studenttask.service.UserTaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
@@ -29,6 +29,9 @@ public class TeacherTaskController {
 
     @Autowired
     private UserTaskService userTaskService;
+
+    @Autowired
+    private TaskViewService taskViewService;
 
     /**
      * Zeigt die Übersicht aller Aufgaben des Lehrers
@@ -66,5 +69,17 @@ public class TeacherTaskController {
         model.addAttribute("submissions", submissions);
 
         return "teacher/task-submissions";
+    }
+
+    @PostMapping("/tasks")
+    public String createTask(@ModelAttribute Task task,
+                           @RequestParam("taskViewId") String taskViewId,
+                           @RequestParam("selectedGroups") List<Long> selectedGroups,
+                           Principal principal) {
+
+        // Find TaskView
+        Optional<TaskView> taskViewOpt = taskViewService.findById(taskViewId);
+
+        return "teacher/tasks-list";
     }
 }
