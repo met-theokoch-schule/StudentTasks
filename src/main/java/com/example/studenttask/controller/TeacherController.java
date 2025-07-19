@@ -32,6 +32,9 @@ public class TeacherController {
     private UserService userService;
 
     @Autowired
+    private GroupService groupService;
+
+    @Autowired
     private UserTaskService userTaskService;
 
     /**
