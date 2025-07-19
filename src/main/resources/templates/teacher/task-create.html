@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="_csrf" th:content="${_csrf.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <meta name="_csrf" th:content="${_csrf?.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
     <title>Neue Aufgabe erstellen - Lehrer Dashboard</title>
     <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
     <link th:href="@{/css/custom.css}" rel="stylesheet">
@@ -21,7 +21,7 @@
                 <a class="nav-link" th:href="@{/teacher/groups}">Gruppen</a>
             </div>
             <div class="navbar-nav ms-auto">
-                <span class="navbar-text me-3" th:text="${teacher != null ? teacher.name : 'Lehrer'}"></span>
+                <span class="navbar-text me-3" th:text="${teacher?.name} ?: 'Lehrer'"></span>
                 <a class="btn btn-outline-light" th:href="@{/dashboard}">Hauptmenü</a>
                 <a class="btn btn-outline-light ms-2" th:href="@{/logout}">Abmelden</a>
             </div>
@@ -108,7 +108,7 @@
                             <!-- Gruppen-Auswahl -->
                             <div class="mb-3">
                                 <label for="selectedGroups" class="form-label">Gruppen zuweisen</label>
-                                <select class="form-select" id="selectedGroups" name="selectedGroups" multiple size="5">
+                                <select class="form-select" id="selectedGroups" name="selectedGroups" multiple="multiple" size="5">
                                     <option th:each="group : ${groups}" 
                                             th:value="${group.id}" 
                                             th:text="${group.name}">
