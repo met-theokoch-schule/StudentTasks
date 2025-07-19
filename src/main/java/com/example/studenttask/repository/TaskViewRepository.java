@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface TaskViewRepository extends JpaRepository<TaskView, String> {
+public interface TaskViewRepository extends JpaRepository<TaskView, Long> {
 
     List<TaskView> findAllByOrderByName();
 

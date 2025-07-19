@@ -33,7 +33,7 @@ public class TaskViewService {
     /**
      * Find task view by ID
      */
-    public Optional<TaskView> findById(String id) {
+    public Optional<TaskView> findById(Long id) {
         return taskViewRepository.findById(id);
     }
 
@@ -58,10 +58,9 @@ public class TaskViewService {
     /**
      * Create a new task view
      */
-    public TaskView createTaskView(String id, String name, String description, 
+    public TaskView createTaskView(String name, String description, 
                                   String templatePath, boolean isActive) {
         TaskView taskView = new TaskView();
-        taskView.setId(id);
         taskView.setName(name);
         taskView.setDescription(description);
         taskView.setTemplatePath(templatePath);
@@ -73,7 +72,7 @@ public class TaskViewService {
     /**
      * Activate task view
      */
-    public void activateTaskView(String id) {
+    public void activateTaskView(Long id) {
         Optional<TaskView> taskViewOpt = taskViewRepository.findById(id);
         if (taskViewOpt.isPresent()) {
             TaskView taskView = taskViewOpt.get();
@@ -85,7 +84,7 @@ public class TaskViewService {
     /**
      * Deactivate task view
      */
-    public void deactivateTaskView(String id) {
+    public void deactivateTaskView(Long id) {
         Optional<TaskView> taskViewOpt = taskViewRepository.findById(id);
         if (taskViewOpt.isPresent()) {
             TaskView taskView = taskViewOpt.get();
@@ -97,14 +96,14 @@ public class TaskViewService {
     /**
      * Delete task view
      */
-    public void deleteTaskView(String id) {
+    public void deleteTaskView(Long id) {
         taskViewRepository.deleteById(id);
     }
 
     /**
      * Check if task view exists and is active
      */
-    public boolean isTaskViewActiveAndExists(String id) {
+    public boolean isTaskViewActiveAndExists(Long id) {
         Optional<TaskView> taskViewOpt = taskViewRepository.findById(id);
         return taskViewOpt.isPresent() && taskViewOpt.get().isActive();
     }

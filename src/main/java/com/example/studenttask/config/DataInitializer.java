@@ -53,19 +53,19 @@ public class DataInitializer implements ApplicationRunner {
     private void initializeTaskViews() {
         // Initialize Task Views if they don't exist
         if (taskViewRepository.count() == 0) {
-            TaskView simpleText = new TaskView("simple-text", "Einfacher Texteditor", "taskviews/simple-text");
+            TaskView simpleText = new TaskView("Einfacher Texteditor", "taskviews/simple-text");
             simpleText.setDescription("Einfaches Textfeld für Text-Abgaben");
             taskViewRepository.save(simpleText);
 
-            TaskView htmlEditor = new TaskView("html-editor", "HTML Editor", "taskviews/html-editor");
+            TaskView htmlEditor = new TaskView("HTML Editor", "taskviews/html-editor");
             htmlEditor.setDescription("Rich-Text HTML Editor für Textaufgaben");
             taskViewRepository.save(htmlEditor);
 
-            TaskView mathExercise = new TaskView("math-exercise", "Mathematik Übung", "taskviews/math-exercise");
+            TaskView mathExercise = new TaskView("Mathematik Übung", "taskviews/math-exercise");
             mathExercise.setDescription("Interaktive Mathematik-Aufgaben mit LaTeX");
             taskViewRepository.save(mathExercise);
 
-            TaskView codeEditor = new TaskView("code-editor", "Code Editor", "taskviews/code-editor");
+            TaskView codeEditor = new TaskView("Code Editor", "taskviews/code-editor");
             codeEditor.setDescription("Syntax-highlightender Code-Editor");
             taskViewRepository.save(codeEditor);
 

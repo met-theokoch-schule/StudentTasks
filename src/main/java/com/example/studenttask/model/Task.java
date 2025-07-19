@@ -40,7 +40,7 @@ public class Task {
     private Boolean isActive = true;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "view_type_id", nullable = false)
+    @JoinColumn(name = "view_type_id", referencedColumnName = "id")
     private TaskView viewType; // References to available task views
 
     @Column(columnDefinition = "TEXT")
