@@ -49,21 +49,7 @@ public class TeacherController {
         return "teacher/dashboard";
     }
 
-    /**
-     * Zeigt alle Aufgaben des Lehrers
-     */
-    @GetMapping("/tasks")
-    public String listTasks(Model model, Principal principal) {
-        User teacher = userService.findByOpenIdSubject(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-
-        List<Task> tasks = taskService.findByCreatedBy(teacher);
-
-        model.addAttribute("tasks", tasks);
-        model.addAttribute("teacher", teacher);
-
-        return "teacher/tasks-list";
-    }
+    
 
     /**
      * Zeigt das Formular zum Erstellen einer neuen Aufgabe
