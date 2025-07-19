@@ -104,7 +104,7 @@ public class TeacherController {
                 .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
             // Task View setzen
-            TaskView taskView = taskViewService.findById(Long.toString(taskViewId))
+            TaskView taskView = taskViewService.findById(taskViewId.toString())
                 .orElseThrow(() -> new RuntimeException("TaskView nicht gefunden"));
             task.setTaskView(taskView);
 
@@ -112,36 +112,20 @@ public class TeacherController {
             task.setCreatedBy(teacher);
             task.setCreatedAt(LocalDateTime.now());
 
-            // Standard-Submission setzen falls leer
-            if (task.getDefaultSubmission() == null || task.getDefaultSubmission().trim().isEmpty()) {
-                task.setDefaultSubmission("");
-            }
-
-            // selectedGroups von String zu Long konvertieren
-            List<Long> groupIds = new ArrayList<>();
-            if (selectedGroups != null && !selectedGroups.isEmpty()) {
-                for (String groupIdStr : selectedGroups) {
-                    try {
-                        groupIds.add(Long.parseLong(groupIdStr));
-                    } catch (NumberFormatException e) {
-                        // Ignoriere ungültige IDs
-                    }
-                }
-            }
-
-            // Ausgewählte Gruppen zuweisen
-            Set<Group> assignedGroups = new HashSet<>();
-            if (!groupIds.isEmpty()) {
-                assignedGroups = teacher.getGroups().stream()
-                    .filter(group -> groupIds.contains(group.getId()))
-                    .collect(Collectors.toSet());
-            }
-            task.setAssignedGroups(assignedGroups);
-
             // Aufgabe speichern
-            Task savedTask = taskService.createTask(task.getTitle(), task.getDescription(), 
-                task.getDefaultSubmission(), teacher, task.getDueDate(), task.getTaskView(), 
-                assignedGroups);
+            Task savedTask = taskService.save(task);
+
+            // Gruppen zuordnen
+            if (selectedGroups != null && !selectedGroups.isEmpty()) {
+                Set<Group> assignedGroups = new HashSet<>();
+                for (String groupId : selectedGroups) {
+                    Group group = groupService.findById(Long.parseLong(groupId))
+                        .orElseThrow(() -> new RuntimeException("Gruppe nicht gefunden: " + groupId));
+                    assignedGroups.add(group);
+                }
+                savedTask.setAssignedGroups(assignedGroups);
+                taskService.save(savedTask);
+            }
 
             redirectAttributes.addFlashAttribute("success", "Aufgabe '" + savedTask.getTitle() + "' wurde erfolgreich erstellt.");
             return "redirect:/teacher/tasks";
