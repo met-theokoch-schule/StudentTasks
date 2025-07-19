@@ -1,7 +1,11 @@
 package com.example.studenttask.controller;
 
 import com.example.studenttask.model.*;
-import com.example.studenttask.service.*;
+import com.example.studenttask.service.GroupService;
+import com.example.studenttask.service.TaskService;
+import com.example.studenttask.service.TaskViewService;
+import com.example.studenttask.service.UserService;
+import com.example.studenttask.service.UserTaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
