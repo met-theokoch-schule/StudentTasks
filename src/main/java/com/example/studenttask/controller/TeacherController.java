@@ -91,7 +91,7 @@ public class TeacherController {
     /**
      * Verarbeitet das Erstellen einer neuen Aufgabe
      */
-    @PostMapping("/tasks/create")
+    @PostMapping("/tasks")
     public String createTask(
             @ModelAttribute Task task,
             @RequestParam(value = "selectedGroups", required = false) List<String> selectedGroups,
