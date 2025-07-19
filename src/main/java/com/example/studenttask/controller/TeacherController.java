@@ -204,71 +204,46 @@ public class TeacherController {
         return "redirect:/teacher/tasks";
     }
 
+    /**
+     * Speichert eine Aufgabe als Entwurf
+     */
     @PostMapping("/tasks/draft")
-    public ResponseEntity<String> saveDraft(@ModelAttribute Task task,
-                                          @RequestParam(value = "selectedGroups", required = false) List<Long> selectedGroupIds,
-                                          @RequestParam Long taskViewId,
-                                          Authentication authentication) {
+    public ResponseEntity<String> saveDraft(@ModelAttribute Task task, 
+                                          @RequestParam("selectedGroups") List<Long> selectedGroupIds,
+                                          @RequestParam("taskViewId") Long taskViewId,
+                                          Principal principal) {
         try {
-            // Set task as inactive (draft)
-            task.setActive(false);
+            User teacher = userService.findByOpenIdSubject(principal.getName())
+                .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
-            // Set TaskView
-            TaskView taskView = taskViewService.findById(Long.toString(taskViewId)).orElse(null);
+            // TaskView zuweisen
+            TaskView taskView = taskViewService.findById(taskViewId)
+                .orElseThrow(() -> new RuntimeException("TaskView nicht gefunden"));
             task.setTaskView(taskView);
 
-            // Get current teacher
-            String username = authentication.getName();
-            User teacher = userService.findByOpenIdSubject(username).orElse(null);
+            // Lehrer zuweisen
             task.setCreatedBy(teacher);
 
-            // Handle groups
+            // Als Entwurf markieren (inaktiv)
+            task.setActive(false);
+
+            // Gruppen zuweisen
             if (selectedGroupIds != null && !selectedGroupIds.isEmpty()) {
                 Set<Group> selectedGroups = new HashSet<>();
                 for (Long groupId : selectedGroupIds) {
-                    Group group = groupService.findById(groupId);
-                    if (group != null) {
-                        selectedGroups.add(group);
-                    }
+                    Group group = groupService.findById(groupId)
+                        .orElseThrow(() -> new RuntimeException("Gruppe nicht gefunden: " + groupId));
+                    selectedGroups.add(group);
                 }
                 task.setAssignedGroups(selectedGroups);
             }
 
-            // Save task as draft
-            taskService.save(task);
+            // Aufgabe speichern
+            Task savedTask = taskService.save(task);
+            return ResponseEntity.ok("Entwurf erfolgreich gespeichert");
 
-            return ResponseEntity.ok("Draft saved successfully");
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error saving draft");
+            return ResponseEntity.badRequest().body("Fehler beim Speichern: " + e.getMessage());
         }
-    }
-
-    @GetMapping("/tasks/{id}/edit")
-    public String editTaskForm(@PathVariable Long id, Model model, Principal principal) {
-        User teacher = userService.findByOpenIdSubject(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-
-        Task task = taskService.findById(id)
-            .orElseThrow(() -> new RuntimeException("Aufgabe nicht gefunden"));
-
-        // Sicherheitscheck: Nur eigene Aufgaben bearbeiten
-        if (!task.getCreatedBy().equals(teacher)) {
-            throw new RuntimeException("Zugriff verweigert");
-        }
-
-        List<TaskView> taskViews = taskViewService.findActiveTaskViews();
-        List<Group> allGroups = groupService.findAll();
-
-        // Filter groups that belong to this teacher
-        List<Group> teacherGroups = allGroups.stream()
-            .filter(group -> teacher.getGroups().contains(group))
-            .collect(java.util.stream.Collectors.toList());
-
-        model.addAttribute("task", task);
-        model.addAttribute("taskViews", taskViews != null ? taskViews : new ArrayList<>());
-        model.addAttribute("groups", teacherGroups);
-        model.addAttribute("teacher", teacher);
-
-        return "teacher/task-edit";
     }
 }
