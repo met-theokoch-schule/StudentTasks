@@ -57,7 +57,7 @@ public class TeacherController {
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
         Task task = new Task();
-        List<TaskView> taskViews = taskViewService.findAllActive();
+        List<TaskView> taskViews = taskViewService.findActiveTaskViews();
 
         model.addAttribute("task", task);
         model.addAttribute("taskViews", taskViews);
