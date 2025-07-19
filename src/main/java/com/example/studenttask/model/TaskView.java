@@ -10,7 +10,8 @@ import java.util.Set;
 public class TaskView {
     
     @Id
-    private String id; // e.g., "html-editor", "math-exercise", "code-editor"
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     
     @Column(nullable = false)
     private String name; // Display name for dropdown selection
@@ -30,18 +31,17 @@ public class TaskView {
     // Constructors
     public TaskView() {}
     
-    public TaskView(String id, String name, String templatePath) {
-        this.id = id;
+    public TaskView(String name, String templatePath) {
         this.name = name;
         this.templatePath = templatePath;
     }
     
     // Getters and Setters
-    public String getId() {
+    public Long getId() {
         return id;
     }
     
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
     
