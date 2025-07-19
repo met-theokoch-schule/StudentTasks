@@ -19,16 +19,13 @@ import java.util.stream.Collectors;
 public class TeacherController {
 
     @Autowired
-    private UserService userService;
-
-    @Autowired
     private TaskService taskService;
 
     @Autowired
-    private GroupService groupService;
+    private TaskViewService taskViewService;
 
     @Autowired
-    private TaskViewService taskViewService;
+    private UserService userService;
 
     @Autowired
     private UserTaskService userTaskService;
@@ -49,7 +46,7 @@ public class TeacherController {
         return "teacher/dashboard";
     }
 
-    
+
 
     /**
      * Zeigt das Formular zum Erstellen einer neuen Aufgabe
@@ -187,5 +184,5 @@ public class TeacherController {
         return "redirect:/teacher/tasks";
     }
 
-    
+
 }
