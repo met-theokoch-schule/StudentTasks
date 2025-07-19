@@ -69,10 +69,14 @@ public class TeacherController {
 
         Task task = new Task();
         List<TaskView> taskViews = taskViewService.findActiveTaskViews();
-        
-        // Convert Set to List for template compatibility
-        Set<Group> teacherGroupsSet = teacher.getGroups();
-        List<Group> teacherGroups = new ArrayList<>(teacherGroupsSet != null ? teacherGroupsSet : new HashSet<>());
+
+        // Get all groups from GroupService to ensure proper loading
+        List<Group> allGroups = groupService.findAll();
+
+        // Filter groups that belong to this teacher
+        List<Group> teacherGroups = allGroups.stream()
+            .filter(group -> teacher.getGroups().contains(group))
+            .collect(java.util.stream.Collectors.toList());
 
         model.addAttribute("task", task);
         model.addAttribute("taskViews", taskViews != null ? taskViews : new ArrayList<>());
