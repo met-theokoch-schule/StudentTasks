@@ -103,8 +103,8 @@ public class TeacherController {
             User teacher = userService.findByOpenIdSubject(principal.getName())
                 .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
-            // Task View setzen
-            TaskView taskView = taskViewService.findById(taskViewId)
+            // Task View aus dem Service laden
+            TaskView taskView = taskViewService.findById(taskViewId.toString())
                 .orElseThrow(() -> new RuntimeException("TaskView nicht gefunden"));
             task.setTaskView(taskView);
 
@@ -201,8 +201,8 @@ public class TeacherController {
             User teacher = userService.findByOpenIdSubject(principal.getName())
                 .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
-            // TaskView zuweisen
-            TaskView taskView = taskViewService.findById(taskViewId)
+            // Task View aus dem Service laden
+            TaskView taskView = taskViewService.findById(taskViewId.toString())
                 .orElseThrow(() -> new RuntimeException("TaskView nicht gefunden"));
             task.setTaskView(taskView);
 
