@@ -9,6 +9,10 @@ import com.example.studenttask.service.UserTaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -65,10 +69,13 @@ public class TeacherController {
 
         Task task = new Task();
         List<TaskView> taskViews = taskViewService.findActiveTaskViews();
-        Set<Group> teacherGroups = teacher.getGroups();
+        
+        // Convert Set to List for template compatibility
+        Set<Group> teacherGroupsSet = teacher.getGroups();
+        List<Group> teacherGroups = new ArrayList<>(teacherGroupsSet != null ? teacherGroupsSet : new HashSet<>());
 
         model.addAttribute("task", task);
-        model.addAttribute("taskViews", taskViews);
+        model.addAttribute("taskViews", taskViews != null ? taskViews : new ArrayList<>());
         model.addAttribute("groups", teacherGroups);
         model.addAttribute("teacher", teacher);
 
