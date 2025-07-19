@@ -104,7 +104,7 @@ public class TeacherController {
                 .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
             // Task View setzen
-            TaskView taskView = taskViewService.findById(taskViewId.toString())
+            TaskView taskView = taskViewService.findById(taskViewId)
                 .orElseThrow(() -> new RuntimeException("TaskView nicht gefunden"));
             task.setTaskView(taskView);
 
@@ -119,9 +119,10 @@ public class TeacherController {
             if (selectedGroups != null && !selectedGroups.isEmpty()) {
                 Set<Group> assignedGroups = new HashSet<>();
                 for (String groupId : selectedGroups) {
-                    Group group = groupService.findById(Long.parseLong(groupId))
-                        .orElseThrow(() -> new RuntimeException("Gruppe nicht gefunden: " + groupId));
-                    assignedGroups.add(group);
+                    Group group = groupService.findById(Long.parseLong(groupId));
+                    if (group != null) {
+                        assignedGroups.add(group);
+                    }
                 }
                 savedTask.setAssignedGroups(assignedGroups);
                 taskService.save(savedTask);
