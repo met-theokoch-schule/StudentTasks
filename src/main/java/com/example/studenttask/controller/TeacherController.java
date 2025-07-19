@@ -201,19 +201,5 @@ public class TeacherController {
         return "redirect:/teacher/tasks";
     }
 
-    /**
-     * Zeigt eine Liste aller Gruppen mit aktiven Aufgaben
-     */
-    @GetMapping("/groups")
-    public String listGroups(Model model, Principal principal) {
-        User teacher = userService.findByOpenIdSubject(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-
-        Set<Group> teacherGroups = teacher.getGroups();
-
-        model.addAttribute("groups", teacherGroups);
-        model.addAttribute("teacher", teacher);
-
-        return "teacher/groups-list";
-    }
+    
 }
