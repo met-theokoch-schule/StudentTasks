@@ -58,10 +58,11 @@ public class TeacherController {
 
         Task task = new Task();
         List<TaskView> taskViews = taskViewService.findActiveTaskViews();
+        Set<Group> teacherGroups = teacher.getGroups();
 
         model.addAttribute("task", task);
         model.addAttribute("taskViews", taskViews);
-        model.addAttribute("groups", teacher.getGroups());
+        model.addAttribute("groups", teacherGroups);
         model.addAttribute("teacher", teacher);
 
         return "teacher/task-create";
