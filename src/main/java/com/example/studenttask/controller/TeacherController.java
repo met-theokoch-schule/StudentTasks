@@ -52,17 +52,16 @@ public class TeacherController {
      * Zeigt das Formular zum Erstellen einer neuen Aufgabe
      */
     @GetMapping("/tasks/create")
-    public String showCreateTaskForm(Model model, Principal principal) {
+    public String createTaskForm(Model model, Principal principal) {
         User teacher = userService.findByOpenIdSubject(principal.getName())
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
         Task task = new Task();
-        List<TaskView> taskViews = taskViewService.findAll();
-        Set<Group> teacherGroups = teacher.getGroups();
+        List<TaskView> taskViews = taskViewService.findAllActive();
 
         model.addAttribute("task", task);
         model.addAttribute("taskViews", taskViews);
-        model.addAttribute("teacherGroups", teacherGroups);
+        model.addAttribute("groups", teacher.getGroups());
         model.addAttribute("teacher", teacher);
 
         return "teacher/task-create";
