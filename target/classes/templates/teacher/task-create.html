@@ -109,7 +109,7 @@
                                 <select class="form-select" id="selectedGroups" name="selectedGroups" multiple size="5">
                                     <option th:each="group : ${groups}" 
                                             th:value="${group.id}" 
-                                            th:text="${group.name + ' (' + #lists.size(group.students) + ' Schüler)'}">
+                                            th:text="${group.name}">
                                         Gruppe
                                     </option>
                                 </select>
