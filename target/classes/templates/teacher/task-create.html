@@ -1,226 +1,47 @@
 <!DOCTYPE html>
-<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="_csrf" th:content="${_csrf?.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
-    <title>Neue Aufgabe erstellen - Lehrer Dashboard</title>
-    <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
-    <link th:href="@{/css/custom.css}" rel="stylesheet">
+    <title>Neue Aufgabe erstellen</title>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
-        <div class="container">
-            <a class="navbar-brand" th:href="@{/teacher/dashboard}">
-                <i class="fas fa-chalkboard-teacher"></i> Lehrer-Bereich
-            </a>
-            <div class="navbar-nav me-auto">
-                <a class="nav-link" th:href="@{/teacher/dashboard}">Dashboard</a>
-                <a class="nav-link active" th:href="@{/teacher/tasks}">Aufgaben</a>
-                <a class="nav-link" th:href="@{/teacher/groups}">Gruppen</a>
-            </div>
-            <div class="navbar-nav ms-auto">
-                <span class="navbar-text me-3" th:text="${teacher?.name} ?: 'Lehrer'"></span>
-                <a class="btn btn-outline-light" th:href="@{/dashboard}">Hauptmenü</a>
-                <a class="btn btn-outline-light ms-2" th:href="@{/logout}">Abmelden</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container mt-4">
-        <!-- Breadcrumb -->
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a th:href="@{/teacher/dashboard}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a th:href="@{/teacher/tasks}">Aufgaben</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Neue Aufgabe</li>
-            </ol>
-        </nav>
-
-        <div class="row">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h1><i class="fas fa-plus"></i> Neue Aufgabe erstellen</h1>
-                    <a th:href="@{/teacher/tasks}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Zurück zur Übersicht
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <form th:action="@{/teacher/tasks}" method="post" th:object="${task}">
-                            <!-- Titel -->
-                            <div class="mb-3">
-                                <label for="title" class="form-label">Aufgabentitel *</label>
-                                <input type="text" class="form-control" id="title" th:field="*{title}" required>
-                                <div class="form-text">Geben Sie einen aussagekräftigen Titel für die Aufgabe ein.</div>
-                            </div>
-
-                            <!-- Aufgabentyp -->
-                            <div class="mb-3">
-                                <label for="taskViewId" class="form-label">Aufgabentyp *</label>
-                                <select class="form-select" id="taskViewId" name="taskViewId" required>
-                                    <option value="">-- Aufgabentyp wählen --</option>
-                                    <option th:each="view : ${taskViews}" 
-                                            th:value="${view.id}" 
-                                            th:text="${view.name}"
-                                            th:attr="data-description=${view.description}">
-                                        TaskView Name
-                                    </option>
-                                </select>
-                                <div class="form-text" id="taskViewDescription">
-                                    Wählen Sie den Typ der Aufgabe aus.
-                                </div>
-                            </div>
-
-                            <!-- Beschreibung -->
-                            <div class="mb-3">
-                                <label for="description" class="form-label">Aufgabenbeschreibung *</label>
-                                <textarea class="form-control" id="description" th:field="*{description}" rows="8" required
-                                          placeholder="Geben Sie hier die Aufgabenbeschreibung ein..."></textarea>
-                                <div class="form-text">
-                                    Beschreiben Sie die Aufgabe ausführlich. Markdown-Syntax wird unterstützt.
-                                </div>
-                            </div>
-
-                            <!-- Standard-Vorlage -->
-                            <div class="mb-3">
-                                <label for="defaultSubmission" class="form-label">Standard-Vorlage (optional)</label>
-                                <textarea class="form-control" id="defaultSubmission" th:field="*{defaultSubmission}" rows="4"
-                                          placeholder="Geben Sie hier den Standard-Inhalt ein, mit dem die Aufgabe vorausgefüllt werden soll..."></textarea>
-                                <div class="form-text">
-                                    Dieser Text wird als Ausgangsbasis in der Aufgabe angezeigt. Format abhängig vom gewählten Aufgabentyp.
-                                </div>
-                            </div>
-
-                            <!-- Fälligkeitsdatum -->
-                            <div class="mb-3">
-                                <label for="dueDate" class="form-label">Fälligkeitsdatum (optional)</label>
-                                <input type="datetime-local" class="form-control" id="dueDate" th:field="*{dueDate}">
-                                <div class="form-text">Optional: Datum und Uhrzeit der Fälligkeit</div>
-                            </div>
-
-                            <!-- Gruppen-Auswahl -->
-                            <div class="mb-3">
-                                <label for="selectedGroups" class="form-label">Gruppen zuweisen</label>
-                                <select class="form-select" id="selectedGroups" name="selectedGroups" multiple="multiple" size="5">
-                                    <option th:each="group : ${groups}" 
-                                            th:value="${group.id}" 
-                                            th:text="${group.name}">
-                                        Gruppe
-                                    </option>
-                                </select>
-                                <div class="form-text">
-                                    Halten Sie Ctrl/Cmd gedrückt, um mehrere Gruppen auszuwählen. 
-                                    <span th:if="${groups == null or groups.isEmpty()}" class="text-warning">
-                                        Sie sind noch keinen Gruppen zugeordnet. Wenden Sie sich an den Administrator.
-                                    </span>
-                                </div>
-                            </div>
-
-                            <!-- Status -->
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="isActive" th:field="*{active}" checked>
-                                    <label class="form-check-label" for="isActive">
-                                        Aufgabe ist aktiv
-                                    </label>
-                                </div>
-                                <div class="form-text">Nur aktive Aufgaben sind für Schüler sichtbar.</div>
-                            </div>
-
-                            <!-- Buttons -->
-                            <div class="d-flex justify-content-between">
-                                <a th:href="@{/teacher/tasks}" class="btn btn-secondary">
-                                    <i class="fas fa-times"></i> Abbrechen
-                                </a>
-                                <div class="d-flex gap-2">
-                                    <button type="button" class="btn btn-outline-primary" onclick="saveDraft()">
-                                        <i class="fas fa-save"></i> Als Entwurf speichern
-                                    </button>
-                                    <button type="submit" class="btn btn-success">
-                                        <i class="fas fa-check"></i> Aufgabe erstellen
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
-    <script>
-        // TaskView Beschreibung anzeigen
-        document.getElementById('taskViewId').addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const description = selectedOption.getAttribute('data-description') || 'Wählen Sie den Typ der Aufgabe aus.';
-            document.getElementById('taskViewDescription').textContent = description;
-        });
-
-        // Entwurf speichern
-        function saveDraft() {
-            const form = document.querySelector('form');
-            const formData = new FormData(form);
-
-            // CSRF Token hinzufügen falls vorhanden
-            const csrfToken = document.querySelector('meta[name="_csrf"]');
-            const csrfHeader = document.querySelector('meta[name="_csrf_header"]');
-
-            const headers = {};
-            if (csrfToken && csrfHeader) {
-                headers[csrfHeader.getAttribute('content')] = csrfToken.getAttribute('content');
-            }
-
-            fetch('/teacher/tasks/draft', {
-                method: 'POST',
-                headers: headers,
-                body: formData
-            })
-            .then(response => {
-                if (response.ok) {
-                    return response.text();
-                } else {
-                    throw new Error('Failed to save draft');
-                }
-            })
-            .then(message => {
-                showMessage('Entwurf erfolgreich gespeichert!', 'success');
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showMessage('Fehler beim Speichern des Entwurfs', 'error');
-            });
-        }
-
-        // Status-Nachrichten anzeigen
-        function showMessage(message, type) {
-            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-            const alertHtml = `
-                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            `;
-
-            // Nachricht vor dem Formular einfügen
-            const form = document.querySelector('form');
-            form.insertAdjacentHTML('beforebegin', alertHtml);
-
-            // Nachricht nach 3 Sekunden automatisch ausblenden
-            setTimeout(() => {
-                const alert = document.querySelector('.alert');
-                if (alert) {
-                    alert.remove();
-                }
-            }, 3000);
-        }
-    </script>
+    <h1>Neue Aufgabe erstellen</h1>
+    
+    <form th:action="@{/teacher/tasks}" method="post" th:object="${task}">
+        <p>
+            <label for="title">Titel:</label>
+            <input type="text" id="title" th:field="*{title}" required>
+        </p>
+        
+        <p>
+            <label for="description">Beschreibung:</label>
+            <textarea id="description" th:field="*{description}" required></textarea>
+        </p>
+        
+        <p>
+            <label for="taskViewId">Aufgabentyp:</label>
+            <select id="taskViewId" name="taskViewId" required>
+                <option value="">Bitte wählen</option>
+                <option th:each="view : ${taskViews}" th:value="${view.id}" th:text="${view.name}"></option>
+            </select>
+        </p>
+        
+        <p>
+            <label for="selectedGroups">Gruppen:</label>
+            <select id="selectedGroups" name="selectedGroups" multiple>
+                <option th:each="group : ${groups}" th:value="${group.id}" th:text="${group.name}"></option>
+            </select>
+        </p>
+        
+        <p>
+            <input type="checkbox" id="isActive" th:field="*{active}" checked>
+            <label for="isActive">Aktiv</label>
+        </p>
+        
+        <p>
+            <button type="submit">Speichern</button>
+            <a th:href="@{/teacher/tasks}">Abbrechen</a>
+        </p>
+    </form>
 </body>
 </html>
