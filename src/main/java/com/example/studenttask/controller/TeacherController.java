@@ -216,8 +216,10 @@ public class TeacherController {
             if (selectedGroupIds != null && !selectedGroupIds.isEmpty()) {
                 Set<Group> selectedGroups = new HashSet<>();
                 for (Long groupId : selectedGroupIds) {
-                    Group group = groupService.findById(groupId)
-                        .orElseThrow(() -> new RuntimeException("Gruppe nicht gefunden: " + groupId));
+                    Group group = groupService.findById(groupId);
+                    if (group == null) {
+                        throw new RuntimeException("Gruppe nicht gefunden: " + groupId);
+                    }
                     selectedGroups.add(group);
                 }
                 task.setAssignedGroups(selectedGroups);
