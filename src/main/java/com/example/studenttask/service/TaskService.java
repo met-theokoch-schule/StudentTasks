@@ -224,6 +224,13 @@ public class TaskService {
     }
     
     /**
+     * Save a task
+     */
+    public Task save(Task task) {
+        return taskRepository.save(task);
+    }
+    
+    /**
      * Find all active tasks
      */
     public List<Task> findActiveTasks() {
