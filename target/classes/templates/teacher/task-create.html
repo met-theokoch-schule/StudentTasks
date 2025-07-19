@@ -21,7 +21,7 @@
                 <a class="nav-link" th:href="@{/teacher/groups}">Gruppen</a>
             </div>
             <div class="navbar-nav ms-auto">
-                <span class="navbar-text me-3" th:text="${teacher?.name ?: 'Lehrer'}"></span>
+                <span class="navbar-text me-3" th:text="${teacher != null ? teacher.name : 'Lehrer'}"></span>
                 <a class="btn btn-outline-light" th:href="@{/dashboard}">Hauptmenü</a>
                 <a class="btn btn-outline-light ms-2" th:href="@{/logout}">Abmelden</a>
             </div>
@@ -168,16 +168,16 @@
         function saveDraft() {
             const form = document.querySelector('form');
             const formData = new FormData(form);
-            
+
             // CSRF Token hinzufügen falls vorhanden
             const csrfToken = document.querySelector('meta[name="_csrf"]');
             const csrfHeader = document.querySelector('meta[name="_csrf_header"]');
-            
+
             const headers = {};
             if (csrfToken && csrfHeader) {
                 headers[csrfHeader.getAttribute('content')] = csrfToken.getAttribute('content');
             }
-            
+
             fetch('/teacher/tasks/draft', {
                 method: 'POST',
                 headers: headers,
@@ -208,11 +208,11 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             `;
-            
+
             // Nachricht vor dem Formular einfügen
             const form = document.querySelector('form');
             form.insertAdjacentHTML('beforebegin', alertHtml);
-            
+
             // Nachricht nach 3 Sekunden automatisch ausblenden
             setTimeout(() => {
                 const alert = document.querySelector('.alert');
