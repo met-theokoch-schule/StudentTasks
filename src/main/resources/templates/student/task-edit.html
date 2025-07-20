@@ -35,8 +35,7 @@
                             </small>
                         </div>
                         <div th:if="${userTask.status}" class="mb-3">
-                            <span th:class="'badge ' + (${userTask.status.name == 'VOLLSTÄNDIG'} ? 'bg-success' : 
-                                         ${userTask.status.name == 'IN_BEARBEITUNG'} ? 'bg-warning' : 'bg-secondary')"
+                            <span th:class="'badge ' + (${userTask.status.name == 'VOLLSTÄNDIG'} ? 'bg-success' : (${userTask.status.name == 'IN_BEARBEITUNG'} ? 'bg-warning' : 'bg-secondary'))"
                                   th:text="${userTask.status.name}">Status</span>
                         </div>
                         <div class="task-description" th:utext="${task.description}">
