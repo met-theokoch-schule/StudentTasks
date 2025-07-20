@@ -34,8 +34,7 @@ public interface TaskContentRepository extends JpaRepository<TaskContent, Long> 
 
     boolean existsByUserTask(UserTask userTask);
 
-    boolean existsByUserTaskAndIsSubmitted(UserTask userTask, Boolean isSubmitted);
+    boolean existsByUserTaskAndIsSubmitted(UserTask userTask);
     List<TaskContent> findByUserTaskOrderBySavedAtDesc(UserTask userTask);
     int countByUserTaskAndIsSubmittedTrue(UserTask userTask);
-    List<TaskContent> findByUserTaskOrderByVersionDesc(UserTask userTask);
 }

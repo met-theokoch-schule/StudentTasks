@@ -1,4 +1,3 @@
-
 package com.example.studenttask.service;
 
 import com.example.studenttask.controller.TeacherGroupController.*;
@@ -42,10 +41,10 @@ public class GroupService {
      */
     public List<GroupInfo> getGroupsWithActiveTasksByTeacher(User teacher) {
         List<GroupInfo> result = new ArrayList<>();
-        
+
         // Alle aktiven Aufgaben des Lehrers
         List<Task> activeTasks = taskRepository.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher);
-        
+
         // Gruppiere nach Gruppen
         activeTasks.stream()
             .flatMap(task -> task.getAssignedGroups().stream())
@@ -56,16 +55,16 @@ public class GroupService {
                 int activeTaskCount = (int) activeTasks.stream()
                     .filter(task -> task.getAssignedGroups().contains(group))
                     .count();
-                
+
                 // Zähle ausstehende Abgaben
                 int pendingSubmissions = countPendingSubmissionsForGroup(group, teacher);
-                
+
                 // Letzte Aktivität
                 LocalDateTime lastActivity = getLastActivityForGroup(group, teacher);
-                
+
                 result.add(new GroupInfo(group, studentCount, activeTaskCount, pendingSubmissions, lastActivity));
             });
-        
+
         return result;
     }
 
@@ -74,16 +73,16 @@ public class GroupService {
      */
     public GroupStatistics getGroupStatistics(Group group, User teacher) {
         int totalStudents = userRepository.countByGroupsContaining(group);
-        
+
         List<Task> activeTasks = taskRepository.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher)
             .stream()
             .filter(task -> task.getAssignedGroups().contains(group))
             .collect(Collectors.toList());
-        
+
         int activeTaskCount = activeTasks.size();
         int pendingSubmissions = countPendingSubmissionsForGroup(group, teacher);
         int completedSubmissions = countCompletedSubmissionsForGroup(group, teacher);
-        
+
         return new GroupStatistics(totalStudents, activeTaskCount, pendingSubmissions, completedSubmissions);
     }
 
@@ -92,26 +91,26 @@ public class GroupService {
      */
     public List<StudentTaskInfo> getStudentTasksForGroup(Group group, User teacher) {
         List<StudentTaskInfo> result = new ArrayList<>();
-        
+
         // Alle Schüler der Gruppe
         List<User> students = userRepository.findByGroupsContaining(group);
-        
+
         // Alle aktiven Aufgaben des Lehrers für diese Gruppe
         List<Task> groupTasks = taskRepository.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher)
             .stream()
             .filter(task -> task.getAssignedGroups().contains(group))
             .collect(Collectors.toList());
-        
+
         for (User student : students) {
             List<TaskInfo> taskInfos = new ArrayList<>();
-            
+
             for (Task task : groupTasks) {
                 // UserTask für diesen Schüler und diese Aufgabe
                 UserTask userTask = userTaskRepository.findByUserAndTask(student, task);
-                
+
                 if (userTask != null) {
                     boolean hasSubmissions = taskContentRepository.countByUserTaskAndIsSubmittedTrue(userTask) > 0;
-                    
+
                     TaskInfo taskInfo = new TaskInfo(
                         userTask.getId(),
                         task,
@@ -121,12 +120,12 @@ public class GroupService {
                     taskInfos.add(taskInfo);
                 }
             }
-            
+
             if (!taskInfos.isEmpty()) {
                 result.add(new StudentTaskInfo(student, taskInfos));
             }
         }
-        
+
         return result;
     }
 
@@ -139,17 +138,20 @@ public class GroupService {
             .stream()
             .filter(task -> task.getAssignedGroups().contains(group))
             .collect(Collectors.toList());
-        
+
         int count = 0;
         for (User student : students) {
             for (Task task : activeTasks) {
-                UserTask userTask = userTaskRepository.findByUserAndTask(student, task);
-                if (userTask != null && !isTaskCompleted(userTask)) {
-                    count++;
+                Optional<UserTask> userTaskOpt = userTaskRepository.findByUserAndTask(student, task);
+                if (userTaskOpt.isPresent()) {
+                    UserTask userTask = userTaskOpt.get();
+                    if (userTask != null && !isTaskCompleted(userTask)) {
+                        count++;
+                    }
                 }
             }
         }
-        
+
         return count;
     }
 
@@ -162,17 +164,20 @@ public class GroupService {
             .stream()
             .filter(task -> task.getAssignedGroups().contains(group))
             .collect(Collectors.toList());
-        
+
         int count = 0;
         for (User student : students) {
             for (Task task : activeTasks) {
-                UserTask userTask = userTaskRepository.findByUserAndTask(student, task);
-                if (userTask != null && isTaskCompleted(userTask)) {
-                    count++;
+                Optional<UserTask> userTaskOpt = userTaskRepository.findByUserAndTask(student, task);
+                if (userTaskOpt.isPresent()) {
+                    UserTask userTask = userTaskOpt.get();
+                    if (userTask != null && isTaskCompleted(userTask)) {
+                        count++;
+                    }
                 }
             }
         }
-        
+
         return count;
     }
 
@@ -185,9 +190,9 @@ public class GroupService {
             .stream()
             .filter(task -> task.getAssignedGroups().contains(group))
             .collect(Collectors.toList());
-        
+
         LocalDateTime latest = null;
-        
+
         for (User student : students) {
             for (Task task : activeTasks) {
                 UserTask userTask = userTaskRepository.findByUserAndTask(student, task);
@@ -198,7 +203,7 @@ public class GroupService {
                 }
             }
         }
-        
+
         return latest;
     }
 
