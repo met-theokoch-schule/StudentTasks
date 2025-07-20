@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${task.title}">Aufgabe</title>
+    <title>Einfache Textaufgabe</title>
     <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
-    <link th:href="@{/css/custom.css}" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
     <div class="container mt-4">
@@ -35,135 +35,39 @@
                             <i class="fas fa-paper-plane"></i> Abgeben
                         </button>
                     </div>
-
-                    <div id="status-message" class="mt-2"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+    <!-- Content Fragment für task-edit Integration -->
+    <div th:fragment="content">
+        <div class="p-3">
+            <textarea id="content-editor" class="form-control" rows="20" 
+                      placeholder="Geben Sie hier Ihre Antwort ein..."
+                      onchange="onContentChange()" 
+                      oninput="onContentChange()"></textarea>
+        </div>
+    </div>
+
     <script>
-        const taskId = /*[[${task.id}]]*/ 1;
-        let currentContent = '';
-        let isSubmitted = false;
+        // Funktionen für die Integration mit task-edit.html
+        function getTaskContent() {
+            const textarea = document.querySelector('#content-editor, #submission-content');
+            return textarea ? textarea.value : '';
+        }
 
-        // Load existing content on page load
+        function setTaskContent(content) {
+            const textarea = document.querySelector('#content-editor, #submission-content');
+            if (textarea) {
+                textarea.value = content;
+            }
+        }
+
+        // Lade gespeicherten Inhalt beim Laden der Seite
         document.addEventListener('DOMContentLoaded', function() {
-            loadContent();
+            // Hier könnte Content von der API geladen werden
         });
-
-        // Load current content
-        function loadContent() {
-            fetch(`/api/tasks/${taskId}/content`)
-                .then(response => {
-                    if (response.ok) {
-                        return response.text();
-                    } else if (response.status === 404) {
-                        // No content yet, use default submission if available
-                        return /*[[${task.defaultSubmission ?: ''}]]*/ '';
-                    }
-                    throw new Error('Failed to load content');
-                })
-                .then(content => {
-                    document.getElementById('submission-content').value = content;
-                    currentContent = content;
-                    showStatus('Inhalt geladen', 'success');
-                })
-                .catch(error => {
-                    console.error('Error loading content:', error);
-                    showStatus('Fehler beim Laden des Inhalts', 'error');
-                });
-        }
-
-        // Save content as draft
-        function saveContent() {
-            const content = document.getElementById('submission-content').value;
-
-            fetch(`/api/tasks/${taskId}/content`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'text/plain',
-                },
-                body: content
-            })
-            .then(response => {
-                if (response.ok) {
-                    currentContent = content;
-                    showStatus('Entwurf gespeichert', 'success');
-                } else {
-                    throw new Error('Failed to save content');
-                }
-            })
-            .catch(error => {
-                console.error('Error saving content:', error);
-                showStatus('Fehler beim Speichern', 'error');
-            });
-        }
-
-        // Submit task
-        function submitTask() {
-            const content = document.getElementById('submission-content').value;
-
-            if (!content.trim()) {
-                showStatus('Bitte geben Sie eine Antwort ein', 'error');
-                return;
-            }
-
-            if (confirm('Möchten Sie die Aufgabe wirklich abgeben? Dies kann nicht rückgängig gemacht werden.')) {
-                // First save the content
-                fetch(`/api/tasks/${taskId}/content`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'text/plain',
-                    },
-                    body: content
-                })
-                .then(response => {
-                    if (!response.ok) throw new Error('Failed to save content');
-
-                    // Then submit the task
-                    return fetch(`/api/tasks/${taskId}/submit`, {
-                        method: 'POST'
-                    });
-                })
-                .then(response => {
-                    if (response.ok) {
-                        isSubmitted = true;
-                        document.getElementById('submission-content').disabled = true;
-                        document.getElementById('save-btn').disabled = true;
-                        document.getElementById('submit-btn').disabled = true;
-                        showStatus('Aufgabe erfolgreich abgegeben!', 'success');
-                    } else {
-                        throw new Error('Failed to submit task');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error submitting task:', error);
-                    showStatus('Fehler beim Abgeben der Aufgabe', 'error');
-                });
-            }
-        }
-
-        // Show status message
-        function showStatus(message, type) {
-            const statusEl = document.getElementById('status-message');
-            statusEl.className = `alert alert-${type === 'success' ? 'success' : 'danger'}`;
-            statusEl.textContent = message;
-            statusEl.style.display = 'block';
-
-            setTimeout(() => {
-                statusEl.style.display = 'none';
-            }, 3000);
-        }
-
-        // Auto-save every 30 seconds
-        setInterval(() => {
-            const content = document.getElementById('submission-content').value;
-            if (content !== currentContent && !isSubmitted) {
-                saveContent();
-            }
-        }, 30000);
     </script>
 </body>
 </html>
