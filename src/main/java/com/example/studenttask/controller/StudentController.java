@@ -67,9 +67,43 @@ public class StudentController {
         }
         UserTask userTask = userTaskOpt.get();
 
+        // Neuesten Content laden
+        Optional<TaskContent> latestContent = taskContentService.getLatestContent(userTask);
+
+        // TaskView laden
+        TaskView taskView = taskViewService.findById(task.getTaskView().getId())
+            .orElseThrow(() -> new RuntimeException("TaskView nicht gefunden"));
+
+        // Debug-Ausgaben für Content-Laden
+        System.out.println("🔍 === DEBUG: StudentController.viewTask Content Loading ===");
+        System.out.println("   - UserTask ID: " + userTask.getId());
+        System.out.println("   - Task ID: " + task.getId());
+        System.out.println("   - Latest content present: " + latestContent.isPresent());
+        if (latestContent.isPresent()) {
+            TaskContent content = latestContent.get();
+            System.out.println("   - Content ID: " + content.getId());
+            System.out.println("   - Content version: " + content.getVersion());
+            System.out.println("   - Content length: " + (content.getContent() != null ? content.getContent().length() : "null"));
+            System.out.println("   - Content preview: " + (content.getContent() != null && content.getContent().length() > 50 ? content.getContent().substring(0, 50) + "..." : content.getContent()));
+        }
+        System.out.println("   - Default submission: " + (task.getDefaultSubmission() != null ? task.getDefaultSubmission().substring(0, Math.min(50, task.getDefaultSubmission().length())) : "null"));
+
         model.addAttribute("task", task);
         model.addAttribute("userTask", userTask);
+        model.addAttribute("taskView", taskView);
         model.addAttribute("student", student);
+
+        String contentToShow;
+        if (latestContent.isPresent() && latestContent.get().getContent() != null && !latestContent.get().getContent().trim().isEmpty()) {
+            contentToShow = latestContent.get().getContent();
+            System.out.println("   - Using saved content: " + contentToShow.substring(0, Math.min(50, contentToShow.length())) + "...");
+        } else {
+            contentToShow = task.getDefaultSubmission() != null ? task.getDefaultSubmission() : "";
+            System.out.println("   - Using default content: " + contentToShow);
+        }
+
+        model.addAttribute("currentContent", contentToShow);
+        System.out.println("🔍 === DEBUG: StudentController.viewTask Content Loading END ===");
 
         // Direkt das TaskView-Template zurückgeben
         return task.getTaskView().getTemplatePath();
