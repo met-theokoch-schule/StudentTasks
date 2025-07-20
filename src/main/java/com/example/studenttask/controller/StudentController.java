@@ -47,6 +47,33 @@ public class StudentController {
     private TaskStatusRepository taskStatusRepository;
 
     /**
+     * Direkte Aufgaben-Ansicht (ohne task-edit.html Wrapper)
+     */
+    @GetMapping("/tasks/{taskId}")
+    public String viewTask(@PathVariable Long taskId, Model model, Principal principal) {
+        User student = userService.findByOpenIdSubject(principal.getName())
+            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+
+        Task task = taskService.findById(taskId);
+        if (task == null) {
+            throw new RuntimeException("Aufgabe nicht gefunden");
+        }
+
+        // Check if student has access to this task
+        UserTask userTask = userTaskService.findByUserAndTask(student, task);
+        if (userTask == null) {
+            throw new RuntimeException("Keine Berechtigung für diese Aufgabe");
+        }
+
+        model.addAttribute("task", task);
+        model.addAttribute("userTask", userTask);
+        model.addAttribute("student", student);
+
+        // Direkt das TaskView-Template zurückgeben
+        return task.getTaskView().getTemplatePath();
+    }
+
+    /**
      * Schüler-Dashboard
      */
     @GetMapping("/dashboard")
