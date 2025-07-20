@@ -1,0 +1,139 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Submission Review</title>
+    <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/custom.css}" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a th:href="@{/teacher/dashboard}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a th:href="@{/teacher/tasks}">Aufgaben</a></li>
+                <li class="breadcrumb-item"><a th:href="@{'/teacher/tasks/' + ${userTask.task.id}}">
+                    <span th:text="${userTask.task.title}">Aufgabe</span>
+                </a></li>
+                <li class="breadcrumb-item active">Review</li>
+            </ol>
+        </nav>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Submission Review - <span th:text="${userTask.user.name}">Schüler</span></h5>
+                        <small class="text-muted">Aufgabe: <span th:text="${userTask.task.title}">Aufgabentitel</span></small>
+                    </div>
+                    <div class="card-body">
+                        <!-- Current Status -->
+                        <div class="alert alert-info">
+                            <strong>Aktueller Status:</strong> 
+                            <span th:text="${userTask.status?.name ?: 'Kein Status'}">Status</span>
+                        </div>
+
+                        <!-- Submissions History -->
+                        <h6>Submission-Historie:</h6>
+                        <div th:if="${submissions != null and !submissions.isEmpty()}">
+                            <div th:each="submission, iterStat : ${submissions}" class="border rounded p-3 mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="mb-0">Version <span th:text="${submission.version}">1</span></h6>
+                                    <div>
+                                        <small class="text-muted" th:text="${#temporals.format(submission.savedAt, 'dd.MM.yyyy HH:mm')}">Datum</small>
+                                        <span th:if="${submission.isSubmitted}" class="badge bg-success ms-2">Abgegeben</span>
+                                        <span th:unless="${submission.isSubmitted}" class="badge bg-secondary ms-2">Entwurf</span>
+                                    </div>
+                                </div>
+                                <div class="submission-content">
+                                    <pre th:text="${submission.content}">Content</pre>
+                                </div>
+                            </div>
+                        </div>
+                        <div th:if="${submissions == null or submissions.isEmpty()}" class="alert alert-warning">
+                            Keine Submissions vorhanden.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <!-- Review Form -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6>Bewertung abgeben</h6>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{'/teacher/submissions/' + ${userTask.id} + '/review'}" method="post">
+                            <div class="mb-3">
+                                <label for="statusId" class="form-label">Neuer Status:</label>
+                                <select id="statusId" name="statusId" class="form-select" required>
+                                    <option value="">Status wählen</option>
+                                    <option th:each="status : ${statuses}" 
+                                            th:value="${status.id}" 
+                                            th:text="${status.name}"
+                                            th:selected="${status.id == userTask.status?.id}"></option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="submissionId" class="form-label">Bezieht sich auf Version:</label>
+                                <select id="submissionId" name="submissionId" class="form-select">
+                                    <option value="">Allgemein</option>
+                                    <option th:each="submission : ${submissions}" 
+                                            th:value="${submission.id}" 
+                                            th:text="'Version ' + ${submission.version} + ' (' + ${#temporals.format(submission.savedAt, 'dd.MM.yyyy HH:mm')} + ')'">
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="comment" class="form-label">Kommentar:</label>
+                                <textarea id="comment" name="comment" class="form-control" rows="4" 
+                                          placeholder="Feedback für den Schüler..."></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Bewertung speichern</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Previous Reviews -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6>Bisherige Bewertungen</h6>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${reviews != null and !reviews.isEmpty()}">
+                            <div th:each="review : ${reviews}" class="border-bottom pb-2 mb-2">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong th:text="${review.status?.name}">Status</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            von <span th:text="${review.reviewer.name}">Lehrer</span>
+                                            am <span th:text="${#temporals.format(review.reviewedAt, 'dd.MM.yyyy HH:mm')}">Datum</span>
+                                        </small>
+                                    </div>
+                                </div>
+                                <div th:if="${review.comment != null and !review.comment.isEmpty()}" class="mt-2">
+                                    <p class="mb-0" th:text="${review.comment}">Kommentar</p>
+                                </div>
+                                <div th:if="${review.submission != null}" class="mt-1">
+                                    <small class="text-info">Bezieht sich auf Version <span th:text="${review.submission.version}">1</span></small>
+                                </div>
+                            </div>
+                        </div>
+                        <div th:if="${reviews == null or reviews.isEmpty()}" class="text-muted">
+                            Noch keine Bewertungen vorhanden.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>
