@@ -71,55 +71,123 @@
 
         // Save content as draft
         function saveContent() {
-        const content = document.getElementById('submission-content').value;
-        console.log('Saving content:', content.substring(0, 100) + '...');
-
-        fetch(`/api/tasks/${taskId}/content`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ content: content })
-        })
-        .then(response => {
-            console.log('Response status:', response.status);
-            return response.text();
-        })
-        .then(data => {
-            console.log('Save response:', data);
-            if (data.includes('successfully')) {
-                showStatus('Änderungen gespeichert', 'success');
-            } else {
-                showStatus('Fehler beim Speichern: ' + data, 'error');
+            const textarea = document.getElementById('submission-content');
+            if (!textarea) {
+                console.error('❌ Textarea element not found!');
+                showStatus('Textarea nicht gefunden!', 'error');
+                return;
             }
-        })
-        .catch(error => {
-            console.error('Error saving content:', error);
-            showStatus('Fehler beim Speichern: ' + error.message, 'error');
-        });
-    }
+
+            const content = textarea.value;
+            console.log('🔍 === FRONTEND DEBUG: Save Content ===');
+            console.log('   - Content length:', content.length);
+            console.log('   - Content preview:', content.substring(0, 100) + (content.length > 100 ? '...' : ''));
+            console.log('   - TaskId from URL:', taskId);
+            console.log('   - Request URL:', `/api/tasks/${taskId}/content`);
+
+            const requestBody = { content: content };
+            console.log('   - Request body:', JSON.stringify(requestBody));
+
+            fetch(`/api/tasks/${taskId}/content`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestBody)
+            })
+            .then(response => {
+                console.log('   - Response status:', response.status);
+                console.log('   - Response headers:', response.headers);
+                console.log('   - Response ok:', response.ok);
+                return response.text();
+            })
+            .then(data => {
+                console.log('   - Save response text:', data);
+                if (data.includes('successfully')) {
+                    console.log('✅ Save successful');
+                    showStatus('Änderungen gespeichert', 'success');
+                } else {
+                    console.log('❌ Save failed');
+                    showStatus('Fehler beim Speichern: ' + data, 'error');
+                }
+                console.log('🔍 === FRONTEND DEBUG: Save Content End ===');
+            })
+            .catch(error => {
+                console.error('❌ Error saving content:', error);
+                showStatus('Fehler beim Speichern: ' + error.message, 'error');
+                console.log('🔍 === FRONTEND DEBUG: Save Content Error End ===');
+            });
+        }
 
         // Load current content
         function loadContent() {
-        console.log('Loading content for task:', taskId);
-        fetch(`/api/tasks/${taskId}/content`)
-            .then(response => {
-                console.log('Load response status:', response.status);
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
+            console.log('🔍 === FRONTEND DEBUG: Load Content ===');
+            console.log('   - TaskId:', taskId);
+            console.log('   - Request URL:', `/api/tasks/${taskId}/content`);
+            
+            fetch(`/api/tasks/${taskId}/content`)
+                .then(response => {
+                    console.log('   - Load response status:', response.status);
+                    console.log('   - Load response ok:', response.ok);
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('   - Content loaded:', data);
+                    const textarea = document.getElementById('submission-content');
+                    if (textarea) {
+                        textarea.value = data.content || '';
+                        console.log('   - Content set in textarea, length:', (data.content || '').length);
+                    } else {
+                        console.error('   - Textarea not found for loading content!');
+                    }
+                    console.log('🔍 === FRONTEND DEBUG: Load Content End ===');
+                })
+                .catch(error => {
+                    console.error('❌ Error loading content:', error);
+                    showStatus('Fehler beim Laden des Inhalts: ' + error.message, 'error');
+                    console.log('🔍 === FRONTEND DEBUG: Load Content Error End ===');
+                });
+        }
+
+        // Status display function
+        function showStatus(message, type) {
+            console.log('📢 Status:', type, '-', message);
+            // Create status element if it doesn't exist
+            let statusElement = document.getElementById('status-message');
+            if (!statusElement) {
+                statusElement = document.createElement('div');
+                statusElement.id = 'status-message';
+                statusElement.className = 'alert mt-2';
+                const cardBody = document.querySelector('.card-body');
+                if (cardBody) {
+                    cardBody.appendChild(statusElement);
                 }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Content loaded:', data);
-                document.getElementById('submission-content').value = data.content || '';
-                console.log('Content set in textarea');
-            })
-            .catch(error => {
-                console.error('Error loading content:', error);
-                showStatus('Fehler beim Laden des Inhalts: ' + error.message, 'error');
-            });
-    }
+            }
+            
+            // Update status
+            statusElement.className = 'alert mt-2 alert-' + (type === 'success' ? 'success' : 'danger');
+            statusElement.textContent = message;
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                if (statusElement.parentNode) {
+                    statusElement.remove();
+                }
+            }, 3000);
+        }
+
+        // Get taskId from URL
+        const taskId = window.location.pathname.split('/').pop();
+        console.log('🔍 TaskId extracted from URL:', taskId);
+
+        // Load content when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔍 Page loaded, loading content...');
+            loadContent();
+        });
     </script>
 </body>
 </html>
