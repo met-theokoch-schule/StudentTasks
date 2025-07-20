@@ -164,8 +164,8 @@
                                             <td th:text="${#temporals.format(task.createdAt, 'dd.MM.yyyy HH:mm')}">01.01.2024 10:00</td>
                                             <td th:text="${task.dueDate != null ? #temporals.format(task.dueDate, 'dd.MM.yyyy') : 'Kein Datum'}">31.12.2024</td>
                                             <td>
-                                                <span th:if="${task.isActive}" class="badge bg-success">Aktiv</span>
-                                                <span th:unless="${task.isActive}" class="badge bg-secondary">Inaktiv</span>
+                                                <span class="badge bg-success" th:if="${task.isActive}">Aktiv</span>
+                                                <span class="badge bg-secondary" th:unless="${task.isActive}">Inaktiv</span>
                                             </td>
                                             <td>
                                                 <a th:href="@{'/teacher/tasks/' + ${task.id}}" class="btn btn-sm btn-outline-primary">
