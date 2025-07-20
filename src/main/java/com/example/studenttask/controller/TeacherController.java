@@ -146,10 +146,10 @@ public class TeacherController {
                 for (String groupIdStr : selectedGroups) {
                     try {
                         Long groupId = Long.parseLong(groupIdStr);
-                        Optional<Group> groupOpt = groupService.findById(groupId);
-                        if (groupOpt.isPresent()) {
-                            assignedGroups.add(groupOpt.get());
-                            System.out.println("   - Added group: " + groupOpt.get().getName() + " (ID: " + groupId + ")");
+                        Group group = groupService.findById(groupId);
+                        if (group != null) {
+                            assignedGroups.add(group);
+                            System.out.println("   - Added group: " + group.getName() + " (ID: " + groupId + ")");
                         } else {
                             System.out.println("   - Group not found: " + groupId);
                         }
