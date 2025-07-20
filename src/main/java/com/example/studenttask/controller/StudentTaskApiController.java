@@ -43,12 +43,13 @@ public class StudentTaskApiController {
             System.out.println("   - User: " + authentication.getName());
 
             // Find user
-            String username = authentication.getName();
-            User user = userService.findByUsername(username);
-            if (user == null) {
-                System.out.println("   - ERROR: User not found: " + username);
+            String openIdSubject = authentication.getName();
+            Optional<User> userOpt = userService.findByOpenIdSubject(openIdSubject);
+            if (userOpt.isEmpty()) {
+                System.out.println("   - ERROR: User not found: " + openIdSubject);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
+            User user = userOpt.get();
             System.out.println("   - User found: " + user.getName() + " (ID: " + user.getId() + ")");
 
             // Find UserTask
@@ -106,16 +107,16 @@ public class StudentTaskApiController {
             }
 
             // Find user
-            String username = authentication.getName();
-            System.out.println("   - Looking for user with username: '" + username + "'");
-            User user = userService.findByUsername(username);
-            if (user == null) {
-                System.out.println("   - ERROR: User not found: " + username);
+            String openIdSubject = authentication.getName();
+            Optional<User> userOpt = userService.findByOpenIdSubject(openIdSubject);
+            if (userOpt.isEmpty()) {
+                System.out.println("   - ERROR: User not found: " + openIdSubject);
                 System.out.println("   - Available users in database:");
                 // Add some debug info about available users
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found: " + username);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found: " + openIdSubject);
             }
-            System.out.println("   - User found: " + user.getName() + " (ID: " + user.getId() + ", Username: " + user.getUsername() + ")");
+            User user = userOpt.get();
+            System.out.println("   - User found: " + user.getName() + " (ID: " + user.getId() + ", Username: " + user.getName() + ")");
 
             // Find task
             System.out.println("   - Looking for task with ID: " + taskId);
