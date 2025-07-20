@@ -119,7 +119,6 @@ public class TeacherTaskController {
         if (userTaskOpt.isEmpty()) {
             return "redirect:/teacher/tasks";
         }
-
         UserTask userTask = userTaskOpt.get();
         model.addAttribute("userTask", userTask);
 
@@ -149,7 +148,6 @@ public class TeacherTaskController {
         if (userTaskOpt.isEmpty()) {
             return "redirect:/teacher/tasks";
         }
-
         UserTask userTask = userTaskOpt.get();
         User reviewer = userService.findByOpenIdSubject(authentication.getName()).orElse(null);
 
@@ -163,3 +161,4 @@ public class TeacherTaskController {
         return "redirect:/teacher/submissions/" + userTaskId;
     }
 }
+```

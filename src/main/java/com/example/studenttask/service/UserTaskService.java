@@ -29,12 +29,10 @@ public class UserTaskService {
      * Find or create UserTask for user and task
      */
     public UserTask findOrCreateUserTask(User user, Task task) {
-        UserTask existingUserTask = userTaskRepository.findByUserAndTask(user, task);
-
-        if (existingUserTask != null) {
-            return existingUserTask;
+        Optional<UserTask> existingUserTask = userTaskRepository.findByUserAndTask(user, task);
+        if (existingUserTask.isPresent()) {
+            return existingUserTask.get();
         } else {
-            // Create new UserTask
             UserTask userTask = new UserTask();
             userTask.setUser(user);
             userTask.setTask(task);
@@ -101,5 +99,9 @@ public class UserTaskService {
      */
     public void delete(UserTask userTask) {
         userTaskRepository.delete(userTask);
+    }
+
+    public Optional<UserTask> findById(Long id) {
+        return userTaskRepository.findById(id);
     }
 }

@@ -15,6 +15,11 @@ public interface TaskReviewRepository extends JpaRepository<TaskReview, Long> {
      * Alle Reviews für eine UserTask finden, sortiert nach Erstellungsdatum
      */
     List<TaskReview> findByUserTaskOrderByCreatedAtDesc(UserTask userTask);
+    
+    /**
+     * Alle Reviews für eine UserTask finden, sortiert nach Review-Datum
+     */
+    List<TaskReview> findByUserTaskOrderByReviewedAtDesc(UserTask userTask);
 
     /**
      * Das neueste Review für eine UserTask finden
