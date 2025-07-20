@@ -114,3 +114,35 @@ public class TaskStatusService {
         });
     }
 }
+package com.example.studenttask.service;
+
+import com.example.studenttask.model.TaskStatus;
+import com.example.studenttask.repository.TaskStatusRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class TaskStatusService {
+
+    @Autowired
+    private TaskStatusRepository taskStatusRepository;
+
+    public List<TaskStatus> findAllActive() {
+        return taskStatusRepository.findByIsActiveTrueOrderByOrderAsc();
+    }
+
+    public List<TaskStatus> findAll() {
+        return taskStatusRepository.findAll();
+    }
+
+    public Optional<TaskStatus> findById(Long id) {
+        return taskStatusRepository.findById(id);
+    }
+
+    public TaskStatus save(TaskStatus taskStatus) {
+        return taskStatusRepository.save(taskStatus);
+    }
+}
