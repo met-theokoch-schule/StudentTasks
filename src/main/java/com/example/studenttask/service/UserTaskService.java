@@ -104,4 +104,16 @@ public class UserTaskService {
     public Optional<UserTask> findById(Long id) {
         return userTaskRepository.findById(id);
     }
+
+    public Optional<UserTask> findByUserIdAndTaskId(Long userId, Long taskId) {
+        return userTaskRepository.findByUserIdAndTaskId(userId, taskId);
+    }
+
+    public void updateStatus(UserTask userTask, String statusName) {
+        Optional<TaskStatus> status = taskStatusService.findByName(statusName);
+        if (status.isPresent()) {
+            userTask.setStatus(status.get());
+            userTaskRepository.save(userTask);
+        }
+    }
 }
