@@ -1,4 +1,3 @@
-
 package com.example.studenttask.service;
 
 import com.example.studenttask.model.TaskStatus;
@@ -57,15 +56,15 @@ public class TaskStatusService {
     private Set<String> getAllowedTransitions(String fromStatusName) {
         return switch (fromStatusName) {
             case "NICHT_BEGONNEN" -> Set.of("IN_BEARBEITUNG");
-            
+
             case "IN_BEARBEITUNG" -> Set.of("ABGEGEBEN", "NICHT_BEGONNEN");
-            
+
             case "ABGEGEBEN" -> Set.of("IN_BEARBEITUNG", "ÜBERARBEITUNG_NÖTIG", "VOLLSTÄNDIG");
-            
+
             case "ÜBERARBEITUNG_NÖTIG" -> Set.of("IN_BEARBEITUNG");
-            
+
             case "VOLLSTÄNDIG" -> Set.of("ÜBERARBEITUNG_NÖTIG");
-            
+
             default -> Set.of(); // Keine Übergänge erlaubt für unbekannte Status
         };
     }
@@ -95,40 +94,6 @@ public class TaskStatusService {
     public List<TaskStatus> getAllStatuses() {
         return taskStatusRepository.findAllByOrderByOrder();
     }
-
-    /**
-     * Neuen Status erstellen (für Admin)
-     */
-    public TaskStatus createStatus(String name, String description, Integer order) {
-        TaskStatus status = new TaskStatus(name, description, order);
-        return taskStatusRepository.save(status);
-    }
-
-    /**
-     * Status deaktivieren (für Admin)
-     */
-    public void deactivateStatus(Long statusId) {
-        taskStatusRepository.findById(statusId).ifPresent(status -> {
-            status.setIsActive(false);
-            taskStatusRepository.save(status);
-        });
-    }
-}
-package com.example.studenttask.service;
-
-import com.example.studenttask.model.TaskStatus;
-import com.example.studenttask.repository.TaskStatusRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
-
-@Service
-public class TaskStatusService {
-
-    @Autowired
-    private TaskStatusRepository taskStatusRepository;
 
     public List<TaskStatus> findAllActive() {
         return taskStatusRepository.findByIsActiveTrueOrderByOrderAsc();
