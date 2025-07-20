@@ -1,0 +1,93 @@
+
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meine Aufgaben</title>
+    <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/custom.css}" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a th:href="@{/student/dashboard}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Aufgaben</li>
+            </ol>
+        </nav>
+
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-tasks"></i> Meine Aufgaben</h5>
+            </div>
+            <div class="card-body">
+                <div th:if="${userTasks != null and !userTasks.isEmpty()}">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Aufgabe</th>
+                                    <th>Status</th>
+                                    <th>Fälligkeitsdatum</th>
+                                    <th>Letzte Bearbeitung</th>
+                                    <th>Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="userTask : ${userTasks}">
+                                    <td>
+                                        <strong th:text="${userTask.task.title}">Aufgabentitel</strong>
+                                        <br>
+                                        <small class="text-muted" 
+                                               th:text="${#strings.abbreviate(userTask.task.description, 60)}">
+                                            Beschreibung...
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <span th:if="${userTask.status}" 
+                                              th:class="'badge ' + (${userTask.status.name == 'VOLLSTÄNDIG'} ? 'bg-success' : 
+                                                       ${userTask.status.name == 'IN_BEARBEITUNG'} ? 'bg-warning' : 'bg-secondary')"
+                                              th:text="${userTask.status.name}">Status</span>
+                                        <span th:unless="${userTask.status}" class="badge bg-light text-dark">Nicht begonnen</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${userTask.task.dueDate}" 
+                                              th:text="${#temporals.format(userTask.task.dueDate, 'dd.MM.yyyy HH:mm')}">
+                                            Fälligkeitsdatum
+                                        </span>
+                                        <span th:unless="${userTask.task.dueDate}" class="text-muted">Kein Datum</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${userTask.lastModified}" 
+                                              th:text="${#temporals.format(userTask.lastModified, 'dd.MM.yyyy HH:mm')}">
+                                            Letzte Bearbeitung
+                                        </span>
+                                        <span th:unless="${userTask.lastModified}" class="text-muted">Noch nicht bearbeitet</span>
+                                    </td>
+                                    <td>
+                                        <a th:href="@{'/student/tasks/' + ${userTask.task.id}}" 
+                                           class="btn btn-primary btn-sm">
+                                            <i class="fas fa-edit"></i> Bearbeiten
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div th:if="${userTasks == null or userTasks.isEmpty()}" class="text-center py-4">
+                    <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Keine Aufgaben verfügbar.</p>
+                    <a th:href="@{/student/dashboard}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left"></i> Zurück zum Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>
