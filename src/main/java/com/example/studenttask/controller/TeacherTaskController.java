@@ -38,8 +38,17 @@ public class TeacherTaskController {
      */
     @GetMapping("/tasks")
     public String listTasks(Model model, Principal principal) {
-        User teacher = userService.findByPreferredUsername(principal.getName());
+        User teacher = userService.findByOpenIdSubject(principal.getName())
+            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+        
+        System.out.println("🔍 === DEBUG: Task List Loading ===");
+        System.out.println("   - Loading tasks for teacher: " + teacher.getName() + " (ID: " + teacher.getId() + ")");
+        
         List<Task> tasks = taskService.findByCreatedBy(teacher);
+        System.out.println("   - Found " + tasks.size() + " tasks in task list");
+        for (Task task : tasks) {
+            System.out.println("   - Task: " + task.getTitle() + " (ID: " + task.getId() + ", Active: " + task.getIsActive() + ")");
+        }
 
         model.addAttribute("teacher", teacher);
         model.addAttribute("tasks", tasks);
@@ -52,7 +61,8 @@ public class TeacherTaskController {
      */
     @GetMapping("/tasks/{taskId}/submissions")
     public String viewTaskSubmissions(@PathVariable Long taskId, Model model, Principal principal) {
-        User teacher = userService.findByPreferredUsername(principal.getName());
+        User teacher = userService.findByOpenIdSubject(principal.getName())
+            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
         Optional<Task> taskOpt = taskService.findById(taskId);
 
         // Sicherheit: Prüfen ob Aufgabe existiert und dem Lehrer gehört
