@@ -81,7 +81,7 @@ public class StudentController {
             System.out.println("   - Checking group: " + group.getName() + " (ID: " + group.getId() + ")");
 
             // Finde alle aktiven Aufgaben, die dieser Gruppe zugewiesen sind
-            List<Task> groupTasks = taskRepository.findByIsActiveTrueOrderByCreatedAtDesc()
+            List<Task> groupTasks = taskRepository.findByIsActiveTrueAndAssignedGroupsContainsOrderByCreatedAtDesc(group)
                 .stream()
                 .filter(task -> task.getAssignedGroups().contains(group))
                 .collect(Collectors.toList());
@@ -176,4 +176,17 @@ public class StudentController {
 
         return "student/tasks-list";
     }
+}
+```package com.example.studenttask.repository;
+
+import com.example.studenttask.model.Group;
+import com.example.studenttask.model.Task;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface TaskRepository extends JpaRepository<Task, Long> {
+    List<Task> findByIsActiveTrueAndAssignedGroupsContainsOrderByCreatedAtDesc(Group group);
 }
