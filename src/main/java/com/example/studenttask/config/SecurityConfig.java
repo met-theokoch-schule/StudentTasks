@@ -27,6 +27,7 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/", "/login", "/error", "/webjars/**", "/css/**", "/js/**").permitAll()
+                .requestMatchers("/api/**").authenticated()
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2
@@ -43,6 +44,9 @@ public class SecurityConfig {
                 .logoutSuccessUrl("/")
                 .invalidateHttpSession(true)
                 .clearAuthentication(true)
+            )
+            .csrf(csrf -> csrf
+                .ignoringRequestMatchers("/api/**")
             )
             .headers(headers -> headers
                 .frameOptions().sameOrigin()
