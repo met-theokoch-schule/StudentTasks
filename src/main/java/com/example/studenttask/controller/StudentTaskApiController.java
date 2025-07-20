@@ -1,4 +1,3 @@
-
 package com.example.studenttask.controller;
 
 import com.example.studenttask.model.UserTask;
@@ -41,15 +40,13 @@ public class StudentTaskApiController {
                 return ResponseEntity.notFound().build();
             }
 
-            // Get latest content
-            TaskContent latestContent = taskContentService.findLatestByUserTask(userTaskOpt.get());
-            if (latestContent == null || latestContent.getContent() == null) {
-                // Return default submission if no content exists
-                String defaultContent = userTaskOpt.get().getTask().getDefaultSubmission();
-                return ResponseEntity.ok(defaultContent != null ? defaultContent : "");
-            }
+            UserTask userTask = userTaskOpt.get();
 
-            return ResponseEntity.ok(latestContent.getContent());
+            // Get current content or create empty
+            Optional<TaskContent> currentContentOpt = taskContentService.getLatestContent(userTask);
+            String currentContent = currentContentOpt.map(TaskContent::getContent).orElse("");
+
+            return ResponseEntity.ok(currentContent);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).build();
@@ -73,8 +70,9 @@ public class StudentTaskApiController {
                 return ResponseEntity.notFound().build();
             }
 
+            UserTask userTask = userTaskOpt.get();
             // Save content as draft
-            taskContentService.saveContent(userTaskOpt.get(), content, false);
+            taskContentService.saveContent(userTask, content, false);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             e.printStackTrace();
@@ -99,10 +97,11 @@ public class StudentTaskApiController {
 
             UserTask userTask = userTaskOpt.get();
 
-            // Get latest content and mark as submitted
-            TaskContent latestContent = taskContentService.findLatestByUserTask(userTask);
-            if (latestContent != null) {
-                taskContentService.submitContent(latestContent);
+            // Get latest content to submit
+            Optional<TaskContent> latestContentOpt = taskContentService.getLatestContent(userTask);
+            if (latestContentOpt.isPresent()) {
+                // Create submitted version from latest content
+                taskContentService.submitContent(userTask, latestContentOpt.get().getContent());
             }
 
             // Update UserTask status to "ABGEGEBEN"

@@ -123,7 +123,7 @@ public class TeacherTaskController {
         model.addAttribute("userTask", userTask);
 
         // Get all submissions for this user task (version history)
-        List<TaskContent> submissions = taskContentService.findByUserTaskOrderByVersionDesc(userTask);
+        List<TaskContent> submissions = taskContentService.getAllContentVersions(userTask);
         model.addAttribute("submissions", submissions);
 
         // Get all reviews for this user task
