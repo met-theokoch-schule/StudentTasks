@@ -1,7 +1,6 @@
 com/example/studenttask/config/SecurityConfig.class
 com/example/studenttask/repository/TaskStatusRepository.class
 com/example/studenttask/service/TaskService$TaskStatistics.class
-com/example/studenttask/controller/StudentTaskApiController.class
 com/example/studenttask/repository/GroupRepository.class
 com/example/studenttask/model/TaskStatus.class
 com/example/studenttask/service/TaskService.class
@@ -26,7 +25,6 @@ com/example/studenttask/model/Group.class
 com/example/studenttask/service/TaskStatusService.class
 com/example/studenttask/repository/TaskRepository.class
 com/example/studenttask/controller/StudentController.class
-com/example/studenttask/StudentTaskApplication.class
 com/example/studenttask/model/TaskView.class
 com/example/studenttask/model/TaskContent.class
 com/example/studenttask/config/DataInitializer.class
