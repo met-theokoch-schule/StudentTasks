@@ -25,7 +25,9 @@
                 </div>
                 <div class="card-body">
                     <textarea id="submission-content" class="form-control" rows="15" 
-                              placeholder="Geben Sie hier Ihre Antwort ein..."></textarea>
+                              placeholder="Geben Sie hier Ihre Antwort ein..."
+                              onchange="onContentChange()" 
+                              oninput="onContentChange()"></textarea>
 
                     <div class="mt-3 d-flex gap-2">
                         <button id="save-btn" class="btn btn-secondary" onclick="saveContent()">
@@ -64,10 +66,49 @@
             }
         }
 
-        // Lade gespeicherten Inhalt beim Laden der Seite
-        document.addEventListener('DOMContentLoaded', function() {
-            // Hier könnte Content von der API geladen werden
-        });
+        // Content Change Handler für task-edit.html Integration
+        function onContentChange() {
+            // Diese Funktion wird von task-edit.html erwartet
+            console.log('Content changed in simple-text view');
+            
+            // Falls hasUnsavedChanges definiert ist (in task-edit.html), setze es auf true
+            if (typeof hasUnsavedChanges !== 'undefined') {
+                hasUnsavedChanges = true;
+            }
+        }
+
+        // Submit Task Function
+        function submitTask() {
+            if (confirm('Möchten Sie die Aufgabe wirklich abgeben? Dies kann nicht rückgängig gemacht werden.')) {
+                const content = getTaskContent();
+                
+                fetch(`/api/tasks/${taskId}/submit`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ content: content })
+                })
+                .then(response => {
+                    if (response.ok) {
+                        showStatus('Aufgabe erfolgreich abgegeben!', 'success');
+                        // Disable further editing
+                        const textarea = document.querySelector('#content-editor, #submission-content');
+                        if (textarea) {
+                            textarea.disabled = true;
+                        }
+                        document.getElementById('save-btn').disabled = true;
+                        document.getElementById('submit-btn').disabled = true;
+                    } else {
+                        showStatus('Fehler beim Abgeben der Aufgabe', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Submit error:', error);
+                    showStatus('Fehler beim Abgeben der Aufgabe: ' + error.message, 'error');
+                });
+            }
+        }
 
         // Save content as draft
         function saveContent() {
