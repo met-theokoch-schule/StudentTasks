@@ -1,0 +1,56 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Aufgabe bearbeiten</title>
+</head>
+<body>
+    <h1>Aufgabe bearbeiten</h1>
+
+    <form th:action="@{'/teacher/tasks/' + ${task.id}}" method="post" th:object="${task}">
+        <input type="hidden" name="_method" value="put">
+        
+        <p>
+            <label for="title">Titel:</label>
+            <input type="text" id="title" th:field="*{title}" required>
+        </p>
+
+        <p>
+            <label for="description">Beschreibung:</label>
+            <textarea id="description" th:field="*{description}" required></textarea>
+        </p>
+
+        <p>
+            <label for="taskViewId">Aufgabentyp:</label>
+            <select id="taskViewId" name="taskViewId" required>
+                <option value="">Bitte wählen</option>
+                <option th:each="view : ${taskViews}" 
+                        th:value="${view.id}" 
+                        th:text="${view.name}"
+                        th:selected="${view.id == task.taskView?.id}"></option>
+            </select>
+        </p>
+
+        <p>
+            <label for="selectedGroups">Gruppen:</label>
+            <select id="selectedGroups" name="selectedGroups" multiple>
+                <option th:each="group : ${groups}" 
+                        th:value="${group.id}" 
+                        th:text="${group.name}"
+                        th:selected="${task.assignedGroups != null and task.assignedGroups.contains(group)}"></option>
+            </select>
+        </p>
+
+        <p>
+            <input type="checkbox" id="isActive" th:field="*{isActive}">
+            <label for="isActive">Aktiv</label>
+        </p>
+
+        <p>
+            <button type="submit">Speichern</button>
+            <a th:href="@{/teacher/tasks}">Abbrechen</a>
+        </p>
+    </form>
+</body>
+</html>
