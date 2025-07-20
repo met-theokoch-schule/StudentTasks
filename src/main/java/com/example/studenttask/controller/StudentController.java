@@ -150,40 +150,6 @@ public class StudentController {
 
 
     /**
-     * Aufgabe bearbeiten
-     */
-    @GetMapping("/tasks/{taskId}")
-    public String editTask(@PathVariable Long taskId, Model model, Principal principal) {
-        User student = userService.findByOpenIdSubject(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-        Task task = taskService.findById(taskId)
-            .orElseThrow(() -> new RuntimeException("Aufgabe nicht gefunden"));
-
-        // UserTask finden oder erstellen
-        UserTask userTask = userTaskService.findOrCreateUserTask(student, task);
-
-        // Neuesten Content laden
-        Optional<TaskContent> latestContent = taskContentService.getLatestContent(userTask);
-
-        // TaskView laden
-        TaskView taskView = taskViewService.findById(task.getTaskView().getId())
-            .orElseThrow(() -> new RuntimeException("TaskView nicht gefunden"));
-
-        model.addAttribute("task", task);
-        model.addAttribute("userTask", userTask);
-        model.addAttribute("taskView", taskView);
-        model.addAttribute("student", student);
-
-        if (latestContent.isPresent()) {
-            model.addAttribute("currentContent", latestContent.get().getContent());
-        } else {
-            model.addAttribute("currentContent", task.getDefaultSubmission() != null ? task.getDefaultSubmission() : "");
-        }
-
-        return "student/task-edit";
-    }
-
-    /**
      * Aufgabenliste für Schüler
      */
     @GetMapping("/tasks")
