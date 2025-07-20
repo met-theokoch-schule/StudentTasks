@@ -88,7 +88,7 @@ public class TaskContentService {
     /**
      * Create a new version based on existing content
      */
-    public TaskContent createNewVersionFromExisting(UserTask userTask, int sourceVersion, 
+    public TaskContent createNewVersionFromExisting(UserTask userTask, int sourceVersion,
                                                    boolean isSubmitted) {
         Optional<TaskContent> sourceOpt = getContentVersion(userTask, sourceVersion);
         if (sourceOpt.isPresent()) {
@@ -166,7 +166,7 @@ public class TaskContentService {
         private final LocalDateTime lastSaved;
         private final boolean latestIsSubmitted;
 
-        public ContentStatistics(long totalVersions, long submittedVersions, 
+        public ContentStatistics(long totalVersions, long submittedVersions,
                                 LocalDateTime lastSaved, boolean latestIsSubmitted) {
             this.totalVersions = totalVersions;
             this.submittedVersions = submittedVersions;
@@ -200,5 +200,9 @@ public class TaskContentService {
         taskContent.setSubmitted(true);
 
         return taskContentRepository.save(taskContent);
+    }
+
+    public List<TaskContent> findByUserTaskOrderByVersionDesc(UserTask userTask) {
+        return taskContentRepository.findByUserTaskOrderByVersionDesc(userTask);
     }
 }
