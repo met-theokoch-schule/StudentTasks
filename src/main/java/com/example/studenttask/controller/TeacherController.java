@@ -51,10 +51,22 @@ public class TeacherController {
         User teacher = userService.findByOpenIdSubject(principal.getName())
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
-        List<Task> recentTasks = taskService.findByCreatedBy(teacher);
+        // Tasks des Lehrers laden
+        System.out.println("🔍 === DEBUG: Dashboard Task Loading ===");
+        System.out.println("   - Loading tasks for teacher: " + teacher.getName() + " (ID: " + teacher.getId() + ")");
+        List<Task> tasks = taskService.findByCreatedBy(teacher);
+        System.out.println("   - Found " + tasks.size() + " tasks");
+        for (Task task : tasks) {
+            System.out.println("   - Task: " + task.getTitle() + " (ID: " + task.getId() + ", CreatedBy: " + 
+                (task.getCreatedBy() != null ? task.getCreatedBy().getName() + " (ID: " + task.getCreatedBy().getId() + ")" : "NULL") + 
+                ", Active: " + task.getIsActive() + ")");
+        }
+
+        // Task-Statistiken berechnen
+        TaskService.TaskStatistics stats = taskService.getTaskStatistics(teacher);
 
         model.addAttribute("teacher", teacher);
-        model.addAttribute("recentTasks", recentTasks);
+        model.addAttribute("recentTasks", tasks);
 
         return "teacher/dashboard";
     }
@@ -100,33 +112,69 @@ public class TeacherController {
             Principal principal) {
 
         try {
+            System.out.println("🔍 === DEBUG: Task Creation START ===");
+            System.out.println("   - Task title: " + task.getTitle());
+            System.out.println("   - Task description: " + task.getDescription());
+            System.out.println("   - Selected groups: " + selectedGroups);
+            System.out.println("   - TaskView ID: " + taskViewId);
+
             User teacher = userService.findByOpenIdSubject(principal.getName())
                 .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+            System.out.println("   - Teacher: " + teacher.getName() + " (ID: " + teacher.getId() + ")");
 
             // Task View aus dem Service laden
             TaskView taskView = taskViewService.findById(taskViewId)
                 .orElseThrow(() -> new RuntimeException("TaskView nicht gefunden"));
             task.setTaskView(taskView);
+            System.out.println("   - TaskView: " + taskView.getName() + " (ID: " + taskView.getId() + ")");
 
             // Ersteller setzen
             task.setCreatedBy(teacher);
+            System.out.println("   - CreatedBy set to teacher: " + teacher.getName() + " (ID: " + teacher.getId() + ")");
             task.setCreatedAt(LocalDateTime.now());
+            System.out.println("   - CreatedAt set to: " + task.getCreatedAt());
 
-            // Aufgabe speichern
-            Task savedTask = taskService.save(task);
+            // Task aktiv setzen
+            task.setIsActive(true);
+            System.out.println("   - Task set to active: " + task.getIsActive());
 
-            // Gruppen zuordnen
+            // Gruppen verarbeiten
+            Set<Group> assignedGroups = new HashSet<>();
+            System.out.println("   - Processing groups...");
             if (selectedGroups != null && !selectedGroups.isEmpty()) {
-                Set<Group> assignedGroups = new HashSet<>();
-                for (String groupId : selectedGroups) {
-                    Group group = groupService.findById(Long.parseLong(groupId));
-                    if (group != null) {
-                        assignedGroups.add(group);
+                System.out.println("   - Groups to process: " + selectedGroups.size());
+                for (String groupIdStr : selectedGroups) {
+                    try {
+                        Long groupId = Long.parseLong(groupIdStr);
+                        Optional<Group> groupOpt = groupService.findById(groupId);
+                        if (groupOpt.isPresent()) {
+                            assignedGroups.add(groupOpt.get());
+                            System.out.println("   - Added group: " + groupOpt.get().getName() + " (ID: " + groupId + ")");
+                        } else {
+                            System.out.println("   - Group not found: " + groupId);
+                        }
+                    } catch (NumberFormatException e) {
+                        System.err.println("   - Invalid group ID: " + groupIdStr);
                     }
                 }
-                savedTask.setAssignedGroups(assignedGroups);
-                taskService.save(savedTask);
+            } else {
+                System.out.println("   - No groups selected");
             }
+            task.setAssignedGroups(assignedGroups);
+            System.out.println("   - Total assigned groups: " + assignedGroups.size());
+
+            // Task vor dem Speichern prüfen
+            System.out.println("   - Task before saving:");
+            System.out.println("     - Title: " + task.getTitle());
+            System.out.println("     - CreatedBy: " + (task.getCreatedBy() != null ? task.getCreatedBy().getName() + " (ID: " + task.getCreatedBy().getId() + ")" : "NULL"));
+            System.out.println("     - IsActive: " + task.getIsActive());
+            System.out.println("     - TaskView: " + (task.getTaskView() != null ? task.getTaskView().getName() : "NULL"));
+
+            // Task speichern
+            Task savedTask = taskService.save(task);
+            System.out.println("   - Task saved with ID: " + savedTask.getId());
+            System.out.println("   - Saved task CreatedBy: " + (savedTask.getCreatedBy() != null ? savedTask.getCreatedBy().getName() + " (ID: " + savedTask.getCreatedBy().getId() + ")" : "NULL"));
+            System.out.println("🔍 === DEBUG: Task Creation END ===");
 
             redirectAttributes.addFlashAttribute("success", "Aufgabe '" + savedTask.getTitle() + "' wurde erfolgreich erstellt.");
             return "redirect:/teacher/tasks";
