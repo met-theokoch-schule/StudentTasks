@@ -39,4 +39,8 @@ public interface UserTaskRepository extends JpaRepository<UserTask, Long> {
      * Anzahl UserTasks nach Status
      */
     long countByStatus(TaskStatus status);
+
+    List<UserTask> findByUserOrderByStartedAtDesc(User user);
+
+    Optional<UserTask> findByUserIdAndTaskId(Long userId, Long taskId);
 }

@@ -68,6 +68,61 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Hier könnte Content von der API geladen werden
         });
+
+        // Save content as draft
+        function saveContent() {
+            const content = document.getElementById('submission-content').value;
+            console.log('Saving content for task ID:', taskId, 'Content length:', content.length);
+
+            fetch(`/api/tasks/${taskId}/content`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain',
+                },
+                body: content
+            })
+            .then(response => {
+                console.log('Save response status:', response.status);
+                if (response.ok) {
+                    currentContent = content;
+                    showStatus('Entwurf gespeichert', 'success');
+                    console.log('Content saved successfully');
+                } else {
+                    throw new Error(`Failed to save content: ${response.status}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error saving content:', error);
+                showStatus('Fehler beim Speichern: ' + error.message, 'error');
+            });
+        }
+
+        // Load current content
+        function loadContent() {
+            console.log('Loading content for task ID:', taskId);
+            fetch(`/api/tasks/${taskId}/content`)
+                .then(response => {
+                    console.log('Load response status:', response.status);
+                    if (response.ok) {
+                        return response.text();
+                    } else if (response.status === 404) {
+                        // No content yet, use default submission if available
+                        console.log('No content found, using default submission');
+                        return /*[[${task.defaultSubmission ?: ''}]]*/ '';
+                    }
+                    throw new Error(`Failed to load content: ${response.status}`);
+                })
+                .then(content => {
+                    console.log('Loaded content:', content);
+                    document.getElementById('submission-content').value = content;
+                    currentContent = content;
+                    showStatus('Inhalt geladen', 'success');
+                })
+                .catch(error => {
+                    console.error('Error loading content:', error);
+                    showStatus('Fehler beim Laden des Inhalts: ' + error.message, 'error');
+                });
+        }
     </script>
 </body>
 </html>
