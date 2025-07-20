@@ -138,7 +138,7 @@ public class TaskContentService {
      * Check if user task has submitted content
      */
     public boolean hasSubmittedContent(UserTask userTask) {
-        return taskContentRepository.existsByUserTaskAndIsSubmitted(userTask, true);
+        return taskContentRepository.existsByUserTaskAndIsSubmittedTrue(userTask);
     }
 
     /**

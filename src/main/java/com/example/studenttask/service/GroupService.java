@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -106,9 +107,10 @@ public class GroupService {
 
             for (Task task : groupTasks) {
                 // UserTask für diesen Schüler und diese Aufgabe
-                UserTask userTask = userTaskRepository.findByUserAndTask(student, task);
+                Optional<UserTask> userTaskOpt = userTaskRepository.findByUserAndTask(student, task);
+                if (userTaskOpt.isPresent()) {
+                    UserTask userTask = userTaskOpt.get();
 
-                if (userTask != null) {
                     boolean hasSubmissions = taskContentRepository.countByUserTaskAndIsSubmittedTrue(userTask) > 0;
 
                     TaskInfo taskInfo = new TaskInfo(
@@ -195,10 +197,13 @@ public class GroupService {
 
         for (User student : students) {
             for (Task task : activeTasks) {
-                UserTask userTask = userTaskRepository.findByUserAndTask(student, task);
-                if (userTask != null && userTask.getLastModified() != null) {
-                    if (latest == null || userTask.getLastModified().isAfter(latest)) {
-                        latest = userTask.getLastModified();
+                Optional<UserTask> userTaskOpt = userTaskRepository.findByUserAndTask(student, task);
+                 if (userTaskOpt.isPresent()) {
+                     UserTask userTask = userTaskOpt.get();
+                    if (userTask != null && userTask.getLastModified() != null) {
+                        if (latest == null || userTask.getLastModified().isAfter(latest)) {
+                            latest = userTask.getLastModified();
+                        }
                     }
                 }
             }
