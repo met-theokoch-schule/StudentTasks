@@ -61,10 +61,11 @@ public class StudentController {
         Task task = taskOpt.get();
 
         // Check if student has access to this task
-        UserTask userTask = userTaskService.findByUserIdAndTaskId(student.getId(), task.getId());
-        if (userTask == null) {
+        Optional<UserTask> userTaskOpt = userTaskService.findByUserIdAndTaskId(student.getId(), task.getId());
+        if (userTaskOpt.isEmpty()) {
             throw new RuntimeException("Keine Berechtigung für diese Aufgabe");
         }
+        UserTask userTask = userTaskOpt.get();
 
         model.addAttribute("task", task);
         model.addAttribute("userTask", userTask);
