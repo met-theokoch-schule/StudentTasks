@@ -12,11 +12,6 @@ import java.util.Optional;
 public interface TaskReviewRepository extends JpaRepository<TaskReview, Long> {
 
     /**
-     * Alle Reviews für eine UserTask finden, sortiert nach Erstellungsdatum
-     */
-    List<TaskReview> findByUserTaskOrderByCreatedAtDesc(UserTask userTask);
-    
-    /**
      * Alle Reviews für eine UserTask finden, sortiert nach Review-Datum
      */
     List<TaskReview> findByUserTaskOrderByReviewedAtDesc(UserTask userTask);
@@ -24,10 +19,10 @@ public interface TaskReviewRepository extends JpaRepository<TaskReview, Long> {
     /**
      * Das neueste Review für eine UserTask finden
      */
-    Optional<TaskReview> findFirstByUserTaskOrderByCreatedAtDesc(UserTask userTask);
+    Optional<TaskReview> findFirstByUserTaskOrderByReviewedAtDesc(UserTask userTask);
 
     /**
      * Alle Reviews eines Reviewers finden
      */
-    List<TaskReview> findByReviewerIdOrderByCreatedAtDesc(String reviewerId);
+    List<TaskReview> findByReviewerIdOrderByReviewedAtDesc(String reviewerId);
 }
