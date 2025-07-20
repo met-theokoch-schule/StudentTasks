@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="de" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -67,7 +66,7 @@
                                   th:text="${existingContent}"></textarea>
                     </div>
                 </div>
-                
+
                 <!-- Auto-Save Status -->
                 <div class="mt-2">
                     <small id="save-status" class="text-muted">
@@ -91,7 +90,7 @@
         function saveContent() {
             const content = document.getElementById('submission-content').value;
             updateSaveStatus('saving');
-            
+
             fetch(`/api/tasks/${taskId}/content`, {
                 method: 'POST',
                 headers: {
@@ -152,7 +151,7 @@
         function onContentChange() {
             hasUnsavedChanges = true;
             updateSaveStatus('unsaved');
-            
+
             clearTimeout(saveTimeout);
             saveTimeout = setTimeout(autoSave, 2000); // Auto-save nach 2 Sekunden
         }
