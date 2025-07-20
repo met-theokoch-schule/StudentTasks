@@ -211,19 +211,11 @@ public class TaskContentService {
         return contents.isEmpty() ? null : contents.get(0);
     }
 
-    public TaskContent saveContent(UserTask userTask, String content, boolean isSubmitted) {
-        // Get the latest version number
-        List<TaskContent> existingContents = taskContentRepository.findByUserTaskOrderByVersionDesc(userTask);
-        int nextVersion = existingContents.isEmpty() ? 1 : existingContents.get(0).getVersion() + 1;
-
-        TaskContent taskContent = new TaskContent();
-        taskContent.setUserTask(userTask);
-        taskContent.setContent(content);
-        taskContent.setVersion(nextVersion);
-        taskContent.setSavedAt(java.time.LocalDateTime.now());
-        taskContent.setSubmitted(isSubmitted);
-
-        return taskContentRepository.save(taskContent);
+    /**
+     * Submit content for a user task (creates new version and marks as submitted)
+     */
+    public TaskContent submitContent(UserTask userTask, String content) {
+        return saveContent(userTask, content, true);
     }
 
     public void submitContent(TaskContent taskContent) {
