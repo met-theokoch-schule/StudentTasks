@@ -64,10 +64,11 @@ public class StudentTaskApiController {
             System.out.println("   - UserTask: " + userTask.getId());
 
             // Get latest content
-            TaskContent latestContent = taskContentService.getLatestContent(userTask);
+            Optional<TaskContent> latestContentOpt = taskContentService.getLatestContent(userTask);
 
             Map<String, Object> response = new HashMap<>();
-            if (latestContent != null) {
+            if (latestContentOpt.isPresent()) {
+                TaskContent latestContent = latestContentOpt.get();
                 response.put("content", latestContent.getContent());
                 response.put("version", latestContent.getVersion());
                 System.out.println("   - Found content: Version " + latestContent.getVersion() + ", Length: " + 
