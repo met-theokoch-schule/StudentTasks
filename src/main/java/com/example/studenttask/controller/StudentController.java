@@ -54,13 +54,14 @@ public class StudentController {
         User student = userService.findByOpenIdSubject(principal.getName())
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
-        Task task = taskService.findById(taskId);
-        if (task == null) {
+        Optional<Task> taskOpt = taskService.findById(taskId);
+        if (taskOpt.isEmpty()) {
             throw new RuntimeException("Aufgabe nicht gefunden");
         }
+        Task task = taskOpt.get();
 
         // Check if student has access to this task
-        UserTask userTask = userTaskService.findByUserAndTask(student, task);
+        UserTask userTask = userTaskService.findByUserIdAndTaskId(student.getId(), task.getId());
         if (userTask == null) {
             throw new RuntimeException("Keine Berechtigung für diese Aufgabe");
         }
