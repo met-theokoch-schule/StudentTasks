@@ -42,23 +42,31 @@ public class StudentTaskApiController {
             System.out.println("   - User: " + authentication.getName());
 
             // Get current user
-            User user = userService.getCurrentUser(authentication);
+            String openIdSubject = authentication.getName();
+            Optional<User> userOpt = userService.findByOpenIdSubject(openIdSubject);
+            if (userOpt.isEmpty()) {
+                System.out.println("   - User not found: " + openIdSubject);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("");
+            }
+            User user = userOpt.get();
             System.out.println("   - Found user: " + user.getId() + " (" + user.getName() + ")");
 
             // Get task
-            Task task = taskService.findById(taskId);
-            if (task == null) {
+            Optional<Task> taskOpt = taskService.findById(taskId);
+            if (taskOpt.isEmpty()) {
                 System.out.println("   - Task not found!");
                 return ResponseEntity.notFound().build();
             }
+            Task task = taskOpt.get();
             System.out.println("   - Found task: " + task.getId() + " (" + task.getTitle() + ")");
 
             // Find UserTask
-            UserTask userTask = userTaskService.findByUserAndTask(user, task);
-            if (userTask == null) {
+            Optional<UserTask> userTaskOpt = userTaskService.findByUserIdAndTaskId(user.getId(), task.getId());
+            if (userTaskOpt.isEmpty()) {
                 System.out.println("   - UserTask not found!");
                 return ResponseEntity.ok(""); // Return empty content for new tasks
             }
+            UserTask userTask = userTaskOpt.get();
             System.out.println("   - Found UserTask: " + userTask.getId());
 
             // Get latest content from TaskContentService
