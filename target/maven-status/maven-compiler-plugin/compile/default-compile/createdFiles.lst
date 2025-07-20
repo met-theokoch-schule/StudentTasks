@@ -4,7 +4,9 @@ com/example/studenttask/model/Task.class
 com/example/studenttask/model/TaskReview.class
 com/example/studenttask/model/User.class
 com/example/studenttask/model/Group.class
+com/example/studenttask/controller/StudentController.class
 com/example/studenttask/model/TaskView.class
 com/example/studenttask/model/TaskContent.class
 com/example/studenttask/model/Role.class
 com/example/studenttask/model/UserTask.class
+com/example/studenttask/controller/DashboardController.class
