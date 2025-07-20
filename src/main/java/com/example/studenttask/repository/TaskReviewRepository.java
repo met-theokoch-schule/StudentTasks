@@ -2,6 +2,7 @@ package com.example.studenttask.repository;
 
 import com.example.studenttask.model.TaskReview;
 import com.example.studenttask.model.UserTask;
+import com.example.studenttask.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
