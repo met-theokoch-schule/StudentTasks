@@ -185,30 +185,7 @@ public class TeacherController {
         }
     }
 
-    /**
-     * Zeigt Details einer Aufgabe mit allen Abgaben
-     */
-    @GetMapping("/tasks/{taskId}")
-    public String taskDetail(@PathVariable Long taskId, Model model, Principal principal) {
-        User teacher = userService.findByOpenIdSubject(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-
-        Task task = taskService.findById(taskId)
-            .orElseThrow(() -> new RuntimeException("Aufgabe nicht gefunden"));
-
-        // Sicherheitscheck: Nur eigene Aufgaben anzeigen
-        if (!task.getCreatedBy().equals(teacher)) {
-            throw new RuntimeException("Zugriff verweigert");
-        }
-
-        List<UserTask> submissions = userTaskService.findByTask(task);
-
-        model.addAttribute("task", task);
-        model.addAttribute("submissions", submissions);
-        model.addAttribute("teacher", teacher);
-
-        return "teacher/task-submissions";
-    }
+    
 
     /**
      * Löscht eine Aufgabe
