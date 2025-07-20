@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="de" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -47,8 +46,7 @@
                                     </td>
                                     <td>
                                         <span th:if="${userTask.status}" 
-                                              th:class="'badge ' + (${userTask.status.name == 'VOLLSTÄNDIG'} ? 'bg-success' : 
-                                                       ${userTask.status.name == 'IN_BEARBEITUNG'} ? 'bg-warning' : 'bg-secondary')"
+                                              th:class="'badge ' + (${userTask.status.name == 'VOLLSTÄNDIG'} ? 'bg-success' : (${userTask.status.name == 'IN_BEARBEITUNG'} ? 'bg-warning' : 'bg-secondary'))"
                                               th:text="${userTask.status.name}">Status</span>
                                         <span th:unless="${userTask.status}" class="badge bg-light text-dark">Nicht begonnen</span>
                                     </td>
