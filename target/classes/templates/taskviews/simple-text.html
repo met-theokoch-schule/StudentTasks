@@ -54,6 +54,10 @@
     </div>
 
     <script>
+        // Get taskId from URL
+        const taskId = window.location.pathname.split('/').pop();
+        console.log('🔍 TaskId extracted from URL:', taskId);
+
         // Funktionen für die Integration mit task-edit.html
         function getTaskContent() {
             const textarea = document.querySelector('#content-editor, #submission-content');
@@ -69,7 +73,6 @@
 
         // Content Change Handler für task-edit.html Integration
         function onContentChange() {
-            // Diese Funktion wird von task-edit.html erwartet
             console.log('Content changed in simple-text view');
             
             // Falls hasUnsavedChanges definiert ist (in task-edit.html), setze es auf true
@@ -220,10 +223,6 @@
                 }
             }, 3000);
         }
-
-        // Get taskId from URL
-        const taskId = window.location.pathname.split('/').pop();
-        console.log('🔍 TaskId extracted from URL:', taskId);
 
         // Load content when page loads
         document.addEventListener('DOMContentLoaded', function() {
