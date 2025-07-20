@@ -46,8 +46,7 @@
                                             <div class="d-flex justify-content-between align-items-start mb-2">
                                                 <h6 class="card-title" th:text="${userTask.task.title}">Aufgabentitel</h6>
                                                 <span th:if="${userTask.status}" 
-                                                      th:class="'badge ' + (${userTask.status.name == 'VOLLSTÄNDIG'} ? 'bg-success' : 
-                                                               ${userTask.status.name == 'IN_BEARBEITUNG'} ? 'bg-warning' : 'bg-secondary')"
+                                                      th:class="'badge ' + (${userTask.status.name == 'VOLLSTÄNDIG'} ? 'bg-success' : (${userTask.status.name == 'IN_BEARBEITUNG'} ? 'bg-warning' : 'bg-secondary'))"
                                                       th:text="${userTask.status.name}">Status</span>
                                             </div>
                                             <p class="card-text small text-muted" 
