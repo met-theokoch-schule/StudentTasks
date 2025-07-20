@@ -66,8 +66,8 @@
                                             <td th:text="${#temporals.format(task.createdAt, 'dd.MM.yyyy HH:mm')}">01.01.2024 10:00</td>
                                             <td th:text="${task.dueDate != null ? #temporals.format(task.dueDate, 'dd.MM.yyyy') : 'Kein Datum'}">31.12.2024</td>
                                             <td>
-                                                <span class="badge bg-success" th:if="${task.active}">Aktiv</span>
-                                                <span class="badge bg-secondary" th:unless="${task.active}">Inaktiv</span>
+                                                <span class="badge bg-success" th:if="${task.isActive}">Aktiv</span>
+                                                <span class="badge bg-secondary" th:unless="${task.isActive}">Inaktiv</span>
                                             </td>
                                             <td>
                                                 <div class="btn-group" role="group">
