@@ -161,4 +161,3 @@ public class TeacherTaskController {
         return "redirect:/teacher/submissions/" + userTaskId;
     }
 }
-```
