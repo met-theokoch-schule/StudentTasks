@@ -127,7 +127,6 @@ public class StudentController {
     public String editTask(@PathVariable Long taskId, Model model, Principal principal) {
         User student = userService.findByOpenIdSubject(principal.getName())
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-
         Task task = taskService.findById(taskId)
             .orElseThrow(() -> new RuntimeException("Aufgabe nicht gefunden"));
 
