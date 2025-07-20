@@ -24,5 +24,5 @@ public interface TaskReviewRepository extends JpaRepository<TaskReview, Long> {
     /**
      * Alle Reviews eines Reviewers finden
      */
-    List<TaskReview> findByReviewerIdOrderByReviewedAtDesc(String reviewerId);
+    List<TaskReview> findByReviewerOrderByReviewedAtDesc(User reviewer);
 }
