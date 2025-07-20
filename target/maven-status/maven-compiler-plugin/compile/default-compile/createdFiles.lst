@@ -28,8 +28,8 @@ com/example/studenttask/controller/TaskContentController.class
 com/example/studenttask/model/TaskView.class
 com/example/studenttask/model/TaskContent.class
 com/example/studenttask/config/DataInitializer.class
-com/example/studenttask/controller/TeacherGroupController$GroupStatistics.class
 com/example/studenttask/controller/TeacherController.class
+com/example/studenttask/controller/TeacherGroupController$GroupStatistics.class
 com/example/studenttask/repository/UserTaskRepository.class
 com/example/studenttask/controller/TeacherGroupController.class
 com/example/studenttask/model/Role.class
@@ -39,5 +39,5 @@ com/example/studenttask/service/TaskViewService.class
 com/example/studenttask/repository/TaskViewRepository.class
 com/example/studenttask/service/UserTaskService.class
 com/example/studenttask/config/SecurityConfig$1.class
-com/example/studenttask/repository/TaskReviewRepository.class
 com/example/studenttask/repository/SubmissionRepository.class
+com/example/studenttask/repository/TaskReviewRepository.class
