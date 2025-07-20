@@ -87,11 +87,11 @@ public class TeacherTaskController {
 
         Task task = taskOpt.get();
 
-        List<UserTask> submissions = userTaskService.findByTask(task);
+        List<UserTask> userTasks = userTaskService.findByTask(task);
 
         model.addAttribute("teacher", teacher);
         model.addAttribute("task", task);
-        model.addAttribute("submissions", submissions);
+        model.addAttribute("userTasks", userTasks);
 
         return "teacher/task-submissions";
     }
