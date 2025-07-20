@@ -35,56 +35,51 @@ public class StudentTaskApiController {
     private TaskService taskService;
 
     @GetMapping("/{taskId}/content")
-    public ResponseEntity<Map<String, Object>> getTaskContent(@PathVariable Long taskId, 
-                                                             Authentication authentication) {
+    public ResponseEntity<String> getTaskContent(@PathVariable Long taskId, Authentication authentication) {
         try {
             System.out.println("🔍 === DEBUG: Get Content API Called ===");
             System.out.println("   - Task ID: " + taskId);
             System.out.println("   - User: " + authentication.getName());
 
-            // Find user
-            String openIdSubject = authentication.getName();
-            Optional<User> userOpt = userService.findByOpenIdSubject(openIdSubject);
-            if (userOpt.isEmpty()) {
-                System.out.println("   - ERROR: User not found: " + openIdSubject);
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            // Get current user
+            User user = userService.getCurrentUser(authentication);
+            System.out.println("   - Found user: " + user.getId() + " (" + user.getName() + ")");
+
+            // Get task
+            Task task = taskService.findById(taskId);
+            if (task == null) {
+                System.out.println("   - Task not found!");
+                return ResponseEntity.notFound().build();
             }
-            User user = userOpt.get();
-            System.out.println("   - User found: " + user.getName() + " (ID: " + user.getId() + ")");
+            System.out.println("   - Found task: " + task.getId() + " (" + task.getTitle() + ")");
 
             // Find UserTask
-            Task task = taskService.findById(taskId).orElse(null);
-            if (task == null) {
-                System.out.println("   - ERROR: Task not found: " + taskId);
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            UserTask userTask = userTaskService.findByUserAndTask(user, task);
+            if (userTask == null) {
+                System.out.println("   - UserTask not found!");
+                return ResponseEntity.ok(""); // Return empty content for new tasks
             }
-            System.out.println("   - Task found: " + task.getTitle() + " (ID: " + task.getId() + ")");
+            System.out.println("   - Found UserTask: " + userTask.getId());
 
-            UserTask userTask = userTaskService.findOrCreateUserTask(user, task);
-            System.out.println("   - UserTask: " + userTask.getId());
-
-            // Get latest content
-            Optional<TaskContent> latestContentOpt = taskContentService.getLatestContent(userTask);
-
-            Map<String, Object> response = new HashMap<>();
-            if (latestContentOpt.isPresent()) {
-                TaskContent latestContent = latestContentOpt.get();
-                response.put("content", latestContent.getContent());
-                response.put("version", latestContent.getVersion());
-                System.out.println("   - Found content: Version " + latestContent.getVersion() + ", Length: " + 
-                                 (latestContent.getContent() != null ? latestContent.getContent().length() : "null"));
+            // Get latest content from TaskContentService
+            Optional<TaskContent> latestContent = taskContentService.getLatestContent(userTask);
+            String content = "";
+            if (latestContent.isPresent()) {
+                content = latestContent.get().getContent();
+                System.out.println("   - Found latest content: version " + latestContent.get().getVersion());
+                System.out.println("   - Content length: " + (content != null ? content.length() : "null"));
+                System.out.println("   - Content preview: " + (content != null && content.length() > 50 ? content.substring(0, 50) + "..." : content));
             } else {
-                response.put("content", "");
-                response.put("version", 0);
-                System.out.println("   - No content found, returning empty");
+                System.out.println("   - No content found, returning empty string");
             }
-            System.out.println("🔍 === DEBUG: Get Content API End ===");
 
-            return ResponseEntity.ok(response);
+            System.out.println("🔍 === DEBUG: Get Content API END ===");
+
+            return ResponseEntity.ok(content != null ? content : "");
         } catch (Exception e) {
-            System.out.println("   - ERROR in get content: " + e.getMessage());
+            System.err.println("Error loading task content: " + e.getMessage());
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("");
         }
     }
 
