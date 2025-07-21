@@ -91,17 +91,38 @@
             const content = document.getElementById('submission-content').value;
             updateSaveStatus('saving');
 
-            fetch(`/api/tasks/${taskId}/content`, {
+            // Check if we're in teacher view mode (iframe)
+            const isTeacherView = [[${isTeacherView ?: false}]];
+            const userTaskId = [[${userTask.id}]];
+            
+            let saveUrl, saveBody;
+            if (isTeacherView && userTaskId) {
+                // Save to student's history when in teacher view
+                saveUrl = `/api/usertasks/${userTaskId}/content`;
+                saveBody = JSON.stringify({ content: content });
+            } else {
+                // Normal student save
+                saveUrl = `/api/tasks/${taskId}/content`;
+                saveBody = JSON.stringify({ content: content });
+            }
+
+            fetch(saveUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ content: content })
+                body: saveBody
             })
             .then(response => {
                 if (response.ok) {
                     updateSaveStatus('saved');
                     hasUnsavedChanges = false;
+                    if (isTeacherView) {
+                        // Notify parent window about save
+                        if (window.parent && window.parent !== window) {
+                            window.parent.postMessage('content-saved', '*');
+                        }
+                    }
                 } else {
                     updateSaveStatus('error');
                 }

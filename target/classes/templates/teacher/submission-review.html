@@ -8,7 +8,7 @@
     <link th:href="@{/css/custom.css}" rel="stylesheet">
 </head>
 <body>
-    <div class="container mt-4">
+    <div class="container-fluid mt-4">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a th:href="@{/teacher/dashboard}">Dashboard</a></li>
@@ -23,36 +23,35 @@
         <div class="row">
             <div class="col-md-8">
                 <div class="card">
-                    <div class="card-header">
-                        <h5>Submission Review - <span th:text="${userTask.user.name}">Schüler</span></h5>
-                        <small class="text-muted">Aufgabe: <span th:text="${userTask.task.title}">Aufgabentitel</span></small>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5>Submission Review - <span th:text="${userTask.user.name}">Schüler</span></h5>
+                            <small class="text-muted">Aufgabe: <span th:text="${userTask.task.title}">Aufgabentitel</span></small>
+                        </div>
+                        <div>
+                            <label for="versionSelect" class="form-label me-2">Version:</label>
+                            <select id="versionSelect" class="form-select d-inline-block" style="width: auto;" onchange="changeVersion()">
+                                <option value="">Aktuellste Version</option>
+                                <option th:each="submission : ${submissions}" 
+                                        th:value="${submission.version}" 
+                                        th:text="'Version ' + ${submission.version} + ' (' + ${#temporals.format(submission.savedAt, 'dd.MM.yyyy HH:mm')} + ')'">
+                                </option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-0">
                         <!-- Current Status -->
-                        <div class="alert alert-info">
+                        <div class="alert alert-info m-3">
                             <strong>Aktueller Status:</strong> 
                             <span th:text="${userTask.status?.name ?: 'Kein Status'}">Status</span>
                         </div>
 
-                        <!-- Submissions History -->
-                        <h6>Submission-Historie:</h6>
-                        <div th:if="${submissions != null and !submissions.isEmpty()}">
-                            <div th:each="submission, iterStat : ${submissions}" class="border rounded p-3 mb-3">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h6 class="mb-0">Version <span th:text="${submission.version}">1</span></h6>
-                                    <div>
-                                        <small class="text-muted" th:text="${#temporals.format(submission.savedAt, 'dd.MM.yyyy HH:mm')}">Datum</small>
-                                        <span th:if="${submission.isSubmitted}" class="badge bg-success ms-2">Abgegeben</span>
-                                        <span th:unless="${submission.isSubmitted}" class="badge bg-secondary ms-2">Entwurf</span>
-                                    </div>
-                                </div>
-                                <div class="submission-content">
-                                    <pre th:text="${submission.content}">Content</pre>
-                                </div>
-                            </div>
-                        </div>
-                        <div th:if="${submissions == null or submissions.isEmpty()}" class="alert alert-warning">
-                            Keine Submissions vorhanden.
+                        <!-- Task View iFrame -->
+                        <div class="task-view-container" style="height: 600px; border: 1px solid #dee2e6;">
+                            <iframe id="taskViewFrame" 
+                                    th:src="@{'/teacher/submissions/' + ${userTask.id} + '/view'}" 
+                                    style="width: 100%; height: 100%; border: none;">
+                            </iframe>
                         </div>
                     </div>
                 </div>
@@ -133,6 +132,23 @@
             </div>
         </div>
     </div>
+
+    <script th:inline="javascript">
+        const userTaskId = [[${userTask.id}]];
+        
+        function changeVersion() {
+            const versionSelect = document.getElementById('versionSelect');
+            const selectedVersion = versionSelect.value;
+            const iframe = document.getElementById('taskViewFrame');
+            
+            // Update iframe source with selected version
+            let newSrc = `/teacher/submissions/${userTaskId}/view`;
+            if (selectedVersion) {
+                newSrc += `?version=${selectedVersion}`;
+            }
+            iframe.src = newSrc;
+        }
+    </script>
 
     <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
 </body>
