@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.ArrayList;
 
 @Service
 public class TaskReviewService {
@@ -25,6 +26,9 @@ public class TaskReviewService {
 
     @Autowired
     private UserTaskService userTaskService;
+
+    @Autowired
+    private TaskStatusService taskStatusService;
 
     public List<TaskReview> findByUserTask(UserTask userTask) {
         return taskReviewRepository.findByUserTaskOrderByReviewedAtDesc(userTask);
@@ -71,4 +75,18 @@ public class TaskReviewService {
     public Optional<TaskReview> findById(Long id) {
         return taskReviewRepository.findById(id);
     }
+
+    /**
+     * Verfügbare Status für Lehrer-Reviews (nur VOLLSTÄNDIG und ÜBERARBEITUNG_NÖTIG)
+     */
+    public List<TaskStatus> getAvailableReviewStatuses() {
+        List<TaskStatus> teacherStatuses = new ArrayList<>();
+
+        // Nur diese beiden Status sind für Lehrer-Reviews sinnvoll
+        taskStatusService.findByName("VOLLSTÄNDIG").ifPresent(teacherStatuses::add);
+        taskStatusService.findByName("ÜBERARBEITUNG_NÖTIG").ifPresent(teacherStatuses::add);
+
+        return teacherStatuses;
+    }
 }
+```
