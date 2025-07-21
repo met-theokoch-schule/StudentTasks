@@ -1,55 +1,101 @@
-@PostMapping("/api/tasks/{taskId}/submit")
-    public ResponseEntity<String> submitTask(@PathVariable Long taskId, 
-                                           @RequestBody Map<String, String> request,
-                                           Authentication authentication) {
-        try {
-            String content = request.get("content");
-            User user = userService.findByOpenIdSubject(authentication.getName()).orElse(null);
-            if (user == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
-            }
 
-            Optional<Task> taskOpt = taskService.findById(taskId);
-            if (taskOpt.isEmpty()) {
-                return ResponseEntity.notFound().build();
-            }
+package com.example.studenttask.controller;
 
-            boolean success = submissionService.submitTask(user, taskOpt.get(), content);
-            if (success) {
-                return ResponseEntity.ok("Task submitted successfully");
-            } else {
-                return ResponseEntity.badRequest().body("Failed to submit task");
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+import com.example.studenttask.model.*;
+import com.example.studenttask.service.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+
+@Controller
+@RequestMapping("/student")
+public class TaskController {
+
+    @Autowired
+    private TaskService taskService;
+
+    @Autowired
+    private UserTaskService userTaskService;
+
+    @Autowired
+    private TaskContentService taskContentService;
+
+    @Autowired
+    private UserService userService;
+
+    @GetMapping("/tasks/{taskId}")
+    public String viewTask(@PathVariable Long taskId, Authentication authentication, Model model) {
+        User currentUser = userService.findByOpenIdSubject(authentication.getName());
+        
+        Task task = taskService.findById(taskId);
+        if (task == null) {
+            return "redirect:/student/dashboard";
         }
+
+        // Get or create UserTask
+        UserTask userTask = userTaskService.findByUserAndTask(currentUser, task);
+        if (userTask == null) {
+            userTask = userTaskService.createUserTask(currentUser, task);
+        }
+
+        // Get current content
+        TaskContent currentContent = taskContentService.getLatestContent(userTask);
+        String content = currentContent != null ? currentContent.getContent() : task.getDefaultSubmission();
+
+        model.addAttribute("task", task);
+        model.addAttribute("userTask", userTask);
+        model.addAttribute("content", content);
+        model.addAttribute("renderedDescription", task.getDescription());
+
+        // Return the appropriate task view template
+        return "taskviews/" + task.getTaskView().getId();
     }
 
-    @PostMapping("/api/usertasks/{userTaskId}/content")
-    public ResponseEntity<String> saveContentForUserTask(@PathVariable Long userTaskId,
-                                                        @RequestBody Map<String, String> request,
-                                                        Authentication authentication) {
-        try {
-            String content = request.get("content");
-
-            // Verify teacher permissions
-            User teacher = userService.findByOpenIdSubject(authentication.getName()).orElse(null);
-            if (teacher == null || !teacher.hasRole("TEACHER")) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
-            }
-
-            Optional<UserTask> userTaskOpt = userTaskService.findById(userTaskId);
-            if (userTaskOpt.isEmpty()) {
-                return ResponseEntity.notFound().build();
-            }
-
-            UserTask userTask = userTaskOpt.get();
-
-            // Save content with teacher as modifier (but keep original user)
-            TaskContent savedContent = taskContentService.saveContent(userTask, content, false);
-
-            return ResponseEntity.ok("Content saved successfully. Version: " + savedContent.getVersion());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+    @GetMapping("/tasks/{taskId}/iframe")
+    public String viewTaskIframe(@PathVariable Long taskId, 
+                                @RequestParam(required = false) Long userId,
+                                @RequestParam(required = false) Integer version,
+                                Authentication authentication, Model model) {
+        Task task = taskService.findById(taskId);
+        if (task == null) {
+            return "redirect:/student/dashboard";
         }
+
+        User targetUser;
+        if (userId != null) {
+            // For teacher viewing student work
+            targetUser = userService.findById(userId);
+        } else {
+            // For student viewing own work
+            targetUser = userService.findByOpenIdSubject(authentication.getName());
+        }
+
+        // Get or create UserTask
+        UserTask userTask = userTaskService.findByUserAndTask(targetUser, task);
+        if (userTask == null) {
+            userTask = userTaskService.createUserTask(targetUser, task);
+        }
+
+        // Get content for specific version or latest
+        TaskContent content;
+        if (version != null) {
+            content = taskContentService.getContentByVersion(userTask, version);
+        } else {
+            content = taskContentService.getLatestContent(userTask);
+        }
+
+        String contentText = content != null ? content.getContent() : task.getDefaultSubmission();
+
+        model.addAttribute("task", task);
+        model.addAttribute("userTask", userTask);
+        model.addAttribute("content", contentText);
+        model.addAttribute("renderedDescription", task.getDescription());
+        model.addAttribute("isIframe", true);
+        model.addAttribute("isTeacherView", userId != null);
+
+        // Return the appropriate task view template
+        return "taskviews/" + task.getTaskView().getId();
     }
+}
