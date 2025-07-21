@@ -108,12 +108,6 @@ public class TeacherController {
      /**
      * Zeigt das Formular zum Bearbeiten einer Aufgabe
      */
-    
-
-    // Removed conflicting POST mapping - now handled by TeacherTaskController
-                         @ModelAttribute Task task,
-                         @RequestParam("taskViewId") Long taskViewId,
-                         @RequestParam(value = "selectedGroups", required = false) List<Long> selectedGroups,
                          RedirectAttributes redirectAttributes,
                          Principal principal) {
         try {
