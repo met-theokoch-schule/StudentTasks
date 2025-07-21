@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -79,6 +78,22 @@
                                 </select>
                                 <div class="form-text" id="taskViewDescription">
                                     Wählen Sie den Typ der Aufgabe aus.
+                                </div>
+                            </div>
+
+                             <!-- Thema der Unterrichtseinheit -->
+                            <div class="mb-3">
+                                <label for="unitTitleId" class="form-label">Thema der Unterrichtseinheit</label>
+                                <select id="unitTitleId" name="unitTitleId" class="form-select">
+                                    <option value="">Kein Thema zuweisen</option>
+                                    <option th:each="unitTitle : ${unitTitles}" 
+                                            th:value="${unitTitle.id}" 
+                                            th:text="${unitTitle.name}">
+                                        UnitTitle Name
+                                    </option>
+                                </select>
+                                 <div class="form-text">
+                                    Optional: Wählen Sie das Thema der Unterrichtseinheit für diese Aufgabe.
                                 </div>
                             </div>
 
@@ -191,7 +206,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
-    
+
     <script>
         $(document).ready(function() {
             // Select2 für Gruppen-Auswahl initialisieren
