@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -80,16 +81,6 @@
                                     Wählen Sie den Typ der Aufgabe aus.
                                 </div>
                             </div>
-
-                            <!-- Kategorie -->
-                             <div class="mb-3">
-                            <label for="categoryId" class="form-label">Kategorie</label>
-                            <select id="categoryId" name="categoryId" class="form-select">
-                                <option value="">Keine Kategorie</option>
-                                <option th:each="category : ${categories}" th:value="${category.id}" th:text="${category.name}"></option>
-                            </select>
-                            <div class="form-text">Optional: Kategorisierung der Aufgabe für bessere Organisation</div>
-                        </div>
 
                             <!-- Beschreibung -->
                             <div class="mb-3">
@@ -200,7 +191,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
-
+    
     <script>
         $(document).ready(function() {
             // Select2 für Gruppen-Auswahl initialisieren
