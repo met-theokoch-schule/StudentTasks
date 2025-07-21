@@ -317,7 +317,3 @@ public class TeacherTaskController {
         return "redirect:/teacher/tasks";
     }
 }
-```
-
-```
-</replit_final_file>
