@@ -1,11 +1,31 @@
 
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<html lang="de" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aufgabenhistorie</title>
+    <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/custom.css}" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <div layout:fragment="content">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" th:href="@{/}">Aufgaben-System</a>
+            
+            <div class="navbar-nav ms-auto" sec:authorize="isAuthenticated()">
+                <span class="navbar-text me-3" sec:authentication="name"></span>
+                <a class="btn btn-outline-light" th:href="@{/logout}">Abmelden</a>
+            </div>
+            
+            <div class="navbar-nav ms-auto" sec:authorize="!isAuthenticated()">
+                <a class="btn btn-outline-light" th:href="@{/oauth2/authorization/iserv}">Anmelden</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-4">
         <div class="container-fluid mt-4">
             <!-- Breadcrumb -->
             <nav aria-label="breadcrumb">
@@ -147,6 +167,8 @@
                 </div>
             </div>
         </div>
-    </div>
+    </main>
+
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
 </body>
 </html>
