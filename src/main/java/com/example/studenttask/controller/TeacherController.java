@@ -108,8 +108,8 @@ public class TeacherController {
      /**
      * Zeigt das Formular zum Bearbeiten einer Aufgabe
      */
-                         RedirectAttributes redirectAttributes,
-                         Principal principal) {
+    @GetMapping("/tasks/{taskId}/edit")
+    public String editTaskForm(@PathVariable Long taskId, Model model, Principal principal) {
         try {
             User teacher = userService.findByOpenIdSubject(principal.getName())
                 .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
