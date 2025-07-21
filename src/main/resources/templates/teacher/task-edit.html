@@ -295,15 +295,6 @@
             <label for="isActive">Aktiv</label>
         </p>
 
-        <div class="mb-3">
-            <label for="defaultSubmission" class="form-label">Standard-Vorlage (optional)</label>
-            <textarea class="form-control" id="defaultSubmission" th:field="*{defaultSubmission}" rows="4"
-                      placeholder="Geben Sie hier den Standard-Inhalt ein, mit dem die Aufgabe vorausgefüllt werden soll..."></textarea>
-            <div class="form-text">
-                Dieser Text wird als Ausgangsbasis in der Aufgabe angezeigt. Format abhängig vom gewählten Aufgabentyp.
-            </div>
-        </div>
-
         <!-- Tutorial -->
         <div class="mb-3">
             <label for="tutorial" class="form-label">Tutorial (optional)</label>
@@ -311,6 +302,15 @@
                       placeholder="Geben Sie hier ein Tutorial oder Hilfeanleitung für die Aufgabe ein..."></textarea>
             <div class="form-text">
                 Tutorial oder Hilfeanleitung für die Schüler. Format abhängig vom gewählten Aufgabentyp.
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="defaultSubmission" class="form-label">Standard-Vorlage (optional)</label>
+            <textarea class="form-control" id="defaultSubmission" th:field="*{defaultSubmission}" rows="4"
+                      placeholder="Geben Sie hier den Standard-Inhalt ein, mit dem die Aufgabe vorausgefüllt werden soll..."></textarea>
+            <div class="form-text">
+                Dieser Text wird als Ausgangsbasis in der Aufgabe angezeigt. Format abhängig vom gewählten Aufgabentyp.
             </div>
         </div>
 
