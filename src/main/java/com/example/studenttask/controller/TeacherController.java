@@ -105,33 +105,7 @@ public class TeacherController {
         return "redirect:/teacher/tasks";
     }
 
-     /**
-     * Zeigt das Formular zum Bearbeiten einer Aufgabe
-     */
-    @GetMapping("/tasks/{taskId}/edit")
-    public String editTaskForm(@PathVariable Long taskId, Model model, Principal principal) {
-        try {
-            User teacher = userService.findByOpenIdSubject(principal.getName())
-                .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-
-            Task task = taskService.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Aufgabe nicht gefunden"));
-
-            // Überprüfen, ob der Lehrer berechtigt ist
-            if (!task.getCreatedBy().getId().equals(teacher.getId())) {
-                throw new RuntimeException("Keine Berechtigung für diese Aufgabe");
-            }
-
-            model.addAttribute("task", task);
-            model.addAttribute("taskViews", taskViewService.findAll());
-            model.addAttribute("groups", groupService.findAll());
-
-            return "teacher/task-edit";
-        } catch (Exception e) {
-            model.addAttribute("error", "Fehler beim Laden der Aufgabe: " + e.getMessage());
-            return "redirect:/teacher/tasks";
-        }
-    }
+     
 
     /**
      * Speichert eine Aufgabe als Entwurf
