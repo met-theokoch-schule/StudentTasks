@@ -110,8 +110,7 @@ public class TeacherController {
      */
     
 
-    @PostMapping("/tasks/{taskId}/edit")
-    public String editTask(@PathVariable Long taskId,
+    // Removed conflicting POST mapping - now handled by TeacherTaskController
                          @ModelAttribute Task task,
                          @RequestParam("taskViewId") Long taskViewId,
                          @RequestParam(value = "selectedGroups", required = false) List<Long> selectedGroups,
