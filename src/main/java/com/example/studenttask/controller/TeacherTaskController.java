@@ -30,6 +30,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.Set;
 import java.util.HashSet;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/teacher")
@@ -227,7 +228,7 @@ public class TeacherTaskController {
         return "teacher/task-create";
     }
 
-    @PostMapping
+    @PostMapping("/tasks")
     public String createTask(@ModelAttribute Task task,
                            @RequestParam String taskViewId,
                            @RequestParam(required = false) String unitTitleId,
@@ -248,7 +249,7 @@ public class TeacherTaskController {
 
         // Set unit title if provided
         if (unitTitleId != null && !unitTitleId.isEmpty()) {
-            UnitTitle unitTitle = unitTitleService.findById(Long.parseLong(unitTitleId));
+            UnitTitle unitTitle = unitTitleService.findById(unitTitleId);
             task.setUnitTitle(unitTitle);
         }
 
@@ -271,21 +272,22 @@ public class TeacherTaskController {
         return "teacher/task-edit";
     }
 
-    @PutMapping("/{id}")
+    @PostMapping("/tasks/{id}/edit")
     public String updateTask(@PathVariable Long id,
-                           @ModelAttribute Task updatedTask,
-                           @RequestParam String taskViewId,
-                           @RequestParam(required = false) String unitTitleId,
+                           @ModelAttribute Task task,
                            @RequestParam List<Long> selectedGroups,
-                           Authentication authentication) {
+                           @RequestParam String taskViewId,
+                           @RequestParam String unitTitleId,
+                           RedirectAttributes redirectAttributes,
+                           Principal principal) {
         Task existingTask = taskService.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid task Id:" + id));
 
         // Update basic task information
-        existingTask.setTitle(updatedTask.getTitle());
-        existingTask.setDescription(updatedTask.getDescription());
-        existingTask.setDefaultSubmission(updatedTask.getDefaultSubmission());
-        existingTask.setIsActive(updatedTask.getIsActive());
+        existingTask.setTitle(task.getTitle());
+        existingTask.setDescription(task.getDescription());
+        existingTask.setDefaultSubmission(task.getDefaultSubmission());
+        existingTask.setIsActive(task.getIsActive());
 
         // Update assigned groups
         List<Group> groups = groupService.findAllById(selectedGroups);
@@ -297,7 +299,7 @@ public class TeacherTaskController {
 
         // Update unit title
         if (unitTitleId != null && !unitTitleId.isEmpty()) {
-            UnitTitle unitTitle = unitTitleService.findById(Long.parseLong(unitTitleId));
+            UnitTitle unitTitle = unitTitleService.findById(unitTitleId);
             existingTask.setUnitTitle(unitTitle);
         } else {
             existingTask.setUnitTitle(null);
