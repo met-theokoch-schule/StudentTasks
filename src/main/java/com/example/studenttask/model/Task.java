@@ -46,9 +46,13 @@ public class Task {
     @Column(columnDefinition = "TEXT")
     private String defaultSubmission; // Default content for submissions in the format expected by the task view
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "task_view_id")
     private TaskView taskView;
+
+    @ManyToOne
+    @JoinColumn(name = "theme_id")
+    private Theme theme;
 
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL)
     private Set<UserTask> userTasks = new HashSet<>();
@@ -165,6 +169,14 @@ public class Task {
 
     public void setUserTasks(Set<UserTask> userTasks) {
         this.userTasks = userTasks;
+    }
+
+    public Theme getTheme() {
+        return theme;
+    }
+
+    public void setTheme(Theme theme) {
+        this.theme = theme;
     }
 
     @Override
