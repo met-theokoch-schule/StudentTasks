@@ -13,6 +13,11 @@ import com.example.studenttask.service.TaskStatusService;
 import com.example.studenttask.service.TaskViewService;
 import com.example.studenttask.service.UserService;
 import com.example.studenttask.service.UserTaskService;
+import com.example.studenttask.service.GroupService;
+import com.example.studenttask.service.UnitTitleService;
+import com.example.studenttask.model.TaskView;
+import com.example.studenttask.model.Group;
+import com.example.studenttask.model.UnitTitle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -22,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/teacher")
@@ -47,6 +53,12 @@ public class TeacherTaskController {
 
     @Autowired
     private TaskStatusService taskStatusService;
+
+    @Autowired
+    private GroupService groupService;
+
+    @Autowired
+    private UnitTitleService unitTitleService;
 
     /**
      * Zeigt die Übersicht aller Aufgaben des Lehrers
@@ -202,5 +214,102 @@ public class TeacherTaskController {
             "taskviews/simple-text.html";
 
         return templatePath;
+    }
+
+    @GetMapping("/tasks/create")
+    public String showCreateTaskForm(Model model) {
+        model.addAttribute("task", new Task());
+        model.addAttribute("taskViews", taskViewService.findAllActive());
+        model.addAttribute("groups", groupService.findAll());
+        model.addAttribute("unitTitles", unitTitleService.findAllActive());
+        return "teacher/task-create";
+    }
+
+    @PostMapping
+    public String createTask(@ModelAttribute Task task,
+                           @RequestParam String taskViewId,
+                           @RequestParam(required = false) String unitTitleId,
+                           @RequestParam List<Long> selectedGroups,
+                           Authentication authentication) {
+
+        User teacher = userService.findByOpenIdSubject(authentication.getName())
+            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+        task.setCreatedBy(teacher);
+
+        // Assign selected groups to the task
+        List<Group> groups = groupService.findAllById(selectedGroups);
+        task.setAssignedGroups(groups);
+
+        // Set task view
+        TaskView taskView = taskViewService.findById(taskViewId);
+        task.setTaskView(taskView);
+
+        // Set unit title if provided
+        if (unitTitleId != null && !unitTitleId.isEmpty()) {
+            UnitTitle unitTitle = unitTitleService.findById(unitTitleId);
+            task.setUnitTitle(unitTitle);
+        }
+
+        taskService.save(task);
+
+        return "redirect:/teacher/tasks";
+    }
+
+    @GetMapping("/tasks/edit/{id}")
+    public String showEditTaskForm(@PathVariable Long id, Model model) {
+        Task task = taskService.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid task Id:" + id));
+        model.addAttribute("task", task);
+        model.addAttribute("taskViews", taskViewService.findAllActive());
+        model.addAttribute("groups", groupService.findAll());
+        model.addAttribute("unitTitles", unitTitleService.findAllActive());
+        model.addAttribute("selectedGroups", task.getAssignedGroups().stream()
+                .map(Group::getId)
+                .collect(Collectors.toList()));
+        return "teacher/task-edit";
+    }
+
+    @PutMapping("/{id}")
+    public String updateTask(@PathVariable Long id,
+                           @ModelAttribute Task updatedTask,
+                           @RequestParam String taskViewId,
+                           @RequestParam(required = false) String unitTitleId,
+                           @RequestParam List<Long> selectedGroups,
+                           Authentication authentication) {
+        Task existingTask = taskService.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid task Id:" + id));
+
+        // Update basic task information
+        existingTask.setTitle(updatedTask.getTitle());
+        existingTask.setDescription(updatedTask.getDescription());
+        existingTask.setDefaultSubmission(updatedTask.getDefaultSubmission());
+        existingTask.setIsActive(updatedTask.getIsActive());
+
+        // Update assigned groups
+        List<Group> groups = groupService.findAllById(selectedGroups);
+        existingTask.setAssignedGroups(groups);
+
+        // Update task view
+        TaskView taskView = taskViewService.findById(taskViewId);
+        existingTask.setTaskView(taskView);
+
+        // Update unit title
+        if (unitTitleId != null && !unitTitleId.isEmpty()) {
+            UnitTitle unitTitle = unitTitleService.findById(unitTitleId);
+            existingTask.setUnitTitle(unitTitle);
+        } else {
+            existingTask.setUnitTitle(null);
+        }
+
+        taskService.save(existingTask);
+        return "redirect:/teacher/tasks";
+    }
+
+    @DeleteMapping("/tasks/{id}")
+    public String deleteTask(@PathVariable Long id) {
+        Task task = taskService.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid task Id:" + id));
+        taskService.delete(task);
+        return "redirect:/teacher/tasks";
     }
 }
