@@ -46,6 +46,9 @@ public class StudentController {
     @Autowired
     private TaskStatusRepository taskStatusRepository;
 
+    @Autowired
+    private TaskReviewService taskReviewService;
+
     /**
      * Direkte Aufgaben-Ansicht (ohne task-edit.html Wrapper)
      */
@@ -106,6 +109,111 @@ public class StudentController {
         System.out.println("🔍 === DEBUG: StudentController.viewTask Content Loading END ===");
 
         // Direkt das TaskView-Template zurückgeben
+        return task.getTaskView().getTemplatePath();
+    }
+
+    /**
+     * Task History View
+     */
+    @GetMapping("/tasks/{taskId}/history")
+    public String taskHistory(@PathVariable Long taskId, Model model, Principal principal) {
+        User student = userService.findByOpenIdSubject(principal.getName())
+            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+
+        Optional<Task> taskOpt = taskService.findById(taskId);
+        if (taskOpt.isEmpty()) {
+            return "redirect:/student/dashboard";
+        }
+
+        Task task = taskOpt.get();
+        
+        // Check if student has access to this task
+        boolean hasAccess = task.getAssignedGroups().stream()
+            .anyMatch(group -> student.getGroups().contains(group));
+        
+        if (!hasAccess) {
+            return "redirect:/student/dashboard";
+        }
+
+        // Get or create UserTask
+        Optional<UserTask> userTaskOpt = userTaskRepository.findByUserAndTask(student, task);
+        UserTask userTask;
+        if (userTaskOpt.isEmpty()) {
+            // Create new UserTask if it doesn't exist
+            userTask = new UserTask();
+            userTask.setUser(student);
+            userTask.setTask(task);
+            userTask.setStartedAt(LocalDateTime.now());
+            TaskStatus notStartedStatus = taskStatusRepository.findById(1L).orElse(null);
+            userTask.setStatus(notStartedStatus);
+            userTask = userTaskRepository.save(userTask);
+        } else {
+            userTask = userTaskOpt.get();
+        }
+
+        // Get all content versions
+        List<TaskContent> contentVersions = taskContentService.getAllContentVersions(userTask);
+        
+        // Get all reviews for this task
+        List<TaskReview> reviews = taskReviewService.findByUserTaskOrderByReviewedAtDesc(userTask);
+
+        model.addAttribute("task", task);
+        model.addAttribute("userTask", userTask);
+        model.addAttribute("contentVersions", contentVersions);
+        model.addAttribute("reviews", reviews);
+        model.addAttribute("student", student);
+
+        return "student/task-history";
+    }
+
+    /**
+     * View specific version of a task
+     */
+    @GetMapping("/tasks/{taskId}/version/{version}")
+    public String viewTaskVersion(@PathVariable Long taskId, @PathVariable Integer version, 
+                                Model model, Principal principal) {
+        User student = userService.findByOpenIdSubject(principal.getName())
+            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+
+        Optional<Task> taskOpt = taskService.findById(taskId);
+        if (taskOpt.isEmpty()) {
+            return "redirect:/student/dashboard";
+        }
+
+        Task task = taskOpt.get();
+        
+        // Check if student has access to this task
+        boolean hasAccess = task.getAssignedGroups().stream()
+            .anyMatch(group -> student.getGroups().contains(group));
+        
+        if (!hasAccess) {
+            return "redirect:/student/dashboard";
+        }
+
+        // Get UserTask
+        Optional<UserTask> userTaskOpt = userTaskRepository.findByUserAndTask(student, task);
+        if (userTaskOpt.isEmpty()) {
+            return "redirect:/student/tasks/" + taskId + "/history";
+        }
+
+        UserTask userTask = userTaskOpt.get();
+        TaskView taskView = task.getTaskView();
+
+        // Get specific version content
+        TaskContent versionContent = taskContentService.getContentByVersion(userTask, version);
+        if (versionContent == null) {
+            return "redirect:/student/tasks/" + taskId + "/history";
+        }
+
+        model.addAttribute("task", task);
+        model.addAttribute("userTask", userTask);
+        model.addAttribute("taskView", taskView);
+        model.addAttribute("student", student);
+        model.addAttribute("currentContent", versionContent.getContent());
+        model.addAttribute("viewingVersion", version);
+        model.addAttribute("isHistoryView", true);
+
+        // Return the appropriate task view template
         return task.getTaskView().getTemplatePath();
     }
 
