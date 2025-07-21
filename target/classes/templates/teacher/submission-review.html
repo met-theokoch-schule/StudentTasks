@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -23,21 +22,9 @@
         <div class="row">
             <div class="col-md-8">
                 <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5>Submission Review - <span th:text="${userTask.user.name}">Schüler</span></h5>
-                            <small class="text-muted">Aufgabe: <span th:text="${userTask.task.title}">Aufgabentitel</span></small>
-                        </div>
-                        <div>
-                            <label for="versionSelect" class="form-label me-2">Version:</label>
-                            <select id="versionSelect" class="form-select d-inline-block" style="width: auto;" onchange="changeVersion()">
-                                <option value="">Aktuellste Version</option>
-                                <option th:each="submission : ${submissions}" 
-                                        th:value="${submission.version}" 
-                                        th:text="'Version ' + ${submission.version} + ' (' + ${#temporals.format(submission.savedAt, 'dd.MM.yyyy HH:mm')} + ')'">
-                                </option>
-                            </select>
-                        </div>
+                    <div class="card-header">
+                        <h5>Submission Review - <span th:text="${userTask.user.name}">Schüler</span></h5>
+                        <small class="text-muted">Aufgabe: <span th:text="${userTask.task.title}">Aufgabentitel</span></small>
                     </div>
                     <div class="card-body p-0">
                         <!-- Current Status -->
@@ -78,11 +65,12 @@
 
                             <div class="mb-3">
                                 <label for="submissionId" class="form-label">Bezieht sich auf Version:</label>
-                                <select id="submissionId" name="submissionId" class="form-select">
-                                    <option value="">Allgemein</option>
+                                <select id="submissionId" name="submissionId" class="form-select" onchange="changeVersion()">
+                                    <option value="">Allgemein (Aktuellste Version)</option>
                                     <option th:each="submission : ${submissions}" 
                                             th:value="${submission.id}" 
-                                            th:text="'Version ' + ${submission.version} + ' (' + ${#temporals.format(submission.savedAt, 'dd.MM.yyyy HH:mm')} + ')'">
+                                            th:text="'Version ' + ${submission.version} + ' (' + ${#temporals.format(submission.savedAt, 'dd.MM.yyyy HH:mm')} + ')'"
+                                            th:data-version="${submission.version}">
                                     </option>
                                 </select>
                             </div>
@@ -135,16 +123,17 @@
 
     <script th:inline="javascript">
         const userTaskId = [[${userTask.id}]];
-        
+
         function changeVersion() {
-            const versionSelect = document.getElementById('versionSelect');
-            const selectedVersion = versionSelect.value;
+            const submissionSelect = document.getElementById('submissionId');
+            const selectedSubmissionId = submissionSelect.value;
             const iframe = document.getElementById('taskViewFrame');
-            
-            // Update iframe source with selected version
+
             let newSrc = `/teacher/submissions/${userTaskId}/view`;
-            if (selectedVersion) {
-                newSrc += `?version=${selectedVersion}`;
+            if (selectedSubmissionId) {
+                const selectedOption = submissionSelect.options[submissionSelect.selectedIndex];
+                const version = selectedOption.dataset.version;
+                newSrc += `?version=${version}`;
             }
             iframe.src = newSrc;
         }
