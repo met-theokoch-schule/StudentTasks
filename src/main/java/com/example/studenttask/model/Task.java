@@ -47,6 +47,10 @@ public class Task {
     private String defaultSubmission; // Default content for submissions in the format expected by the task view
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "unit_title_id")
+    private UnitTitle unitTitle;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "task_view_id")
     private TaskView taskView;
 
@@ -165,6 +169,14 @@ public class Task {
 
     public void setUserTasks(Set<UserTask> userTasks) {
         this.userTasks = userTasks;
+    }
+
+    public UnitTitle getUnitTitle() {
+        return unitTitle;
+    }
+
+    public void setUnitTitle(UnitTitle unitTitle) {
+        this.unitTitle = unitTitle;
     }
 
     @Override

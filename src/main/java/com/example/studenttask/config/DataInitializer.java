@@ -10,6 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
+import com.example.studenttask.service.TaskViewService;
+import com.example.studenttask.service.TaskStatusService;
+import com.example.studenttask.service.UnitTitleService;
 
 @Component
 public class DataInitializer implements ApplicationRunner {
@@ -23,11 +26,15 @@ public class DataInitializer implements ApplicationRunner {
     @Autowired
     private TaskViewRepository taskViewRepository;
 
+    @Autowired
+    private UnitTitleService unitTitleService;
+
     @Override
     public void run(ApplicationArguments args) throws Exception {
         initializeRoles();
         initializeTaskStatuses();
         initializeTaskViews();
+        initializeUnitTitles();
     }
 
     private void initializeRoles() {
@@ -53,14 +60,14 @@ public class DataInitializer implements ApplicationRunner {
     private void initializeTaskViews() {
         // Initialize Task Views if they don't exist based on unique templatePath
         String simpleTextTemplatePath = "taskviews/simple-text";
-        
+
         if (taskViewRepository.findByTemplatePath(simpleTextTemplatePath) == null) {
             TaskView simpleText = new TaskView("Einfacher Texteditor", simpleTextTemplatePath);
             simpleText.setDescription("Einfaches Textfeld für Text-Abgaben");
             taskViewRepository.save(simpleText);
             System.out.println("TaskView with templatePath '" + simpleTextTemplatePath + "' initialized");
         }
-        
+
         // Hier können weitere TaskViews hinzugefügt werden
         // Beispiel für weitere TaskViews:
         /*
@@ -73,4 +80,28 @@ public class DataInitializer implements ApplicationRunner {
         }
         */
     }
+
+    private void initializeUnitTitles() {
+        // Beispiel Unit Titles - können hier einfach erweitert werden
+        unitTitleService.createIfNotExists("einfuehrung-programmierung",
+            "Einführung in die Programmierung",
+            "Grundlagen der Programmierung und erste Schritte");
+
+        unitTitleService.createIfNotExists("html-css",
+            "HTML & CSS",
+            "Webentwicklung mit HTML und CSS");
+
+        unitTitleService.createIfNotExists("javascript-basics",
+            "JavaScript Grundlagen",
+            "Einführung in JavaScript und DOM-Manipulation");
+
+        unitTitleService.createIfNotExists("datenbanken",
+            "Datenbanken",
+            "Grundlagen von Datenbanken und SQL");
+
+        unitTitleService.createIfNotExists("objektorientierung",
+            "Objektorientierte Programmierung",
+            "Klassen, Objekte und Vererbung");
+    }
 }
+`
