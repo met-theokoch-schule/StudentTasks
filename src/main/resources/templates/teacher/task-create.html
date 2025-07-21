@@ -1,47 +1,197 @@
+
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: layout(~{::title}, ~{::main})}">
 <head>
-    <meta charset="UTF-8">
     <title>Neue Aufgabe erstellen</title>
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 </head>
 <body>
-    <h1>Neue Aufgabe erstellen</h1>
+    <main>
+        <div class="container-fluid">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/teacher/dashboard}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/teacher/tasks}">Aufgaben</a></li>
+                    <li class="breadcrumb-item active">Neue Aufgabe</li>
+                </ol>
+            </nav>
 
-    <form th:action="@{/teacher/tasks}" method="post" th:object="${task}">
-        <p>
-            <label for="title">Titel:</label>
-            <input type="text" id="title" th:field="*{title}" required>
-        </p>
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-1">Neue Aufgabe erstellen</h1>
+                    <p class="text-muted">Erstellen Sie eine neue Aufgabe für Ihre Schülergruppen</p>
+                </div>
+            </div>
 
-        <p>
-            <label for="description">Beschreibung:</label>
-            <textarea id="description" th:field="*{description}" required></textarea>
-        </p>
+            <!-- Main Form -->
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Aufgabendetails</h5>
+                        </div>
+                        <div class="card-body">
+                            <form th:action="@{/teacher/tasks}" method="post" th:object="${task}">
+                                <!-- Titel -->
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">Aufgabentitel *</label>
+                                    <input type="text" class="form-control" id="title" th:field="*{title}" required
+                                           placeholder="Geben Sie hier den Titel der Aufgabe ein...">
+                                    <div class="form-text">Ein aussagekräftiger Titel für die Aufgabe.</div>
+                                </div>
 
-        <p>
-            <label for="taskViewId">Aufgabentyp:</label>
-            <select id="taskViewId" name="taskViewId" required>
-                <option value="">Bitte wählen</option>
-                <option th:each="view : ${taskViews}" th:value="${view.id}" th:text="${view.name}"></option>
-            </select>
-        </p>
+                                <!-- Aufgabentyp -->
+                                <div class="mb-3">
+                                    <label for="taskViewId" class="form-label">Aufgabentyp *</label>
+                                    <select class="form-select" id="taskViewId" name="taskViewId" required>
+                                        <option value="">-- Aufgabentyp wählen --</option>
+                                        <option th:each="view : ${taskViews}" 
+                                                th:value="${view.id}" 
+                                                th:text="${view.name}"
+                                                th:attr="data-description=${view.description}">
+                                            TaskView Name
+                                        </option>
+                                    </select>
+                                    <div class="form-text" id="taskViewDescription">
+                                        Wählen Sie den Typ der Aufgabe aus.
+                                    </div>
+                                </div>
 
-        <p>
-            <label for="selectedGroups">Gruppen:</label>
-            <select id="selectedGroups" name="selectedGroups" multiple>
-                <option th:each="group : ${groups}" th:value="${group.id}" th:text="${group.name}"></option>
-            </select>
-        </p>
+                                <!-- Beschreibung -->
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Aufgabenbeschreibung *</label>
+                                    <textarea class="form-control" id="description" th:field="*{description}" rows="8" required
+                                              placeholder="Geben Sie hier die Aufgabenbeschreibung ein..."></textarea>
+                                    <div class="form-text">
+                                        Beschreiben Sie die Aufgabe ausführlich. Markdown-Syntax wird unterstützt.
+                                    </div>
+                                </div>
 
-        <p>
-            <input type="checkbox" id="isActive" th:field="*{isActive}" checked>
-            <label for="isActive">Aktiv</label>
-        </p>
+                                <!-- Standard-Vorlage -->
+                                <div class="mb-3">
+                                    <label for="defaultSubmission" class="form-label">Standard-Vorlage (optional)</label>
+                                    <textarea class="form-control" id="defaultSubmission" th:field="*{defaultSubmission}" rows="4"
+                                              placeholder="Geben Sie hier den Standard-Inhalt ein, mit dem die Aufgabe vorausgefüllt werden soll..."></textarea>
+                                    <div class="form-text">
+                                        Dieser Text wird als Ausgangsbasis in der Aufgabe angezeigt. Format abhängig vom gewählten Aufgabentyp.
+                                    </div>
+                                </div>
 
-        <p>
-            <button type="submit">Speichern</button>
-            <a th:href="@{/teacher/tasks}">Abbrechen</a>
-        </p>
-    </form>
+                                <!-- Fälligkeitsdatum -->
+                                <div class="mb-3">
+                                    <label for="dueDate" class="form-label">Fälligkeitsdatum (optional)</label>
+                                    <input type="datetime-local" class="form-control" id="dueDate" th:field="*{dueDate}">
+                                    <div class="form-text">Optional: Datum und Uhrzeit der Fälligkeit</div>
+                                </div>
+
+                                <!-- Gruppen-Auswahl -->
+                                <div class="mb-3">
+                                    <label for="selectedGroups" class="form-label">Zugewiesene Gruppen *</label>
+                                    <select id="selectedGroups" name="selectedGroups" class="form-select" multiple required>
+                                        <option th:each="group : ${groups}" 
+                                                th:value="${group.id}" 
+                                                th:text="${group.name}">
+                                            Gruppe
+                                        </option>
+                                    </select>
+                                    <div class="form-text">
+                                        Wählen Sie die Gruppen aus, die diese Aufgabe bearbeiten sollen.
+                                    </div>
+                                </div>
+
+                                <!-- Aktiv Checkbox -->
+                                <div class="mb-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="isActive" th:field="*{isActive}" checked>
+                                        <label class="form-check-label" for="isActive">
+                                            Aufgabe ist aktiv
+                                        </label>
+                                    </div>
+                                    <div class="form-text">Nur aktive Aufgaben sind für Schüler sichtbar.</div>
+                                </div>
+
+                                <!-- Buttons -->
+                                <div class="d-flex justify-content-between">
+                                    <a th:href="@{/teacher/tasks}" class="btn btn-secondary">
+                                        <i class="fas fa-times"></i> Abbrechen
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Aufgabe erstellen
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar with help -->
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Hilfe</h6>
+                        </div>
+                        <div class="card-body">
+                            <h6>Aufgabentypen</h6>
+                            <p class="small text-muted">
+                                Verschiedene Aufgabentypen ermöglichen unterschiedliche Bearbeitungsformen:
+                            </p>
+                            <ul class="small">
+                                <li><strong>Einfacher Texteditor:</strong> Für reine Textabgaben</li>
+                                <li><strong>HTML Editor:</strong> Für formatierte Texte</li>
+                            </ul>
+
+                            <h6 class="mt-3">Markdown-Syntax</h6>
+                            <p class="small text-muted">
+                                Die Aufgabenbeschreibung unterstützt Markdown:
+                            </p>
+                            <ul class="small">
+                                <li><code>**fett**</code> für <strong>fett</strong></li>
+                                <li><code>*kursiv*</code> für <em>kursiv</em></li>
+                                <li><code># Überschrift</code> für Überschriften</li>
+                                <li><code>- Punkt</code> für Listen</li>
+                            </ul>
+
+                            <h6 class="mt-3">Standard-Vorlage</h6>
+                            <p class="small text-muted">
+                                Mit der Standard-Vorlage können Sie den Schülern eine Ausgangsbasis geben. 
+                                Das Format hängt vom gewählten Aufgabentyp ab.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Select2 JavaScript -->
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+        
+        <script>
+            $(document).ready(function() {
+                // Select2 für Gruppen-Auswahl initialisieren
+                $('#selectedGroups').select2({
+                    theme: 'bootstrap-5',
+                    placeholder: 'Gruppen auswählen...',
+                    allowClear: false,
+                    width: '100%'
+                });
+
+                // TaskView Beschreibung dynamisch anzeigen
+                $('#taskViewId').on('change', function() {
+                    const selectedOption = $(this).find('option:selected');
+                    const description = selectedOption.data('description');
+                    if (description) {
+                        $('#taskViewDescription').text(description);
+                    } else {
+                        $('#taskViewDescription').text('Wählen Sie den Typ der Aufgabe aus.');
+                    }
+                });
+            });
+        </script>
+    </main>
 </body>
 </html>
