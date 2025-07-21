@@ -31,7 +31,7 @@ public class TaskReview {
     private LocalDateTime reviewedAt;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "submission_id", nullable = false)
+    @JoinColumn(name = "submission_id", nullable = true)
     private Submission submission;
     
     // Constructors
