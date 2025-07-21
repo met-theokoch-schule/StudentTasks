@@ -3,9 +3,11 @@ package com.example.studenttask.config;
 import com.example.studenttask.model.Role;
 import com.example.studenttask.model.TaskStatus;
 import com.example.studenttask.model.TaskView;
+import com.example.studenttask.model.Category;
 import com.example.studenttask.repository.RoleRepository;
 import com.example.studenttask.repository.TaskStatusRepository;
 import com.example.studenttask.repository.TaskViewRepository;
+import com.example.studenttask.repository.CategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -22,12 +24,16 @@ public class DataInitializer implements ApplicationRunner {
 
     @Autowired
     private TaskViewRepository taskViewRepository;
+    
+    @Autowired
+    private CategoryRepository categoryRepository;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
         initializeRoles();
         initializeTaskStatuses();
         initializeTaskViews();
+        initializeCategories();
     }
 
     private void initializeRoles() {
@@ -72,5 +78,27 @@ public class DataInitializer implements ApplicationRunner {
             System.out.println("TaskView with templatePath '" + htmlEditorTemplatePath + "' initialized");
         }
         */
+    }
+    
+    private void initializeCategories() {
+        // Initialize Categories if they don't exist
+        createCategoryIfNotExists("Mathematik", "Mathematische Aufgaben und Übungen");
+        createCategoryIfNotExists("Deutsch", "Deutsche Sprache und Literatur");
+        createCategoryIfNotExists("Englisch", "Englische Sprache und Literatur");
+        createCategoryIfNotExists("Informatik", "Programmierung und Informatik");
+        createCategoryIfNotExists("Naturwissenschaften", "Physik, Chemie, Biologie");
+        createCategoryIfNotExists("Geschichte", "Geschichtliche Themen und Ereignisse");
+        createCategoryIfNotExists("Geographie", "Erdkunde und geografische Themen");
+        createCategoryIfNotExists("Kunst", "Künstlerische und kreative Aufgaben");
+        createCategoryIfNotExists("Sport", "Sportliche Aktivitäten und Theorie");
+        createCategoryIfNotExists("Allgemein", "Allgemeine und fächerübergreifende Aufgaben");
+    }
+    
+    private void createCategoryIfNotExists(String name, String description) {
+        if (categoryRepository.findByNameIgnoreCase(name).isEmpty()) {
+            Category category = new Category(name, description);
+            categoryRepository.save(category);
+            System.out.println("Category '" + name + "' initialized");
+        }
     }
 }
