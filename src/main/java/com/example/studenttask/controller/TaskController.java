@@ -33,36 +33,14 @@ public class TaskController {
     @Autowired
     private SubmissionService submissionService;
 
-    @GetMapping("/tasks/{taskId}")
-    public String viewTask(@PathVariable Long taskId, Authentication authentication, Model model) {
-        User currentUser = userService.findByOpenIdSubject(authentication.getName()).orElse(null);
-        if (currentUser == null) {
-            return "redirect:/login";
-        }
-
-        Optional<Task> taskOpt = taskService.findById(taskId);
-        if (taskOpt.isEmpty()) {
-            return "redirect:/student/dashboard";
-        }
-
-        Task task = taskOpt.get();
-
-        // Get or create UserTask
-        UserTask userTask = userTaskService.findOrCreateUserTask(currentUser, task);
-
-        // Get current content
-        Optional<TaskContent> currentContentOpt = taskContentService.getLatestContent(userTask);
-        String content = currentContentOpt.map(TaskContent::getContent)
-                .orElse(task.getDefaultSubmission() != null ? task.getDefaultSubmission() : "");
-
-        model.addAttribute("task", task);
-        model.addAttribute("userTask", userTask);
-        model.addAttribute("content", content);
-        model.addAttribute("renderedDescription", task.getDescription());
-
-        // Return the appropriate task view template
-        return "taskviews/" + task.getTaskView().getId();
-    }
+    // This method was causing a conflict with StudentController#viewTask
+    // The StudentController already handles /student/tasks/{taskId}
+    // If we need teacher review functionality, we should use a different path like:
+    // @GetMapping("/teacher/tasks/{taskId}/review")
+    // public String reviewTask(@PathVariable Long taskId, @RequestParam(required = false) Long userId, Authentication authentication, Model model) {
+    //     // Teacher review implementation would go here
+    //     return "teacher/task-review";
+    // }
 
     @GetMapping("/tasks/{taskId}/iframe")
     public String viewTaskIframe(@PathVariable Long taskId, 
