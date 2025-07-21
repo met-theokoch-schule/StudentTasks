@@ -3,6 +3,7 @@ package com.example.studenttask.service;
 import com.example.studenttask.model.TaskReview;
 import com.example.studenttask.model.UserTask;
 import com.example.studenttask.model.TaskStatus;
+import com.example.studenttask.model.User;
 import com.example.studenttask.repository.TaskReviewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -53,6 +54,38 @@ public class TaskReviewService {
      */
     public Optional<TaskReview> findLatestReviewForUserTask(UserTask userTask) {
         return taskReviewRepository.findFirstByUserTaskOrderByReviewedAtDesc(userTask);
+    }
+
+    /**
+     * Find all reviews for a user task
+     */
+    public List<TaskReview> findByUserTask(UserTask userTask) {
+        return taskReviewRepository.findByUserTaskOrderByReviewedAtDesc(userTask);
+    }
+
+    /**
+     * Create a new review for a user task
+     */
+    public TaskReview createReview(UserTask userTask, User reviewer, Long statusId, String comment, Long submissionId) {
+        TaskReview review = new TaskReview();
+        review.setUserTask(userTask);
+        review.setReviewer(reviewer);
+        review.setComment(comment);
+        review.setReviewedAt(java.time.LocalDateTime.now());
+
+        // Set status if provided
+        if (statusId != null) {
+            taskStatusService.findById(statusId).ifPresent(review::setStatus);
+            // Update the user task status as well
+            taskStatusService.findById(statusId).ifPresent(userTask::setStatus);
+        }
+
+        // TODO: Handle submission reference if needed
+        // if (submissionId != null) {
+        //     submissionService.findById(submissionId).ifPresent(review::setSubmission);
+        // }
+
+        return save(review);
     }
 
     /**
