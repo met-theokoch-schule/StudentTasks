@@ -79,7 +79,7 @@ public class TaskController {
         User targetUser;
         if (userId != null) {
             // Teacher reviewing student's work
-            Optional<User> userOpt = userService.findByUserId(userId);
+            Optional<User> userOpt = userService.findById(userId);
             if (userOpt.isEmpty()) {
                 return "redirect:/teacher/dashboard";
             }
