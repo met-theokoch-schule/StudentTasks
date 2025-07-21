@@ -144,12 +144,7 @@ public class TaskContentService {
         taskContentRepository.deleteByUserTask(userTask);
     }
 
-    /**
-     * Get content by specific version
-     */
-    public Optional<TaskContent> getContentByVersion(UserTask userTask, Integer version) {
-        return taskContentRepository.findByUserTaskAndVersion(userTask, version);
-    }
+    
 
     /**
      * Check if user task has any content
