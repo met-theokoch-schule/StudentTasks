@@ -250,7 +250,12 @@ public class TeacherTaskController {
         // Set unit title
         UnitTitle unitTitle = null;
         if (unitTitleId != null && !unitTitleId.trim().isEmpty()) {
-            unitTitle = unitTitleService.findById(unitTitleId);
+            try {
+                Long unitTitleIdLong = Long.parseLong(unitTitleId);
+                unitTitle = unitTitleService.findById(unitTitleIdLong);
+            } catch (NumberFormatException e) {
+                System.err.println("Invalid unitTitleId format: " + unitTitleId);
+            }
         }
 
         taskService.save(task);
@@ -298,9 +303,15 @@ public class TeacherTaskController {
         existingTask.setTaskView(taskView);
 
         // Update unit title
-        UnitTitle unitTitle = null;
         if (unitTitleId != null && !unitTitleId.trim().isEmpty()) {
-            unitTitle = unitTitleService.findById(unitTitleId);
+            try {
+                Long unitTitleIdLong = Long.parseLong(unitTitleId);
+                UnitTitle unitTitle = unitTitleService.findById(unitTitleIdLong);
+                existingTask.setUnitTitle(unitTitle);
+            } catch (NumberFormatException e) {
+                System.err.println("Invalid unitTitleId format: " + unitTitleId);
+                existingTask.setUnitTitle(null);
+            }
         } else {
             existingTask.setUnitTitle(null);
         }
