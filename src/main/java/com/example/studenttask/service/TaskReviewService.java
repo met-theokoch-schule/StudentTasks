@@ -1,4 +1,3 @@
-
 package com.example.studenttask.service;
 
 import com.example.studenttask.model.*;
@@ -17,13 +16,13 @@ public class TaskReviewService {
 
     @Autowired
     private TaskReviewRepository taskReviewRepository;
-    
+
     @Autowired
     private TaskStatusRepository taskStatusRepository;
-    
+
     @Autowired
     private SubmissionRepository submissionRepository;
-    
+
     @Autowired
     private UserTaskService userTaskService;
 
@@ -37,24 +36,31 @@ public class TaskReviewService {
         review.setReviewer(reviewer);
         review.setComment(comment);
         review.setReviewedAt(LocalDateTime.now());
-        
+
         // Set status
-        Optional<TaskStatus> statusOpt = taskStatusRepository.findById(statusId);
-        if (statusOpt.isPresent()) {
-            review.setStatus(statusOpt.get());
-            
-            // Update UserTask status
-            userTask.setStatus(statusOpt.get());
-            userTask.setLastModified(LocalDateTime.now());
-            userTaskService.save(userTask);
-        }
-        
-        // Set submission if provided
+        TaskStatus status = taskStatusRepository.findById(statusId)
+                .orElseThrow(() -> new RuntimeException("Status not found"));
+        review.setStatus(status);
+
+        // Set submission - if not provided, find the latest submission
+        Submission submission;
         if (submissionId != null) {
-            Optional<Submission> submissionOpt = submissionRepository.findById(submissionId);
-            submissionOpt.ifPresent(review::setSubmission);
+            submission = submissionRepository.findById(submissionId)
+                    .orElseThrow(() -> new RuntimeException("Submission not found"));
+        } else {
+            // Find latest submission for this user task
+            List<Submission> submissions = submissionRepository.findByUserTaskOrderBySubmittedAtDesc(userTask);
+            if (submissions.isEmpty()) {
+                throw new RuntimeException("No submissions found for this task - cannot create review");
+            }
+            submission = submissions.get(0);
         }
-        
+        review.setSubmission(submission);
+
+        // Update UserTask status
+        userTask.setStatus(status);
+        userTask.setLastModified(LocalDateTime.now());
+
         return taskReviewRepository.save(review);
     }
 
