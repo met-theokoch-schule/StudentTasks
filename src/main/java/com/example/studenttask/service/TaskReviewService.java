@@ -15,11 +15,20 @@ import java.util.ArrayList;
 @Service
 public class TaskReviewService {
 
-    @Autowired
-    private TaskReviewRepository taskReviewRepository;
+    private final TaskReviewRepository taskReviewRepository;
+    private final UserTaskService userTaskService;
+    private final TaskStatusService taskStatusService;
+    private final SubmissionService submissionService;
 
-    @Autowired
-    private TaskStatusService taskStatusService;
+    public TaskReviewService(TaskReviewRepository taskReviewRepository,
+                           UserTaskService userTaskService,
+                           TaskStatusService taskStatusService,
+                           SubmissionService submissionService) {
+        this.taskReviewRepository = taskReviewRepository;
+        this.userTaskService = userTaskService;
+        this.taskStatusService = taskStatusService;
+        this.submissionService = submissionService;
+    }
 
     /**
      * Find all reviews for a user task ordered by review date descending
