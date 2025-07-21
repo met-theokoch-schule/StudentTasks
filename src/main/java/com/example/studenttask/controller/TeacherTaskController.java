@@ -28,6 +28,8 @@ import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.Set;
+import java.util.HashSet;
 
 @Controller
 @RequestMapping("/teacher")
@@ -246,7 +248,7 @@ public class TeacherTaskController {
 
         // Set unit title if provided
         if (unitTitleId != null && !unitTitleId.isEmpty()) {
-            UnitTitle unitTitle = unitTitleService.findById(unitTitleId);
+            UnitTitle unitTitle = unitTitleService.findById(Long.parseLong(unitTitleId));
             task.setUnitTitle(unitTitle);
         }
 
@@ -295,7 +297,7 @@ public class TeacherTaskController {
 
         // Update unit title
         if (unitTitleId != null && !unitTitleId.isEmpty()) {
-            UnitTitle unitTitle = unitTitleService.findById(unitTitleId);
+            UnitTitle unitTitle = unitTitleService.findById(Long.parseLong(unitTitleId));
             existingTask.setUnitTitle(unitTitle);
         } else {
             existingTask.setUnitTitle(null);

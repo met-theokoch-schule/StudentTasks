@@ -226,4 +226,15 @@ public class GroupService {
     public List<Group> findAll() {
         return groupRepository.findAll();
     }
+
+    public void deleteGroup(Long id) {
+        groupRepository.deleteById(id);
+    }
+
+    /**
+     * Find groups by IDs
+     */
+    public List<Group> findAllById(List<Long> ids) {
+        return groupRepository.findAllById(ids);
+    }
 }

@@ -115,4 +115,11 @@ public class TaskViewService {
         List<TaskView> activeViews = findActiveTaskViews();
         return activeViews.isEmpty() ? Optional.empty() : Optional.of(activeViews.get(0));
     }
+
+    /**
+     * Get all active task views (alias for findActiveTaskViews)
+     */
+    public List<TaskView> findAllActive() {
+        return findActiveTaskViews();
+    }
 }

@@ -222,14 +222,14 @@ public class TaskService {
 
         return savedTask;
     }
-    
+
     /**
      * Save a task
      */
     public Task save(Task task) {
         return taskRepository.save(task);
     }
-    
+
     /**
      * Find all active tasks
      */
@@ -242,5 +242,27 @@ public class TaskService {
      */
     public List<Task> findInactiveTasks() {
         return taskRepository.findByIsActiveFalse();
+    }
+
+    /**
+     * Check if user has access to task
+     */
+    public boolean hasUserAccessToTask(User user, Task task) {
+        return task.getAssignedGroups().stream()
+            .anyMatch(group -> user.getGroups().contains(group));
+    }
+
+    /**
+     * Delete a task
+     */
+    public void delete(Task task) {
+        taskRepository.delete(task);
+    }
+
+    /**
+     * Delete a task by id
+     */
+    public void deleteById(Long id) {
+        taskRepository.deleteById(id);
     }
 }
