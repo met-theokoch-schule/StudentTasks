@@ -185,7 +185,7 @@ public class TeacherController {
         }
     }
 
-    
+
 
     /**
      * Löscht eine Aufgabe
@@ -341,5 +341,52 @@ public class TeacherController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Fehler beim Speichern: " + e.getMessage());
         }
+    }
+
+    @Autowired
+    private com.example.studenttask.service.TaskContentService taskContentService;
+
+    @GetMapping("/teacher/submissions/{userTaskId}/view")
+    public String viewSubmissionContent(@PathVariable Long userTaskId, 
+                                       @RequestParam(required = false) Integer version,
+                                       Authentication authentication, Model model) {
+        // Get the user task
+        Optional<UserTask> userTaskOpt = userTaskService.findById(userTaskId);
+        if (userTaskOpt.isEmpty()) {
+            return "redirect:/teacher/dashboard";
+        }
+
+        UserTask userTask = userTaskOpt.get();
+        Task task = userTask.getTask();
+
+        String contentText;
+
+        if (version != null && version > 0) {
+            // Load specific version
+            TaskContent versionContent = taskContentService.getContentByVersion(userTask, version);
+            if (versionContent != null) {
+                contentText = versionContent.getContent();
+            } else {
+                // Fallback if version not found
+                Optional<TaskContent> latestContentOpt = taskContentService.getLatestContent(userTask);
+                contentText = latestContentOpt.map(TaskContent::getContent)
+                    .orElse(task.getDefaultSubmission() != null ? task.getDefaultSubmission() : "");
+            }
+        } else {
+            // Show latest content by default
+            Optional<TaskContent> latestContentOpt = taskContentService.getLatestContent(userTask);
+            contentText = latestContentOpt.map(TaskContent::getContent)
+                .orElse(task.getDefaultSubmission() != null ? task.getDefaultSubmission() : "");
+        }
+
+        model.addAttribute("task", task);
+        model.addAttribute("userTask", userTask);
+        model.addAttribute("content", contentText);
+        model.addAttribute("renderedDescription", task.getDescription());
+        model.addAttribute("isIframe", true);
+        model.addAttribute("isTeacherView", true);
+
+        // Return the appropriate task view template
+        return "taskviews/" + task.getTaskView().getId();
     }
 }
