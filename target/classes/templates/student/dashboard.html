@@ -56,8 +56,12 @@
                                                     Fällig: <span th:text="${#temporals.format(userTask.task.dueDate, 'dd.MM.yyyy')}">Datum</span>
                                                 </small>
                                                 <a th:href="@{'/student/tasks/' + ${userTask.task.id}}" 
-                                                   class="btn btn-primary btn-sm">
+                                                   class="btn btn-primary btn-sm me-1">
                                                     <i class="fas fa-edit"></i> Bearbeiten
+                                                </a>
+                                                <a th:href="@{'/student/tasks/' + ${userTask.task.id} + '/history'}" 
+                                                   class="btn btn-outline-info btn-sm">
+                                                    <i class="fas fa-history"></i> Historie
                                                 </a>
                                             </div>
                                         </div>
