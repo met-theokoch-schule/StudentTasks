@@ -2,7 +2,9 @@ package com.example.studenttask.service;
 
 import com.example.studenttask.model.TaskContent;
 import com.example.studenttask.model.UserTask;
+import com.example.studenttask.model.TaskStatus;
 import com.example.studenttask.repository.TaskContentRepository;
+import com.example.studenttask.repository.UserTaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
