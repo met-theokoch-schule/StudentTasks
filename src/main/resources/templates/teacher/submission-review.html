@@ -32,9 +32,9 @@
                             <label for="versionSelect" class="form-label me-2">Version:</label>
                             <select id="versionSelect" class="form-select d-inline-block" style="width: auto;" onchange="changeVersion()">
                                 <option value="">Aktuellste Version</option>
-                                <option th:each="content : ${taskContents}" 
-                                        th:value="${content.version}" 
-                                        th:text="'Version ' + ${content.version} + ' (' + ${#temporals.format(content.savedAt, 'dd.MM.yyyy HH:mm')} + ')'">
+                                <option th:each="submission : ${submissions}" 
+                                        th:value="${submission.version}" 
+                                        th:text="'Version ' + ${submission.version} + ' (' + ${#temporals.format(submission.savedAt, 'dd.MM.yyyy HH:mm')} + ')'">
                                 </option>
                             </select>
                         </div>
@@ -80,9 +80,9 @@
                                 <label for="submissionId" class="form-label">Bezieht sich auf Version:</label>
                                 <select id="submissionId" name="submissionId" class="form-select">
                                     <option value="">Allgemein</option>
-                                    <option th:each="content : ${taskContents}" 
-                                            th:value="${content.id}" 
-                                            th:text="'Version ' + ${content.version} + ' (' + ${#temporals.format(content.savedAt, 'dd.MM.yyyy HH:mm')} + ')'">
+                                    <option th:each="submission : ${submissions}" 
+                                            th:value="${submission.id}" 
+                                            th:text="'Version ' + ${submission.version} + ' (' + ${#temporals.format(submission.savedAt, 'dd.MM.yyyy HH:mm')} + ')'">
                                     </option>
                                 </select>
                             </div>
