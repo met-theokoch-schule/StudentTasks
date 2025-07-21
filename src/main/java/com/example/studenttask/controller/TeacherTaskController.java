@@ -1,6 +1,8 @@
 package com.example.studenttask.controller;
 
 import com.example.studenttask.model.Task;
+import com.example.studenttask.model.TaskView;
+import com.example.studenttask.model.Category;
 import com.example.studenttask.model.TaskContent;
 import com.example.studenttask.model.TaskReview;
 import com.example.studenttask.model.TaskStatus;
@@ -47,6 +49,9 @@ public class TeacherTaskController {
 
     @Autowired
     private TaskStatusService taskStatusService;
+
+    @Autowired
+    private CategoryService categoryService;
 
     /**
      * Zeigt die Übersicht aller Aufgaben des Lehrers
