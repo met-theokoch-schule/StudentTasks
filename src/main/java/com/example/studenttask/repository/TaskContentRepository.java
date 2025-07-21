@@ -14,6 +14,8 @@ import java.util.Optional;
 public interface TaskContentRepository extends JpaRepository<TaskContent, Long> {
 
     List<TaskContent> findByUserTaskOrderByVersionDesc(UserTask userTask);
+    
+    TaskContent findByUserTaskAndVersion(UserTask userTask, Integer version);
 
     @Query("SELECT tc FROM TaskContent tc WHERE tc.userTask = :userTask ORDER BY tc.version DESC LIMIT 1")
     Optional<TaskContent> findLatestByUserTask(@Param("userTask") UserTask userTask);
