@@ -4,6 +4,7 @@ import com.example.studenttask.model.TaskReview;
 import com.example.studenttask.model.UserTask;
 import com.example.studenttask.model.TaskStatus;
 import com.example.studenttask.model.User;
+import com.example.studenttask.model.Submission;
 import com.example.studenttask.repository.TaskReviewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.ArrayList;
+import java.time.LocalDateTime;
 
 @Service
 public class TaskReviewService {
@@ -20,6 +22,9 @@ public class TaskReviewService {
 
     @Autowired
     private TaskStatusService taskStatusService;
+
+    @Autowired
+    private SubmissionService submissionService;
 
     /**
      * Find all reviews for a user task ordered by review date descending
@@ -64,26 +69,30 @@ public class TaskReviewService {
     }
 
     /**
-     * Create a new review for a user task
+     * Create a new review
      */
-    public TaskReview createReview(UserTask userTask, User reviewer, Long statusId, String comment, Long submissionId) {
+    public TaskReview createReview(UserTask userTask, com.example.studenttask.model.User reviewer,
+                                 String comment, Integer rating, Long submissionId) {
         TaskReview review = new TaskReview();
         review.setUserTask(userTask);
         review.setReviewer(reviewer);
         review.setComment(comment);
-        review.setReviewedAt(java.time.LocalDateTime.now());
+        review.setRating(rating);
+        review.setReviewedAt(LocalDateTime.now());
 
-        // Set status if provided
-        if (statusId != null) {
-            taskStatusService.findById(statusId).ifPresent(review::setStatus);
-            // Update the user task status as well
-            taskStatusService.findById(statusId).ifPresent(userTask::setStatus);
+        // If submissionId is provided, find and set the submission
+        if (submissionId != null) {
+            // Find submission by userTask and submissionId
+            List<Submission> submissions = submissionService.getSubmissionsByUserTask(userTask);
+            Optional<Submission> targetSubmission = submissions.stream()
+                    .filter(s -> s.getId().equals(submissionId))
+                    .findFirst();
+            review.setSubmission(targetSubmission.orElse(null));
+        } else {
+            // If no specific submission is selected, use the latest submission
+            Optional<Submission> latestSubmission = submissionService.getLatestSubmission(userTask);
+            review.setSubmission(latestSubmission.orElse(null));
         }
-
-        // TODO: Handle submission reference if needed
-        // if (submissionId != null) {
-        //     submissionService.findById(submissionId).ifPresent(review::setSubmission);
-        // }
 
         return save(review);
     }
