@@ -46,6 +46,9 @@ public class Task {
     @Column(columnDefinition = "TEXT")
     private String defaultSubmission; // Default content for submissions in the format expected by the task view
 
+    @Column(columnDefinition = "TEXT")
+    private String tutorial;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "unit_title_id")
     private UnitTitle unitTitle;
@@ -157,6 +160,14 @@ public class Task {
 
     public void setDefaultSubmission(String defaultSubmission) {
         this.defaultSubmission = defaultSubmission;
+    }
+
+    public String getTutorial() {
+        return tutorial;
+    }
+
+    public void setTutorial(String tutorial) {
+        this.tutorial = tutorial;
     }
 
     public TaskView getTaskView() {
