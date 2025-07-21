@@ -114,47 +114,22 @@ public class TeacherController {
             User teacher = userService.findByOpenIdSubject(principal.getName())
                 .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
-            Task existingTask = taskService.findById(taskId)
+            Task task = taskService.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Aufgabe nicht gefunden"));
 
-            // Sicherheitscheck: Nur eigene Aufgaben bearbeiten
-            if (!existingTask.getCreatedBy().equals(teacher)) {
-                throw new RuntimeException("Zugriff verweigert");
+            // Überprüfen, ob der Lehrer berechtigt ist
+            if (!task.getCreatedBy().getId().equals(teacher.getId())) {
+                throw new RuntimeException("Keine Berechtigung für diese Aufgabe");
             }
 
-            // TaskView laden
-            TaskView taskView = taskViewService.findById(taskViewId)
-                .orElseThrow(() -> new RuntimeException("TaskView nicht gefunden"));
-            task.setTaskView(taskView);
-            existingTask.setTaskView(taskView);
+            model.addAttribute("task", task);
+            model.addAttribute("taskViews", taskViewService.findAll());
+            model.addAttribute("groups", groupService.findAll());
 
-            // Gruppen aktualisieren
-            if (selectedGroups != null && !selectedGroups.isEmpty()) {
-                Set<Group> assignedGroups = new HashSet<>();
-                for (Long groupId : selectedGroups) {
-                    Group group = groupService.findById(groupId);
-                    if (group != null) {
-                        assignedGroups.add(group);
-                    }
-                }
-                existingTask.setAssignedGroups(assignedGroups);
-            } else {
-                existingTask.setAssignedGroups(new HashSet<>());
-            }
-
-            // Daten aktualisieren
-            existingTask.setTitle(task.getTitle());
-            existingTask.setDescription(task.getDescription());
-            existingTask.setIsActive(task.getIsActive());
-
-            taskService.save(existingTask);
-
-            redirectAttributes.addFlashAttribute("success", "Aufgabe '" + existingTask.getTitle() + "' wurde erfolgreich aktualisiert.");
-            return "redirect:/teacher/tasks";
-
+            return "teacher/task-edit";
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Fehler beim Aktualisieren der Aufgabe: " + e.getMessage());
-            return "redirect:/teacher/tasks/edit/" + taskId;
+            model.addAttribute("error", "Fehler beim Laden der Aufgabe: " + e.getMessage());
+            return "redirect:/teacher/tasks";
         }
     }
 
