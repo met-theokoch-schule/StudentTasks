@@ -18,6 +18,16 @@ public class TaskContentService {
     @Autowired
     private TaskContentRepository taskContentRepository;
 
+    @Autowired
+    private TaskStatusService taskStatusService;
+
+    @Autowired
+    private SubmissionService submissionService;
+
+     @Autowired
+    private UserTaskRepository userTaskRepository;
+
+
     /**
      * Save task content (creates new version)
      */
@@ -32,7 +42,35 @@ public class TaskContentService {
         taskContent.setSavedAt(LocalDateTime.now());
         taskContent.setSubmitted(isSubmitted);
 
-        return taskContentRepository.save(taskContent);
+        TaskContent saved = taskContentRepository.save(taskContent);
+
+        // Update UserTask timestamps
+        userTask.setLastModified(LocalDateTime.now());
+        if (userTask.getStartedAt() == null) {
+            userTask.setStartedAt(LocalDateTime.now());
+        }
+
+        // Update status based on action
+        if (isSubmitted) {
+            // If submitted, set to ABGEGEBEN
+            TaskStatus submittedStatus = taskStatusService.findByName("ABGEGEBEN")
+                    .orElseThrow(() -> new RuntimeException("Status ABGEGEBEN not found"));
+            userTask.setStatus(submittedStatus);
+
+            // Create submission record
+            submissionService.createSubmission(userTask, saved);
+        } else {
+            // If just saving (not submitting) and status is still NICHT_BEGONNEN, change to IN_BEARBEITUNG
+            if (userTask.getStatus() != null && "NICHT_BEGONNEN".equals(userTask.getStatus().getName())) {
+                TaskStatus inProgressStatus = taskStatusService.findByName("IN_BEARBEITUNG")
+                        .orElseThrow(() -> new RuntimeException("Status IN_BEARBEITUNG not found"));
+                userTask.setStatus(inProgressStatus);
+            }
+        }
+
+        userTaskRepository.save(userTask);
+
+        return saved;
     }
 
     /**
