@@ -240,7 +240,7 @@ public class TeacherTaskController {
 
         // Assign selected groups to the task
         List<Group> groups = groupService.findAllById(selectedGroups);
-        task.setAssignedGroups(groups);
+        task.setAssignedGroups(new HashSet<>(groups));
 
         // Set task view
         TaskView taskView = taskViewService.findById(taskViewId);
@@ -289,7 +289,7 @@ public class TeacherTaskController {
 
         // Update assigned groups
         List<Group> groups = groupService.findAllById(selectedGroups);
-        existingTask.setAssignedGroups(groups);
+        existingTask.setAssignedGroups(new HashSet<>(groups));
 
         // Update task view
         TaskView taskView = taskViewService.findById(taskViewId);
