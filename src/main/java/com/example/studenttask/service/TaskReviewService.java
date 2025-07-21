@@ -80,10 +80,11 @@ public class TaskReviewService {
             taskStatusService.findById(statusId).ifPresent(userTask::setStatus);
         }
 
-        // TODO: Handle submission reference if needed
-        // if (submissionId != null) {
-        //     submissionService.findById(submissionId).ifPresent(review::setSubmission);
-        // }
+        // Set submission reference if provided (for version-specific reviews)
+        if (submissionId != null) {
+            submissionService.findById(submissionId).ifPresent(review::setSubmission);
+        }
+        // If no submissionId provided, it remains null (general review)
 
         return save(review);
     }
