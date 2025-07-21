@@ -58,6 +58,13 @@ public class SubmissionService {
     }
 
     /**
+     * Find submission by id
+     */
+    public Optional<Submission> findById(Long id) {
+        return submissionRepository.findById(id);
+    }
+
+    /**
      * Delete all submissions for a user task
      */
     public void deleteAllSubmissionsForUserTask(UserTask userTask) {
