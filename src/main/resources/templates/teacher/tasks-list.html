@@ -59,8 +59,6 @@
                                         <tr th:each="task : ${tasks}">
                                             <td>
                                                 <strong th:text="${task.title}">Aufgabentitel</strong>
-                                                <br>
-                                                <small class="text-muted" th:text="${#strings.abbreviate(task.description, 50)}">Beschreibung...</small>
                                             </td>
                                             <td th:text="${task.taskView?.name ?: 'Kein View'}">Task View</td>
                                             <td th:text="${#temporals.format(task.createdAt, 'dd.MM.yyyy HH:mm')}">01.01.2024 10:00</td>

@@ -38,11 +38,6 @@
                                 <tr th:each="userTask : ${userTasks}">
                                     <td>
                                         <strong th:text="${userTask.task.title}">Aufgabentitel</strong>
-                                        <br>
-                                        <small class="text-muted" 
-                                               th:text="${#strings.abbreviate(userTask.task.description, 60)}">
-                                            Beschreibung...
-                                        </small>
                                     </td>
                                     <td>
                                         <span th:if="${userTask.status}" 
