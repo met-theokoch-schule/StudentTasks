@@ -247,10 +247,10 @@ public class TeacherTaskController {
         TaskView taskView = taskViewService.findById(taskViewId);
         task.setTaskView(taskView);
 
-        // Set unit title if provided
-        if (unitTitleId != null && !unitTitleId.isEmpty()) {
-            UnitTitle unitTitle = unitTitleService.findById(unitTitleId);
-            task.setUnitTitle(unitTitle);
+        // Set unit title
+        UnitTitle unitTitle = null;
+        if (unitTitleId != null && !unitTitleId.trim().isEmpty()) {
+            unitTitle = unitTitleService.findById(unitTitleId);
         }
 
         taskService.save(task);
@@ -298,9 +298,9 @@ public class TeacherTaskController {
         existingTask.setTaskView(taskView);
 
         // Update unit title
-        if (unitTitleId != null && !unitTitleId.isEmpty()) {
-            UnitTitle unitTitle = unitTitleService.findById(unitTitleId);
-            existingTask.setUnitTitle(unitTitle);
+        UnitTitle unitTitle = null;
+        if (unitTitleId != null && !unitTitleId.trim().isEmpty()) {
+            unitTitle = unitTitleService.findById(unitTitleId);
         } else {
             existingTask.setUnitTitle(null);
         }
@@ -317,3 +317,7 @@ public class TeacherTaskController {
         return "redirect:/teacher/tasks";
     }
 }
+```
+
+```
+</replit_final_file>
