@@ -74,6 +74,11 @@ public class TeacherController {
 
 
     /**
+     * Zeigt das Formular zum Löschen einer Aufgabe
+     */
+   
+
+    /**
      * Zeigt das Formular zum Erstellen einer neuen Aufgabe
      */
     @GetMapping("/tasks/create")
