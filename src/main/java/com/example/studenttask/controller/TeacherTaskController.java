@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 import java.util.Set;
 import java.util.HashSet;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import java.util.ArrayList;
 
 @Controller
 @RequestMapping("/teacher")
@@ -267,17 +268,24 @@ public class TeacherTaskController {
         return "redirect:/teacher/tasks";
     }
 
-    @GetMapping("/tasks/edit/{id}")
-    public String showEditTaskForm(@PathVariable Long id, Model model) {
+    @GetMapping("/tasks/{id}/edit")
+    public String showEditTaskForm(@PathVariable Long id, Model model, Principal principal) {
+        User teacher = userService.findByOpenIdSubject(principal.getName())
+                .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+
         Task task = taskService.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid task Id:" + id));
+
+        List<TaskView> taskViews = taskViewService.findActiveTaskViews();
+        List<Group> allGroups = groupService.findAll();
+        List<UnitTitle> unitTitles = unitTitleService.findAllActive();
+
         model.addAttribute("task", task);
-        model.addAttribute("taskViews", taskViewService.findAllActive());
-        model.addAttribute("groups", groupService.findAll());
-        model.addAttribute("unitTitles", unitTitleService.findAllActive());
-        model.addAttribute("selectedGroups", task.getAssignedGroups().stream()
-                .map(Group::getId)
-                .collect(Collectors.toList()));
+        model.addAttribute("taskViews", taskViews != null ? taskViews : new ArrayList<>());
+        model.addAttribute("groups", allGroups);
+        model.addAttribute("unitTitles", unitTitles);
+        model.addAttribute("teacher", teacher);
+
         return "teacher/task-edit";
     }
 
