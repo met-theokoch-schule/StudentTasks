@@ -108,31 +108,7 @@ public class TeacherController {
      /**
      * Zeigt das Formular zum Bearbeiten einer Aufgabe
      */
-    @GetMapping("/tasks/{taskId}/edit")
-    public String editTaskForm(@PathVariable Long taskId, Model model, Principal principal) {
-        User teacher = userService.findByOpenIdSubject(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-
-        Optional<Task> taskOpt = taskService.findById(taskId);
-        if (taskOpt.isEmpty() || !taskOpt.get().getCreatedBy().equals(teacher)) {
-            return "redirect:/teacher/tasks";
-        }
-
-        Task task = taskOpt.get();
-        List<TaskView> taskViews = taskViewService.findActiveTaskViews();
-        List<Group> allGroups = groupService.findAll();
-
-        // Set current taskViewId for form
-        Long currentTaskViewId = task.getTaskView() != null ? task.getTaskView().getId() : null;
-
-        model.addAttribute("task", task);
-        model.addAttribute("taskViews", taskViews);
-        model.addAttribute("groups", allGroups);
-        model.addAttribute("selectedGroups", task.getAssignedGroups().stream().map(Group::getId).collect(Collectors.toList()));
-        model.addAttribute("currentTaskViewId", currentTaskViewId);
-
-        return "teacher/task-edit";
-    }
+    
 
     @PostMapping("/tasks/{taskId}/edit")
     public String editTask(@PathVariable Long taskId,
