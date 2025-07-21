@@ -69,7 +69,7 @@ public class TeacherTaskController {
     @GetMapping("/tasks")
     public String listTasks(Model model, Principal principal) {
         User teacher = userService.findByOpenIdSubject(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+                .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
         System.out.println("🔍 === DEBUG: Task List Loading ===");
         System.out.println("   - Loading tasks for teacher: " + teacher.getName() + " (ID: " + teacher.getId() + ")");
@@ -77,7 +77,8 @@ public class TeacherTaskController {
         List<Task> tasks = taskService.findByCreatedBy(teacher);
         System.out.println("   - Found " + tasks.size() + " tasks in task list");
         for (Task task : tasks) {
-            System.out.println("   - Task: " + task.getTitle() + " (ID: " + task.getId() + ", Active: " + task.getIsActive() + ")");
+            System.out.println("   - Task: " + task.getTitle() + " (ID: " + task.getId() + ", Active: "
+                    + task.getIsActive() + ")");
         }
 
         model.addAttribute("teacher", teacher);
@@ -92,7 +93,7 @@ public class TeacherTaskController {
     @GetMapping("/tasks/{taskId}/submissions")
     public String viewTaskSubmissions(@PathVariable Long taskId, Model model, Principal principal) {
         User teacher = userService.findByOpenIdSubject(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+                .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
         Optional<Task> taskOpt = taskService.findById(taskId);
 
         // Sicherheit: Prüfen ob Aufgabe existiert und dem Lehrer gehört
@@ -154,10 +155,10 @@ public class TeacherTaskController {
 
     @PostMapping("/submissions/{userTaskId}/review")
     public String submitReview(@PathVariable Long userTaskId,
-                             @RequestParam Long statusId,
-                             @RequestParam(required = false) String comment,
-                             @RequestParam(required = false) Long submissionId,
-                             Authentication authentication) {
+            @RequestParam Long statusId,
+            @RequestParam(required = false) String comment,
+            @RequestParam(required = false) Long submissionId,
+            Authentication authentication) {
 
         Optional<UserTask> userTaskOpt = userTaskService.findById(userTaskId);
         if (userTaskOpt.isEmpty()) {
@@ -178,9 +179,9 @@ public class TeacherTaskController {
 
     @GetMapping("/submissions/{userTaskId}/view")
     public String viewSubmissionInTaskView(@PathVariable Long userTaskId,
-                                         @RequestParam(required = false) Integer version,
-                                         Model model,
-                                         Authentication authentication) {
+            @RequestParam(required = false) Integer version,
+            Model model,
+            Authentication authentication) {
         Optional<UserTask> userTaskOpt = userTaskService.findById(userTaskId);
         if (userTaskOpt.isEmpty()) {
             return "error/404";
@@ -212,9 +213,8 @@ public class TeacherTaskController {
         model.addAttribute("version", content.getVersion());
 
         // Determine the template path
-        String templatePath = task.getTaskView() != null ? 
-            task.getTaskView().getTemplatePath() : 
-            "taskviews/simple-text.html";
+        String templatePath = task.getTaskView() != null ? task.getTaskView().getTemplatePath()
+                : "taskviews/simple-text.html";
 
         return templatePath;
     }
@@ -230,13 +230,13 @@ public class TeacherTaskController {
 
     @PostMapping("/tasks")
     public String createTask(@ModelAttribute Task task,
-                           @RequestParam String taskViewId,
-                           @RequestParam(required = false) String unitTitleId,
-                           @RequestParam List<Long> selectedGroups,
-                           Authentication authentication) {
+            @RequestParam String taskViewId,
+            @RequestParam(required = false) String unitTitleId,
+            @RequestParam List<Long> selectedGroups,
+            Authentication authentication) {
 
         User teacher = userService.findByOpenIdSubject(authentication.getName())
-            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+                .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
         task.setCreatedBy(teacher);
 
         // Assign selected groups to the task
@@ -244,18 +244,21 @@ public class TeacherTaskController {
         task.setAssignedGroups(new HashSet<>(groups));
 
         // Set task view
-        TaskView taskView = taskViewService.findById(taskViewId);
+        try {
+            TaskView taskView = taskViewService.findById(Long.parseLong(taskViewId));
+
+        } catch (NumberFormatException e) {
+            System.err.println("Invalid unitTitleId format: " + unitTitleId);
+        }
+
         task.setTaskView(taskView);
 
         // Set unit title
         UnitTitle unitTitle = null;
         if (unitTitleId != null && !unitTitleId.trim().isEmpty()) {
-            try {
-                Long unitTitleIdLong = Long.parseLong(unitTitleId);
-                unitTitle = unitTitleService.findById(unitTitleIdLong);
-            } catch (NumberFormatException e) {
-                System.err.println("Invalid unitTitleId format: " + unitTitleId);
-            }
+
+            unitTitle = unitTitleService.findById(unitTitleId);
+
         }
 
         taskService.save(task);
@@ -279,12 +282,12 @@ public class TeacherTaskController {
 
     @PostMapping("/tasks/{id}/edit")
     public String updateTask(@PathVariable Long id,
-                           @ModelAttribute Task task,
-                           @RequestParam List<Long> selectedGroups,
-                           @RequestParam String taskViewId,
-                           @RequestParam String unitTitleId,
-                           RedirectAttributes redirectAttributes,
-                           Principal principal) {
+            @ModelAttribute Task task,
+            @RequestParam List<Long> selectedGroups,
+            @RequestParam String taskViewId,
+            @RequestParam String unitTitleId,
+            RedirectAttributes redirectAttributes,
+            Principal principal) {
         Task existingTask = taskService.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid task Id:" + id));
 
@@ -299,19 +302,20 @@ public class TeacherTaskController {
         existingTask.setAssignedGroups(new HashSet<>(groups));
 
         // Update task view
-        TaskView taskView = taskViewService.findById(taskViewId);
-        existingTask.setTaskView(taskView);
+        try {
+            TaskView taskView = taskViewService.findById(Long.parseLong(taskViewId));
+            existingTask.setTaskView(taskView);
+        } catch (NumberFormatException e) {
+            System.err.println("Invalid unitTitleId format: " + unitTitleId);
+            existingTask.setUnitTitle(null);
+        }
 
         // Update unit title
         if (unitTitleId != null && !unitTitleId.trim().isEmpty()) {
-            try {
-                Long unitTitleIdLong = Long.parseLong(unitTitleId);
-                UnitTitle unitTitle = unitTitleService.findById(unitTitleIdLong);
-                existingTask.setUnitTitle(unitTitle);
-            } catch (NumberFormatException e) {
-                System.err.println("Invalid unitTitleId format: " + unitTitleId);
-                existingTask.setUnitTitle(null);
-            }
+
+            UnitTitle unitTitle = unitTitleService.findById(unitTitleId);
+            existingTask.setUnitTitle(unitTitle);
+
         } else {
             existingTask.setUnitTitle(null);
         }
