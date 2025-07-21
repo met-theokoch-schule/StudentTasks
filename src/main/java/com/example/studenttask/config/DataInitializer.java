@@ -51,13 +51,27 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     private void initializeTaskViews() {
-        // Initialize Task Views if they don't exist
-        if (taskViewRepository.count() == 0) {
-            TaskView simpleText = new TaskView("Einfacher Texteditor", "taskviews/simple-text");
+        // Initialize Task Views if they don't exist based on unique templatePath
+        String simpleTextTemplatePath = "taskviews/simple-text";
+        
+        if (taskViewRepository.findByTemplatePath(simpleTextTemplatePath) == null) {
+            TaskView simpleText = new TaskView("Einfacher Texteditor", simpleTextTemplatePath);
             simpleText.setDescription("Einfaches Textfeld für Text-Abgaben");
             taskViewRepository.save(simpleText);
-
-            System.out.println("Default task views initialized");
+            System.out.println("TaskView with templatePath '" + simpleTextTemplatePath + "' initialized");
         }
+        
+        // Hier können weitere TaskViews hinzugefügt werden
+        // Beispiel für weitere TaskViews:
+        /*
+        String htmlEditorTemplatePath = "taskviews/html-editor";
+        if (taskViewRepository.findByTemplatePath(htmlEditorTemplatePath) == null) {
+            TaskView htmlEditor = new TaskView("HTML Editor", htmlEditorTemplatePath);
+            htmlEditor.setDescription("Rich-Text HTML Editor für Textaufgaben");
+            taskViewRepository.save(htmlEditor);
+            System.out.println("TaskView with templatePath '" + htmlEditorTemplatePath + "' initialized");
+        }
+        */
+    }
     }
 }

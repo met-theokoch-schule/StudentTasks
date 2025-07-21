@@ -15,4 +15,5 @@ public interface TaskViewRepository extends JpaRepository<TaskView, Long> {
     List<TaskView> findByIsActiveOrderByName(Boolean isActive);
 
     Optional<TaskView> findByName(String name);
+    TaskView findByTemplatePath(String templatePath);
 }
