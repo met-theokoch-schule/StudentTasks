@@ -160,4 +160,47 @@ public class TeacherTaskController {
 
         return "redirect:/teacher/submissions/" + userTaskId;
     }
+
+    @GetMapping("/submissions/{userTaskId}/view")
+    public String viewSubmissionInTaskView(@PathVariable Long userTaskId,
+                                         @RequestParam(required = false) Integer version,
+                                         Model model,
+                                         Authentication authentication) {
+        Optional<UserTask> userTaskOpt = userTaskService.findById(userTaskId);
+        if (userTaskOpt.isEmpty()) {
+            return "error/404";
+        }
+        UserTask userTask = userTaskOpt.get();
+        Task task = userTask.getTask();
+
+        // Get the specific version or latest version
+        TaskContent content;
+        if (version != null) {
+            content = taskContentService.getContentByVersion(userTask, version);
+        } else {
+            List<TaskContent> contents = taskContentService.getAllContentVersions(userTask);
+            content = contents.isEmpty() ? null : contents.get(0);
+        }
+
+        // If no content found, create default content
+        if (content == null) {
+            content = new TaskContent();
+            content.setContent(task.getDefaultSubmission() != null ? task.getDefaultSubmission() : "");
+            content.setVersion(1);
+        }
+
+        // Add model attributes for task view
+        model.addAttribute("task", task);
+        model.addAttribute("userTask", userTask);
+        model.addAttribute("currentContent", content.getContent());
+        model.addAttribute("isTeacherView", true);
+        model.addAttribute("version", content.getVersion());
+
+        // Determine the template path
+        String templatePath = task.getTaskView() != null ? 
+            task.getTaskView().getTemplatePath() : 
+            "taskviews/simple-text.html";
+
+        return templatePath;
+    }
 }

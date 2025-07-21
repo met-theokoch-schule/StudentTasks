@@ -95,6 +95,10 @@ public class TaskContentService {
     public List<TaskContent> getAllContentVersions(UserTask userTask) {
         return taskContentRepository.findByUserTaskOrderByVersionDesc(userTask);
     }
+    
+    public TaskContent getContentByVersion(UserTask userTask, Integer version) {
+        return taskContentRepository.findByUserTaskAndVersion(userTask, version);
+    }
 
     /**
      * Get the next version number for a user task
