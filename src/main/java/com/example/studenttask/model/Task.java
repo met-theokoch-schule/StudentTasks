@@ -43,10 +43,6 @@ public class Task {
     @JoinColumn(name = "view_type_id", referencedColumnName = "id")
     private TaskView viewType; // References to available task views
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id")
-    private Category category;
-
     @Column(columnDefinition = "TEXT")
     private String defaultSubmission; // Default content for submissions in the format expected by the task view
 
@@ -149,14 +145,6 @@ public class Task {
 
     public void setViewType(TaskView viewType) {
         this.viewType = viewType;
-    }
-
-    public Category getCategory() {
-        return category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
     }
 
     public String getDefaultSubmission() {
