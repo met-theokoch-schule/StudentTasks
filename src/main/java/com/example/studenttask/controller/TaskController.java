@@ -92,6 +92,9 @@ public class TaskController {
             }
         }
 
+        // Get or create UserTask
+        UserTask userTask = userTaskService.findOrCreateUserTask(targetUser, task);
+
         // Get task content based on version
         TaskContent content = null;
         if (version != null) {
