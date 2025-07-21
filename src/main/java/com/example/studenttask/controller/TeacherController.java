@@ -79,33 +79,6 @@ public class TeacherController {
 
 
     /**
-     * Zeigt das Formular zum Erstellen einer neuen Aufgabe
-     */
-    @GetMapping("/tasks/create")
-    public String createTaskForm(Model model, Principal principal) {
-        User teacher = userService.findByOpenIdSubject(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-
-        Task task = new Task();
-        List<TaskView> taskViews = taskViewService.findActiveTaskViews();
-
-        // Get all groups from GroupService to ensure proper loading
-        List<Group> allGroups = groupService.findAll();
-
-        // Filter groups that belong to this teacher
-        List<Group> teacherGroups = allGroups.stream()
-            .filter(group -> teacher.getGroups().contains(group))
-            .collect(java.util.stream.Collectors.toList());
-
-        model.addAttribute("task", task);
-        model.addAttribute("taskViews", taskViews != null ? taskViews : new ArrayList<>());
-        model.addAttribute("groups", teacherGroups);
-        model.addAttribute("teacher", teacher);
-
-        return "teacher/task-create";
-    }
-
-    /**
      * Löscht eine Aufgabe
      */
     @PostMapping("/tasks/{taskId}/delete")
