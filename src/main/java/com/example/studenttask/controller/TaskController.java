@@ -78,14 +78,14 @@ public class TaskController {
 
         User targetUser;
         if (userId != null) {
-            // For teacher viewing student work
-            Optional<User> userOpt = userService.findById(userId);
+            // Teacher reviewing student's work
+            Optional<User> userOpt = userService.findByUserId(userId);
             if (userOpt.isEmpty()) {
-                return "redirect:/student/dashboard";
+                return "redirect:/teacher/dashboard";
             }
             targetUser = userOpt.get();
         } else {
-            // For student viewing own work
+            // Student accessing their own task
             targetUser = userService.findByOpenIdSubject(authentication.getName()).orElse(null);
             if (targetUser == null) {
                 return "redirect:/login";
