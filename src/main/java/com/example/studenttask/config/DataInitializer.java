@@ -102,6 +102,7 @@ public class DataInitializer implements ApplicationRunner {
         unitTitleService.createIfNotExists("objektorientierung",
             "Objektorientierte Programmierung",
             "Klassen, Objekte und Vererbung");
+
+        // Hier können weitere Unit Titles hinzugefügt werden
     }
 }
-`
