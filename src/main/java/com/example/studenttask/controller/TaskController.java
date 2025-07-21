@@ -101,8 +101,13 @@ public class TaskController {
             Optional<TaskContent> contentOpt = taskContentService.getContentByVersion(userTask, version);
             content = contentOpt.orElse(null);
         } else {
-            Optional<TaskContent> contentOpt = taskContentService.getLatestContent(userTask);
-            content = contentOpt.orElse(null);
+            // Get latest content or default submission
+            Optional<TaskContent> latestContentOpt = taskContentService.getLatestContent(userTask);
+            if (latestContentOpt.isEmpty()) {
+                TaskContent defaultContent = taskContentService.createDefaultContent(userTask);
+                latestContentOpt = Optional.ofNullable(defaultContent);
+            }
+            content = latestContentOpt.orElse(null);
         }
 
         String contentText = content != null ? content.getContent() : 
