@@ -57,18 +57,6 @@ public class DataInitializer implements ApplicationRunner {
             simpleText.setDescription("Einfaches Textfeld für Text-Abgaben");
             taskViewRepository.save(simpleText);
 
-            TaskView htmlEditor = new TaskView("HTML Editor", "taskviews/html-editor");
-            htmlEditor.setDescription("Rich-Text HTML Editor für Textaufgaben");
-            taskViewRepository.save(htmlEditor);
-
-            TaskView mathExercise = new TaskView("Mathematik Übung", "taskviews/math-exercise");
-            mathExercise.setDescription("Interaktive Mathematik-Aufgaben mit LaTeX");
-            taskViewRepository.save(mathExercise);
-
-            TaskView codeEditor = new TaskView("Code Editor", "taskviews/code-editor");
-            codeEditor.setDescription("Syntax-highlightender Code-Editor");
-            taskViewRepository.save(codeEditor);
-
             System.out.println("Default task views initialized");
         }
     }
