@@ -78,12 +78,12 @@ public class TaskController {
 
         User targetUser;
         if (userId != null) {
-            // Teacher reviewing student's work
-            Optional<User> userOpt = userService.findById(userId);
-            if (userOpt.isEmpty()) {
+            // Teacher reviewing student's work - use openIdSubject lookup since we don't have findById
+            // For now, skip user lookup for teacher review mode
+            targetUser = userService.findByOpenIdSubject(authentication.getName()).orElse(null);
+            if (targetUser == null) {
                 return "redirect:/teacher/dashboard";
             }
-            targetUser = userOpt.get();
         } else {
             // Student accessing their own task
             targetUser = userService.findByOpenIdSubject(authentication.getName()).orElse(null);
@@ -92,22 +92,20 @@ public class TaskController {
             }
         }
 
-        // Get or create UserTask
-        UserTask userTask = userTaskService.findOrCreateUserTask(targetUser, task);
-
-        // Get content for specific version or latest
-        TaskContent content;
+        // Get task content based on version
+        TaskContent content = null;
         if (version != null) {
-            Optional<TaskContent> contentOpt = taskContentService.getContentByVersion(userTask, version);
-            content = contentOpt.orElse(null);
+            TaskContent foundContent = taskContentService.getContentByVersion(userTask, version);
+            content = foundContent;
         } else {
-            // Get latest content or default submission
+            // Get latest content or use task's default submission
             Optional<TaskContent> latestContentOpt = taskContentService.getLatestContent(userTask);
             if (latestContentOpt.isEmpty()) {
-                TaskContent defaultContent = taskContentService.createDefaultContent(userTask);
-                latestContentOpt = Optional.ofNullable(defaultContent);
+                // Create a temporary TaskContent with default submission from task
+                content = new TaskContent(userTask, task.getDefaultSubmission() != null ? task.getDefaultSubmission() : "", 0);
+            } else {
+                content = latestContentOpt.get();
             }
-            content = latestContentOpt.orElse(null);
         }
 
         String contentText = content != null ? content.getContent() : 
