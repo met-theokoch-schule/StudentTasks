@@ -245,13 +245,14 @@ public class TeacherTaskController {
 
         // Set task view
         try {
-            TaskView taskView = taskViewService.findById(Long.parseLong(taskViewId));
+            Optional<TaskView> taskViewOpt = taskViewService.findById(Long.parseLong(taskViewId));
+            if (taskViewOpt.isPresent()) {
+                task.setTaskView(taskViewOpt.get());
+            }
 
         } catch (NumberFormatException e) {
             System.err.println("Invalid unitTitleId format: " + unitTitleId);
         }
-
-        task.setTaskView(taskView);
 
         // Set unit title
         UnitTitle unitTitle = null;
@@ -303,8 +304,10 @@ public class TeacherTaskController {
 
         // Update task view
         try {
-            TaskView taskView = taskViewService.findById(Long.parseLong(taskViewId));
-            existingTask.setTaskView(taskView);
+            Optional<TaskView> taskViewOpt = taskViewService.findById(Long.parseLong(taskViewId));
+            if (taskViewOpt.isPresent()) {
+                existingTask.setTaskView(taskViewOpt.get());
+            }
         } catch (NumberFormatException e) {
             System.err.println("Invalid unitTitleId format: " + unitTitleId);
             existingTask.setUnitTitle(null);
