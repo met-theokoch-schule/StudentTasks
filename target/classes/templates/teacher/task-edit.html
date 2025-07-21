@@ -55,8 +55,7 @@
                         <h5 class="card-title mb-0">Aufgabendetails</h5>
                     </div>
                     <div class="card-body">
-                        <form th:action="@{'/teacher/tasks/' + ${task.id}}" method="post" th:object="${task}">
-                            <input type="hidden" name="_method" value="put">
+                        <form th:action="@{'/teacher/tasks/' + ${task.id} + '/edit'}" method="post" th:object="${task}">
 
                             <!-- Titel -->
                             <div class="mb-3">
