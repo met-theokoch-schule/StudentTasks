@@ -22,6 +22,14 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
+import com.example.studenttask.model.TaskView;
+import com.example.studenttask.model.Theme;
+import com.example.studenttask.service.ThemeService;
+import com.example.studenttask.service.GroupService;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.example.studenttask.model.Group;
+
 
 @Controller
 @RequestMapping("/teacher")
@@ -47,6 +55,13 @@ public class TeacherTaskController {
 
     @Autowired
     private TaskStatusService taskStatusService;
+    
+    @Autowired
+    private ThemeService themeService;
+    
+    @Autowired
+    private GroupService groupService;
+
 
     /**
      * Zeigt die Übersicht aller Aufgaben des Lehrers
@@ -202,5 +217,56 @@ public class TeacherTaskController {
             "taskviews/simple-text.html";
 
         return templatePath;
+    }
+    
+    @GetMapping("/tasks/create")
+    public String showCreateTaskForm(Model model) {
+        model.addAttribute("task", new Task());
+        model.addAttribute("taskViews", taskViewService.findActiveTaskViews());
+        model.addAttribute("groups", groupService.findAll());
+        model.addAttribute("themes", themeService.findActiveThemes());
+        return "teacher/task-create";
+    }
+
+    @PostMapping("/tasks/create")
+    public String createTask(@ModelAttribute Task task, 
+                           @RequestParam(required = false) Long taskViewId,
+                           @RequestParam(required = false) Long themeId,
+                           @RequestParam(required = false) List<Long> selectedGroups,
+                           RedirectAttributes redirectAttributes) {
+
+        User teacher = userService.findByOpenIdSubject(SecurityContextHolder.getContext().getAuthentication().getName())
+                .orElseThrow(() -> new RuntimeException("Lehrer nicht gefunden"));
+        task.setCreatedBy(teacher);
+        task.setIsActive(true);
+
+        // Set TaskView if provided
+        if (taskViewId != null) {
+            TaskView taskView = taskViewService.findById(taskViewId).orElse(null);
+            task.setTaskView(taskView);
+        }
+
+        // Set Theme if provided
+        if (themeId != null) {
+            Theme theme = themeService.findById(themeId).orElse(null);
+            task.setTheme(theme);
+        }
+
+        taskService.save(task);
+
+        // Assign task to selected groups
+        if (selectedGroups != null && !selectedGroups.isEmpty()) {
+            for (Long groupId : selectedGroups) {
+                Group group = groupService.findById(groupId).orElse(null);
+                if (group != null) {
+                    userTaskService.createTasksForGroup(task, group);
+                    redirectAttributes.addFlashAttribute("message", "Aufgabe erfolgreich erstellt und an Gruppe verteilt.");
+                }
+            }
+        } else {
+            redirectAttributes.addFlashAttribute("message", "Aufgabe erfolgreich erstellt.");
+        }
+
+        return "redirect:/teacher/tasks";
     }
 }

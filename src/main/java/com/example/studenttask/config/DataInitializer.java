@@ -10,6 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
+import com.example.studenttask.service.UserService;
+import com.example.studenttask.service.TaskViewService;
+import com.example.studenttask.service.ThemeService; // Added ThemeService import
+
 
 @Component
 public class DataInitializer implements ApplicationRunner {
@@ -23,11 +27,17 @@ public class DataInitializer implements ApplicationRunner {
     @Autowired
     private TaskViewRepository taskViewRepository;
 
+    @Autowired
+    private ThemeService themeService; // Added ThemeService dependency
+
     @Override
     public void run(ApplicationArguments args) throws Exception {
         initializeRoles();
         initializeTaskStatuses();
         initializeTaskViews();
+
+        // Initialize Themes
+        initializeThemes();  // Added theme initialization
     }
 
     private void initializeRoles() {
@@ -53,14 +63,14 @@ public class DataInitializer implements ApplicationRunner {
     private void initializeTaskViews() {
         // Initialize Task Views if they don't exist based on unique templatePath
         String simpleTextTemplatePath = "taskviews/simple-text";
-        
+
         if (taskViewRepository.findByTemplatePath(simpleTextTemplatePath) == null) {
             TaskView simpleText = new TaskView("Einfacher Texteditor", simpleTextTemplatePath);
             simpleText.setDescription("Einfaches Textfeld für Text-Abgaben");
             taskViewRepository.save(simpleText);
             System.out.println("TaskView with templatePath '" + simpleTextTemplatePath + "' initialized");
         }
-        
+
         // Hier können weitere TaskViews hinzugefügt werden
         // Beispiel für weitere TaskViews:
         /*
@@ -72,5 +82,15 @@ public class DataInitializer implements ApplicationRunner {
             System.out.println("TaskView with templatePath '" + htmlEditorTemplatePath + "' initialized");
         }
         */
+    }
+
+    private void initializeThemes() {
+        // Initialize Themes if they don't exist
+        if (themeService.count() == 0) {
+            themeService.save(new com.example.studenttask.model.Theme("Mathematik", "Aufgaben zum Thema Mathematik"));
+            themeService.save(new com.example.studenttask.model.Theme("Deutsch", "Aufgaben zum Thema Deutsch"));
+            themeService.save(new com.example.studenttask.model.Theme("Englisch", "Aufgaben zum Thema Englisch"));
+            System.out.println("Default themes initialized");
+        }
     }
 }
