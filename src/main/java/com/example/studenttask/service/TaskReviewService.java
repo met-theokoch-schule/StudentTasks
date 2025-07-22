@@ -150,4 +150,20 @@ public class TaskReviewService {
 
         return teacherStatuses;
     }
+
+    public void createReview(UserTask userTask, TaskStatus status, String comment, Integer version, User reviewer) {
+        TaskReview review = new TaskReview();
+        review.setUserTask(userTask);
+        review.setStatus(status);
+        review.setComment(comment);
+        review.setVersion(version);
+        review.setReviewer(reviewer);
+        review.setReviewedAt(LocalDateTime.now());
+
+        taskReviewRepository.save(review);
+    }
+
+    public boolean hasReviewsForVersion(UserTask userTask, Integer version) {
+        return taskReviewRepository.existsByUserTaskAndVersion(userTask, version);
+    }
 }

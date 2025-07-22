@@ -16,6 +16,8 @@ public interface TaskReviewRepository extends JpaRepository<TaskReview, Long> {
      * Find all reviews for a user task ordered by review date descending
      */
     List<TaskReview> findByUserTaskOrderByReviewedAtDesc(UserTask userTask);
+    
+    boolean existsByUserTaskAndVersion(UserTask userTask, Integer version);
 
     /**
      * Find all reviews by a specific reviewer ordered by review date descending

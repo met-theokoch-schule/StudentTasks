@@ -176,11 +176,17 @@ public class TaskContentService {
                 dateTime = content.getSavedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yy HH:mm"));
             }
             
-            String displayText;
+            String displayText = "v" + content.getVersion() + " " + dateTime;
+            
             if (content.isSubmitted()) {
-                displayText = "📝 v" + content.getVersion() + " " + dateTime;
-            } else {
-                displayText = "v" + content.getVersion() + " " + dateTime;
+                // Check if there are any reviews for this version
+                boolean hasReviews = taskReviewService.hasReviewsForVersion(content.getUserTask(), content.getVersion());
+                
+                if (hasReviews) {
+                    displayText += " 👁"; // Already reviewed
+                } else {
+                    displayText += " ⏳"; // Waiting for review
+                }
             }
 
             versionsWithStatus.add(new VersionWithSubmissionStatus(
