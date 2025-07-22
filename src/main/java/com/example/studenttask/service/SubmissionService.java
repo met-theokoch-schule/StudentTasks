@@ -65,6 +65,13 @@ public class SubmissionService {
     }
 
     /**
+     * Find submission by user task and version
+     */
+    public Optional<Submission> findByUserTaskAndVersion(UserTask userTask, Integer version) {
+        return submissionRepository.findByUserTaskAndVersion(userTask, version);
+    }
+
+    /**
      * Delete all submissions for a user task
      */
     public void deleteAllSubmissionsForUserTask(UserTask userTask) {
