@@ -194,6 +194,21 @@
             console.log('📋 Page loaded - Initial state:');
             console.log('  - UserTask ID:', userTaskId);
             console.log('  - Available versions:', document.querySelectorAll('#versionSelect option').length - 1);
+            
+            // Auto-select the latest submitted version (with ⏳ or 👁 symbol)
+            const versionSelect = document.getElementById('versionSelect');
+            const options = versionSelect.options;
+            
+            // Start from index 1 to skip "Alle Versionen" option
+            for (let i = 1; i < options.length; i++) {
+                const optionText = options[i].text;
+                if (optionText.includes('⏳') || optionText.includes('👁')) {
+                    versionSelect.selectedIndex = i;
+                    console.log('🎯 Auto-selected submitted version:', optionText);
+                    changeVersion(); // Load the selected version
+                    break;
+                }
+            }
         });
     </script>
 
