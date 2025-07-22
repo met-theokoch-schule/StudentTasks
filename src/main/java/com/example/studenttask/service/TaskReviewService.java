@@ -1,17 +1,18 @@
 package com.example.studenttask.service;
 
 import com.example.studenttask.model.TaskReview;
+import com.example.studenttask.model.User;
 import com.example.studenttask.model.UserTask;
 import com.example.studenttask.model.TaskStatus;
-import com.example.studenttask.model.User;
+import com.example.studenttask.model.Submission;
 import com.example.studenttask.repository.TaskReviewRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.ArrayList;
-import java.time.LocalDateTime;
 
 @Service
 public class TaskReviewService {
@@ -110,7 +111,7 @@ public class TaskReviewService {
         System.out.println("Comment: " + comment);
         System.out.println("Submission ID: " + submissionId);
         System.out.println("Current Version: " + currentVersion);
-        
+
         TaskReview review = new TaskReview();
         review.setUserTask(userTask);
         review.setReviewer(reviewer);
@@ -149,11 +150,11 @@ public class TaskReviewService {
             (review.getSubmission() != null ? 
                 "ID=" + review.getSubmission().getId() + ", Version=" + review.getSubmission().getVersion() : 
                 "null"));
-        
+
         TaskReview savedReview = save(review);
         System.out.println("Review gespeichert mit ID: " + savedReview.getId());
         System.out.println("=== END DEBUG createReview ===");
-        
+
         return savedReview;
     }
 
