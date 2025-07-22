@@ -178,7 +178,7 @@ public class TaskContentService {
             
             String displayText;
             if (content.isSubmitted()) {
-                displayText = "✓ v" + content.getVersion() + " " + dateTime;
+                displayText = "📝 v" + content.getVersion() + " " + dateTime;
             } else {
                 displayText = "v" + content.getVersion() + " " + dateTime;
             }
