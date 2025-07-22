@@ -177,8 +177,13 @@ public class TeacherTaskController {
             submissionId = Long.parseLong(submissionIdStr);
         }
 
-        // Create review
-        taskReviewService.createReview(userTask, reviewer, statusId, comment, submissionId);
+        // Create review with version information
+        Integer currentVersion = null;
+        if (request.getParameter("currentVersion") != null && !request.getParameter("currentVersion").isEmpty()) {
+            currentVersion = Integer.parseInt(request.getParameter("currentVersion"));
+        }
+        
+        taskReviewService.createReview(userTask, reviewer, statusId, comment, submissionId, currentVersion);
 
         return "redirect:/teacher/submissions/" + userTaskId;
     }
