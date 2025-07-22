@@ -133,29 +133,7 @@ public class TeacherTaskController {
         return "teacher/task-submissions";
     }
 
-    @GetMapping("/submissions/{userTaskId}")
-    public String viewSubmission(@PathVariable Long userTaskId, Model model, Authentication authentication) {
-        Optional<UserTask> userTaskOpt = userTaskService.findById(userTaskId);
-        if (userTaskOpt.isEmpty()) {
-            return "redirect:/teacher/tasks";
-        }
-        UserTask userTask = userTaskOpt.get();
-        model.addAttribute("userTask", userTask);
-
-        // Get all submissions for this user task (version history)
-        List<TaskContent> submissions = taskContentService.getAllContentVersions(userTask);
-        model.addAttribute("submissions", submissions);
-
-        // Get all reviews for this user task
-        List<TaskReview> reviews = taskReviewService.findByUserTask(userTask);
-        model.addAttribute("reviews", reviews);
-
-        // Get available statuses for review
-        List<TaskStatus> statuses = taskStatusService.findAllActive();
-        model.addAttribute("statuses", statuses);
-
-        return "teacher/submission-review";
-    }
+    
 
     @PostMapping("/submissions/{userTaskId}/review")
     public String submitReview(@PathVariable Long userTaskId,
@@ -363,19 +341,20 @@ public class TeacherTaskController {
                                      Model model, Authentication authentication) {
 
         // Get UserTask with all necessary data
-        UserTask userTask = userTaskService.findById(userTaskId);
-        if (userTask == null) {
+        Optional<UserTask> userTaskOpt = userTaskService.findById(userTaskId);
+        if (userTaskOpt.isEmpty()) {
             return "redirect:/teacher/dashboard";
         }
+        UserTask userTask = userTaskOpt.get();
 
         // Get all reviews for this UserTask
-        List<TaskReview> reviews = taskReviewService.findByUserTaskIdOrderByReviewedAtDesc(userTaskId);
+        List<TaskReview> reviews = taskReviewService.findByUserTask(userTask);
 
         // Get all available task statuses
-        List<TaskStatus> statuses = taskStatusService.findActiveStatuses();
+        List<TaskStatus> statuses = taskStatusService.findAllActive();
 
-        // Get versions with submission status for the dropdown
-        List<VersionWithSubmissionStatus> versionsWithStatus = taskContentService.getVersionsWithSubmissionStatus(userTaskId);
+        // Get versions with submission status for the dropdown - create empty list for now
+        List<VersionWithSubmissionStatus> versionsWithStatus = new ArrayList<>();
 
         model.addAttribute("userTask", userTask);
         model.addAttribute("reviews", reviews);
