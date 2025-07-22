@@ -29,7 +29,7 @@ public class TaskReview {
     @Column(nullable = false)
     private LocalDateTime reviewedAt;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "submission_id", nullable = true)
     private Submission submission;
 
@@ -126,3 +126,4 @@ public class TaskReview {
                 '}';
     }
 }
+```
