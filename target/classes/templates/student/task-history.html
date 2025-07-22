@@ -103,11 +103,11 @@
                                         <small class="text-muted">
                                             von <span th:text="${review.reviewer.name}">Lehrer</span>
                                         </small>
-                                        <div th:if="${review.submission != null}" class="mt-1">
+                                        <div th:if="${review.version != null}" class="mt-1">
                                             <small class="text-info">
                                                 <i class="fas fa-link"></i> Bezieht sich auf Version 
-                                                <a th:href="@{'/student/tasks/' + ${task.id} + '/version/' + ${review.submission.version}}" 
-                                                   class="text-decoration-none" th:text="${review.submission.version}">1</a>
+                                                <a th:href="@{'/student/tasks/' + ${task.id} + '/version/' + ${review.version}}" 
+                                                   class="text-decoration-none" th:text="${review.version}">1</a>
                                             </small>
                                         </div>
                                     </div>
