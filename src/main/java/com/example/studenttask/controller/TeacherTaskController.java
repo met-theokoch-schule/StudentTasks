@@ -1,10 +1,3 @@
-` tags, and includes all necessary functions and modifications. I will also pay close attention to maintaining the original indentation and structure.
-
-```text
-Adding the missing versionsWithStatus attribute to the model in the viewSubmissionReview method.
-```
-
-<replit_final_file>
 package com.example.studenttask.controller;
 
 import com.example.studenttask.dto.VersionWithSubmissionStatus;
