@@ -102,31 +102,26 @@ public class TaskReviewService {
     /**
      * Create a new review for a user task with version
      */
-    public TaskReview createReview(UserTask userTask, User reviewer, Long statusId, String comment, Long submissionId, Integer version) {
+    public TaskReview createReview(UserTask userTask, User reviewer, Long statusId, String comment, Long submissionId, Integer currentVersion) {
         TaskReview review = new TaskReview();
         review.setUserTask(userTask);
         review.setReviewer(reviewer);
+
+        TaskStatus status = taskStatusService.findById(statusId)
+            .orElseThrow(() -> new RuntimeException("Status not found"));
+        review.setStatus(status);
+
         review.setComment(comment);
         review.setReviewedAt(LocalDateTime.now());
 
-        // Set status
-        taskStatusService.findById(statusId).ifPresent(review::setStatus);
-
-        // Set submission reference - prioritize version-based lookup if version is provided
-        if (submissionId != null && submissionId > 0) {
-            submissionService.findById(submissionId).ifPresent(submission -> {
-                // Verify this submission matches the expected version
-                if (version != null && !version.equals(submission.getVersion())) {
-                    // Try to find submission by version instead
-                    submissionService.findByUserTaskAndVersion(userTask, version)
-                        .ifPresent(review::setSubmission);
-                } else {
-                    review.setSubmission(submission);
-                }
-            });
-        } else if (version != null) {
-            // No submissionId but version provided - find by version
-            submissionService.findByUserTaskAndVersion(userTask, version)
+        // Set submission based on currentVersion if provided
+        if (currentVersion != null && currentVersion > 0) {
+            // Find submission by version
+            submissionService.findByUserTaskAndVersion(userTask, currentVersion)
+                .ifPresent(review::setSubmission);
+        } else if (submissionId != null && submissionId > 0) {
+            // Fallback to submissionId if no version specified
+            submissionService.findById(submissionId)
                 .ifPresent(review::setSubmission);
         }
 
