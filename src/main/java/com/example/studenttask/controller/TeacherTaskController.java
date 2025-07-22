@@ -1,3 +1,10 @@
+` tags, and includes all necessary functions and modifications. I will also pay close attention to maintaining the original indentation and structure.
+
+```text
+Adding the missing versionsWithStatus attribute to the model in the viewSubmissionReview method.
+```
+
+<replit_final_file>
 package com.example.studenttask.controller;
 
 import com.example.studenttask.dto.VersionWithSubmissionStatus;
@@ -355,5 +362,33 @@ public class TeacherTaskController {
                 .orElseThrow(() -> new IllegalArgumentException("Invalid task Id:" + id));
         taskService.delete(task);
         return "redirect:/teacher/tasks";
+    }
+
+    @GetMapping("/submissions/{userTaskId}")
+    public String viewSubmissionReview(@PathVariable Long userTaskId, 
+                                     @RequestParam(required = false) Integer version,
+                                     Model model, Authentication authentication) {
+
+        // Get UserTask with all necessary data
+        UserTask userTask = userTaskService.findById(userTaskId);
+        if (userTask == null) {
+            return "redirect:/teacher/dashboard";
+        }
+
+        // Get all reviews for this UserTask
+        List<TaskReview> reviews = taskReviewService.findByUserTaskIdOrderByReviewedAtDesc(userTaskId);
+
+        // Get all available task statuses
+        List<TaskStatus> statuses = taskStatusService.findActiveStatuses();
+
+        // Get versions with submission status for the dropdown
+        List<VersionWithSubmissionStatus> versionsWithStatus = taskContentService.getVersionsWithSubmissionStatus(userTaskId);
+
+        model.addAttribute("userTask", userTask);
+        model.addAttribute("reviews", reviews);
+        model.addAttribute("statuses", statuses);
+        model.addAttribute("versionsWithStatus", versionsWithStatus);
+
+        return "teacher/submission-review";
     }
 }
