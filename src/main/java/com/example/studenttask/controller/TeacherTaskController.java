@@ -353,8 +353,8 @@ public class TeacherTaskController {
         // Get all available task statuses
         List<TaskStatus> statuses = taskStatusService.findAllActive();
 
-        // Get versions with submission status for the dropdown - create empty list for now
-        List<VersionWithSubmissionStatus> versionsWithStatus = new ArrayList<>();
+        // Get versions with submission status for the dropdown
+        List<VersionWithSubmissionStatus> versionsWithStatus = taskContentService.getVersionsWithSubmissionStatus(userTaskId);
 
         model.addAttribute("userTask", userTask);
         model.addAttribute("reviews", reviews);

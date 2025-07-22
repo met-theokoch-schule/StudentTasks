@@ -37,3 +37,42 @@ public class VersionWithSubmissionStatus {
         this.displayText = displayText;
     }
 }
+package com.example.studenttask.dto;
+
+public class VersionWithSubmissionStatus {
+    private Integer version;
+    private Boolean isSubmitted;
+    private String displayText;
+
+    public VersionWithSubmissionStatus() {}
+
+    public VersionWithSubmissionStatus(Integer version, Boolean isSubmitted, String displayText) {
+        this.version = version;
+        this.isSubmitted = isSubmitted;
+        this.displayText = displayText;
+    }
+
+    public Integer getVersion() {
+        return version;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
+    }
+
+    public Boolean getIsSubmitted() {
+        return isSubmitted;
+    }
+
+    public void setIsSubmitted(Boolean isSubmitted) {
+        this.isSubmitted = isSubmitted;
+    }
+
+    public String getDisplayText() {
+        return displayText;
+    }
+
+    public void setDisplayText(String displayText) {
+        this.displayText = displayText;
+    }
+}
