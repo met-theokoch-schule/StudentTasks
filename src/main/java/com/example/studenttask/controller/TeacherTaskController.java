@@ -175,26 +175,6 @@ public class TeacherTaskController {
         Long submissionId = null;
         if (submissionIdStr != null && !submissionIdStr.isEmpty()) {
             submissionId = Long.parseLong(submissionIdStr);
-            System.out.println("🎯 Verarbeite submissionId: " + submissionId);
-            
-            // Verify that this is actually a Submission ID, not TaskContent ID
-            Optional<Submission> submissionCheck = submissionRepository.findById(submissionId);
-            if (!submissionCheck.isPresent()) {
-                System.out.println("⚠️ FEHLER: Submission mit ID " + submissionId + " nicht gefunden in submissions Tabelle!");
-                
-                // Try to find if this is a TaskContent ID instead
-                Optional<TaskContent> taskContentOpt = taskContentService.findById(submissionId);
-                if (taskContentOpt.isPresent()) {
-                    TaskContent taskContent = taskContentOpt.get();
-                    Optional<Submission> realSubmission = submissionRepository.findByTaskContentId(taskContent.getId());
-                    if (realSubmission.isPresent()) {
-                        submissionId = realSubmission.get().getId();
-                        System.out.println("✅ Korrigiert: Verwendung von echter Submission ID: " + submissionId);
-                    }
-                }
-            } else {
-                System.out.println("✅ Submission gefunden: " + submissionCheck.get().getVersion());
-            }
         }
 
         // Create review

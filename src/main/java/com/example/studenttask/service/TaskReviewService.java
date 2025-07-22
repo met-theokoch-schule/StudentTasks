@@ -11,8 +11,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.ArrayList;
-import java.time.ZonedDateTime;
-import com.example.studenttask.model.Submission;
 
 @Service
 public class TaskReviewService {
@@ -82,35 +80,22 @@ public class TaskReviewService {
         review.setUserTask(userTask);
         review.setReviewer(reviewer);
         review.setComment(comment);
-        review.setReviewedAt(ZonedDateTime.now());
+        review.setReviewedAt(java.time.LocalDateTime.now());
 
         // Set status if provided
         if (statusId != null) {
-            TaskStatus status = taskStatusService.findById(statusId)
-                .orElseThrow(() -> new RuntimeException("Status not found: " + statusId));
-            review.setStatus(status);
-             // Update the user task status as well
+            taskStatusService.findById(statusId).ifPresent(review::setStatus);
+            // Update the user task status as well
             taskStatusService.findById(statusId).ifPresent(userTask::setStatus);
         }
 
-        // Set submission if provided
+        // Set submission reference if provided (for version-specific reviews)
         if (submissionId != null && submissionId > 0) {
-            // Find the submission by ID
-            Optional<Submission> submissionOpt = submissionService.findById(submissionId);
-            if (submissionOpt.isPresent()) {
-                review.setSubmission(submissionOpt.get());
-                System.out.println("🔗 Review verknüpft mit Submission ID: " + submissionId + ", Version: " + submissionOpt.get().getVersion());
-            } else {
-                System.out.println("⚠️ Submission mit ID " + submissionId + " nicht gefunden!");
-            }
-        } else {
-            System.out.println("ℹ️ Kein submissionId angegeben oder submissionId ist 0/null");
+            submissionService.findById(submissionId).ifPresent(review::setSubmission);
         }
+        // If no submissionId provided, it remains null (general review)
 
-        TaskReview savedReview = save(review);
-        System.out.println("✅ Review gespeichert mit ID: " + savedReview.getId() + ", submission_id: " + (savedReview.getSubmission() != null ? savedReview.getSubmission().getId() : "null"));
-
-        return savedReview;
+        return save(review);
     }
 
     /**
