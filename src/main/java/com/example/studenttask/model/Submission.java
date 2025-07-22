@@ -28,9 +28,10 @@ public class Submission {
     @Column(nullable = false)
     private Integer version; // Reference to TaskContent.version
     
-    @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @OrderBy("reviewedAt DESC")
-    private List<TaskReview> reviews = new ArrayList<>();
+    // Reviews werden jetzt über Version und UserTask verknüpft, nicht mehr direkt über Submission
+    // @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    // @OrderBy("reviewedAt DESC")
+    // private List<TaskReview> reviews = new ArrayList<>();
     
     // Constructors
     public Submission() {
@@ -88,18 +89,19 @@ public class Submission {
         this.version = version;
     }
     
-    public List<TaskReview> getReviews() {
-        return reviews;
-    }
-    
-    public void setReviews(List<TaskReview> reviews) {
-        this.reviews = reviews;
-    }
-    
-    // Helper methods
-    public TaskReview getLatestReview() {
-        return reviews.isEmpty() ? null : reviews.get(0);
-    }
+    // Reviews methods entfernt da TaskReview nicht mehr direkt mit Submission verknüpft ist
+    // public List<TaskReview> getReviews() {
+    //     return reviews;
+    // }
+    // 
+    // public void setReviews(List<TaskReview> reviews) {
+    //     this.reviews = reviews;
+    // }
+    // 
+    // // Helper methods
+    // public TaskReview getLatestReview() {
+    //     return reviews.isEmpty() ? null : reviews.get(0);
+    // }
     
     @Override
     public boolean equals(Object obj) {
