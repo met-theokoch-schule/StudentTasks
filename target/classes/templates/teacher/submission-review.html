@@ -36,7 +36,7 @@
                         <!-- Task View iFrame -->
                         <div class="task-view-container" style="height: 600px; border: 1px solid #dee2e6;">
                             <iframe id="taskViewFrame" 
-                                    th:src="@{'/teacher/submissions/' + ${userTask.id} + '/view'}" 
+                                    src="data:text/html,<html><body style='margin:0;padding:40px;font-family:Arial,sans-serif;text-align:center;color:#666;'><div style='margin-top:200px;'><h3>🔄 Wird geladen...</h3><p>Die Aufgabenansicht wird vorbereitet.</p></div></body></html>"
                                     style="width: 100%; height: 100%; border: none;">
                             </iframe>
                         </div>
