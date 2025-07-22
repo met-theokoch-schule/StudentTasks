@@ -51,7 +51,7 @@
                         <h6>Bewertung abgeben</h6>
                     </div>
                     <div class="card-body">
-                        <form th:action="@{'/teacher/submissions/' + ${userTask.id} + '/review'}" method="post">
+                        <form th:action="@{'/teacher/submissions/' + ${userTask.id} + '/review'}" method="post" onsubmit="debugFormSubmission(event)">
                             <div class="mb-3">
                                 <label for="statusId" class="form-label">Neuer Status:</label>
                                 <select id="statusId" name="statusId" class="form-select" required>
@@ -80,6 +80,9 @@
                                 <textarea id="comment" name="comment" class="form-control" rows="4" 
                                           placeholder="Feedback für den Schüler..."></textarea>
                             </div>
+
+                            <!-- Hidden field for current version -->
+                            <input type="hidden" id="currentVersion" name="currentVersion" value="">
 
                             <button type="submit" class="btn btn-primary">Bewertung speichern</button>
                         </form>
@@ -123,20 +126,78 @@
 
     <script th:inline="javascript">
         const userTaskId = [[${userTask.id}]];
+        let currentDisplayedVersion = null; // Track welche Version gerade angezeigt wird
 
         function changeVersion() {
             const submissionSelect = document.getElementById('submissionId');
             const selectedSubmissionId = submissionSelect.value;
             const iframe = document.getElementById('taskViewFrame');
+            const currentVersionField = document.getElementById('currentVersion');
 
             let newSrc = `/teacher/submissions/${userTaskId}/view`;
             if (selectedSubmissionId) {
                 const selectedOption = submissionSelect.options[submissionSelect.selectedIndex];
                 const version = selectedOption.dataset.version;
                 newSrc += `?version=${version}`;
+                currentDisplayedVersion = version;
+                currentVersionField.value = version;
+                console.log('🔄 Version gewechselt zu:', version, 'URL:', newSrc);
+            } else {
+                currentDisplayedVersion = null;
+                currentVersionField.value = '';
+                console.log('🔄 Zurück zu aktuellster Version');
             }
             iframe.src = newSrc;
+            
+            console.log('📊 Current State:');
+            console.log('  - Selected Submission ID:', selectedSubmissionId);
+            console.log('  - Current Displayed Version:', currentDisplayedVersion);
+            console.log('  - Hidden Field Value:', currentVersionField.value);
         }
+
+        function debugFormSubmission(event) {
+            console.log('🚀 FORM SUBMISSION DEBUG:');
+            console.log('========================');
+            
+            const formData = new FormData(event.target);
+            const submissionSelect = document.getElementById('submissionId');
+            const selectedOption = submissionSelect.options[submissionSelect.selectedIndex];
+            
+            console.log('📝 Form Data:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`  ${key}: ${value}`);
+            }
+            
+            console.log('');
+            console.log('🎯 Dropdown Info:');
+            console.log('  - Selected Index:', submissionSelect.selectedIndex);
+            console.log('  - Selected Value:', submissionSelect.value);
+            console.log('  - Selected Text:', selectedOption.text);
+            console.log('  - Data Version:', selectedOption.dataset.version);
+            
+            console.log('');
+            console.log('🔍 Internal State:');
+            console.log('  - Current Displayed Version:', currentDisplayedVersion);
+            console.log('  - UserTask ID:', userTaskId);
+            
+            console.log('');
+            console.log('📡 Was wird gesendet:');
+            console.log('  - userTaskId:', userTaskId);
+            console.log('  - submissionId:', formData.get('submissionId'));
+            console.log('  - currentVersion:', formData.get('currentVersion'));
+            console.log('  - statusId:', formData.get('statusId'));
+            console.log('  - comment:', formData.get('comment'));
+            
+            // Form normal absenden lassen
+            return true;
+        }
+
+        // Initial state beim Laden der Seite
+        window.addEventListener('load', function() {
+            console.log('📋 Page loaded - Initial state:');
+            console.log('  - UserTask ID:', userTaskId);
+            console.log('  - Available submissions:', document.querySelectorAll('#submissionId option').length - 1);
+        });
     </script>
 
     <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
