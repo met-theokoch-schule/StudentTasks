@@ -93,7 +93,7 @@ public class TaskReviewService {
 
         // Set submission reference if provided (for version-specific reviews)
         if (submissionId != null && submissionId > 0) {
-            submissionService.findById(submissionId).ifPresent(review::setSubmission);
+            //submissionService.findById(submissionId).ifPresent(review::setSubmission);  //Removed setSubmission
         }
         // If no submissionId provided, it remains null (general review)
 
@@ -123,12 +123,12 @@ public class TaskReviewService {
         review.setComment(comment);
         review.setReviewedAt(LocalDateTime.now());
 
-        // Speichere einfach die Versionsnummer
+        // Set version directly in review
         if (currentVersion != null && currentVersion > 0) {
             review.setVersion(currentVersion);
-            System.out.println("Review bezieht sich auf Version: " + currentVersion);
+            System.out.println("Version direkt gesetzt: " + currentVersion);
         } else {
-            System.out.println("Kein Review für spezifische Version");
+            System.out.println("Keine Version angegeben - Review ohne spezifische Version");
         }
 
         TaskReview savedReview = save(review);
