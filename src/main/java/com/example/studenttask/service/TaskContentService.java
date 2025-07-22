@@ -154,6 +154,37 @@ public class TaskContentService {
     }
 
     /**
+     * Get versions with submission status for dropdown
+     */
+    public List<VersionWithSubmissionStatus> getVersionsWithSubmissionStatus(Long userTaskId) {
+        Optional<UserTask> userTaskOpt = userTaskRepository.findById(userTaskId);
+        if (userTaskOpt.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        UserTask userTask = userTaskOpt.get();
+        List<TaskContent> allVersions = taskContentRepository.findByUserTaskOrderByVersionDesc(userTask);
+        List<VersionWithSubmissionStatus> versionsWithStatus = new ArrayList<>();
+        
+        for (TaskContent content : allVersions) {
+            String displayText = "Version " + content.getVersion();
+            if (content.isSubmitted()) {
+                displayText += " ✓";
+            } else {
+                displayText += " (Entwurf)";
+            }
+            
+            versionsWithStatus.add(new VersionWithSubmissionStatus(
+                content.getVersion(), 
+                content.isSubmitted(), 
+                displayText
+            ));
+        }
+        
+        return versionsWithStatus;
+    }
+
+    /**
      * Get all content versions ordered by saved date
      */
     public List<TaskContent> getAllContentVersionsByDate(UserTask userTask) {
