@@ -148,7 +148,7 @@
                 console.log('🔄 Zurück zu aktuellster Version');
             }
             iframe.src = newSrc;
-            
+
             console.log('📊 Current State:');
             console.log('  - Selected Submission ID:', selectedSubmissionId);
             console.log('  - Current Displayed Version:', currentDisplayedVersion);
@@ -158,28 +158,28 @@
         function debugFormSubmission(event) {
             console.log('🚀 FORM SUBMISSION DEBUG:');
             console.log('========================');
-            
+
             const formData = new FormData(event.target);
             const submissionSelect = document.getElementById('submissionId');
             const selectedOption = submissionSelect.options[submissionSelect.selectedIndex];
-            
+
             console.log('📝 Form Data:');
             for (let [key, value] of formData.entries()) {
                 console.log(`  ${key}: ${value}`);
             }
-            
+
             console.log('');
             console.log('🎯 Dropdown Info:');
             console.log('  - Selected Index:', submissionSelect.selectedIndex);
             console.log('  - Selected Value:', submissionSelect.value);
             console.log('  - Selected Text:', selectedOption.text);
             console.log('  - Data Version:', selectedOption.dataset.version);
-            
+
             console.log('');
             console.log('🔍 Internal State:');
             console.log('  - Current Displayed Version:', currentDisplayedVersion);
             console.log('  - UserTask ID:', userTaskId);
-            
+
             console.log('');
             console.log('📡 Was wird gesendet:');
             console.log('  - userTaskId:', userTaskId);
@@ -187,7 +187,7 @@
             console.log('  - currentVersion:', formData.get('currentVersion'));
             console.log('  - statusId:', formData.get('statusId'));
             console.log('  - comment:', formData.get('comment'));
-            
+
             // Form normal absenden lassen
             return true;
         }
@@ -197,6 +197,428 @@
             console.log('📋 Page loaded - Initial state:');
             console.log('  - UserTask ID:', userTaskId);
             console.log('  - Available submissions:', document.querySelectorAll('#submissionId option').length - 1);
+        });
+    </script>
+
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>
+```
+
+```
+Replacing the select element with versionsWithStatus
+```
+
+```html
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Submission Review</title>
+    <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/custom.css}" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid mt-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a th:href="@{/teacher/dashboard}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a th:href="@{/teacher/tasks}">Aufgaben</a></li>
+                <li class="breadcrumb-item"><a th:href="@{'/teacher/tasks/' + ${userTask.task.id}}">
+                    <span th:text="${userTask.task.title}">Aufgabe</span>
+                </a></li>
+                <li class="breadcrumb-item active">Review</li>
+            </ol>
+        </nav>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Submission Review - <span th:text="${userTask.user.name}">Schüler</span></h5>
+                        <small class="text-muted">Aufgabe: <span th:text="${userTask.task.title}">Aufgabentitel</span></small>
+                    </div>
+                    <div class="card-body p-0">
+                        <!-- Current Status -->
+                        <div class="alert alert-info m-3">
+                            <strong>Aktueller Status:</strong> 
+                            <span th:text="${userTask.status?.name ?: 'Kein Status'}">Status</span>
+                        </div>
+
+                        <!-- Task View iFrame -->
+                        <div class="task-view-container" style="height: 600px; border: 1px solid #dee2e6;">
+                            <iframe id="taskViewFrame" 
+                                    th:src="@{'/teacher/submissions/' + ${userTask.id} + '/view'}" 
+                                    style="width: 100%; height: 100%; border: none;">
+                            </iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <!-- Review Form -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6>Bewertung abgeben</h6>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{'/teacher/submissions/' + ${userTask.id} + '/review'}" method="post" onsubmit="debugFormSubmission(event)">
+                            <div class="mb-3">
+                                <label for="statusId" class="form-label">Neuer Status:</label>
+                                <select id="statusId" name="statusId" class="form-select" required>
+                                    <option value="">Status wählen</option>
+                                    <option th:each="status : ${statuses}" 
+                                            th:value="${status.id}" 
+                                            th:text="${status.name}"
+                                            th:selected="${status.id == userTask.status?.id}"></option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="submissionId" class="form-label">Bezieht sich auf Version:</label>
+                                <select id="versionSelect" name="currentVersion" class="form-select">
+                                    <option value="">Alle Versionen</option>
+                                    <option th:each="versionStatus : ${versionsWithStatus}"
+                                            th:value="${versionStatus.version}"
+                                            th:text="${versionStatus.displayText}"
+                                            th:selected="${param.version != null and param.version[0] == versionStatus.version.toString()}">
+                                        Version 1 *
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="comment" class="form-label">Kommentar:</label>
+                                <textarea id="comment" name="comment" class="form-control" rows="4" 
+                                          placeholder="Feedback für den Schüler..."></textarea>
+                            </div>
+
+                            <!-- Hidden field for current version -->
+                            <input type="hidden" id="currentVersion" name="currentVersion" value="">
+
+                            <button type="submit" class="btn btn-primary">Bewertung speichern</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Previous Reviews -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6>Bisherige Bewertungen</h6>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${reviews != null and !reviews.isEmpty()}">
+                            <div th:each="review : ${reviews}" class="border-bottom pb-2 mb-2">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong th:text="${review.status?.name}">Status</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            von <span th:text="${review.reviewer.name}">Lehrer</span>
+                                            am <span th:text="${#temporals.format(review.reviewedAt, 'dd.MM.yyyy HH:mm')}">Datum</span>
+                                        </small>
+                                    </div>
+                                </div>
+                                <div th:if="${review.comment != null and !review.comment.isEmpty()}" class="mt-2">
+                                    <p class="mb-0" th:text="${review.comment}">Kommentar</p>
+                                </div>
+                                <div th:if="${review.submission != null}" class="mt-1">
+                                    <small class="text-info">Bezieht sich auf Version <span th:text="${review.submission.version}">1</span></small>
+                                </div>
+                            </div>
+                        </div>
+                        <div th:if="${reviews == null or reviews.isEmpty()}" class="text-muted">
+                            Noch keine Bewertungen vorhanden.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        const userTaskId = [[${userTask.id}]];
+        let currentDisplayedVersion = null; // Track welche Version gerade angezeigt wird
+
+        function changeVersion() {
+            const submissionSelect = document.getElementById('versionSelect');
+            const selectedSubmissionId = submissionSelect.value;
+            const iframe = document.getElementById('taskViewFrame');
+            const currentVersionField = document.getElementById('currentVersion');
+
+            let newSrc = `/teacher/submissions/${userTaskId}/view`;
+            if (selectedSubmissionId) {
+                const selectedOption = submissionSelect.options[submissionSelect.selectedIndex];
+                const version = selectedOption.dataset.version;
+                newSrc += `?version=${version}`;
+                currentDisplayedVersion = version;
+                currentVersionField.value = version;
+                console.log('🔄 Version gewechselt zu:', version, 'URL:', newSrc);
+            } else {
+                currentDisplayedVersion = null;
+                currentVersionField.value = '';
+                console.log('🔄 Zurück zu aktuellster Version');
+            }
+            iframe.src = newSrc;
+
+            console.log('📊 Current State:');
+            console.log('  - Selected Submission ID:', selectedSubmissionId);
+            console.log('  - Current Displayed Version:', currentDisplayedVersion);
+            console.log('  - Hidden Field Value:', currentVersionField.value);
+        }
+
+        function debugFormSubmission(event) {
+            console.log('🚀 FORM SUBMISSION DEBUG:');
+            console.log('========================');
+
+            const formData = new FormData(event.target);
+            const submissionSelect = document.getElementById('versionSelect');
+            const selectedOption = submissionSelect.options[submissionSelect.selectedIndex];
+
+            console.log('📝 Form Data:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`  ${key}: ${value}`);
+            }
+
+            console.log('');
+            console.log('🎯 Dropdown Info:');
+            console.log('  - Selected Index:', submissionSelect.selectedIndex);
+            console.log('  - Selected Value:', submissionSelect.value);
+            console.log('  - Selected Text:', selectedOption.text);
+            console.log('  - Data Version:', selectedOption.dataset.version);
+
+            console.log('');
+            console.log('🔍 Internal State:');
+            console.log('  - Current Displayed Version:', currentDisplayedVersion);
+            console.log('  - UserTask ID:', userTaskId);
+
+            console.log('');
+            console.log('📡 Was wird gesendet:');
+            console.log('  - userTaskId:', userTaskId);
+            console.log('  - submissionId:', formData.get('submissionId'));
+            console.log('  - currentVersion:', formData.get('currentVersion'));
+            console.log('  - statusId:', formData.get('statusId'));
+            console.log('  - comment:', formData.get('comment'));
+
+            // Form normal absenden lassen
+            return true;
+        }
+
+        // Initial state beim Laden der Seite
+        window.addEventListener('load', function() {
+            console.log('📋 Page loaded - Initial state:');
+            console.log('  - UserTask ID:', userTaskId);
+            console.log('  - Available submissions:', document.querySelectorAll('#submissionId option').length - 1);
+        });
+    </script>
+
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>
+```
+
+```
+The JavaScript function `changeVersion` and the debug function `debugFormSubmission` need to be adapted to work with the new select element with id `versionSelect` and name `currentVersion`. The submissionId is not used anymore.
+```
+
+```html
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Submission Review</title>
+    <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/custom.css}" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid mt-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a th:href="@{/teacher/dashboard}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a th:href="@{/teacher/tasks}">Aufgaben</a></li>
+                <li class="breadcrumb-item"><a th:href="@{'/teacher/tasks/' + ${userTask.task.id}}">
+                    <span th:text="${userTask.task.title}">Aufgabe</span>
+                </a></li>
+                <li class="breadcrumb-item active">Review</li>
+            </ol>
+        </nav>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Submission Review - <span th:text="${userTask.user.name}">Schüler</span></h5>
+                        <small class="text-muted">Aufgabe: <span th:text="${userTask.task.title}">Aufgabentitel</span></small>
+                    </div>
+                    <div class="card-body p-0">
+                        <!-- Current Status -->
+                        <div class="alert alert-info m-3">
+                            <strong>Aktueller Status:</strong> 
+                            <span th:text="${userTask.status?.name ?: 'Kein Status'}">Status</span>
+                        </div>
+
+                        <!-- Task View iFrame -->
+                        <div class="task-view-container" style="height: 600px; border: 1px solid #dee2e6;">
+                            <iframe id="taskViewFrame" 
+                                    th:src="@{'/teacher/submissions/' + ${userTask.id} + '/view'}" 
+                                    style="width: 100%; height: 100%; border: none;">
+                            </iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <!-- Review Form -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6>Bewertung abgeben</h6>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{'/teacher/submissions/' + ${userTask.id} + '/review'}" method="post" onsubmit="debugFormSubmission(event)">
+                            <div class="mb-3">
+                                <label for="statusId" class="form-label">Neuer Status:</label>
+                                <select id="statusId" name="statusId" class="form-select" required>
+                                    <option value="">Status wählen</option>
+                                    <option th:each="status : ${statuses}" 
+                                            th:value="${status.id}" 
+                                            th:text="${status.name}"
+                                            th:selected="${status.id == userTask.status?.id}"></option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="versionSelect" class="form-label">Bezieht sich auf Version:</label>
+                                <select id="versionSelect" name="currentVersion" class="form-select" onchange="changeVersion()">
+                                    <option value="">Alle Versionen</option>
+                                    <option th:each="versionStatus : ${versionsWithStatus}"
+                                            th:value="${versionStatus.version}"
+                                            th:text="${versionStatus.displayText}"
+                                            th:selected="${param.version != null and param.version[0] == versionStatus.version.toString()}">
+                                        Version 1 *
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="comment" class="form-label">Kommentar:</label>
+                                <textarea id="comment" name="comment" class="form-control" rows="4" 
+                                          placeholder="Feedback für den Schüler..."></textarea>
+                            </div>
+
+                            <!-- Hidden field for current version -->
+                            <input type="hidden" id="currentVersion" name="currentVersion" value="">
+
+                            <button type="submit" class="btn btn-primary">Bewertung speichern</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Previous Reviews -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6>Bisherige Bewertungen</h6>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${reviews != null and !reviews.isEmpty()}">
+                            <div th:each="review : ${reviews}" class="border-bottom pb-2 mb-2">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong th:text="${review.status?.name}">Status</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            von <span th:text="${review.reviewer.name}">Lehrer</span>
+                                            am <span th:text="${#temporals.format(review.reviewedAt, 'dd.MM.yyyy HH:mm')}">Datum</span>
+                                        </small>
+                                    </div>
+                                </div>
+                                <div th:if="${review.comment != null and !review.comment.isEmpty()}" class="mt-2">
+                                    <p class="mb-0" th:text="${review.comment}">Kommentar</p>
+                                </div>
+                                <div th:if="${review.submission != null}" class="mt-1">
+                                    <small class="text-info">Bezieht sich auf Version <span th:text="${review.submission.version}">1</span></small>
+                                </div>
+                            </div>
+                        </div>
+                        <div th:if="${reviews == null or reviews.isEmpty()}" class="text-muted">
+                            Noch keine Bewertungen vorhanden.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        const userTaskId = [[${userTask.id}]];
+        let currentDisplayedVersion = null; // Track welche Version gerade angezeigt wird
+
+        function changeVersion() {
+            const versionSelect = document.getElementById('versionSelect');
+            const selectedVersion = versionSelect.value;
+            const iframe = document.getElementById('taskViewFrame');
+            const currentVersionField = document.getElementById('currentVersion');
+
+            let newSrc = `/teacher/submissions/${userTaskId}/view`;
+            if (selectedVersion) {
+                newSrc += `?version=${selectedVersion}`;
+                currentDisplayedVersion = selectedVersion;
+                currentVersionField.value = selectedVersion;
+                console.log('🔄 Version gewechselt zu:', selectedVersion, 'URL:', newSrc);
+            } else {
+                currentDisplayedVersion = null;
+                currentVersionField.value = '';
+                console.log('🔄 Zurück zu aktuellster Version');
+            }
+            iframe.src = newSrc;
+
+            console.log('📊 Current State:');
+            console.log('  - Selected Version:', selectedVersion);
+            console.log('  - Current Displayed Version:', currentDisplayedVersion);
+            console.log('  - Hidden Field Value:', currentVersionField.value);
+        }
+
+        function debugFormSubmission(event) {
+            console.log('🚀 FORM SUBMISSION DEBUG:');
+            console.log('========================');
+
+            const formData = new FormData(event.target);
+            const versionSelect = document.getElementById('versionSelect');
+            const selectedOption = versionSelect.options[versionSelect.selectedIndex];
+
+            console.log('📝 Form Data:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`  ${key}: ${value}`);
+            }
+
+            console.log('');
+            console.log('🎯 Dropdown Info:');
+            console.log('  - Selected Index:', versionSelect.selectedIndex);
+            console.log('  - Selected Value:', versionSelect.value);
+            console.log('  - Selected Text:', selectedOption.text);
+
+            console.log('');
+            console.log('🔍 Internal State:');
+            console.log('  - Current Displayed Version:', currentDisplayedVersion);
+            console.log('  - UserTask ID:', userTaskId);
+
+            console.log('');
+            console.log('📡 Was wird gesendet:');
+            console.log('  - userTaskId:', userTaskId);
+            console.log('  - currentVersion:', formData.get('currentVersion'));
+            console.log('  - statusId:', formData.get('statusId'));
+            console.log('  - comment:', formData.get('comment'));
+
+            // Form normal absenden lassen
+            return true;
+        }
+
+        // Initial state beim Laden der Seite
+        window.addEventListener('load', function() {
+            console.log('📋 Page loaded - Initial state:');
+            console.log('  - UserTask ID:', userTaskId);
+            console.log('  - Available versions:', document.querySelectorAll('#versionSelect option').length - 1);
         });
     </script>
 
