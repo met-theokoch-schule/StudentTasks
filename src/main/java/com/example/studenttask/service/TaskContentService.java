@@ -199,6 +199,32 @@ public class TaskContentService {
             ));
         }
 
+        // Find the latest submitted version for default selection
+        Integer latestSubmittedVersion = null;
+        for (VersionWithSubmissionStatus version : versionsWithStatus) {
+            if (version.isSubmitted() && (latestSubmittedVersion == null || version.getVersion() > latestSubmittedVersion)) {
+                latestSubmittedVersion = version.getVersion();
+            }
+        }
+
+        // Set the latest submitted version as selected
+        if (latestSubmittedVersion != null) {
+            for (VersionWithSubmissionStatus version : versionsWithStatus) {
+                if (version.getVersion() != null && version.getVersion().equals(latestSubmittedVersion)) {
+                    version.setSelected(true);
+                    break;
+                }
+            }
+        }
+
+        // Add "All Versions" option at the beginning (always unselected)
+        versionsWithStatus.add(0, new VersionWithSubmissionStatus(
+            null, // No specific version
+            "Alle Versionen", // Display text
+            false, // Not submitted
+            false  // Not selected by default
+        ));
+
         return versionsWithStatus;
     }
 
