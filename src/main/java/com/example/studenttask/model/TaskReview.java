@@ -29,21 +29,20 @@ public class TaskReview {
     @Column(nullable = false)
     private LocalDateTime reviewedAt;
 
-    @ManyToOne
-    @JoinColumn(name = "submission_id", nullable = true)
-    private Submission submission;
+    @Column(nullable = true)
+    private Integer version; // Version der TaskContent, auf die sich das Review bezieht
 
     // Constructors
     public TaskReview() {
         this.reviewedAt = LocalDateTime.now();
     }
 
-    public TaskReview(UserTask userTask, User reviewer, TaskStatus status, Submission submission) {
+    public TaskReview(UserTask userTask, User reviewer, TaskStatus status, Integer version) {
         this();
         this.userTask = userTask;
         this.reviewer = reviewer;
         this.status = status;
-        this.submission = submission;
+        this.version = version;
     }
 
     // Getters and Setters
@@ -95,12 +94,12 @@ public class TaskReview {
         this.reviewedAt = reviewedAt;
     }
 
-    public Submission getSubmission() {
-        return submission;
+    public Integer getVersion() {
+        return version;
     }
 
-    public void setSubmission(Submission submission) {
-        this.submission = submission;
+    public void setVersion(Integer version) {
+        this.version = version;
     }
 
     @Override

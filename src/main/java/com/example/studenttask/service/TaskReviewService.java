@@ -109,7 +109,6 @@ public class TaskReviewService {
         System.out.println("Reviewer: " + reviewer.getName());
         System.out.println("Status ID: " + statusId);
         System.out.println("Comment: " + comment);
-        System.out.println("Submission ID: " + submissionId);
         System.out.println("Current Version: " + currentVersion);
 
         TaskReview review = new TaskReview();
@@ -124,35 +123,16 @@ public class TaskReviewService {
         review.setComment(comment);
         review.setReviewedAt(LocalDateTime.now());
 
-        // Set submission based on currentVersion if provided
+        // Speichere einfach die Versionsnummer
         if (currentVersion != null && currentVersion > 0) {
-            System.out.println("Suche Submission mit Version: " + currentVersion);
-            Optional<Submission> submissionOpt = submissionService.findByUserTaskAndVersion(userTask, currentVersion);
-            if (submissionOpt.isPresent()) {
-                Submission submission = submissionOpt.get();
-                review.setSubmission(submission);
-                System.out.println("Submission gefunden und verknüpft - ID: " + submission.getId() + ", Version: " + submission.getVersion());
-            } else {
-                System.out.println("Keine Submission mit Version " + currentVersion + " gefunden!");
-            }
-        } else if (submissionId != null && submissionId > 0) {
-            System.out.println("Fallback: Suche Submission mit ID: " + submissionId);
-            submissionService.findById(submissionId)
-                .ifPresent(submission -> {
-                    review.setSubmission(submission);
-                    System.out.println("Submission per ID verknüpft - ID: " + submission.getId() + ", Version: " + submission.getVersion());
-                });
+            review.setVersion(currentVersion);
+            System.out.println("Review bezieht sich auf Version: " + currentVersion);
         } else {
-            System.out.println("Keine Submission verknüpft (keine Version und keine ID)");
+            System.out.println("Kein Review für spezifische Version");
         }
 
-        System.out.println("Review wird gespeichert mit Submission: " + 
-            (review.getSubmission() != null ? 
-                "ID=" + review.getSubmission().getId() + ", Version=" + review.getSubmission().getVersion() : 
-                "null"));
-
         TaskReview savedReview = save(review);
-        System.out.println("Review gespeichert mit ID: " + savedReview.getId());
+        System.out.println("Review gespeichert mit ID: " + savedReview.getId() + ", Version: " + savedReview.getVersion());
         System.out.println("=== END DEBUG createReview ===");
 
         return savedReview;
