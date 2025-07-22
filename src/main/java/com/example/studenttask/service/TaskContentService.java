@@ -29,8 +29,11 @@ public class TaskContentService {
     @Autowired
     private SubmissionService submissionService;
 
-     @Autowired
+    @Autowired
     private UserTaskRepository userTaskRepository;
+
+    @Autowired
+    private TaskReviewService taskReviewService;
 
 
     /**
@@ -175,13 +178,13 @@ public class TaskContentService {
             if (content.getSavedAt() != null) {
                 dateTime = content.getSavedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yy HH:mm"));
             }
-            
+
             String displayText = "v" + content.getVersion() + " " + dateTime;
-            
+
             if (content.isSubmitted()) {
                 // Check if there are any reviews for this version
                 boolean hasReviews = taskReviewService.hasReviewsForVersion(content.getUserTask(), content.getVersion());
-                
+
                 if (hasReviews) {
                     displayText += " 👁"; // Already reviewed
                 } else {
