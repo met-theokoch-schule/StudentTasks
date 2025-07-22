@@ -24,6 +24,7 @@
 /home/runner/workspace/src/main/java/com/example/studenttask/service/UnitTitleService.java
 /home/runner/workspace/src/main/java/com/example/studenttask/model/TaskStatus.java
 /home/runner/workspace/src/main/java/com/example/studenttask/service/AuthenticationService.java
+/home/runner/workspace/src/main/java/com/example/studenttask/dto/VersionWithSubmissionStatus.java
 /home/runner/workspace/src/main/java/com/example/studenttask/controller/HomeController.java
 /home/runner/workspace/src/main/java/com/example/studenttask/controller/StudentController.java
 /home/runner/workspace/src/main/java/com/example/studenttask/service/TaskReviewService.java
