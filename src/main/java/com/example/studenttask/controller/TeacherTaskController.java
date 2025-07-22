@@ -350,8 +350,11 @@ public class TeacherTaskController {
         // Get all reviews for this UserTask
         List<TaskReview> reviews = taskReviewService.findByUserTask(userTask);
 
-        // Get all available task statuses
-        List<TaskStatus> statuses = taskStatusService.findAllActive();
+        // Get only review-relevant task statuses (ÜBERARBEITUNG_NÖTIG and VOLLSTÄNDIG)
+        List<TaskStatus> allStatuses = taskStatusService.findAllActive();
+        List<TaskStatus> statuses = allStatuses.stream()
+                .filter(status -> "ÜBERARBEITUNG_NÖTIG".equals(status.getName()) || "VOLLSTÄNDIG".equals(status.getName()))
+                .collect(java.util.stream.Collectors.toList());
 
         // Get versions with submission status for the dropdown
         List<VersionWithSubmissionStatus> versionsWithStatus = taskContentService.getVersionsWithSubmissionStatus(userTaskId);
