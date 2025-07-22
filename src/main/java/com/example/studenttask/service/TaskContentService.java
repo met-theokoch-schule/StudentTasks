@@ -170,11 +170,17 @@ public class TaskContentService {
         List<VersionWithSubmissionStatus> versionsWithStatus = new ArrayList<>();
 
         for (TaskContent content : allVersions) {
-            String displayText = "Version " + content.getVersion();
+            // Format the date and time
+            String dateTime = "";
+            if (content.getSavedAt() != null) {
+                dateTime = content.getSavedAt().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yy HH:mm"));
+            }
+            
+            String displayText;
             if (content.isSubmitted()) {
-                displayText += " ✓";
+                displayText = "✓ v" + content.getVersion() + " " + dateTime;
             } else {
-                displayText += " (Entwurf)";
+                displayText = "v" + content.getVersion() + " " + dateTime;
             }
 
             versionsWithStatus.add(new VersionWithSubmissionStatus(
