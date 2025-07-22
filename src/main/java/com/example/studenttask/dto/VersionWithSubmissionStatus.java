@@ -1,9 +1,11 @@
+
 package com.example.studenttask.dto;
 
 public class VersionWithSubmissionStatus {
     private Integer version;
     private Boolean isSubmitted;
     private String displayText;
+    private Boolean selected = false; // Default to false
 
     public VersionWithSubmissionStatus() {}
 
@@ -11,6 +13,15 @@ public class VersionWithSubmissionStatus {
         this.version = version;
         this.isSubmitted = isSubmitted;
         this.displayText = displayText;
+        this.selected = false;
+    }
+
+    // Constructor with selection parameter
+    public VersionWithSubmissionStatus(Integer version, String displayText, Boolean isSubmitted, Boolean selected) {
+        this.version = version;
+        this.displayText = displayText;
+        this.isSubmitted = isSubmitted;
+        this.selected = selected;
     }
 
     public Integer getVersion() {
@@ -25,6 +36,10 @@ public class VersionWithSubmissionStatus {
         return isSubmitted;
     }
 
+    public Boolean isSubmitted() {
+        return isSubmitted;
+    }
+
     public void setIsSubmitted(Boolean isSubmitted) {
         this.isSubmitted = isSubmitted;
     }
@@ -35,5 +50,17 @@ public class VersionWithSubmissionStatus {
 
     public void setDisplayText(String displayText) {
         this.displayText = displayText;
+    }
+
+    public Boolean getSelected() {
+        return selected;
+    }
+
+    public Boolean isSelected() {
+        return selected;
+    }
+
+    public void setSelected(Boolean selected) {
+        this.selected = selected;
     }
 }
