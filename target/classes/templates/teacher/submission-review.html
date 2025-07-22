@@ -55,11 +55,10 @@
                             <div class="mb-3">
                                 <label for="statusId" class="form-label">Neuer Status:</label>
                                 <select id="statusId" name="statusId" class="form-select" required>
-                                    <option value="">Status wählen</option>
                                     <option th:each="status : ${statuses}" 
                                             th:value="${status.id}" 
                                             th:text="${status.name}"
-                                            th:selected="${status.id == userTask.status?.id}"></option>
+                                            th:selected="${status.name == 'ÜBERARBEITUNG_NÖTIG'}"></option>
                                 </select>
                             </div>
 
