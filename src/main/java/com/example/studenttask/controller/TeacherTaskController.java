@@ -156,10 +156,10 @@ public class TeacherTaskController {
 
     @PostMapping("/submissions/{userTaskId}/review")
     public String submitReview(@PathVariable Long userTaskId,
-            @RequestParam Long statusId,
-            @RequestParam(required = false) String comment,
-            @RequestParam(required = false) Long submissionId,
-            Authentication authentication) {
+                             @RequestParam Long statusId,
+                             @RequestParam(required = false) String comment,
+                             @RequestParam(required = false) String submissionIdStr,
+                             Authentication authentication) {
 
         Optional<UserTask> userTaskOpt = userTaskService.findById(userTaskId);
         if (userTaskOpt.isEmpty()) {
@@ -170,6 +170,11 @@ public class TeacherTaskController {
 
         if (reviewer == null) {
             return "redirect:/teacher/tasks";
+        }
+
+        Long submissionId = null;
+        if (submissionIdStr != null && !submissionIdStr.isEmpty()) {
+            submissionId = Long.parseLong(submissionIdStr);
         }
 
         // Create review
