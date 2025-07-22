@@ -90,7 +90,7 @@ public class TaskReviewService {
         }
 
         // Set submission reference if provided (for version-specific reviews)
-        if (submissionId != null) {
+        if (submissionId != null && submissionId > 0) {
             submissionService.findById(submissionId).ifPresent(review::setSubmission);
         }
         // If no submissionId provided, it remains null (general review)
