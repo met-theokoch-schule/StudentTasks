@@ -27,8 +27,8 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.Set;
+import javax.servlet.http.HttpServletRequest;
 import java.util.HashSet;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.ArrayList;
@@ -159,7 +159,8 @@ public class TeacherTaskController {
                              @RequestParam Long statusId,
                              @RequestParam(required = false) String comment,
                              @RequestParam(required = false) String submissionIdStr,
-                             Authentication authentication) {
+                             Authentication authentication,
+                             HttpServletRequest request) {
 
         Optional<UserTask> userTaskOpt = userTaskService.findById(userTaskId);
         if (userTaskOpt.isEmpty()) {
@@ -182,7 +183,7 @@ public class TeacherTaskController {
         if (request.getParameter("currentVersion") != null && !request.getParameter("currentVersion").isEmpty()) {
             currentVersion = Integer.parseInt(request.getParameter("currentVersion"));
         }
-        
+
         taskReviewService.createReview(userTask, reviewer, statusId, comment, submissionId, currentVersion);
 
         return "redirect:/teacher/submissions/" + userTaskId;
