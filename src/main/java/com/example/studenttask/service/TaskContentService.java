@@ -3,6 +3,8 @@ package com.example.studenttask.service;
 import com.example.studenttask.model.TaskContent;
 import com.example.studenttask.model.UserTask;
 import com.example.studenttask.model.TaskStatus;
+import com.example.studenttask.model.Submission;
+import com.example.studenttask.dto.VersionWithSubmissionStatus;
 import com.example.studenttask.repository.TaskContentRepository;
 import com.example.studenttask.repository.UserTaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -95,7 +98,7 @@ public class TaskContentService {
     public List<TaskContent> getAllContentVersions(UserTask userTask) {
         return taskContentRepository.findByUserTaskOrderByVersionDesc(userTask);
     }
-    
+
     public TaskContent getContentByVersion(UserTask userTask, Integer version) {
         return taskContentRepository.findByUserTaskAndVersion(userTask, version);
     }
@@ -144,7 +147,7 @@ public class TaskContentService {
         taskContentRepository.deleteByUserTask(userTask);
     }
 
-    
+
 
     /**
      * Check if user task has any content
@@ -161,11 +164,11 @@ public class TaskContentService {
         if (userTaskOpt.isEmpty()) {
             return new ArrayList<>();
         }
-        
+
         UserTask userTask = userTaskOpt.get();
         List<TaskContent> allVersions = taskContentRepository.findByUserTaskOrderByVersionDesc(userTask);
         List<VersionWithSubmissionStatus> versionsWithStatus = new ArrayList<>();
-        
+
         for (TaskContent content : allVersions) {
             String displayText = "Version " + content.getVersion();
             if (content.isSubmitted()) {
@@ -173,14 +176,14 @@ public class TaskContentService {
             } else {
                 displayText += " (Entwurf)";
             }
-            
+
             versionsWithStatus.add(new VersionWithSubmissionStatus(
                 content.getVersion(), 
                 content.isSubmitted(), 
                 displayText
             ));
         }
-        
+
         return versionsWithStatus;
     }
 
