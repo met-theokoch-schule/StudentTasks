@@ -9,15 +9,16 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.List;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 import com.example.studenttask.repository.*;
 import com.example.studenttask.service.UserService;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Objects;
 
 @Controller
 @RequestMapping("/student")
@@ -348,20 +349,41 @@ public class StudentController {
      */
     @GetMapping("/tasks")
     public String taskList(Model model, Principal principal) {
-        User student = userService.findByOpenIdSubject(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-
-        // Alle aktiven Aufgaben finden, die einer Gruppe des Benutzers zugewiesen sind
+        User student = userService.findByOpenIdSubject(principal.getName());
         List<UserTask> userTasks = getOrCreateUserTasksForStudent(student);
 
-        // Nur aktive Aufgaben anzeigen
-        List<UserTask> activeTasks = userTasks.stream()
-            .filter(ut -> ut.getTask().getIsActive())
+        // Gruppiere Aufgaben nach UnitTitle und sortiere sie
+        Map<UnitTitle, List<UserTask>> tasksByUnitTitle = new LinkedHashMap<>();
+
+        // Sammle alle UnitTitles und sortiere sie alphabetisch
+        Set<UnitTitle> unitTitles = userTasks.stream()
+            .map(ut -> ut.getTask().getUnitTitle())
+            .collect(Collectors.toSet());
+
+        List<UnitTitle> sortedUnitTitles = unitTitles.stream()
+            .sorted((ut1, ut2) -> {
+                // null-Werte (Aufgaben ohne Thema) kommen zuletzt
+                if (ut1 == null && ut2 == null) return 0;
+                if (ut1 == null) return 1;
+                if (ut2 == null) return -1;
+                return ut1.getName().compareTo(ut2.getName());
+            })
             .collect(Collectors.toList());
 
-        model.addAttribute("student", student);
-        model.addAttribute("userTasks", activeTasks);
+        // Gruppiere Aufgaben nach UnitTitle
+        for (UnitTitle unitTitle : sortedUnitTitles) {
+            List<UserTask> tasksForUnit = userTasks.stream()
+                .filter(ut -> Objects.equals(ut.getTask().getUnitTitle(), unitTitle))
+                .sorted((ut1, ut2) -> ut1.getTask().getTitle().compareTo(ut2.getTask().getTitle()))
+                .collect(Collectors.toList());
 
+            if (!tasksForUnit.isEmpty()) {
+                tasksByUnitTitle.put(unitTitle, tasksForUnit);
+            }
+        }
+
+        model.addAttribute("tasksByUnitTitle", tasksByUnitTitle);
+        model.addAttribute("userTasks", userTasks); // Für Rückwärtskompatibilität
         return "student/tasks-list";
     }
 }
