@@ -329,6 +329,31 @@ public class UserService {
     }
 
     /**
+     * Überprüft, ob ein Benutzer (identifiziert durch openIdSubject) eine Lehrerrolle hat
+     */
+    public boolean hasTeacherRole(String openIdSubject) {
+        Optional<User> userOpt = findByOpenIdSubject(openIdSubject);
+        if (userOpt.isEmpty()) {
+            return false;
+        }
+        
+        User user = userOpt.get();
+        if (user.getRoles() == null) {
+            return false;
+        }
+        
+        return user.getRoles().stream()
+            .anyMatch(role -> {
+                String roleName = role.getName();
+                return "ROLE_TEACHER".equals(roleName) || 
+                       "teacher".equals(roleName) || 
+                       "lehrer".equals(roleName) ||
+                       roleName.toLowerCase().contains("teacher") ||
+                       roleName.toLowerCase().contains("lehrer");
+            });
+    }
+
+    /**
      * Check if user has a specific role
      */
     public boolean hasRole(User user, String roleName) {

@@ -8,6 +8,7 @@ import com.example.studenttask.service.UserService;
 import com.example.studenttask.service.UserTaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/teacher")
+@PreAuthorize("hasAnyAuthority('ROLE_TEACHER', 'ROLE_ADMIN') or @userService.hasTeacherRole(authentication.name)")
 public class TeacherController {
 
     @Autowired
@@ -47,6 +49,7 @@ public class TeacherController {
      * Lehrer-Dashboard
      */
     @GetMapping("/dashboard")
+    @PreAuthorize("hasAnyAuthority('ROLE_TEACHER', 'ROLE_ADMIN') or @userService.hasTeacherRole(authentication.name)")
     public String dashboard(Model model, Principal principal) {
         User teacher = userService.findByOpenIdSubject(principal.getName())
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
