@@ -275,12 +275,12 @@ public class TeacherController {
                                        @RequestParam(required = false) Integer version,
                                        Authentication authentication, Model model) {
         // Get the user task
-        UserTask userTask = userTaskService.findById(userTaskId);
-        if (userTask == null) {
-            throw new RuntimeException("UserTask not found");
+        Optional<UserTask> userTaskOpt = userTaskService.findById(userTaskId);
+        if (userTaskOpt.isEmpty()) {
+            return "redirect:/teacher/dashboard";
         }
 
-        model.addAttribute("userTask", userTask);
+        UserTask userTask = userTaskOpt.get();
         Task task = userTask.getTask();
 
         String contentText;

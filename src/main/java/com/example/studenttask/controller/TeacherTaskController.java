@@ -36,7 +36,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashSet;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.http.ResponseEntity;
 
 @Controller
 @RequestMapping("/teacher")
@@ -147,10 +146,11 @@ public class TeacherTaskController {
                              Authentication authentication,
                              HttpServletRequest request) {
 
-        UserTask userTask = userTaskService.findById(userTaskId);
-        if (userTask == null) {
+        Optional<UserTask> userTaskOpt = userTaskService.findById(userTaskId);
+        if (userTaskOpt.isEmpty()) {
             return "redirect:/teacher/tasks";
         }
+        UserTask userTask = userTaskOpt.get();
         User reviewer = userService.findByOpenIdSubject(authentication.getName()).orElse(null);
 
         if (reviewer == null) {
@@ -181,10 +181,11 @@ public class TeacherTaskController {
             @RequestParam(required = false) Integer version,
             Model model,
             Authentication authentication) {
-        UserTask userTask = userTaskService.findById(userTaskId);
-        if (userTask == null) {
+        Optional<UserTask> userTaskOpt = userTaskService.findById(userTaskId);
+        if (userTaskOpt.isEmpty()) {
             return "error/404";
         }
+        UserTask userTask = userTaskOpt.get();
         Task task = userTask.getTask();
 
         // Get the specific version or latest version
@@ -352,10 +353,12 @@ public class TeacherTaskController {
                                      @RequestParam(required = false) Integer version,
                                      Model model, Authentication authentication) {
 
-        UserTask userTask = userTaskService.findById(userTaskId);
-        if (userTask == null) {
+        // Get UserTask with all necessary data
+        Optional<UserTask> userTaskOpt = userTaskService.findById(userTaskId);
+        if (userTaskOpt.isEmpty()) {
             return "redirect:/teacher/dashboard";
         }
+        UserTask userTask = userTaskOpt.get();
 
         // Get all reviews for this UserTask
         List<TaskReview> reviews = taskReviewService.findByUserTask(userTask);
@@ -375,70 +378,5 @@ public class TeacherTaskController {
         model.addAttribute("versionsWithStatus", versionsWithStatus);
 
         return "teacher/submission-review";
-    }
-
-    @GetMapping("/submissions/{userTaskId}/getTaskContent")
-    public ResponseEntity<String> getTaskContent(@PathVariable Long userTaskId,
-                                               @RequestParam Integer version) {
-        UserTask userTask = userTaskService.findById(userTaskId);
-        if (userTask == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        TaskContent taskContent = taskContentService.getContentByVersion(userTask, version);
-
-        if (taskContent == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(taskContent.getContent());
-    }
-
-    @PostMapping("/submissions/{userTaskId}/saveTaskContent")
-    public ResponseEntity<String> saveTaskContent(@PathVariable Long userTaskId,
-                                                @RequestParam Integer version,
-                                                @RequestParam String content,
-                                                Authentication authentication) {
-        UserTask userTask = userTaskService.findById(userTaskId);
-        if (userTask == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        User user = userService.findByOpenIdSubject(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        TaskContent taskContent = taskContentService.getContentByVersion(userTask, version);
-
-        if (taskContent == null) {
-            taskContent = new TaskContent();
-            taskContent.setUserTask(userTask);
-            taskContent.setVersion(version);
-        }
-
-        taskContent.setContent(content);
-        taskContentService.saveContent(userTask, content, false);
-
-        return ResponseEntity.ok("Content saved successfully");
-    }
-
-    @PostMapping("/submissions/{userTaskId}/submitTaskContent")
-    public ResponseEntity<String> submitTaskContent(@PathVariable Long userTaskId,
-                                                  @RequestParam Integer version,
-                                                  Authentication authentication) {
-
-        UserTask userTask = userTaskService.findById(userTaskId);
-        if (userTask == null) {
-            throw new RuntimeException("UserTask not found");
-        }
-
-        User user = userService.findByOpenIdSubject(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        TaskStatus submittedStatus = taskStatusService.findByName("ABGEGEBEN")
-                .orElseThrow(() -> new RuntimeException("TaskStatus nicht gefunden: ABGEGEBEN"));
-        userTask.setStatus(submittedStatus);
-        userTaskService.save(userTask);
-
-        return ResponseEntity.ok("Task content submitted successfully!");
     }
 }

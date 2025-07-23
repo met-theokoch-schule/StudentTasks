@@ -1,13 +1,9 @@
 package com.example.studenttask.controller;
 
-import com.example.studenttask.dto.GroupStatistics;
-import com.example.studenttask.dto.StudentTaskData;
-import com.example.studenttask.dto.TaskInfo;
-import com.example.studenttask.model.*;
+import com.example.studenttask.model.Group;
+import com.example.studenttask.model.User;
 import com.example.studenttask.service.GroupService;
 import com.example.studenttask.service.UserService;
-import com.example.studenttask.service.TaskService;
-import com.example.studenttask.service.UserTaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -15,34 +11,21 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import com.example.studenttask.repository.GroupRepository;
 
 import java.security.Principal;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Controller
 @RequestMapping("/teacher/groups")
-@PreAuthorize("hasAnyAuthority('ROLE_TEACHER', 'ROLE_ADMIN') or @userService.hasTeacherRole(authentication.name)")
+@PreAuthorize("@userService.hasTeacherRole(authentication.name)")
 public class TeacherGroupController {
 
-    private final GroupService groupService;
-    private final UserService userService;
-    private final TaskService taskService;
-    private final UserTaskService userTaskService;
-    private final com.example.studenttask.repository.TaskRepository taskRepository;
-    private final GroupRepository groupRepository;
+    @Autowired
+    private GroupService groupService;
 
     @Autowired
-    public TeacherGroupController(GroupService groupService, UserService userService, TaskService taskService, UserTaskService userTaskService,
-                                  com.example.studenttask.repository.TaskRepository taskRepository, GroupRepository groupRepository) {
-        this.groupService = groupService;
-        this.userService = userService;
-        this.taskService = taskService;
-        this.userTaskService = userTaskService;
-        this.taskRepository = taskRepository;
-        this.groupRepository = groupRepository;
-    }
+    private UserService userService;
 
     /**
      * Zeigt alle Gruppen mit aktiven Aufgaben
@@ -53,7 +36,7 @@ public class TeacherGroupController {
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
         // Lade Gruppen mit aktiven Aufgaben des Lehrers
-        List<GroupService.GroupInfo> groups = groupService.getGroupsWithActiveTasksByTeacher(teacher);
+        List<GroupInfo> groups = groupService.getGroupsWithActiveTasksByTeacher(teacher);
 
         model.addAttribute("groups", groups);
         model.addAttribute("teacher", teacher);
@@ -62,94 +45,175 @@ public class TeacherGroupController {
     }
 
     /**
-     * Zeigt die Details einer spezifischen Gruppe mit allen Schülern und ihren Aufgaben-Status
+     * Zeigt Details einer Gruppe mit allen Schülern und ihren Aufgaben
      */
     @GetMapping("/{groupId}")
     public String showGroupDetail(@PathVariable Long groupId, Model model, Principal principal) {
         User teacher = userService.findByOpenIdSubject(principal.getName())
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
-        Group group = groupRepository.findById(groupId)
-            .orElseThrow(() -> new RuntimeException("Gruppe nicht gefunden"));
-
-        // Statistiken für die Gruppe berechnen
-        GroupStatistics statistics = groupService.getGroupStatistics(group, teacher);
-        model.addAttribute("statistics", statistics);
-
-        // Alle Schüler der Gruppe
-        List<User> students = userService.findByGroupsContaining(group);
-
-        // Alle aktiven Aufgaben des Lehrers für diese Gruppe
-        List<Task> activeTasks = taskRepository.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher)
-            .stream()
-            .filter(task -> task.getAssignedGroups().contains(group))
-            .collect(Collectors.toList());
-
-        // Aufgaben-Informationen erstellen
-        List<TaskInfo> tasks = activeTasks.stream()
-            .map(task -> {
-                TaskInfo taskInfo = new TaskInfo();
-                taskInfo.setTaskId(task.getId());
-                taskInfo.setTaskTitle(task.getTitle());
-                return taskInfo;
-            })
-            .collect(Collectors.toList());
-
-        // Schüler-Aufgaben-Daten erstellen
-        List<StudentTaskData> studentTasks = new ArrayList<>();
-        for (User student : students) {
-            StudentTaskData studentData = new StudentTaskData();
-            studentData.setStudentId(student.getId());
-            studentData.setStudentName(student.getName());
-
-            Map<Long, String> taskStatuses = new HashMap<>();
-            for (Task task : activeTasks) {
-                Optional<UserTask> userTaskOpt = userTaskService.findByUserAndTask(student, task);
-                String statusName = userTaskOpt.map(ut -> ut.getStatus() != null ? ut.getStatus().getName() : "NICHT_BEGONNEN")
-                    .orElse("NICHT_BEGONNEN");
-                taskStatuses.put(task.getId(), statusName);
-            }
-            studentData.setTaskStatuses(taskStatuses);
-            studentTasks.add(studentData);
+        // Lade Gruppe
+        Group group = groupService.findById(groupId);
+        if (group == null) {
+            throw new RuntimeException("Gruppe nicht gefunden");
         }
 
+        // Lade Statistiken für die Gruppe
+        GroupStatistics statistics = groupService.getGroupStatistics(group, teacher);
+
+        // Lade alle Schüler der Gruppe mit ihren Aufgaben
+        List<StudentTaskInfo> studentTasks = groupService.getStudentTasksForGroup(group, teacher);
+
         model.addAttribute("group", group);
-        model.addAttribute("tasks", tasks);
+        model.addAttribute("statistics", statistics);
         model.addAttribute("studentTasks", studentTasks);
+        model.addAttribute("teacher", teacher);
 
         return "teacher/group-detail";
     }
 
+    // Helper Classes für Template-Daten
+
     public static class GroupInfo {
         private Group group;
+        private int studentCount;
         private int activeTaskCount;
-        private int totalStudents;
         private int pendingSubmissions;
-        private int completedSubmissions;
+        private LocalDateTime lastActivity;
 
-        // Konstruktor
-        public GroupInfo(Group group, int activeTaskCount, int totalStudents, int pendingSubmissions, int completedSubmissions) {
+        // Constructors
+        public GroupInfo() {}
+
+        public GroupInfo(Group group, int studentCount, int activeTaskCount, int pendingSubmissions, LocalDateTime lastActivity) {
             this.group = group;
+            this.studentCount = studentCount;
             this.activeTaskCount = activeTaskCount;
-            this.totalStudents = totalStudents;
             this.pendingSubmissions = pendingSubmissions;
-            this.completedSubmissions = completedSubmissions;
+            this.lastActivity = lastActivity;
         }
 
-        // Getter und Setter
+        // Getters and Setters
         public Group getGroup() { return group; }
         public void setGroup(Group group) { this.group = group; }
+
+        public int getStudentCount() { return studentCount; }
+        public void setStudentCount(int studentCount) { this.studentCount = studentCount; }
 
         public int getActiveTaskCount() { return activeTaskCount; }
         public void setActiveTaskCount(int activeTaskCount) { this.activeTaskCount = activeTaskCount; }
 
+        public int getPendingSubmissions() { return pendingSubmissions; }
+        public void setPendingSubmissions(int pendingSubmissions) { this.pendingSubmissions = pendingSubmissions; }
+
+        public LocalDateTime getLastActivity() { return lastActivity; }
+        public void setLastActivity(LocalDateTime lastActivity) { this.lastActivity = lastActivity; }
+    }
+
+    public static class GroupStatistics {
+        private int totalStudents;
+        private int activeTasks;
+        private int pendingSubmissions;
+        private int completedSubmissions;
+
+        // Constructors
+        public GroupStatistics() {}
+
+        public GroupStatistics(int totalStudents, int activeTasks, int pendingSubmissions, int completedSubmissions) {
+            this.totalStudents = totalStudents;
+            this.activeTasks = activeTasks;
+            this.pendingSubmissions = pendingSubmissions;
+            this.completedSubmissions = completedSubmissions;
+        }
+
+        // Getters and Setters
         public int getTotalStudents() { return totalStudents; }
         public void setTotalStudents(int totalStudents) { this.totalStudents = totalStudents; }
+
+        public int getActiveTasks() { return activeTasks; }
+        public void setActiveTasks(int activeTasks) { this.activeTasks = activeTasks; }
 
         public int getPendingSubmissions() { return pendingSubmissions; }
         public void setPendingSubmissions(int pendingSubmissions) { this.pendingSubmissions = pendingSubmissions; }
 
         public int getCompletedSubmissions() { return completedSubmissions; }
         public void setCompletedSubmissions(int completedSubmissions) { this.completedSubmissions = completedSubmissions; }
+    }
+
+    public static class StudentTaskInfo {
+        private User student;
+        private List<TaskInfo> tasks;
+
+        // Constructors
+        public StudentTaskInfo() {}
+
+        public StudentTaskInfo(User student, List<TaskInfo> tasks) {
+            this.student = student;
+            this.tasks = tasks;
+        }
+
+        // Getters and Setters
+        public User getStudent() { return student; }
+        public void setStudent(User student) { this.student = student; }
+
+        public List<TaskInfo> getTasks() { return tasks; }
+        public void setTasks(List<TaskInfo> tasks) { this.tasks = tasks; }
+    }
+
+    public static class TaskInfo {
+        private Long userTaskId;
+        private com.example.studenttask.model.Task task;
+        private com.example.studenttask.model.TaskStatus status;
+        private boolean hasSubmissions;
+        private String statusBadgeClass;
+
+        // Constructors
+        public TaskInfo() {}
+
+        public TaskInfo(Long userTaskId, com.example.studenttask.model.Task task, 
+                       com.example.studenttask.model.TaskStatus status, boolean hasSubmissions) {
+            this.userTaskId = userTaskId;
+            this.task = task;
+            this.status = status;
+            this.hasSubmissions = hasSubmissions;
+            this.statusBadgeClass = determineStatusBadgeClass(status);
+        }
+
+        private String determineStatusBadgeClass(com.example.studenttask.model.TaskStatus status) {
+            if (status == null) return "bg-secondary";
+
+            switch (status.getName().toUpperCase()) {
+                case "NICHT_BEGONNEN":
+                    return "bg-secondary";
+                case "IN_BEARBEITUNG":
+                    return "bg-warning";
+                case "ABGEGEBEN":
+                    return "bg-info";
+                case "ÜBERARBEITUNG_NÖTIG":
+                    return "bg-danger";
+                case "VOLLSTÄNDIG":
+                    return "bg-success";
+                default:
+                    return "bg-secondary";
+            }
+        }
+
+        // Getters and Setters
+        public Long getUserTaskId() { return userTaskId; }
+        public void setUserTaskId(Long userTaskId) { this.userTaskId = userTaskId; }
+
+        public com.example.studenttask.model.Task getTask() { return task; }
+        public void setTask(com.example.studenttask.model.Task task) { this.task = task; }
+
+        public com.example.studenttask.model.TaskStatus getStatus() { return status; }
+        public void setStatus(com.example.studenttask.model.TaskStatus status) { 
+            this.status = status;
+            this.statusBadgeClass = determineStatusBadgeClass(status);
+        }
+
+        public boolean isHasSubmissions() { return hasSubmissions; }
+        public void setHasSubmissions(boolean hasSubmissions) { this.hasSubmissions = hasSubmissions; }
+
+        public String getStatusBadgeClass() { return statusBadgeClass; }
+        public void setStatusBadgeClass(String statusBadgeClass) { this.statusBadgeClass = statusBadgeClass; }
     }
 }
