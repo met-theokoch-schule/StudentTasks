@@ -3,6 +3,7 @@ package com.example.studenttask.service;
 import com.example.studenttask.model.*;
 import com.example.studenttask.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -90,7 +91,58 @@ public class GroupService {
         public void setLastActivity(LocalDateTime lastActivity) {
             this.lastActivity = lastActivity;
         }
-    }</LocalDateTime>
+    }
+
+    /**
+     * DTO für Gruppenstatistiken
+     */
+    public static class GroupStatistics {
+        private int totalStudents;
+        private int activeTasks;
+        private int pendingSubmissions;
+        private int completedSubmissions;
+
+        public GroupStatistics() {}
+
+        public GroupStatistics(int totalStudents, int activeTasks, int pendingSubmissions, int completedSubmissions) {
+            this.totalStudents = totalStudents;
+            this.activeTasks = activeTasks;
+            this.pendingSubmissions = pendingSubmissions;
+            this.completedSubmissions = completedSubmissions;
+        }
+
+        public int getTotalStudents() {
+            return totalStudents;
+        }
+
+        public void setTotalStudents(int totalStudents) {
+            this.totalStudents = totalStudents;
+        }
+
+        public int getActiveTasks() {
+            return activeTasks;
+        }
+
+        public void setActiveTasks(int activeTasks) {
+            this.activeTasks = activeTasks;
+        }
+
+        public int getPendingSubmissions() {
+            return pendingSubmissions;
+        }
+
+        public void setPendingSubmissions(int pendingSubmissions) {
+            this.pendingSubmissions = pendingSubmissions;
+        }
+
+        public int getCompletedSubmissions() {
+            return completedSubmissions;
+        }
+
+        public void setCompletedSubmissions(int completedSubmissions) {
+            this.completedSubmissions = completedSubmissions;
+        }
+    }
 
     /**
      * Findet Gruppe anhand ID
