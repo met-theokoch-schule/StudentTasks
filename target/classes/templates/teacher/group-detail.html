@@ -215,24 +215,19 @@
                                         <tr th:each="studentTask : ${studentTasks}">
                                             <!-- Student name column -->
                                             <th class="student-name">
-                                                <div th:text="${studentTask.user.name}">Max Mustermann</div>
-                                                <div class="student-email" th:text="${studentTask.user.email}">max@school.de</div>
+                                                <div th:text="${studentTask.studentName}">Max Mustermann</div>
+                                                <div class="student-email">Student ID: <span th:text="${studentTask.studentId}">123</span></div>
                                             </th>
                                             <!-- Status cells for each task -->
                                             <td th:each="task : ${allTasks}" class="status-cell">
-                                                <div th:with="taskInfo=${studentTask.getTaskInfo(task.id)}">
-                                                    <i th:if="${taskInfo != null}"
-                                                       th:class="'fas status-icon ' + 
-                                                               (${taskInfo.status?.name == 'VOLLSTÄNDIG'} ? 'fa-check-circle status-vollstaendig' : 
-                                                                ${taskInfo.status?.name == 'IN_BEARBEITUNG'} ? 'fa-edit status-in-bearbeitung' : 
-                                                                ${taskInfo.status?.name == 'ABGEGEBEN'} ? 'fa-hourglass-half status-abgegeben' :
-                                                                ${taskInfo.status?.name == 'ÜBERARBEITUNG_NÖTIG'} ? 'fa-redo status-ueberarbeitung-noetig' : 'fa-circle status-nicht-begonnen')"
-                                                       th:title="${taskInfo.status?.name ?: 'NICHT_BEGONNEN'}"
-                                                       th:onclick="'window.location.href=\'/teacher/submissions/' + ${taskInfo.userTaskId} + '\''">
-                                                    </i>
-                                                    <i th:unless="${taskInfo != null}"
-                                                       class="fas fa-circle status-icon status-nicht-begonnen"
-                                                       title="NICHT_BEGONNEN">
+                                                <div th:with="statusName=${studentTask.taskStatuses[task.id] ?: 'NICHT_BEGONNEN'}">
+                                                    <i th:class="'fas status-icon ' + 
+                                                               (${statusName == 'VOLLSTÄNDIG'} ? 'fa-check-circle status-vollstaendig' : 
+                                                                ${statusName == 'IN_BEARBEITUNG'} ? 'fa-edit status-in-bearbeitung' : 
+                                                                ${statusName == 'ABGEGEBEN'} ? 'fa-hourglass-half status-abgegeben' :
+                                                                ${statusName == 'ÜBERARBEITUNG_NÖTIG'} ? 'fa-redo status-ueberarbeitung-noetig' : 'fa-circle status-nicht-begonnen')"
+                                                       th:title="${statusName}"
+                                                       onclick="alert('Feature noch nicht implementiert')">
                                                     </i>
                                                 </div>
                                             </td>
