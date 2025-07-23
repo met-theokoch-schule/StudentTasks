@@ -1,9 +1,15 @@
 package com.example.studenttask.controller;
 
 import com.example.studenttask.model.Group;
+import com.example.studenttask.model.Task;
 import com.example.studenttask.model.User;
+import com.example.studenttask.model.UserTask;
+import com.example.studenttask.model.TaskStatus;
 import com.example.studenttask.service.GroupService;
 import com.example.studenttask.service.UserService;
+import com.example.studenttask.service.TaskService;
+import com.example.studenttask.service.UserTaskService;
+import com.example.studenttask.dto.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -15,6 +21,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 @Controller
@@ -24,13 +33,17 @@ public class TeacherGroupController {
 
     private final GroupService groupService;
     private final UserService userService;
+    private final TaskService taskService;
+    private final UserTaskService userTaskService;
     private final com.example.studenttask.repository.TaskRepository taskRepository;
 
     @Autowired
-    public TeacherGroupController(GroupService groupService, UserService userService,
+    public TeacherGroupController(GroupService groupService, UserService userService, TaskService taskService, UserTaskService userTaskService,
                                   com.example.studenttask.repository.TaskRepository taskRepository) {
         this.groupService = groupService;
         this.userService = userService;
+        this.taskService = taskService;
+        this.userTaskService = userTaskService;
         this.taskRepository = taskRepository;
     }
 
@@ -49,6 +62,79 @@ public class TeacherGroupController {
         model.addAttribute("teacher", teacher);
 
         return "teacher/groups-list";
+    }
+
+    @GetMapping("/groups/{groupId}")
+    public String showGroupDetail(@PathVariable Long groupId, Model model, Principal principal) {
+        Group group = groupService.findById(groupId);
+        if (group == null) {
+            return "redirect:/teacher/groups";
+        }
+
+        // Get all students in this group
+        List<User> studentsInGroup = userService.findUsersByGroup(group);
+
+        // Get all tasks created by the teacher
+        User teacher = userService.findByOpenIdSubject(principal.getName())
+                .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+        List<Task> allTasks = taskService.findByCreatedBy(teacher);
+
+        // Filter tasks assigned to this group (or tasks without group assignment)
+        List<Task> relevantTasks = allTasks.stream()
+            .filter(task -> task.getAssignedGroups().isEmpty() || task.getAssignedGroups().contains(group))
+            .collect(Collectors.toList());
+
+        // Create student task data structure
+        List<StudentTaskData> studentTasks = new ArrayList<>();
+        for (User student : studentsInGroup) {
+            StudentTaskData studentTaskData = new StudentTaskData();
+            studentTaskData.setStudent(student);
+
+            // Create a list of task info for this student
+            List<TaskInfo> taskInfos = new ArrayList<>();
+            for (Task task : relevantTasks) {
+                UserTask userTask = userTaskService.findByUserAndTask(student, task);
+                TaskInfo taskInfo = new TaskInfo();
+                taskInfo.setTaskId(task.getId());
+                taskInfo.setTaskTitle(task.getTitle());
+                if (userTask != null) {
+                    taskInfo.setStatus(userTask.getStatus());
+                    taskInfo.setUserTaskId(userTask.getId());
+                } else {
+                    taskInfo.setStatus(null);
+                    taskInfo.setUserTaskId(null);
+                }
+                taskInfos.add(taskInfo);
+            }
+            studentTaskData.setTaskInfos(taskInfos);
+            studentTasks.add(studentTaskData);
+        }
+
+        // Statistics
+        GroupStatistics statistics = new GroupStatistics();
+        statistics.setTotalStudents(studentsInGroup.size());
+        statistics.setActiveTasks(relevantTasks.size());
+
+        long pendingSubmissions = studentTasks.stream()
+            .flatMap(st -> st.getTaskInfos().stream())
+            .filter(ti -> ti.getStatus() != null &&
+                ("ABGEGEBEN".equals(ti.getStatus().getName()) || "IN_BEARBEITUNG".equals(ti.getStatus().getName())))
+            .count();
+
+        long completedSubmissions = studentTasks.stream()
+            .flatMap(st -> st.getTaskInfos().stream())
+            .filter(ti -> ti.getStatus() != null && "VOLLSTÄNDIG".equals(ti.getStatus().getName()))
+            .count();
+
+        statistics.setPendingSubmissions((int) pendingSubmissions);
+        statistics.setCompletedSubmissions((int) completedSubmissions);
+
+        model.addAttribute("group", group);
+        model.addAttribute("studentTasks", studentTasks);
+        model.addAttribute("allTasks", relevantTasks);
+        model.addAttribute("statistics", statistics);
+
+        return "teacher/group-detail";
     }
 
     /**
