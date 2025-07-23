@@ -121,7 +121,7 @@ public class TeacherController {
 
         task.setTaskView(taskView);
         task.setCreatedBy(teacher);
-        task.setCreationDate(LocalDateTime.now());
+        task.setCreatedAt(LocalDateTime.now());
         task.setIsActive(true);
 
         // Gruppen zuweisen
