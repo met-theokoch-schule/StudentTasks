@@ -367,6 +367,11 @@ public class StudentController {
                 if (ut1 == null && ut2 == null) return 0;
                 if (ut1 == null) return 1;
                 if (ut2 == null) return -1;
+                // Sortierung nach weight (aufsteigend), dann nach Name
+                int weightComparison = Integer.compare(ut1.getWeight(), ut2.getWeight());
+                if (weightComparison != 0) {
+                    return weightComparison;
+                }
                 return ut1.getName().compareTo(ut2.getName());
             })
             .collect(Collectors.toList());

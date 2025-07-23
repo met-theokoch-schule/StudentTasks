@@ -17,16 +17,24 @@ public class UnitTitle {
     private String description;
     
     @Column(nullable = false)
+    private int weight = 0;
+    
+    @Column(nullable = false)
     private boolean isActive = true;
     
     // Constructors
     public UnitTitle() {}
     
-    public UnitTitle(String id, String name, String description) {
+    public UnitTitle(String id, String name, String description, int weight) {
         this.id = id;
         this.name = name;
         this.description = description;
+        this.weight = weight;
         this.isActive = true;
+    }
+    
+    public UnitTitle(String id, String name, String description) {
+        this(id, name, description, 0);
     }
     
     // Getters and Setters
@@ -38,6 +46,9 @@ public class UnitTitle {
     
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+    
+    public int getWeight() { return weight; }
+    public void setWeight(int weight) { this.weight = weight; }
     
     public boolean isActive() { return isActive; }
     public void setActive(boolean active) { isActive = active; }
