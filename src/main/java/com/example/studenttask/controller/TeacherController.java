@@ -54,65 +54,24 @@ public class TeacherController {
         User teacher = userService.findByOpenIdSubject(principal.getName())
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
-        // Hauptstatistik: Noch zu bewertende Aufgaben
-        int pendingReviews = countPendingReviewsForTeacher(teacher);
-        model.addAttribute("pendingReviews", pendingReviews);
-
-        // Letzte 5 erstellte Aufgaben
+        // Tasks des Lehrers laden
+        System.out.println("🔍 === DEBUG: Dashboard Task Loading ===");
+        System.out.println("   - Loading tasks for teacher: " + teacher.getName() + " (ID: " + teacher.getId() + ")");
         List<Task> tasks = taskService.findByCreatedBy(teacher);
-        List<Task> recentTasks = tasks.stream()
-                .limit(5)
-                .collect(Collectors.toList());
-        model.addAttribute("recentTasks", recentTasks);
-
-        model.addAttribute("teacher", teacher);
-        return "teacher/dashboard";
-    }
-
-    /**
-     * Zählt alle noch zu bewertenden Aufgaben für einen Lehrer.
-     * Berücksichtigt nur Abgaben mit Status ABGEGEBEN, bei denen sowohl
-     * Schüler als auch Lehrer die entsprechende Gruppe der Aufgabe teilen.
-     */
-    private int countPendingReviewsForTeacher(User teacher) {
-        // Alle Gruppen des Lehrers
-        Set<Group> teacherGroups = teacher.getGroups();
-
-        // Alle aktiven Aufgaben des Lehrers
-        List<Task> teacherTasks = taskService.findByCreatedBy(teacher);
-
-        int pendingCount = 0;
-
-        for (Task task : teacherTasks) {
-            // Für jede Aufgabe: Prüfe welche Gruppen zugeordnet sind
-            Set<Group> taskGroups = task.getAssignedGroups();
-
-            // Nur Gruppen betrachten, die sowohl der Aufgabe als auch dem Lehrer zugeordnet sind
-            Set<Group> relevantGroups = taskGroups.stream()
-                    .filter(teacherGroups::contains)
-                    .collect(Collectors.toSet());
-
-            if (!relevantGroups.isEmpty()) {
-                // Alle UserTasks für diese Aufgabe mit Status ABGEGEBEN
-                List<UserTask> submittedUserTasks = userTaskService.findByTaskAndStatusName(task, "ABGEGEBEN");
-
-                // Nur Schüler zählen, die in einer der relevanten Gruppen sind
-                for (UserTask userTask : submittedUserTasks) {
-                    User student = userTask.getUser();
-                    Set<Group> studentGroups = student.getGroups();
-
-                    // Prüfen ob Schüler in mindestens einer relevanten Gruppe ist
-                    boolean hasSharedGroup = studentGroups.stream()
-                            .anyMatch(relevantGroups::contains);
-
-                    if (hasSharedGroup) {
-                        pendingCount++;
-                    }
-                }
-            }
+        System.out.println("   - Found " + tasks.size() + " tasks");
+        for (Task task : tasks) {
+            System.out.println("   - Task: " + task.getTitle() + " (ID: " + task.getId() + ", CreatedBy: " + 
+                (task.getCreatedBy() != null ? task.getCreatedBy().getName() + " (ID: " + task.getCreatedBy().getId() + ")" : "NULL") + 
+                ", Active: " + task.getIsActive() + ")");
         }
 
-        return pendingCount;
+        // Task-Statistiken berechnen
+        TaskService.TaskStatistics stats = taskService.getTaskStatistics(teacher);
+
+        model.addAttribute("teacher", teacher);
+        model.addAttribute("recentTasks", tasks);
+
+        return "teacher/dashboard";
     }
 
 
@@ -150,7 +109,7 @@ public class TeacherController {
     }
 
     @PostMapping("/tasks/create")
-    public String createTask(@ModelAttribute Task task,
+    public String createTask(@ModelAttribute Task task, 
                            @RequestParam(value = "selectedGroups", required = false) List<Long> selectedGroupIds,
                            @RequestParam("taskViewId") Long taskViewId,
                            @RequestParam(required = false) String unitTitleId,
@@ -189,7 +148,7 @@ public class TeacherController {
      * Speichert eine Aufgabe als Entwurf
      */
     @PostMapping("/tasks/draft")
-    public ResponseEntity<String> saveDraft(@ModelAttribute Task task,
+    public ResponseEntity<String> saveDraft(@ModelAttribute Task task, 
                                           @RequestParam("selectedGroups") List<Long> selectedGroupIds,
                                           @RequestParam("taskViewId") Long taskViewId,
                                           Principal principal) {
@@ -234,7 +193,7 @@ public class TeacherController {
     private com.example.studenttask.service.TaskContentService taskContentService;
 
     @GetMapping("/teacher/submissions/{userTaskId}/view")
-    public String viewSubmissionContent(@PathVariable Long userTaskId,
+    public String viewSubmissionContent(@PathVariable Long userTaskId, 
                                        @RequestParam(required = false) Integer version,
                                        Authentication authentication, Model model) {
         // Get the user task

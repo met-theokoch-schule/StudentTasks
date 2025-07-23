@@ -12,12 +12,12 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <!-- Für Lehrer: Link zum Teacher Dashboard, für Schüler: kein Link -->
-            <a th:if="${#authorization.expression('hasRole(''ROLE_TEACHER'')')}" 
+            <a th:if="${#authorization.expression('hasRole(''TEACHER'')')}" 
                class="navbar-brand" 
                th:href="@{/teacher/dashboard}">
                 <i class="fas fa-user-graduate"></i> Schüler-Bereich
             </a>
-            <span th:unless="${#authorization.expression('hasRole(''ROLE_TEACHER'')')}" 
+            <span th:unless="${#authorization.expression('hasRole(''TEACHER'')')}" 
                   class="navbar-brand">
                 <i class="fas fa-user-graduate"></i> Schüler-Bereich
             </span>
