@@ -215,8 +215,8 @@
                                         <tr th:each="studentTask : ${studentTasks}">
                                             <!-- Student name column -->
                                             <th class="student-name">
-                                                <div th:text="${studentTask.student.name}">Max Mustermann</div>
-                                                <div class="student-email" th:text="${studentTask.student.email}">max@school.de</div>
+                                                <div th:text="${studentTask.user.name}">Max Mustermann</div>
+                                                <div class="student-email" th:text="${studentTask.user.email}">max@school.de</div>
                                             </th>
                                             <!-- Status cells for each task -->
                                             <td th:each="task : ${allTasks}" class="status-cell">
@@ -283,3 +283,4 @@
     <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
 </body>
 </html>
+```
