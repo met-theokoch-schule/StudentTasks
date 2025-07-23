@@ -1,26 +1,20 @@
 package com.example.studenttask.controller;
 
-import com.example.studenttask.model.Group;
-import com.example.studenttask.model.User;
-import com.example.studenttask.service.GroupService;
-import com.example.studenttask.service.UserService;
+import com.example.studenttask.model.*;
+import com.example.studenttask.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.example.studenttask.service.GroupService.GroupInfo;
-
 @Controller
 @RequestMapping("/teacher/groups")
-@PreAuthorize("hasRole('TEACHER') or hasRole('ROLE_TEACHER')")
+@PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
 public class TeacherGroupController {
 
     @Autowired

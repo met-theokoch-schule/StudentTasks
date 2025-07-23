@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/teacher")
-@PreAuthorize("hasRole('TEACHER') or hasRole('ROLE_TEACHER')")
+@PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
 public class TeacherController {
 
     @Autowired
