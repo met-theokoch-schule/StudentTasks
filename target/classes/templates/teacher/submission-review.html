@@ -211,6 +211,36 @@
             console.log('📋 Page loaded - Initial state:');
             console.log('  - UserTask ID:', userTaskId);
             console.log('  - Available versions:', document.querySelectorAll('#versionSelect option').length - 1);
+            
+            // Finde die neueste Version mit Sanduhr (⏳) oder Auge (👁️) Symbol
+            const versionSelect = document.getElementById('versionSelect');
+            const options = Array.from(versionSelect.options);
+            
+            // Suche nach der höchsten Versionsnummer mit Sanduhr oder Auge
+            let latestSubmittedVersion = null;
+            let latestVersionNumber = -1;
+            
+            options.forEach(option => {
+                if (option.value && option.value !== '') {
+                    const text = option.text;
+                    const versionNumber = parseInt(option.value);
+                    
+                    // Prüfe ob die Version Sanduhr (⏳) oder Auge (👁️) Symbol enthält
+                    if ((text.includes('⏳') || text.includes('👁️')) && versionNumber > latestVersionNumber) {
+                        latestSubmittedVersion = option.value;
+                        latestVersionNumber = versionNumber;
+                    }
+                }
+            });
+            
+            // Wenn eine abgegebene Version gefunden wurde, wähle sie aus
+            if (latestSubmittedVersion) {
+                versionSelect.value = latestSubmittedVersion;
+                changeVersion(); // Lade die entsprechende Version
+                console.log('🎯 Auto-selected latest submitted version:', latestSubmittedVersion);
+            } else {
+                console.log('ℹ️ No submitted version found, keeping default selection');
+            }
         });
     </script>
 
