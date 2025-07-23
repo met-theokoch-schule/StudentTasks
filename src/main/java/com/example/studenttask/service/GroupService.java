@@ -274,7 +274,7 @@ public class GroupService {
 
         for (User student : students) {
             for (Task task : tasks) {
-                UserTask userTask = userTaskService.findByUserAndTask(student, task);
+                Optional<UserTask> userTaskOpt = userTaskRepository.findByUserAndTask(student, task);
 
                 Map<String, Object> statusInfo = new HashMap<>();
                 if (userTask != null) {
