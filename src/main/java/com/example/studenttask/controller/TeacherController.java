@@ -105,7 +105,41 @@ public class TeacherController {
         return "redirect:/teacher/tasks";
     }
 
-     
+    @PostMapping("/tasks/create")
+    public String createTask(@ModelAttribute Task task, 
+                           @RequestParam(value = "selectedGroups", required = false) List<Long> selectedGroupIds,
+                           @RequestParam("taskViewId") Long taskViewId,
+                           @RequestParam(required = false) String unitTitleId,
+                           RedirectAttributes redirectAttributes,
+                           Principal principal) {
+
+        User teacher = userService.findByOpenIdSubject(principal.getName())
+            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+
+        TaskView taskView = taskViewService.findById(taskViewId)
+            .orElseThrow(() -> new RuntimeException("TaskView nicht gefunden"));
+
+        task.setTaskView(taskView);
+        task.setCreatedBy(teacher);
+        task.setCreationDate(LocalDateTime.now());
+        task.setIsActive(true);
+
+        // Gruppen zuweisen
+        if (selectedGroupIds != null && !selectedGroupIds.isEmpty()) {
+            List<Group> selectedGroups = groupService.findAllById(selectedGroupIds);
+            task.setAssignedGroups(new HashSet<>(selectedGroups));
+        } else {
+            task.setAssignedGroups(new HashSet<>());
+        }
+
+
+        taskService.save(task);
+
+        redirectAttributes.addFlashAttribute("success", "Aufgabe wurde erfolgreich erstellt.");
+        return "redirect:/teacher/tasks";
+    }
+
+
 
     /**
      * Speichert eine Aufgabe als Entwurf
