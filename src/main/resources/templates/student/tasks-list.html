@@ -101,9 +101,12 @@
                                     </td>
                                     <td>
                                         <span th:if="${userTask.status}" 
-                                              th:class="'badge ' + (${userTask.status.name == 'VOLLSTÄNDIG'} ? 'bg-success' : (${userTask.status.name == 'IN_BEARBEITUNG'} ? 'bg-warning' : 'bg-secondary'))"
+                                              th:class="'badge ' + (${userTask.status.name == 'VOLLSTÄNDIG'} ? 'bg-success' : 
+                                                                   (${userTask.status.name == 'IN_BEARBEITUNG'} ? 'bg-primary' : 
+                                                                   (${userTask.status.name == 'ABGEGEBEN'} ? 'bg-warning' :
+                                                                   (${userTask.status.name == 'ÜBERARBEITUNG_NÖTIG'} ? 'bg-danger' : 'bg-secondary'))))"
                                               th:text="${userTask.status.name}">Status</span>
-                                        <span th:unless="${userTask.status}" class="badge bg-light text-dark">Nicht begonnen</span>
+                                        <span th:unless="${userTask.status}" class="badge bg-secondary">Nicht begonnen</span>
                                     </td>
                                     <td>
                                         <span th:if="${userTask.task.dueDate}" 
