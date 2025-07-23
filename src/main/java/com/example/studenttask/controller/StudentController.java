@@ -256,27 +256,18 @@ public class StudentController {
         model.addAttribute("userTasks", recentUserTasks);
         model.addAttribute("totalTaskCount", allUserTasks.size());
 
-        // Calculate statistics
-        long pendingReview = allUserTasks.stream()
-            .filter(ut -> ut.getStatus() != null && "ABGESCHLOSSEN".equals(ut.getStatus().getName()))
-            .count();
+        // Dashboard-Statistiken berechnen
+        Map<String, Long> statusCounts = userTasks.stream()
+            .filter(ut -> ut.getStatus() != null)
+            .collect(Collectors.groupingBy(
+                ut -> ut.getStatus().getName(),
+                Collectors.counting()
+            ));
 
-        long needsRework = allUserTasks.stream()
-            .filter(ut -> ut.getStatus() != null && "ÜBERARBEITUNG_ERFORDERLICH".equals(ut.getStatus().getName()))
-            .count();
-
-        long completed = allUserTasks.stream()
-            .filter(ut -> ut.getStatus() != null && "BEWERTET".equals(ut.getStatus().getName()))
-            .count();
-
-        long inProgress = allUserTasks.stream()
-            .filter(ut -> ut.getStatus() != null && "IN_BEARBEITUNG".equals(ut.getStatus().getName()))
-            .count();
-
-        model.addAttribute("pendingReview", pendingReview);
-        model.addAttribute("needsRework", needsRework);
-        model.addAttribute("completed", completed);
-        model.addAttribute("inProgress", inProgress);
+        model.addAttribute("inProgress", statusCounts.getOrDefault("IN_BEARBEITUNG", 0L));
+        model.addAttribute("pendingReview", statusCounts.getOrDefault("ABGEGEBEN", 0L));
+        model.addAttribute("needsRework", statusCounts.getOrDefault("ÜBERARBEITUNG_NÖTIG", 0L));
+        model.addAttribute("completed", statusCounts.getOrDefault("VOLLSTÄNDIG", 0L));
 
         return "student/dashboard";
     }
