@@ -15,17 +15,24 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/teacher/groups")
 @PreAuthorize("@userService.hasTeacherRole(authentication.name)")
 public class TeacherGroupController {
 
-    @Autowired
-    private GroupService groupService;
+    private final GroupService groupService;
+    private final UserService userService;
+    private final com.example.studenttask.repository.TaskRepository taskRepository;
 
     @Autowired
-    private UserService userService;
+    public TeacherGroupController(GroupService groupService, UserService userService,
+                                  com.example.studenttask.repository.TaskRepository taskRepository) {
+        this.groupService = groupService;
+        this.userService = userService;
+        this.taskRepository = taskRepository;
+    }
 
     /**
      * Zeigt alle Gruppen mit aktiven Aufgaben
@@ -169,7 +176,7 @@ public class TeacherGroupController {
         // Constructors
         public TaskInfo() {}
 
-        public TaskInfo(Long userTaskId, com.example.studenttask.model.Task task, 
+        public TaskInfo(Long userTaskId, com.example.studenttask.model.Task task,
                        com.example.studenttask.model.TaskStatus status, boolean hasSubmissions) {
             this.userTaskId = userTaskId;
             this.task = task;
@@ -205,7 +212,7 @@ public class TeacherGroupController {
         public void setTask(com.example.studenttask.model.Task task) { this.task = task; }
 
         public com.example.studenttask.model.TaskStatus getStatus() { return status; }
-        public void setStatus(com.example.studenttask.model.TaskStatus status) { 
+        public void setStatus(com.example.studenttask.model.TaskStatus status) {
             this.status = status;
             this.statusBadgeClass = determineStatusBadgeClass(status);
         }
