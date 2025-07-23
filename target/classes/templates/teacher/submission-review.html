@@ -36,7 +36,7 @@
                         <!-- Task View iFrame -->
                         <div class="task-view-container" style="height: 600px; border: 1px solid #dee2e6;">
                             <iframe id="taskViewFrame" 
-                                    src="data:text/html,<html><body style='margin:0;padding:40px;font-family:Arial,sans-serif;text-align:center;color:#666;'><div style='margin-top:200px;'><h3>🔄 Wird geladen...</h3><p>Die Aufgabenansicht wird vorbereitet.</p></div></body></html>"
+                                    th:src="@{'/teacher/submissions/' + ${userTask.id} + '/view'}" 
                                     style="width: 100%; height: 100%; border: none;">
                             </iframe>
                         </div>
@@ -55,10 +55,11 @@
                             <div class="mb-3">
                                 <label for="statusId" class="form-label">Neuer Status:</label>
                                 <select id="statusId" name="statusId" class="form-select" required>
+                                    <option value="">Status wählen</option>
                                     <option th:each="status : ${statuses}" 
                                             th:value="${status.id}" 
                                             th:text="${status.name}"
-                                            th:selected="${status.name == 'ÜBERARBEITUNG_NÖTIG'}"></option>
+                                            th:selected="${status.id == userTask.status?.id}"></option>
                                 </select>
                             </div>
 
@@ -193,21 +194,6 @@
             console.log('📋 Page loaded - Initial state:');
             console.log('  - UserTask ID:', userTaskId);
             console.log('  - Available versions:', document.querySelectorAll('#versionSelect option').length - 1);
-            
-            // Auto-select the latest submitted version (with ⏳ or 👁 symbol)
-            const versionSelect = document.getElementById('versionSelect');
-            const options = versionSelect.options;
-            
-            // Start from index 1 to skip "Alle Versionen" option
-            for (let i = 1; i < options.length; i++) {
-                const optionText = options[i].text;
-                if (optionText.includes('⏳') || optionText.includes('👁')) {
-                    versionSelect.selectedIndex = i;
-                    console.log('🎯 Auto-selected submitted version:', optionText);
-                    changeVersion(); // Load the selected version
-                    break;
-                }
-            }
         });
     </script>
 
