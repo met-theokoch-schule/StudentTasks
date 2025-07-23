@@ -101,8 +101,12 @@ public class UserTaskService {
         userTaskRepository.delete(userTask);
     }
 
-    public Optional<UserTask> findById(Long id) {
-        return userTaskRepository.findById(id);
+    public UserTask findById(Long id) {
+        return userTaskRepository.findById(id).orElse(null);
+    }
+
+    public Optional<UserTask> findByUserAndTask(User user, Task task) {
+        return userTaskRepository.findByUserAndTask(user, task);
     }
 
     public Optional<UserTask> findByUserIdAndTaskId(Long userId, Long taskId) {

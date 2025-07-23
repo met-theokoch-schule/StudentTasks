@@ -47,6 +47,32 @@ public class GroupService {
     /**
      * Findet alle Gruppen mit aktiven Aufgaben eines Lehrers
      */
+    public static class GroupInfo {
+        private Group group;
+        private int activeTaskCount;
+        private int studentCount;
+        private int pendingSubmissions;
+        private int completedSubmissions;
+        private LocalDateTime lastActivity;
+
+        public GroupInfo(Group group, int activeTaskCount, int studentCount, int pendingSubmissions, int completedSubmissions, LocalDateTime lastActivity) {
+            this.group = group;
+            this.activeTaskCount = activeTaskCount;
+            this.studentCount = studentCount;
+            this.pendingSubmissions = pendingSubmissions;
+            this.completedSubmissions = completedSubmissions;
+            this.lastActivity = lastActivity;
+        }
+
+        // Getters
+        public Group getGroup() { return group; }
+        public int getActiveTaskCount() { return activeTaskCount; }
+        public int getStudentCount() { return studentCount; }
+        public int getPendingSubmissions() { return pendingSubmissions; }
+        public int getCompletedSubmissions() { return completedSubmissions; }
+        public LocalDateTime getLastActivity() { return lastActivity; }
+    }
+
     public List<GroupInfo> getGroupsWithActiveTasksByTeacher(User teacher) {
         List<GroupInfo> result = new ArrayList<>();
 
