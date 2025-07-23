@@ -60,7 +60,17 @@
                             <li>Fortschritt verfolgen</li>
                         </ul>
                         <div class="mt-3">
-                            <button class="btn btn-info" disabled>Meine Aufgaben (in Entwicklung)</button>
+                            <!-- Für Lehrer: Link zum Teacher Dashboard -->
+                            <a th:if="${isTeacher != null and isTeacher}" 
+                               th:href="@{/teacher/dashboard}" 
+                               class="btn btn-info">
+                                <i class="fas fa-chalkboard-teacher"></i> Zum Lehrer-Bereich
+                            </a>
+                            <!-- Für Schüler: Kein aktiver Link -->
+                            <span th:if="${isTeacher == null or !isTeacher}" 
+                                  class="btn btn-info disabled">
+                                <i class="fas fa-user-graduate"></i> Meine Aufgaben (in Entwicklung)
+                            </span>
                         </div>
                     </div>
                 </div>
