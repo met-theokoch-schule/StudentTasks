@@ -1,20 +1,19 @@
 package com.example.studenttask.controller;
 
-import com.example.studenttask.model.Group;
-import com.example.studenttask.model.User;
-import com.example.studenttask.service.GroupService;
-import com.example.studenttask.service.UserService;
+import com.example.studenttask.model.*;
+import com.example.studenttask.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
 import java.security.Principal;
 import java.time.LocalDateTime;
-import java.util.List;
+
 
 @Controller
 @RequestMapping("/teacher/groups")
@@ -106,7 +105,7 @@ public class TeacherGroupController {
             if (status == null || status.getStatus() == null) {
                 return "fas fa-circle text-secondary";
             }
-            
+
             switch (status.getStatus().getName()) {
                 case "NICHT_BEGONNEN": return "fas fa-circle text-secondary";
                 case "IN_BEARBEITUNG": return "fas fa-edit text-primary";
@@ -237,7 +236,7 @@ public class TeacherGroupController {
         // Constructors
         public TaskInfo() {}
 
-        public TaskInfo(Long userTaskId, com.example.studenttask.model.Task task, 
+        public TaskInfo(Long userTaskId, com.example.studenttask.model.Task task,
                        com.example.studenttask.model.TaskStatus status, boolean hasSubmissions) {
             this.userTaskId = userTaskId;
             this.task = task;
@@ -273,7 +272,7 @@ public class TeacherGroupController {
         public void setTask(com.example.studenttask.model.Task task) { this.task = task; }
 
         public com.example.studenttask.model.TaskStatus getStatus() { return status; }
-        public void setStatus(com.example.studenttask.model.TaskStatus status) { 
+        public void setStatus(com.example.studenttask.model.TaskStatus status) {
             this.status = status;
             this.statusBadgeClass = determineStatusBadgeClass(status);
         }
