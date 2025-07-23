@@ -1,44 +1,34 @@
-
 package com.example.studenttask.dto;
 
-import com.example.studenttask.model.User;
-import java.util.List;
+import java.util.Map;
 
 public class StudentTaskData {
-    private User student;
-    private List<TaskInfo> taskInfos;
-
-    // Constructors
-    public StudentTaskData() {}
-
-    public StudentTaskData(User student, List<TaskInfo> taskInfos) {
-        this.student = student;
-        this.taskInfos = taskInfos;
-    }
+    private Long studentId;
+    private String studentName;
+    private Map<Long, String> taskStatuses;
 
     // Getters and Setters
-    public User getStudent() {
-        return student;
+    public Long getStudentId() {
+        return studentId;
     }
 
-    public void setStudent(User student) {
-        this.student = student;
+    public void setStudentId(Long studentId) {
+        this.studentId = studentId;
     }
 
-    public List<TaskInfo> getTaskInfos() {
-        return taskInfos;
+    public String getStudentName() {
+        return studentName;
     }
 
-    public void setTaskInfos(List<TaskInfo> taskInfos) {
-        this.taskInfos = taskInfos;
+    public void setStudentName(String studentName) {
+        this.studentName = studentName;
     }
 
-    // Helper method to get task info by task ID
-    public TaskInfo getTaskInfo(Long taskId) {
-        if (taskInfos == null) return null;
-        return taskInfos.stream()
-            .filter(ti -> ti.getTaskId().equals(taskId))
-            .findFirst()
-            .orElse(null);
+    public Map<Long, String> getTaskStatuses() {
+        return taskStatuses;
+    }
+
+    public void setTaskStatuses(Map<Long, String> taskStatuses) {
+        this.taskStatuses = taskStatuses;
     }
 }
