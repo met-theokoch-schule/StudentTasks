@@ -60,15 +60,17 @@
                                                 <i class="fas fa-clock"></i> 
                                                 Zuletzt bearbeitet: <span th:text="${#temporals.format(userTask.lastModified, 'dd.MM.yyyy HH:mm')}">01.01.2024 10:00</span>
                                             </p>
-                                            <div class="mb-2">
+                                            <div class="mb-3">
                                                 <span th:class="'badge ' + ${userTask.status?.name == 'ABGESCHLOSSEN' ? 'bg-success' : 
                                                                             userTask.status?.name == 'IN_BEARBEITUNG' ? 'bg-warning' : 
                                                                             userTask.status?.name == 'ÜBERFÄLLIG' ? 'bg-danger' : 'bg-secondary'}" 
                                                       th:text="${userTask.status?.name ?: 'NICHT_BEGONNEN'}">Status</span>
                                             </div>
-                                            <a th:href="@{/tasks/{id}(id=${userTask.task.id})}" class="btn btn-primary btn-sm">
-                                                <i class="fas fa-arrow-right"></i> Öffnen
-                                            </a>
+                                            <div class="mt-auto">
+                                                <a th:href="@{/student/tasks/{id}(id=${userTask.task.id})}" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-arrow-right"></i> Öffnen
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
