@@ -54,7 +54,7 @@
                         <!-- Task View iFrame -->
                         <div class="task-view-container" style="height: 600px; border: 1px solid #dee2e6;">
                             <iframe id="taskViewFrame" 
-                                    th:src="@{'/teacher/submissions/' + ${userTask.id} + '/view'}" 
+                                    src="about:blank"
                                     style="width: 100%; height: 100%; border: none;">
                             </iframe>
                         </div>
@@ -163,7 +163,12 @@
                 currentVersionField.value = '';
                 console.log('🔄 Zurück zu aktuellster Version');
             }
-            iframe.src = newSrc;
+            
+            // Nur laden wenn sich die URL geändert hat oder es der erste Load ist
+            if (iframe.src === 'about:blank' || iframe.src !== window.location.origin + newSrc) {
+                iframe.src = newSrc;
+                console.log('📡 iFrame URL gesetzt auf:', newSrc);
+            }
 
             console.log('📊 Current State:');
             console.log('  - Selected Version:', selectedVersion);
