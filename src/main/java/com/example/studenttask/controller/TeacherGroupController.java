@@ -1,4 +1,3 @@
-
 package com.example.studenttask.controller;
 
 import com.example.studenttask.model.Group;
@@ -19,7 +18,7 @@ import java.util.List;
 
 @Controller
 @RequestMapping("/teacher/groups")
-@PreAuthorize("hasRole('TEACHER')")
+@PreAuthorize("@userService.hasTeacherRole(authentication.name)")
 public class TeacherGroupController {
 
     @Autowired
@@ -35,13 +34,13 @@ public class TeacherGroupController {
     public String listGroups(Model model, Principal principal) {
         User teacher = userService.findByOpenIdSubject(principal.getName())
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-        
+
         // Lade Gruppen mit aktiven Aufgaben des Lehrers
         List<GroupInfo> groups = groupService.getGroupsWithActiveTasksByTeacher(teacher);
-        
+
         model.addAttribute("groups", groups);
         model.addAttribute("teacher", teacher);
-        
+
         return "teacher/groups-list";
     }
 
@@ -52,29 +51,29 @@ public class TeacherGroupController {
     public String showGroupDetail(@PathVariable Long groupId, Model model, Principal principal) {
         User teacher = userService.findByOpenIdSubject(principal.getName())
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-        
+
         // Lade Gruppe
         Group group = groupService.findById(groupId);
         if (group == null) {
             throw new RuntimeException("Gruppe nicht gefunden");
         }
-        
+
         // Lade Statistiken für die Gruppe
         GroupStatistics statistics = groupService.getGroupStatistics(group, teacher);
-        
+
         // Lade alle Schüler der Gruppe mit ihren Aufgaben
         List<StudentTaskInfo> studentTasks = groupService.getStudentTasksForGroup(group, teacher);
-        
+
         model.addAttribute("group", group);
         model.addAttribute("statistics", statistics);
         model.addAttribute("studentTasks", studentTasks);
         model.addAttribute("teacher", teacher);
-        
+
         return "teacher/group-detail";
     }
 
     // Helper Classes für Template-Daten
-    
+
     public static class GroupInfo {
         private Group group;
         private int studentCount;
@@ -181,7 +180,7 @@ public class TeacherGroupController {
 
         private String determineStatusBadgeClass(com.example.studenttask.model.TaskStatus status) {
             if (status == null) return "bg-secondary";
-            
+
             switch (status.getName().toUpperCase()) {
                 case "NICHT_BEGONNEN":
                     return "bg-secondary";
