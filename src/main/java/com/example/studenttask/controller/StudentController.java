@@ -257,7 +257,7 @@ public class StudentController {
         model.addAttribute("totalTaskCount", allUserTasks.size());
 
         // Dashboard-Statistiken berechnen
-        Map<String, Long> statusCounts = userTasks.stream()
+        Map<String, Long> statusCounts = allUserTasks.stream()
             .filter(ut -> ut.getStatus() != null)
             .collect(Collectors.groupingBy(
                 ut -> ut.getStatus().getName(),
