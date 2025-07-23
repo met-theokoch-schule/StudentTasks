@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<html lang="de" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,7 +11,8 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" th:href="@{/student/dashboard}">
+            <a class="navbar-brand" 
+               th:href="${#authorization.expression('hasRole(''ROLE_TEACHER'')')} ? @{/teacher/dashboard} : @{/student/dashboard}">
                 <i class="fas fa-user-graduate"></i> Schüler-Bereich
             </a>
             <div class="navbar-nav me-auto">
