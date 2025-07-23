@@ -58,7 +58,7 @@ public class TeacherGroupController {
         GroupService.GroupStatistics statistics = groupService.getGroupStatistics(group, teacher);
 
         // Lade alle Schüler der Gruppe mit ihren Aufgaben
-        List<GroupService.StudentTaskInfo> studentTasks = groupService.getStudentTasksForGroup(group, teacher);
+        List<com.example.studenttask.controller.TeacherGroupController.StudentTaskInfo> studentTasks = groupService.getStudentTasksForGroup(group, teacher);
 
         model.addAttribute("group", group);
         model.addAttribute("statistics", statistics);
