@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="de" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -43,15 +44,12 @@
                                     <div class="card h-100">
                                         <div class="card-body">
                                             <div class="d-flex justify-content-between align-items-start mb-2">
-                                                <h6 class="card-title" >
-                                                     <span th:text="${userTask.task.title}">Aufgabentitel</span>
-                                                     <span th:if="${!userTask.task.isActive}" class="badge bg-secondary ms-2">Inaktiv</span>
-                                                </h6>
+                                                <h6 class="card-title" th:text="${userTask.task.title}">Aufgabentitel</h6>
                                                 <span th:if="${userTask.status}" 
                                                       th:class="'badge ' + (${userTask.status.name == 'VOLLSTÄNDIG'} ? 'bg-success' : (${userTask.status.name == 'IN_BEARBEITUNG'} ? 'bg-warning' : 'bg-secondary'))"
                                                       th:text="${userTask.status.name}">Status</span>
                                             </div>
-
+                                            
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <small class="text-muted" th:if="${userTask.task.dueDate}">
                                                     <i class="fas fa-calendar"></i> 
