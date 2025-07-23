@@ -280,6 +280,7 @@ public class GroupService {
                 if (userTaskOpt.isPresent()) {
                     UserTask userTask = userTaskOpt.get();
                     statusInfo.put("userTaskId", userTask.getId());
+                    statusInfo.put("status", userTask.getStatus());
                     statusInfo.put("statusIcon", determineStatusIcon(userTask.getStatus()));
                     statusInfo.put("statusColor", determineStatusColor(userTask.getStatus()));
                     statusInfo.put("hasSubmissions", taskContentRepository.countByUserTaskAndIsSubmittedTrue(userTask) > 0);
@@ -299,5 +300,31 @@ public class GroupService {
         matrix.put("statusMap", statusMap);
 
         return matrix;
+    }
+
+    private String determineStatusIcon(TaskStatus status) {
+        if (status == null) return "fas fa-circle text-secondary";
+        
+        switch (status.getName()) {
+            case "NICHT_BEGONNEN": return "fas fa-circle text-secondary";
+            case "IN_BEARBEITUNG": return "fas fa-edit text-primary";
+            case "ABGEGEBEN": return "fas fa-hourglass-half text-warning";
+            case "ÜBERARBEITUNG_NÖTIG": return "fas fa-redo text-danger";
+            case "VOLLSTÄNDIG": return "fas fa-check-circle text-success";
+            default: return "fas fa-question text-muted";
+        }
+    }
+
+    private String determineStatusColor(TaskStatus status) {
+        if (status == null) return "text-secondary";
+        
+        switch (status.getName()) {
+            case "NICHT_BEGONNEN": return "text-secondary";
+            case "IN_BEARBEITUNG": return "text-primary";
+            case "ABGEGEBEN": return "text-warning";
+            case "ÜBERARBEITUNG_NÖTIG": return "text-danger";
+            case "VOLLSTÄNDIG": return "text-success";
+            default: return "text-muted";
+        }
     }
 }
