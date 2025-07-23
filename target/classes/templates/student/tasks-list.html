@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="de" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -48,9 +47,16 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" th:href="@{/dashboard}">
+            <!-- Für Lehrer: Link zum Teacher Dashboard, für Schüler: kein Link -->
+            <a th:if="${#authorization.expression('hasRole(''ROLE_TEACHER'')')}" 
+               class="navbar-brand" 
+               th:href="@{/teacher/dashboard}">
                 <i class="fas fa-user-graduate"></i> Schüler-Bereich
             </a>
+            <span th:unless="${#authorization.expression('hasRole(''ROLE_TEACHER'')')}" 
+                  class="navbar-brand">
+                <i class="fas fa-user-graduate"></i> Schüler-Bereich
+            </span>
             <div class="navbar-nav me-auto">
                 <a class="nav-link" th:href="@{/student/dashboard}">Dashboard</a>
                 <a class="nav-link active" th:href="@{/student/tasks}">Aufgaben</a>
@@ -64,7 +70,7 @@
 
     <div class="container mt-4">
         <h5 class="mb-4"><i class="fas fa-tasks"></i> Meine Aufgaben</h5>
-        
+
         <div th:if="${tasksByUnitTitle != null and !tasksByUnitTitle.isEmpty()}">
             <!-- Gruppierte Aufgaben nach UnitTitle -->
             <div th:each="entry : ${tasksByUnitTitle}" class="mb-3">
@@ -81,7 +87,7 @@
                                th:text="${entry.key.description}">Beschreibung</small>
                     </div>
                 </div>
-                
+
                 <div class="unit-content collapse show" th:id="'unit-' + ${entry.key?.id ?: 'no-unit'}">
                     <div class="table-responsive">
                         <table class="table table-hover mb-0">
@@ -139,7 +145,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Fallback für keine Aufgaben -->
         <div th:if="${tasksByUnitTitle == null or tasksByUnitTitle.isEmpty()}" class="text-center py-4">
             <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
@@ -153,21 +159,21 @@
     <script>
         // LocalStorage-Schlüssel für die Unit-Zustände
         const STORAGE_KEY = 'student-tasks-unit-states';
-        
+
         // Initialisierung beim Laden der Seite
         document.addEventListener('DOMContentLoaded', function() {
             // Gespeicherte Zustände aus localStorage laden
             const savedStates = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-            
+
             // Alle Unit-Header finden und Zustände anwenden
             document.querySelectorAll('.unit-header').forEach(header => {
                 const unitId = header.getAttribute('data-unit-id');
                 const content = document.getElementById('unit-' + unitId);
-                
+
                 if (content) {
                     // Standardmäßig aufgeklappt, außer gespeicherter Zustand sagt etwas anderes
                     const isCollapsed = savedStates[unitId] === 'collapsed';
-                    
+
                     if (isCollapsed) {
                         header.classList.add('collapsed');
                         content.classList.remove('show');
@@ -175,15 +181,15 @@
                 }
             });
         });
-        
+
         // Funktion zum Ein-/Ausklappen einer Unit
         function toggleUnit(header) {
             const unitId = header.getAttribute('data-unit-id');
             const content = document.getElementById('unit-' + unitId);
-            
+
             if (content) {
                 const isCurrentlyCollapsed = header.classList.contains('collapsed');
-                
+
                 if (isCurrentlyCollapsed) {
                     // Aufklappen
                     header.classList.remove('collapsed');
@@ -193,7 +199,7 @@
                     header.classList.add('collapsed');
                     content.classList.remove('show');
                 }
-                
+
                 // Zustand in localStorage speichern
                 const savedStates = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
                 savedStates[unitId] = isCurrentlyCollapsed ? 'expanded' : 'collapsed';
