@@ -10,6 +10,23 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" th:href="@{/student/dashboard}">
+                <i class="fas fa-chalkboard-teacher"></i> Lehrer-Bereich
+            </a>
+            <div class="navbar-nav me-auto">
+                <a class="nav-link" th:href="@{/teacher/dashboard}">Dashboard</a>
+                <a class="nav-link" th:href="@{/teacher/tasks}">Aufgaben</a>
+                <a class="nav-link active" th:href="@{/teacher/groups}">Gruppen</a>
+            </div>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3" sec:authentication="principal.attributes['name']"></span>
+                <a class="btn btn-outline-light" th:href="@{/logout}">Abmelden</a>
+            </div>
+        </div>
+    </nav>
+
     <div class="container mt-4">
         <div class="row">
             <div class="col-12">
