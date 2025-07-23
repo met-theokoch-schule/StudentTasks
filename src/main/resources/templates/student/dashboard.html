@@ -20,7 +20,7 @@
                 <a class="nav-link" th:href="@{/student/tasks}">Aufgaben</a>
             </div>
             <div class="navbar-nav ms-auto">
-                <span class="navbar-text me-3" th:text="${student?.name ?: 'Unbekannter Benutzer'}"></span>
+                <span class="navbar-text me-3" sec:authentication="principal.attributes['name']"></span>
                 <a class="btn btn-outline-light" th:href="@{/logout}">Abmelden</a>
             </div>
         </div>
@@ -30,7 +30,7 @@
         <div class="row">
             <div class="col-12">
                 <h1>Schüler Dashboard</h1>
-                <p class="lead" th:text="'Willkommen zurück, ' + ${student?.name ?: 'Schüler'} + '!'"></p>
+                <p class="lead">Willkommen zurück, <span sec:authentication="principal.attributes['name']">Schüler</span>!</p>
             </div>
         </div>
 
