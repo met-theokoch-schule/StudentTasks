@@ -34,10 +34,12 @@ import java.security.Principal;
 import java.util.Set;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashSet;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/teacher")
+@PreAuthorize("hasAnyAuthority('ROLE_TEACHER', 'ROLE_ADMIN') or @userService.hasTeacherRole(authentication.name)")
 public class TeacherTaskController {
 
     @Autowired
@@ -71,6 +73,7 @@ public class TeacherTaskController {
      * Zeigt die Übersicht aller Aufgaben des Lehrers
      */
     @GetMapping("/tasks")
+    @PreAuthorize("hasAnyAuthority('ROLE_TEACHER', 'ROLE_ADMIN') or @userService.hasTeacherRole(authentication.name)")
     public String listTasks(Model model, Principal principal) {
         User teacher = userService.findByOpenIdSubject(principal.getName())
                 .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
