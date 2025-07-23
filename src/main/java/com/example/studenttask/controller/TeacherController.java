@@ -71,6 +71,51 @@ public class TeacherController {
         return "teacher/dashboard";
     }
 
+    @GetMapping("/reviews/pending")
+    public String pendingReviews(Model model, Authentication authentication) {
+        User teacher = userService.findByOpenIdSubject(authentication.getName()).orElse(null);
+        if (teacher == null) {
+            return "redirect:/home";
+        }
+
+        // Alle UserTasks mit Status ABGEGEBEN finden, die zu den Aufgaben des Lehrers gehören
+        List<Task> teacherTasks = taskService.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher);
+        Map<UnitTitle, Map<Task, List<UserTask>>> groupedPendingReviews = new LinkedHashMap<>();
+
+        for (Task task : teacherTasks) {
+            List<UserTask> userTasks = userTaskService.findByTask(task);
+            List<UserTask> pendingUserTasks = new ArrayList<>();
+
+            for (UserTask userTask : userTasks) {
+                // Prüfe ob Lehrer und Schüler eine gemeinsame Gruppe haben
+                User student = userTask.getUser();
+                Set<Group> teacherGroups = new HashSet<>(teacher.getGroups());
+                Set<Group> studentGroups = new HashSet<>(student.getGroups());
+
+                // Prüfe, ob Aufgabe einer Gruppe zugeordnet ist, die sowohl Lehrer als auch Schüler haben
+                Set<Group> assignedGroups = task.getAssignedGroups();
+                for (Group assignedGroup : assignedGroups) {
+                    if (teacherGroups.contains(assignedGroup) && studentGroups.contains(assignedGroup)) {
+                        // Prüfe Status ABGEGEBEN
+                        if (userTask.getStatus() != null && "ABGEGEBEN".equals(userTask.getStatus().getName())) {
+                            pendingUserTasks.add(userTask);
+                            break; // Pro UserTask nur einmal zählen
+                        }
+                    }
+                }
+            }
+
+            if (!pendingUserTasks.isEmpty()) {
+                UnitTitle unitTitle = task.getUnitTitle();
+                groupedPendingReviews.computeIfAbsent(unitTitle, k -> new LinkedHashMap<>())
+                    .put(task, pendingUserTasks);
+            }
+        }
+
+        model.addAttribute("groupedPendingReviews", groupedPendingReviews);
+        return "teacher/pending-reviews";
+    }
+
     private int calculatePendingReviews(User teacher) {
         // Alle Gruppen des Lehrers
         Set<Group> teacherGroups = teacher.getGroups();
