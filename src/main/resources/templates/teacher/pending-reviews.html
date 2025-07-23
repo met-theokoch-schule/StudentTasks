@@ -94,7 +94,7 @@
                             <i class="fas fa-chevron-down collapse-icon me-2"></i>
                             <strong th:text="${unitEntry.key?.name ?: 'Ohne Thema'}">Thema</strong>
                             <span class="badge bg-warning ms-2" 
-                                  th:text="${unitEntry.value.values().stream().mapToInt(list -> list.size()).sum()}">0</span>
+                                  th:text="${#aggregates.sum(unitEntry.value.values().![size()])}">0</span>
                         </div>
                         <small class="text-muted" th:if="${unitEntry.key?.description}" 
                                th:text="${unitEntry.key.description}">Beschreibung</small>
