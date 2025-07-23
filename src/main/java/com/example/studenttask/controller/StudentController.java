@@ -244,8 +244,9 @@ public class StudentController {
     }
 
     private List<UserTask> getOrCreateUserTasksForStudent(User student) {
-        // Alle Gruppen des Benutzers finden
-        List<Group> userGroups = groupService.findGroupsByUserId(student.getId());
+        // Gruppen des Schülers ermitteln
+        Set<Group> userGroupsSet = groupService.findGroupsByUserId(student.getId());
+        List<Group> userGroups = new ArrayList<>(userGroupsSet);
 
         // Set für eindeutige Task IDs
         Set<Long> taskIds = new HashSet<>();
