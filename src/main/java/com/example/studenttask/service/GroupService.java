@@ -202,10 +202,10 @@ public class GroupService {
     }
 
     /**
-     * Lädt alle Schüler einer Gruppe mit ihren Aufgaben
+     * Lädt detaillierte Informationen über alle Schüler in einer Gruppe und ihre Aufgaben
      */
-    public List<StudentTaskInfo> getStudentTasksForGroup(Group group, User teacher) {
-        List<StudentTaskInfo> result = new ArrayList<>();
+    public List<com.example.studenttask.controller.TeacherGroupController.StudentTaskInfo> getStudentTasksForGroup(Group group, User teacher) {
+        List<com.example.studenttask.controller.TeacherGroupController.StudentTaskInfo> result = new ArrayList<>();
 
         // Alle Schüler der Gruppe
         List<User> students = userRepository.findByGroupsContaining(group);
@@ -217,17 +217,16 @@ public class GroupService {
                 .collect(Collectors.toList());
 
         for (User student : students) {
-            List<TaskInfo> taskInfos = new ArrayList<>();
+            List<com.example.studenttask.controller.TeacherGroupController.TaskInfo> taskInfos = new ArrayList<>();
 
             for (Task task : groupTasks) {
-                // UserTask für diesen Schüler und diese Aufgabe
                 Optional<UserTask> userTaskOpt = userTaskRepository.findByUserAndTask(student, task);
                 if (userTaskOpt.isPresent()) {
                     UserTask userTask = userTaskOpt.get();
 
                     boolean hasSubmissions = taskContentRepository.countByUserTaskAndIsSubmittedTrue(userTask) > 0;
 
-                    TaskInfo taskInfo = new TaskInfo(
+                    com.example.studenttask.controller.TeacherGroupController.TaskInfo taskInfo = new com.example.studenttask.controller.TeacherGroupController.TaskInfo(
                             userTask.getId(),
                             task,
                             userTask.getStatus(),
@@ -237,7 +236,7 @@ public class GroupService {
             }
 
             if (!taskInfos.isEmpty()) {
-                result.add(new StudentTaskInfo(student, taskInfos));
+                result.add(new com.example.studenttask.controller.TeacherGroupController.StudentTaskInfo(student, taskInfos));
             }
         }
 
