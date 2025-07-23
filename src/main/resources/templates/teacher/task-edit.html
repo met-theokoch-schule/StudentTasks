@@ -11,9 +11,9 @@
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" th:href="@{/teacher/dashboard}">
+            <a class="navbar-brand" th:href="@{/student/dashboard}">
                 <i class="fas fa-chalkboard-teacher"></i> Lehrer-Bereich
             </a>
             <div class="navbar-nav me-auto">
@@ -22,9 +22,8 @@
                 <a class="nav-link" th:href="@{/teacher/groups}">Gruppen</a>
             </div>
             <div class="navbar-nav ms-auto">
-                <span class="navbar-text me-3" sec:authentication="name"></span>
-                <a class="btn btn-outline-light" th:href="@{/dashboard}">Hauptmenü</a>
-                <a class="btn btn-outline-light ms-2" th:href="@{/logout}">Abmelden</a>
+                <span class="navbar-text me-3" sec:authentication="principal.attributes['name']"></span>
+                <a class="btn btn-outline-light" th:href="@{/logout}">Abmelden</a>
             </div>
         </div>
     </nav>
