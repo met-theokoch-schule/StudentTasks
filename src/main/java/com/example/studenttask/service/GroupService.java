@@ -99,23 +99,23 @@ public class GroupService {
 
         // Gruppiere nach Gruppen
         activeTasks.stream()
-            .flatMap(task -> task.getAssignedGroups().stream())
-            .distinct()
-            .forEach(group -> {
-                // Zähle Statistiken für diese Gruppe
-                int studentCount = userRepository.countByGroupsContaining(group);
-                int activeTaskCount = (int) activeTasks.stream()
-                    .filter(task -> task.getAssignedGroups().contains(group))
-                    .count();
+                .flatMap(task -> task.getAssignedGroups().stream())
+                .distinct()
+                .forEach(group -> {
+                    // Zähle Statistiken für diese Gruppe
+                    int studentCount = userRepository.countByGroupsContaining(group);
+                    int activeTaskCount = (int) activeTasks.stream()
+                            .filter(task -> task.getAssignedGroups().contains(group))
+                            .count();
 
-                // Zähle ausstehende Abgaben
-                int pendingSubmissions = countPendingSubmissionsForGroup(group, teacher);
+                    // Zähle ausstehende Abgaben
+                    int pendingSubmissions = countPendingSubmissionsForGroup(group, teacher);
 
-                // Letzte Aktivität
-                LocalDateTime lastActivity = getLastActivityForGroup(group, teacher);
+                    // Letzte Aktivität
+                    LocalDateTime lastActivity = getLastActivityForGroup(group, teacher);
 
-                result.add(new GroupInfo(group, studentCount, activeTaskCount, pendingSubmissions, lastActivity));
-            });
+                    result.add(new GroupInfo(group, studentCount, activeTaskCount, pendingSubmissions, lastActivity));
+                });
 
         return result;
     }
@@ -127,9 +127,9 @@ public class GroupService {
         int totalStudents = userRepository.countByGroupsContaining(group);
 
         List<Task> activeTasks = taskRepository.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher)
-            .stream()
-            .filter(task -> task.getAssignedGroups().contains(group))
-            .collect(Collectors.toList());
+                .stream()
+                .filter(task -> task.getAssignedGroups().contains(group))
+                .collect(Collectors.toList());
 
         int activeTaskCount = activeTasks.size();
         int pendingSubmissions = countPendingSubmissionsForGroup(group, teacher);
@@ -149,9 +149,9 @@ public class GroupService {
 
         // Alle aktiven Aufgaben des Lehrers für diese Gruppe
         List<Task> groupTasks = taskRepository.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher)
-            .stream()
-            .filter(task -> task.getAssignedGroups().contains(group))
-            .collect(Collectors.toList());
+                .stream()
+                .filter(task -> task.getAssignedGroups().contains(group))
+                .collect(Collectors.toList());
 
         for (User student : students) {
             List<TaskInfo> taskInfos = new ArrayList<>();
@@ -165,11 +165,10 @@ public class GroupService {
                     boolean hasSubmissions = taskContentRepository.countByUserTaskAndIsSubmittedTrue(userTask) > 0;
 
                     TaskInfo taskInfo = new TaskInfo(
-                        userTask.getId(),
-                        task,
-                        userTask.getStatus(),
-                        hasSubmissions
-                    );
+                            userTask.getId(),
+                            task,
+                            userTask.getStatus(),
+                            hasSubmissions);
                     taskInfos.add(taskInfo);
                 }
             }
@@ -188,9 +187,9 @@ public class GroupService {
     private int countPendingSubmissionsForGroup(Group group, User teacher) {
         List<User> students = userRepository.findByGroupsContaining(group);
         List<Task> activeTasks = taskRepository.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher)
-            .stream()
-            .filter(task -> task.getAssignedGroups().contains(group))
-            .collect(Collectors.toList());
+                .stream()
+                .filter(task -> task.getAssignedGroups().contains(group))
+                .collect(Collectors.toList());
 
         int count = 0;
         for (User student : students) {
@@ -214,9 +213,9 @@ public class GroupService {
     private int countCompletedSubmissionsForGroup(Group group, User teacher) {
         List<User> students = userRepository.findByGroupsContaining(group);
         List<Task> activeTasks = taskRepository.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher)
-            .stream()
-            .filter(task -> task.getAssignedGroups().contains(group))
-            .collect(Collectors.toList());
+                .stream()
+                .filter(task -> task.getAssignedGroups().contains(group))
+                .collect(Collectors.toList());
 
         int count = 0;
         for (User student : students) {
@@ -240,17 +239,17 @@ public class GroupService {
     private LocalDateTime getLastActivityForGroup(Group group, User teacher) {
         List<User> students = userRepository.findByGroupsContaining(group);
         List<Task> activeTasks = taskRepository.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher)
-            .stream()
-            .filter(task -> task.getAssignedGroups().contains(group))
-            .collect(Collectors.toList());
+                .stream()
+                .filter(task -> task.getAssignedGroups().contains(group))
+                .collect(Collectors.toList());
 
         LocalDateTime latest = null;
 
         for (User student : students) {
             for (Task task : activeTasks) {
                 Optional<UserTask> userTaskOpt = userTaskRepository.findByUserAndTask(student, task);
-                 if (userTaskOpt.isPresent()) {
-                     UserTask userTask = userTaskOpt.get();
+                if (userTaskOpt.isPresent()) {
+                    UserTask userTask = userTaskOpt.get();
                     if (userTask != null && userTask.getLastModified() != null) {
                         if (latest == null || userTask.getLastModified().isAfter(latest)) {
                             latest = userTask.getLastModified();
@@ -267,8 +266,8 @@ public class GroupService {
      * Prüft ob eine UserTask abgeschlossen ist
      */
     private boolean isTaskCompleted(UserTask userTask) {
-        return userTask.getStatus() != null && 
-               "VOLLSTÄNDIG".equals(userTask.getStatus().getName());
+        return userTask.getStatus() != null &&
+                "VOLLSTÄNDIG".equals(userTask.getStatus().getName());
     }
 
     /**
@@ -297,4 +296,3 @@ public class GroupService {
         return new HashSet<>();
     }
 }
-```Die innere Klasse `GroupInfo` wurde dem `GroupService` hinzugefügt, um den Kompilierungsfehler zu beheben und die Gruppeninformationen mit Statistiken zu verwalten.
