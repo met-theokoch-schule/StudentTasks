@@ -22,6 +22,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.example.studenttask.model.User;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
 
 @Configuration
 @EnableWebSecurity
@@ -73,12 +75,12 @@ public class SecurityConfig {
             System.out.println("🔍 Authentication type: " + authentication.getClass().getName());
             System.out.println("🔍 Principal type: " + authentication.getPrincipal().getClass().getName());
             System.out.println("🔍 Current authorities: " + authentication.getAuthorities());
-            
+
             // Log each authority individually
             authentication.getAuthorities().forEach(authority -> {
                 System.out.println("   👤 Authority: " + authority.getAuthority() + " (Type: " + authority.getClass().getName() + ")");
             });
-            
+
             response.sendRedirect("/dashboard");
         };
     }
@@ -104,12 +106,35 @@ public class SecurityConfig {
                 User user = userService.findOrCreateUserFromOAuth2(oauth2User);
                 System.out.println("✅ User created/updated: " + user.getName());
 
-                // Create authorities from database roles
-                List<GrantedAuthority> authorities = new ArrayList<>();
-                user.getRoles().forEach(role -> {
-                    authorities.add(new SimpleGrantedAuthority(role.getName()));
-                    System.out.println("🔑 Added authority: " + role.getName());
-                });
+                // Authorities aus OAuth2 User Attributes extrahieren
+                Collection<GrantedAuthority> authorities = new ArrayList<>();
+                authorities.add(new SimpleGrantedAuthority("OIDC_USER"));
+
+                // Rollen aus OAuth2-Attributen extrahieren
+                Object rolesObj = oauth2User.getAttribute("roles");
+                if (rolesObj instanceof List) {
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, Object>> rolesList = (List<Map<String, Object>>) rolesObj;
+
+                    for (Map<String, Object> roleMap : rolesList) {
+                        String roleId = (String) roleMap.get("id");
+                        if (roleId != null) {
+                            authorities.add(new SimpleGrantedAuthority(roleId));
+                            System.out.println("   🔑 Added authority from OAuth2: " + roleId);
+                        }
+                    }
+                }
+
+                // Zusätzlich: Authorities aus User-Datenbank laden (falls vorhanden)
+                if (user != null && user.getRoles() != null) {
+                    user.getRoles().forEach(role -> {
+                        SimpleGrantedAuthority dbAuthority = new SimpleGrantedAuthority(role.getName());
+                        if (!authorities.contains(dbAuthority)) {
+                            authorities.add(dbAuthority);
+                            System.out.println("   🔑 Added additional authority from DB: " + role.getName());
+                        }
+                    });
+                }
 
                 // Return DefaultOAuth2User with correct authorities
                 return new DefaultOAuth2User(authorities, oauth2User.getAttributes(), "name");
