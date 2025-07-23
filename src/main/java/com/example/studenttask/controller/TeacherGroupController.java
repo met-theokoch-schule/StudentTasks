@@ -61,18 +61,86 @@ public class TeacherGroupController {
         // Lade Statistiken für die Gruppe
         GroupStatistics statistics = groupService.getGroupStatistics(group, teacher);
 
-        // Lade alle Schüler der Gruppe mit ihren Aufgaben
-        List<StudentTaskInfo> studentTasks = groupService.getStudentTasksForGroup(group, teacher);
+        // Lade Matrix-Daten für die Gruppe
+        Map<String, Object> matrix = groupService.getStudentTaskMatrix(group, teacher);
 
         model.addAttribute("group", group);
         model.addAttribute("statistics", statistics);
-        model.addAttribute("studentTasks", studentTasks);
+        model.addAttribute("matrix", matrix);
         model.addAttribute("teacher", teacher);
 
         return "teacher/group-detail";
     }
 
     // Helper Classes für Template-Daten
+
+    public static class StudentTaskMatrix {
+        private List<User> students;
+        private List<Task> tasks;
+        private Map<String, UserTaskStatus> statusMap;
+
+        public StudentTaskMatrix() {}
+
+        public StudentTaskMatrix(List<User> students, List<Task> tasks, Map<String, UserTaskStatus> statusMap) {
+            this.students = students;
+            this.tasks = tasks;
+            this.statusMap = statusMap;
+        }
+
+        // Getters and Setters
+        public List<User> getStudents() { return students; }
+        public void setStudents(List<User> students) { this.students = students; }
+
+        public List<Task> getTasks() { return tasks; }
+        public void setTasks(List<Task> tasks) { this.tasks = tasks; }
+
+        public Map<String, UserTaskStatus> getStatusMap() { return statusMap; }
+        public void setStatusMap(Map<String, UserTaskStatus> statusMap) { this.statusMap = statusMap; }
+
+        public UserTaskStatus getStatus(Long studentId, Long taskId) {
+            return statusMap.get(studentId + "_" + taskId);
+        }
+
+        public String getStatusIcon(Long studentId, Long taskId) {
+            UserTaskStatus status = getStatus(studentId, taskId);
+            if (status == null || status.getStatus() == null) {
+                return "fas fa-circle text-secondary";
+            }
+            
+            switch (status.getStatus().getName()) {
+                case "NICHT_BEGONNEN": return "fas fa-circle text-secondary";
+                case "IN_BEARBEITUNG": return "fas fa-edit text-primary";
+                case "ABGEGEBEN": return "fas fa-hourglass-half text-warning";
+                case "ÜBERARBEITUNG_NÖTIG": return "fas fa-redo text-danger";
+                case "VOLLSTÄNDIG": return "fas fa-check-circle text-success";
+                default: return "fas fa-question text-muted";
+            }
+        }
+    }
+
+    public static class UserTaskStatus {
+        private TaskStatus status;
+        private boolean hasSubmissions;
+        private Long userTaskId;
+
+        public UserTaskStatus() {}
+
+        public UserTaskStatus(TaskStatus status, boolean hasSubmissions, Long userTaskId) {
+            this.status = status;
+            this.hasSubmissions = hasSubmissions;
+            this.userTaskId = userTaskId;
+        }
+
+        // Getters and Setters
+        public TaskStatus getStatus() { return status; }
+        public void setStatus(TaskStatus status) { this.status = status; }
+
+        public boolean isHasSubmissions() { return hasSubmissions; }
+        public void setHasSubmissions(boolean hasSubmissions) { this.hasSubmissions = hasSubmissions; }
+
+        public Long getUserTaskId() { return userTaskId; }
+        public void setUserTaskId(Long userTaskId) { this.userTaskId = userTaskId; }
+    }
 
     public static class GroupInfo {
         private Group group;

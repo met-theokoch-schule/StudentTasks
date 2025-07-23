@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.HashMap;
 
 @Service
 public class GroupService {
@@ -31,6 +33,12 @@ public class GroupService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private TaskService taskService;
+
+    @Autowired
+    private UserTaskService userTaskService;
 
     /**
      * Findet Gruppe anhand ID
@@ -246,5 +254,48 @@ public class GroupService {
             return user.get().getGroups();
         }
         return new HashSet<>();
+    }
+
+    public Map<String, Object> getStudentTaskMatrix(Group group, User teacher) {
+        // Alle Schüler der Gruppe
+        List<User> students = new ArrayList<>(group.getUsers().stream()
+            .filter(user -> user.getRoles().stream()
+                .anyMatch(role -> "STUDENT".equals(role.getName())))
+            .collect(Collectors.toList()));
+
+        // Alle aktiven Aufgaben des Lehrers für diese Gruppe
+        List<Task> tasks = taskService.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher)
+            .stream()
+            .filter(task -> task.getAssignedGroups().contains(group))
+            .collect(Collectors.toList());
+
+        // Status-Matrix aufbauen
+        Map<String, Map<String, Object>> statusMap = new HashMap<>();
+
+        for (User student : students) {
+            for (Task task : tasks) {
+                UserTask userTask = userTaskService.findByUserAndTask(student, task);
+
+                Map<String, Object> statusInfo = new HashMap<>();
+                if (userTask != null) {
+                    statusInfo.put("status", userTask.getStatus());
+                    statusInfo.put("hasSubmissions", userTask.getSubmissions() != null && !userTask.getSubmissions().isEmpty());
+                    statusInfo.put("userTaskId", userTask.getId());
+                } else {
+                    statusInfo.put("status", null);
+                    statusInfo.put("hasSubmissions", false);
+                    statusInfo.put("userTaskId", null);
+                }
+
+                statusMap.put(student.getId() + "_" + task.getId(), statusInfo);
+            }
+        }
+
+        Map<String, Object> matrix = new HashMap<>();
+        matrix.put("students", students);
+        matrix.put("tasks", tasks);
+        matrix.put("statusMap", statusMap);
+
+        return matrix;
     }
 }
