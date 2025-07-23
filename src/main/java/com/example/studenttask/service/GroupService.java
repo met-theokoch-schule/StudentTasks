@@ -21,6 +21,9 @@ public class GroupService {
     private GroupRepository groupRepository;
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
     private TaskRepository taskRepository;
 
     @Autowired
@@ -29,8 +32,54 @@ public class GroupService {
     @Autowired
     private TaskContentRepository taskContentRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+    /**
+     * DTO für Gruppeninformationen mit Statistiken
+     */
+    public static class GroupInfo {
+        private Group group;
+        private int studentCount;
+        private int pendingSubmissions;
+        private int completedSubmissions;
+
+        public GroupInfo(Group group, int studentCount, int pendingSubmissions, int completedSubmissions) {
+            this.group = group;
+            this.studentCount = studentCount;
+            this.pendingSubmissions = pendingSubmissions;
+            this.completedSubmissions = completedSubmissions;
+        }
+
+        public Group getGroup() {
+            return group;
+        }
+
+        public void setGroup(Group group) {
+            this.group = group;
+        }
+
+        public int getStudentCount() {
+            return studentCount;
+        }
+
+        public void setStudentCount(int studentCount) {
+            this.studentCount = studentCount;
+        }
+
+        public int getPendingSubmissions() {
+            return pendingSubmissions;
+        }
+
+        public void setPendingSubmissions(int pendingSubmissions) {
+            this.pendingSubmissions = pendingSubmissions;
+        }
+
+        public int getCompletedSubmissions() {
+            return completedSubmissions;
+        }
+
+        public void setCompletedSubmissions(int completedSubmissions) {
+            this.completedSubmissions = completedSubmissions;
+        }
+    }
 
     /**
      * Findet Gruppe anhand ID
@@ -248,3 +297,4 @@ public class GroupService {
         return new HashSet<>();
     }
 }
+```Die innere Klasse `GroupInfo` wurde dem `GroupService` hinzugefügt, um den Kompilierungsfehler zu beheben und die Gruppeninformationen mit Statistiken zu verwalten.
