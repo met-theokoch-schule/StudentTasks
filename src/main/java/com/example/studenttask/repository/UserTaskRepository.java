@@ -20,8 +20,6 @@ public interface UserTaskRepository extends JpaRepository<UserTask, Long> {
      */
     List<UserTask> findByUser(User user);
 
-    List<UserTask> findByUserOrderByLastModifiedDesc(User user);
-
     /**
      * Find all UserTasks for a specific task
      */
