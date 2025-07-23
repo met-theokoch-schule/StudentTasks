@@ -17,6 +17,7 @@ import com.example.studenttask.service.UserService;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.HashSet;
 
 @Controller
 @RequestMapping("/student")
@@ -48,6 +49,9 @@ public class StudentController {
 
     @Autowired
     private TaskReviewService taskReviewService;
+
+    @Autowired
+    private GroupService groupService;
 
     /**
      * Direkte Aufgaben-Ansicht (ohne task-edit.html Wrapper)
@@ -126,11 +130,11 @@ public class StudentController {
         }
 
         Task task = taskOpt.get();
-        
+
         // Check if student has access to this task
         boolean hasAccess = task.getAssignedGroups().stream()
             .anyMatch(group -> student.getGroups().contains(group));
-        
+
         if (!hasAccess) {
             return "redirect:/student/dashboard";
         }
@@ -153,7 +157,7 @@ public class StudentController {
 
         // Get all content versions
         List<TaskContent> contentVersions = taskContentService.getAllContentVersions(userTask);
-        
+
         // Get all reviews for this task
         List<TaskReview> reviews = taskReviewService.findByUserTaskOrderByReviewedAtDesc(userTask);
 
@@ -181,11 +185,11 @@ public class StudentController {
         }
 
         Task task = taskOpt.get();
-        
+
         // Check if student has access to this task
         boolean hasAccess = task.getAssignedGroups().stream()
             .anyMatch(group -> student.getGroups().contains(group));
-        
+
         if (!hasAccess) {
             return "redirect:/student/dashboard";
         }
@@ -240,54 +244,61 @@ public class StudentController {
     }
 
     private List<UserTask> getOrCreateUserTasksForStudent(User student) {
-        System.out.println("🔍 === DEBUG: Getting UserTasks for student: " + student.getName() + " (ID: " + student.getId() + ") ===");
+        // Alle Gruppen des Benutzers finden
+        List<Group> userGroups = groupService.findGroupsByUserId(student.getId());
 
-        List<UserTask> allUserTasks = new ArrayList<>();
+        // Set für eindeutige Task IDs
+        Set<Long> taskIds = new HashSet<>();
+        List<Task> relevantTasks = new ArrayList<>();
 
-        // Hole alle Gruppen des Benutzers
-        Set<Group> userGroups = student.getGroups();
-        System.out.println("   - Student is member of " + userGroups.size() + " groups");
-
+        // Alle aktiven Aufgaben finden, die einer Gruppe des Benutzers zugewiesen sind
         for (Group group : userGroups) {
-            System.out.println("   - Checking group: " + group.getName() + " (ID: " + group.getId() + ")");
-
-            // Finde alle aktiven Aufgaben, die dieser Gruppe zugewiesen sind
-            List<Task> groupTasks = taskRepository.findByIsActiveTrueAndAssignedGroupsContainsOrderByCreatedAtDesc(group)
-                .stream()
-                .filter(task -> task.getAssignedGroups().contains(group))
-                .collect(Collectors.toList());
-
-            System.out.println("     - Found " + groupTasks.size() + " tasks assigned to this group");
-
+            List<Task> groupTasks = taskRepository.findByAssignedGroupsContainingAndIsActiveTrue(group);
             for (Task task : groupTasks) {
-                System.out.println("     - Processing task: " + task.getTitle() + " (ID: " + task.getId() + ")");
-
-                // Prüfe, ob bereits ein UserTask existiert
-                Optional<UserTask> existingUserTask = userTaskRepository.findByUserAndTask(student, task);
-
-                if (existingUserTask.isPresent()) {
-                    System.out.println("       - UserTask already exists (ID: " + existingUserTask.get().getId() + ")");
-                    allUserTasks.add(existingUserTask.get());
-                } else {
-                    System.out.println("       - Creating new UserTask");
-                    // Erstelle einen neuen UserTask
-                    UserTask newUserTask = new UserTask();
-                    newUserTask.setUser(student);
-                    newUserTask.setTask(task);
-                    newUserTask.setStartedAt(LocalDateTime.now());
-                    // Status auf "NOT_STARTED" setzen (ID: 1)
-                    TaskStatus notStartedStatus = taskStatusRepository.findById(1L).orElse(null);
-                    newUserTask.setStatus(notStartedStatus);
-
-                    userTaskRepository.save(newUserTask);
-                    System.out.println("       - UserTask created with ID: " + newUserTask.getId());
-                    allUserTasks.add(newUserTask);
+                if (!taskIds.contains(task.getId())) {
+                    taskIds.add(task.getId());
+                    relevantTasks.add(task);
                 }
             }
         }
 
-        System.out.println("🔍 === DEBUG: Total UserTasks found/created: " + allUserTasks.size() + " ===");
-        return allUserTasks;
+        // Zusätzlich: Alle bereits begonnenen Aufgaben des Schülers finden (auch wenn er nicht mehr zur Gruppe gehört)
+        List<UserTask> existingUserTasks = userTaskRepository.findByUser(student);
+        for (UserTask existingUserTask : existingUserTasks) {
+            Task task = existingUserTask.getTask();
+            // Nur aktive Aufgaben berücksichtigen und nur solche, die noch nicht in der Liste sind
+            if (task.getIsActive() && !taskIds.contains(task.getId())) {
+                taskIds.add(task.getId());
+                relevantTasks.add(task);
+            }
+        }
+
+        List<UserTask> result = new ArrayList<>();
+
+        // Für jede relevante Aufgabe UserTask erstellen oder finden
+        for (Task task : relevantTasks) {
+            Optional<UserTask> existingUserTask = userTaskRepository.findByUserAndTask(student, task);
+
+            if (existingUserTask.isPresent()) {
+                result.add(existingUserTask.get());
+            } else {
+                // Neue UserTask erstellen
+                UserTask userTask = new UserTask();
+                userTask.setUser(student);
+                userTask.setTask(task);
+                //userTask.setStatus(getDefaultStatus()); // getDefaultStatus() nicht vorhanden, daher entfernt
+                //userTask.setCreatedAt(LocalDateTime.now()); // createdAt nicht vorhanden, daher entfernt
+                //userTask.setLastModified(LocalDateTime.now()); // lastModified nicht vorhanden, daher entfernt
+                TaskStatus notStartedStatus = taskStatusRepository.findById(1L).orElse(null);
+                userTask.setStatus(notStartedStatus);
+                userTask.setStartedAt(LocalDateTime.now());
+
+                UserTask savedUserTask = userTaskRepository.save(userTask);
+                result.add(savedUserTask);
+            }
+        }
+
+        return result;
     }
 
 
