@@ -51,29 +51,62 @@ public class TeacherController {
     @GetMapping("/dashboard")
     @PreAuthorize("hasAnyAuthority('ROLE_TEACHER', 'ROLE_ADMIN') or @userService.hasTeacherRole(authentication.name)")
     public String dashboard(Model model, Principal principal) {
-        User teacher = userService.findByOpenIdSubject(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-
-        // Tasks des Lehrers laden
-        System.out.println("🔍 === DEBUG: Dashboard Task Loading ===");
-        System.out.println("   - Loading tasks for teacher: " + teacher.getName() + " (ID: " + teacher.getId() + ")");
-        List<Task> tasks = taskService.findByCreatedBy(teacher);
-        System.out.println("   - Found " + tasks.size() + " tasks");
-        for (Task task : tasks) {
-            System.out.println("   - Task: " + task.getTitle() + " (ID: " + task.getId() + ", CreatedBy: " + 
-                (task.getCreatedBy() != null ? task.getCreatedBy().getName() + " (ID: " + task.getCreatedBy().getId() + ")" : "NULL") + 
-                ", Active: " + task.getIsActive() + ")");
+        User teacher = userService.findByOpenIdSubject(principal.getName()).orElse(null);
+        if (teacher == null) {
+            return "redirect:/login";
         }
 
-        // Task-Statistiken berechnen
-        TaskService.TaskStatistics stats = taskService.getTaskStatistics(teacher);
+        // Berechne zu bewertende Aufgaben (Status: ABGEGEBEN)
+        // Nur Aufgaben zählen, bei denen Lehrer und Schüler die gleiche Gruppe haben
+        int pendingReviews = calculatePendingReviews(teacher);
+        model.addAttribute("pendingReviews", pendingReviews);
 
-        model.addAttribute("teacher", teacher);
-        model.addAttribute("recentTasks", tasks);
+        // Neueste Aufgaben für Dashboard
+        List<Task> recentTasks = taskService.findByCreatedByOrderByCreatedAtDesc(teacher)
+            .stream()
+            .limit(5)
+            .collect(Collectors.toList());
+        model.addAttribute("recentTasks", recentTasks);
 
         return "teacher/dashboard";
     }
 
+    private int calculatePendingReviews(User teacher) {
+        // Alle Gruppen des Lehrers
+        Set<Group> teacherGroups = teacher.getGroups();
+
+        // Alle aktiven Aufgaben des Lehrers
+        List<Task> activeTasks = taskService.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher);
+
+        int count = 0;
+
+        for (Task task : activeTasks) {
+            // Alle UserTasks für diese Aufgabe mit Status ABGEGEBEN
+            List<UserTask> submittedUserTasks = userTaskService.findByTask(task)
+                .stream()
+                .filter(userTask -> {
+                    TaskStatus status = userTask.getStatus();
+                    return status != null && "ABGEGEBEN".equals(status.getName());
+                })
+                .collect(Collectors.toList());
+
+            for (UserTask userTask : submittedUserTasks) {
+                User student = userTask.getUser();
+                Set<Group> studentGroups = student.getGroups();
+
+                // Prüfe, ob Aufgabe einer Gruppe zugeordnet ist, die sowohl Lehrer als auch Schüler haben
+                Set<Group> assignedGroups = task.getAssignedGroups();
+                for (Group assignedGroup : assignedGroups) {
+                    if (teacherGroups.contains(assignedGroup) && studentGroups.contains(assignedGroup)) {
+                        count++;
+                        break; // Pro UserTask nur einmal zählen
+                    }
+                }
+            }
+        }
+
+        return count;
+    }
 
 
     /**
