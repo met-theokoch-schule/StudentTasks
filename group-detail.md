@@ -184,3 +184,254 @@ public String getStatusIcon(TaskStatus status) {
     }
 }
 ```
+
+## JavaScript-Bibliotheken Bewertung
+
+### Option 1: Vanilla CSS + Minimal JavaScript (EMPFOHLEN)
+**Vorteile:**
+- Keine zusätzlichen Abhängigkeiten
+- Volle Kontrolle über Design und Performance
+- Bootstrap-kompatibel
+- Sticky Headers mit CSS sind gut unterstützt
+- Rotierter Text mit CSS `writing-mode` ist Standard
+
+**Nachteile:**
+- Mehr manuelle Implementierung
+- Potenzielle Browser-Kompatibilitätsprobleme bei älteren Versionen
+
+**Umsetzung:**
+```css
+.task-matrix-container {
+    position: relative;
+    max-height: 70vh;
+    overflow: auto;
+    border: 1px solid #dee2e6;
+}
+
+.matrix-header th {
+    position: sticky;
+    top: 0;
+    background: #f8f9fa;
+    z-index: 10;
+}
+
+.matrix-student-col {
+    position: sticky;
+    left: 0;
+    background: #f8f9fa;
+    z-index: 5;
+}
+
+.rotated-text {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    max-height: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+```
+
+### Option 2: DataTables.js
+**Vorteile:**
+- Integrierte Sticky Headers
+- Responsive Design
+- Scrolling-Features
+- Such- und Filterfunktionen
+
+**Nachteile:**
+- jQuery-Abhängigkeit (Bootstrap 5 ist jQuery-frei)
+- Komplexe Konfiguration für Matrix-Layout
+- Schwierig, rotierten Text zu implementieren
+- Überdimensioniert für unseren Anwendungsfall
+
+### Option 3: AG-Grid (Community)
+**Vorteile:**
+- Sehr mächtige Grid-Funktionen
+- Sticky Columns/Headers out-of-the-box
+- Virtuelle Scrolling bei großen Datenmengen
+
+**Nachteile:**
+- Sehr große Bibliothek (~500KB+)
+- Komplexe API
+- Overkill für einfache Matrix-Anzeige
+- Lizenzprobleme bei erweiterten Features
+
+### Option 4: CSS Grid + Intersection Observer
+**Vorteile:**
+- Modern CSS Grid Layout
+- Performant
+- Flexibler als Tables
+
+**Nachteile:**
+- Komplexere Implementierung
+- Sticky Headers schwieriger umsetzbar
+- Mehr JavaScript für Scrolling-Logik
+
+## Entscheidung: Vanilla CSS + Bootstrap
+
+**Begründung:**
+1. **Einfachheit:** Unsere Anforderungen (sticky headers/columns, rotierter Text) sind mit modernem CSS gut umsetzbar
+2. **Performance:** Keine zusätzlichen großen Bibliotheken
+3. **Wartbarkeit:** Code bleibt überschaubar und Bootstrap-konsistent
+4. **Browser-Support:** CSS Sticky und Writing-Mode sind in allen modernen Browsern verfügbar
+
+## Erweiterte Implementierung
+
+### CSS mit verbesserter Browser-Kompatibilität
+```css
+.task-matrix-container {
+    position: relative;
+    max-height: 70vh;
+    overflow: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+}
+
+.task-matrix {
+    min-width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.875rem;
+}
+
+.matrix-header th {
+    position: sticky;
+    top: 0;
+    background: #f8f9fa;
+    z-index: 10;
+    border-bottom: 2px solid #dee2e6;
+    padding: 12px 8px;
+    vertical-align: bottom;
+}
+
+.matrix-student-col {
+    position: sticky;
+    left: 0;
+    background: #f8f9fa;
+    z-index: 5;
+    border-right: 2px solid #dee2e6;
+    min-width: 150px;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.matrix-corner {
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 15;
+    background: #e9ecef;
+    border-right: 2px solid #dee2e6;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.rotated-text {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    max-height: 120px;
+    min-height: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 8px 4px;
+    line-height: 1.2;
+}
+
+.status-cell {
+    text-align: center;
+    padding: 8px;
+    border: 1px solid #dee2e6;
+    width: 45px;
+    height: 45px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.status-cell:hover {
+    background-color: #f8f9fa;
+}
+
+.status-icon {
+    font-size: 1.2em;
+    transition: transform 0.2s;
+}
+
+.status-cell:hover .status-icon {
+    transform: scale(1.1);
+}
+
+/* Responsive Anpassungen */
+@media (max-width: 768px) {
+    .task-matrix-container {
+        max-height: 50vh;
+    }
+    
+    .matrix-student-col {
+        min-width: 120px;
+        font-size: 0.8rem;
+    }
+    
+    .status-cell {
+        width: 35px;
+        height: 35px;
+        padding: 4px;
+    }
+    
+    .rotated-text {
+        max-height: 100px;
+        font-size: 0.75rem;
+    }
+}
+
+/* Fallback für ältere Browser */
+@supports not (position: sticky) {
+    .matrix-header th,
+    .matrix-student-col,
+    .matrix-corner {
+        position: fixed;
+        /* Fallback-Positionierung */
+    }
+}
+```
+
+### Minimales JavaScript für UX-Verbesserungen
+```javascript
+// Tooltips für Aufgabennamen und Status
+document.addEventListener('DOMContentLoaded', function() {
+    // Tooltip für gekürzte Aufgabennamen
+    document.querySelectorAll('.rotated-text').forEach(el => {
+        if (el.scrollHeight > el.clientHeight) {
+            el.title = el.textContent.trim();
+        }
+    });
+    
+    // Click-Handler für Status-Zellen
+    document.querySelectorAll('.status-cell').forEach(cell => {
+        cell.addEventListener('click', function() {
+            const userTaskId = this.dataset.userTaskId;
+            if (userTaskId) {
+                window.location.href = `/teacher/submissions/${userTaskId}`;
+            }
+        });
+    });
+    
+    // Smooth Scrolling für große Tabellen
+    const container = document.querySelector('.task-matrix-container');
+    if (container) {
+        container.style.scrollBehavior = 'smooth';
+    }
+});
+```
+
+## Fazit
+Die Vanilla CSS + Bootstrap Lösung ist für unseren Anwendungsfall optimal:
+- Keine zusätzlichen Abhängigkeiten
+- Vollständige Kontrolle über Design und Performance  
+- Modern CSS Features sind ausreichend für unsere Anforderungen
+- Einfache Wartbarkeit und Erweiterbarkeit
+- Bootstrap-konsistentes Design
