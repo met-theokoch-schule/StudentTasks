@@ -1,17 +1,22 @@
 package com.example.studenttask.service;
 
-import com.example.studenttask.controller.TeacherGroupController.*;
-import com.example.studenttask.model.*;
-import com.example.studenttask.repository.*;
+import com.example.studenttask.model.Group;
+import com.example.studenttask.model.Task;
+import com.example.studenttask.model.User;
+import com.example.studenttask.model.UserTask;
+import com.example.studenttask.dto.GroupStatistics;
+import com.example.studenttask.dto.StudentTaskInfo;
+import com.example.studenttask.dto.TaskInfo;
+import com.example.studenttask.repository.GroupRepository;
+import com.example.studenttask.repository.TaskRepository;
+import com.example.studenttask.repository.UserRepository;
+import com.example.studenttask.repository.UserTaskRepository;
+import com.example.studenttask.repository.TaskContentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
