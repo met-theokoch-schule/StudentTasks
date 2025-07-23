@@ -53,7 +53,7 @@ public class TeacherGroupController {
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
         // Lade Gruppen mit aktiven Aufgaben des Lehrers
-        List<com.example.studenttask.service.GroupService.GroupInfo> groups = groupService.getGroupsWithActiveTasksByTeacher(teacher);
+        List<GroupService.GroupInfo> groups = groupService.getGroupsWithActiveTasksByTeacher(teacher);
 
         model.addAttribute("groups", groups);
         model.addAttribute("teacher", teacher);
