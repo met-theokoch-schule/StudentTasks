@@ -65,7 +65,7 @@ public class GroupService {
                 // Letzte Aktivität
                 LocalDateTime lastActivity = getLastActivityForGroup(group, teacher);
 
-                result.add(new GroupInfo(group, studentCount, activeTaskCount, pendingSubmissions, lastActivity));
+                result.add(new GroupInfo(group, studentCount, activeTaskCount, pendingSubmissions, (int) pendingSubmissions));
             });
 
         return result;
