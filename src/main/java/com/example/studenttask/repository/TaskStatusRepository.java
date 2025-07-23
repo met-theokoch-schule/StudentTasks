@@ -32,4 +32,6 @@ public interface TaskStatusRepository extends JpaRepository<TaskStatus, Long> {
     List<TaskStatus> findByNameInAndIsActiveTrue(Set<String> names);
 
     List<TaskStatus> findByIsActiveTrueOrderByOrderAsc();
+
+    Optional<TaskStatus> findByName(String name);
 }
