@@ -277,10 +277,12 @@ public class GroupService {
                 Optional<UserTask> userTaskOpt = userTaskRepository.findByUserAndTask(student, task);
 
                 Map<String, Object> statusInfo = new HashMap<>();
-                if (userTask != null) {
-                    statusInfo.put("status", userTask.getStatus());
-                    statusInfo.put("hasSubmissions", userTask.getSubmissions() != null && !userTask.getSubmissions().isEmpty());
+                if (userTaskOpt.isPresent()) {
+                    UserTask userTask = userTaskOpt.get();
                     statusInfo.put("userTaskId", userTask.getId());
+                    statusInfo.put("statusIcon", determineStatusIcon(userTask.getStatus()));
+                    statusInfo.put("statusColor", determineStatusColor(userTask.getStatus()));
+                    statusInfo.put("hasSubmissions", taskContentRepository.countByUserTaskAndIsSubmittedTrue(userTask) > 0);
                 } else {
                     statusInfo.put("status", null);
                     statusInfo.put("hasSubmissions", false);
