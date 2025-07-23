@@ -15,6 +15,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import com.example.studenttask.repository.GroupRepository;
 
 import java.security.Principal;
 import java.util.*;
@@ -30,15 +31,17 @@ public class TeacherGroupController {
     private final TaskService taskService;
     private final UserTaskService userTaskService;
     private final com.example.studenttask.repository.TaskRepository taskRepository;
+    private final GroupRepository groupRepository;
 
     @Autowired
     public TeacherGroupController(GroupService groupService, UserService userService, TaskService taskService, UserTaskService userTaskService,
-                                  com.example.studenttask.repository.TaskRepository taskRepository) {
+                                  com.example.studenttask.repository.TaskRepository taskRepository, GroupRepository groupRepository) {
         this.groupService = groupService;
         this.userService = userService;
         this.taskService = taskService;
         this.userTaskService = userTaskService;
         this.taskRepository = taskRepository;
+        this.groupRepository = groupRepository;
     }
 
     /**
@@ -66,7 +69,7 @@ public class TeacherGroupController {
         User teacher = userService.findByOpenIdSubject(principal.getName())
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
-        Group group = groupService.findById(groupId)
+        Group group = groupRepository.findById(groupId)
             .orElseThrow(() -> new RuntimeException("Gruppe nicht gefunden"));
 
         // Statistiken für die Gruppe berechnen

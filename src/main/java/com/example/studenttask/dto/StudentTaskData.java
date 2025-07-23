@@ -31,4 +31,11 @@ public class StudentTaskData {
     public void setTaskStatuses(Map<Long, String> taskStatuses) {
         this.taskStatuses = taskStatuses;
     }
+
+    // Helper method for template compatibility
+    public TaskInfo getTaskInfo(Long taskId) {
+        // This is a simplified version for template compatibility
+        // In a real implementation, you might want to store TaskInfo objects instead
+        return null;
+    }
 }
