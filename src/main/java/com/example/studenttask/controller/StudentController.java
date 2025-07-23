@@ -53,6 +53,9 @@ public class StudentController {
     @Autowired
     private GroupService groupService;
 
+    @Autowired
+    private TaskContentRepository taskContentRepository;
+
     /**
      * Direkte Aufgaben-Ansicht (ohne task-edit.html Wrapper)
      */
@@ -263,14 +266,51 @@ public class StudentController {
             }
         }
 
-        // Zusätzlich: Alle bereits begonnenen Aufgaben des Schülers finden (auch wenn er nicht mehr zur Gruppe gehört)
+        // Zusätzlich: Alle bereits BEGONNENEN Aufgaben des Schülers finden, 
+        // auch wenn er nicht mehr in der zugewiesenen Gruppe ist
         List<UserTask> existingUserTasks = userTaskRepository.findByUser(student);
         for (UserTask existingUserTask : existingUserTasks) {
             Task task = existingUserTask.getTask();
             // Nur aktive Aufgaben berücksichtigen und nur solche, die noch nicht in der Liste sind
             if (task.getIsActive() && !taskIds.contains(task.getId())) {
-                taskIds.add(task.getId());
-                relevantTasks.add(task);
+                // Prüfen, ob der Schüler noch in mindestens einer der zugewiesenen Gruppen ist
+                boolean isStillInAssignedGroup = false;
+                for (Group assignedGroup : task.getAssignedGroups()) {
+                    if (userGroups.contains(assignedGroup)) {
+                        isStillInAssignedGroup = true;
+                        break;
+                    }
+                }
+
+                // Wenn nicht mehr in der Gruppe: Nur hinzufügen, wenn die Aufgabe wirklich begonnen wurde
+                // (erkennbar an: Status ist nicht "NICHT_BEGONNEN" oder hat Submissions)
+                if (isStillInAssignedGroup) {
+                    // Noch in der Gruppe -> Aufgabe immer anzeigen
+                    taskIds.add(task.getId());
+                    relevantTasks.add(task);
+                } else {
+                    // Nicht mehr in der Gruppe -> nur anzeigen wenn tatsächlich begonnen
+                    boolean hasReallyStarted = false;
+
+                    // Prüfen ob Status nicht "NICHT_BEGONNEN" ist
+                    if (existingUserTask.getStatus() != null && 
+                        !"NICHT_BEGONNEN".equals(existingUserTask.getStatus().getName())) {
+                        hasReallyStarted = true;
+                    }
+
+                    // Oder prüfen ob es Submissions gibt
+                    if (!hasReallyStarted) {
+                        long submissionCount = taskContentRepository.countByUserTaskAndIsSubmittedTrue(existingUserTask);
+                        if (submissionCount > 0) {
+                            hasReallyStarted = true;
+                        }
+                    }
+
+                    if (hasReallyStarted) {
+                        taskIds.add(task.getId());
+                        relevantTasks.add(task);
+                    }
+                }
             }
         }
 
