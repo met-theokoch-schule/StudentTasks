@@ -14,6 +14,13 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.example.studenttask.model.User;
+import java.util.List;
+import java.util.ArrayList;
 
 @Configuration
 @EnableWebSecurity
@@ -35,10 +42,7 @@ public class SecurityConfig {
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(oauth2UserService())
                 )
-                .successHandler((request, response, authentication) -> {
-                    System.out.println("🔄 OAuth2 Success Handler called");
-                    response.sendRedirect("/dashboard");
-                })
+                .successHandler(customAuthenticationSuccessHandler())
                 .failureUrl("/login?error=true")
             )
             .logout(logout -> logout
@@ -59,6 +63,36 @@ public class SecurityConfig {
             );
 
         return http.build();
+    }
+
+    @Bean
+    public AuthenticationSuccessHandler customAuthenticationSuccessHandler() {
+        return (request, response, authentication) -> {
+            System.out.println("🔄 Custom OAuth2 Success Handler called");
+            
+            // Hole den aktuellen User aus der Datenbank
+            OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
+            User user = userService.findOrCreateUserFromOAuth2(oauth2User);
+            
+            // Erstelle neue Authentication mit den richtigen Authorities
+            List<GrantedAuthority> authorities = new ArrayList<>();
+            user.getRoles().forEach(role -> {
+                authorities.add(new SimpleGrantedAuthority(role.getName()));
+                System.out.println("🔑 Added authority: " + role.getName());
+            });
+            
+            // Erstelle neue Authentication
+            OAuth2AuthenticationToken newAuth = new OAuth2AuthenticationToken(
+                oauth2User, 
+                authorities, 
+                ((OAuth2AuthenticationToken) authentication).getAuthorizedClientRegistrationId()
+            );
+            
+            // Setze die neue Authentication
+            SecurityContextHolder.getContext().setAuthentication(newAuth);
+            
+            response.sendRedirect("/dashboard");
+        };
     }
 
     @Bean
