@@ -86,9 +86,14 @@ public class TaskReviewService {
 
         // Set status if provided
         if (statusId != null) {
-            taskStatusService.findById(statusId).ifPresent(review::setStatus);
-            // Update the user task status as well
-            taskStatusService.findById(statusId).ifPresent(userTask::setStatus);
+            Optional<TaskStatus> statusOpt = taskStatusService.findById(statusId);
+            if (statusOpt.isPresent()) {
+                TaskStatus status = statusOpt.get();
+                review.setStatus(status);
+                // Update the user task status as well
+                userTask.setStatus(status);
+                userTask.setLastModified(LocalDateTime.now());
+            }
         }
 
         // Set submission reference if provided (for version-specific reviews)

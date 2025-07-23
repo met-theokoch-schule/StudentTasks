@@ -166,6 +166,9 @@ public class TeacherTaskController {
         }
 
         taskReviewService.createReview(userTask, reviewer, statusId, comment, submissionId, currentVersion);
+        
+        // Explicitly save the UserTask to ensure status change is persisted
+        userTaskService.save(userTask);
 
         return "redirect:/teacher/submissions/" + userTaskId;
     }
