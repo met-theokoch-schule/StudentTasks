@@ -1,4 +1,3 @@
-
 package com.example.studenttask.config;
 
 import com.example.studenttask.service.UserService;
@@ -58,22 +57,22 @@ public class SecurityConfig {
                 .maximumSessions(1)
                 .expiredUrl("/login?expired=true")
             );
-        
+
         return http.build();
     }
 
     @Bean
     public OAuth2UserService<OAuth2UserRequest, OAuth2User> oauth2UserService() {
         DefaultOAuth2UserService delegate = new DefaultOAuth2UserService();
-        
+
         return new OAuth2UserService<OAuth2UserRequest, OAuth2User>() {
             @Override
             public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
                 OAuth2User oauth2User = delegate.loadUser(userRequest);
-                
+
                 // User in Datenbank speichern/aktualisieren
                 userService.findOrCreateUserFromOAuth2(oauth2User);
-                
+
                 return oauth2User;
             }
         };
