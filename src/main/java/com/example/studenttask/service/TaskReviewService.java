@@ -75,70 +75,10 @@ public class TaskReviewService {
         return taskReviewRepository.findByUserTaskOrderByReviewedAtDesc(userTask);
     }
 
+    /**
+     * Create a new review for a user task with version and debug output
+     */
     @Transactional
-    public TaskReview createReview(UserTask userTask, User reviewer, Long statusId, String comment,
-                                 Long submissionId, Integer version) {
-        TaskReview review = new TaskReview();
-        review.setUserTask(userTask);
-        review.setReviewer(reviewer);
-        review.setComment(comment);
-        review.setReviewedAt(LocalDateTime.now());
-        review.setVersion(version);
-
-        // Set status if provided
-        if (statusId != null) {
-            Optional<TaskStatus> statusOpt = taskStatusService.findById(statusId);
-            if (statusOpt.isPresent()) {
-                TaskStatus status = statusOpt.get();
-                review.setStatus(status);
-                // Update the user task status as well
-                userTask.setStatus(status);
-                userTask.setLastModified(LocalDateTime.now());
-
-                // Save UserTask explicitly to ensure status change is persisted
-                userTaskRepository.save(userTask);
-            }
-        }
-
-        // Set submission reference if provided (for version-specific reviews)
-
-        return save(review);
-    }
-
-    /**
-     * Create a new review for a user task
-     */
-    public TaskReview createReview(UserTask userTask, User reviewer, Long statusId, String comment, Long submissionId) {
-        TaskReview review = new TaskReview();
-        review.setUserTask(userTask);
-        review.setReviewer(reviewer);
-        review.setComment(comment);
-        review.setReviewedAt(LocalDateTime.now());
-
-        // Set status if provided
-        if (statusId != null) {
-            Optional<TaskStatus> statusOpt = taskStatusService.findById(statusId);
-            if (statusOpt.isPresent()) {
-                TaskStatus status = statusOpt.get();
-                review.setStatus(status);
-                // Update the user task status as well
-                userTask.setStatus(status);
-                userTask.setLastModified(LocalDateTime.now());
-            }
-        }
-
-        // Set submission reference if provided (for version-specific reviews)
-        if (submissionId != null && submissionId > 0) {
-            //submissionService.findById(submissionId).ifPresent(review::setSubmission);  //Removed setSubmission
-        }
-        // If no submissionId provided, it remains null (general review)
-
-        return save(review);
-    }
-
-    /**
-     * Create a new review for a user task with version
-     */
     public TaskReview createReview(UserTask userTask, User reviewer, Long statusId, String comment, Long submissionId, Integer currentVersion) {
         System.out.println("=== DEBUG createReview ===");
         System.out.println("UserTask ID: " + userTask.getId());
@@ -167,6 +107,14 @@ public class TaskReviewService {
             System.out.println("Keine Version angegeben - Review ohne spezifische Version");
         }
 
+        // Update the user task status as well
+        userTask.setStatus(status);
+        userTask.setLastModified(LocalDateTime.now());
+
+        // Save UserTask explicitly to ensure status change is persisted
+        userTaskRepository.save(userTask);
+        System.out.println("UserTask Status aktualisiert auf: " + status.getName());
+
         TaskReview savedReview = save(review);
         System.out.println("Review gespeichert mit ID: " + savedReview.getId() + ", Version: " + savedReview.getVersion());
         System.out.println("=== END DEBUG createReview ===");
@@ -185,18 +133,6 @@ public class TaskReviewService {
         taskStatusService.findByName("ÜBERARBEITUNG_NÖTIG").ifPresent(teacherStatuses::add);
 
         return teacherStatuses;
-    }
-
-    public void createReview(UserTask userTask, TaskStatus status, String comment, Integer version, User reviewer) {
-        TaskReview review = new TaskReview();
-        review.setUserTask(userTask);
-        review.setStatus(status);
-        review.setComment(comment);
-        review.setVersion(version);
-        review.setReviewer(reviewer);
-        review.setReviewedAt(LocalDateTime.now());
-
-        taskReviewRepository.save(review);
     }
 
     public boolean hasReviewsForVersion(UserTask userTask, Integer version) {
