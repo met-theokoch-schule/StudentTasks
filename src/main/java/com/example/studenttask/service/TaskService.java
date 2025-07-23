@@ -265,4 +265,18 @@ public class TaskService {
     public void deleteById(Long id) {
         taskRepository.deleteById(id);
     }
+
+    /**
+     * Find tasks by creator ordered by creation date descending
+     */
+    public List<Task> findByCreatedByOrderByCreatedAtDesc(User creator) {
+        return taskRepository.findByCreatedByOrderByCreatedAtDesc(creator);
+    }
+
+    /**
+     * Find active tasks by creator ordered by creation date descending
+     */
+    public List<Task> findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(User creator) {
+        return taskRepository.findByCreatedByAndIsActiveOrderByCreatedAtDesc(creator, true);
+    }
 }
