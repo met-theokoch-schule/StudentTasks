@@ -287,7 +287,7 @@ public class TeacherTaskController {
     @PostMapping("/tasks/{id}/edit")
     public String updateTask(@PathVariable Long id,
             @ModelAttribute Task task,
-            @RequestParam List<Long> selectedGroups,
+            @RequestParam(required = false) List<Long> selectedGroups,
             @RequestParam String taskViewId,
             @RequestParam String unitTitleId,
             RedirectAttributes redirectAttributes,
@@ -302,8 +302,12 @@ public class TeacherTaskController {
         existingTask.setIsActive(task.getIsActive());
 
         // Update assigned groups
-        List<Group> groups = groupService.findAllById(selectedGroups);
-        existingTask.setAssignedGroups(new HashSet<>(groups));
+        if (selectedGroups != null && !selectedGroups.isEmpty()) {
+            List<Group> groups = groupService.findAllById(selectedGroups);
+            existingTask.setAssignedGroups(new HashSet<>(groups));
+        } else {
+            existingTask.setAssignedGroups(new HashSet<>());
+        }
 
         // Update task view
         try {
