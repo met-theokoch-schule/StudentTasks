@@ -33,6 +33,73 @@
             </div>
         </div>
 
+        <!-- Statistik Cards -->
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h5 class="card-title">In Bearbeitung</h5>
+                                <h2 th:text="${inProgress ?: 0}">0</h2>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-edit fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h5 class="card-title">Bewertung ausstehend</h5>
+                                <h2 th:text="${pendingReview ?: 0}">0</h2>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-hourglass-half fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card bg-danger text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h5 class="card-title">Zu überarbeiten</h5>
+                                <h2 th:text="${needsRework ?: 0}">0</h2>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-redo fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h5 class="card-title">Vollständig</h5>
+                                <h2 th:text="${completed ?: 0}">0</h2>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-check-circle fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Aufgaben-Übersicht -->
         <div class="row">
             <div class="col-12">

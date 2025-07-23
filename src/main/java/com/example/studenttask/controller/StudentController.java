@@ -255,6 +255,29 @@ public class StudentController {
         model.addAttribute("student", currentUser);
         model.addAttribute("userTasks", recentUserTasks);
         model.addAttribute("totalTaskCount", allUserTasks.size());
+
+        // Calculate statistics
+        long pendingReview = allUserTasks.stream()
+            .filter(ut -> ut.getStatus() != null && "ABGESCHLOSSEN".equals(ut.getStatus().getName()))
+            .count();
+
+        long needsRework = allUserTasks.stream()
+            .filter(ut -> ut.getStatus() != null && "ÜBERARBEITUNG_ERFORDERLICH".equals(ut.getStatus().getName()))
+            .count();
+
+        long completed = allUserTasks.stream()
+            .filter(ut -> ut.getStatus() != null && "BEWERTET".equals(ut.getStatus().getName()))
+            .count();
+
+        long inProgress = allUserTasks.stream()
+            .filter(ut -> ut.getStatus() != null && "IN_BEARBEITUNG".equals(ut.getStatus().getName()))
+            .count();
+
+        model.addAttribute("pendingReview", pendingReview);
+        model.addAttribute("needsRework", needsRework);
+        model.addAttribute("completed", completed);
+        model.addAttribute("inProgress", inProgress);
+
         return "student/dashboard";
     }
 
