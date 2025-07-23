@@ -1,6 +1,5 @@
 package com.example.studenttask.service;
 
-import com.example.studenttask.controller.TeacherGroupController.*;
 import com.example.studenttask.model.*;
 import com.example.studenttask.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,14 +37,18 @@ public class GroupService {
     public static class GroupInfo {
         private Group group;
         private int studentCount;
+        private int activeTaskCount;
         private int pendingSubmissions;
-        private int completedSubmissions;
+        private LocalDateTime lastActivity;
 
-        public GroupInfo(Group group, int studentCount, int pendingSubmissions, int completedSubmissions) {
+        public GroupInfo() {}
+
+        public GroupInfo(Group group, int studentCount, int activeTaskCount, int pendingSubmissions, LocalDateTime lastActivity) {
             this.group = group;
             this.studentCount = studentCount;
+            this.activeTaskCount = activeTaskCount;
             this.pendingSubmissions = pendingSubmissions;
-            this.completedSubmissions = completedSubmissions;
+            this.lastActivity = lastActivity;
         }
 
         public Group getGroup() {
@@ -64,6 +67,14 @@ public class GroupService {
             this.studentCount = studentCount;
         }
 
+        public int getActiveTaskCount() {
+            return activeTaskCount;
+        }
+
+        public void setActiveTaskCount(int activeTaskCount) {
+            this.activeTaskCount = activeTaskCount;
+        }
+
         public int getPendingSubmissions() {
             return pendingSubmissions;
         }
@@ -72,14 +83,14 @@ public class GroupService {
             this.pendingSubmissions = pendingSubmissions;
         }
 
-        public int getCompletedSubmissions() {
-            return completedSubmissions;
+        public LocalDateTime getLastActivity() {
+            return lastActivity;
         }
 
-        public void setCompletedSubmissions(int completedSubmissions) {
-            this.completedSubmissions = completedSubmissions;
+        public void setLastActivity(LocalDateTime lastActivity) {
+            this.lastActivity = lastActivity;
         }
-    }
+    }</LocalDateTime>
 
     /**
      * Findet Gruppe anhand ID
