@@ -163,7 +163,7 @@
                 currentVersionField.value = '';
                 console.log('🔄 Zurück zu aktuellster Version');
             }
-            
+
             // Nur laden wenn sich die URL geändert hat oder es der erste Load ist
             if (iframe.src === 'about:blank' || iframe.src !== window.location.origin + newSrc) {
                 iframe.src = newSrc;
@@ -216,20 +216,20 @@
             console.log('📋 Page loaded - Initial state:');
             console.log('  - UserTask ID:', userTaskId);
             console.log('  - Available versions:', document.querySelectorAll('#versionSelect option').length - 1);
-            
+
             // Finde die neueste Version mit Sanduhr (⏳) oder Auge (👁️) Symbol
             const versionSelect = document.getElementById('versionSelect');
             const options = Array.from(versionSelect.options);
-            
+
             // Suche nach der höchsten Versionsnummer mit Sanduhr oder Auge
             let latestSubmittedVersion = null;
             let latestVersionNumber = -1;
-            
+
             options.forEach(option => {
                 if (option.value && option.value !== '') {
                     const text = option.text;
                     const versionNumber = parseInt(option.value);
-                    
+
                     // Prüfe ob die Version Sanduhr (⏳) oder Auge (👁️) Symbol enthält
                     if ((text.includes('⏳') || text.includes('👁️')) && versionNumber > latestVersionNumber) {
                         latestSubmittedVersion = option.value;
@@ -237,7 +237,7 @@
                     }
                 }
             });
-            
+
             // Wenn eine abgegebene Version gefunden wurde, wähle sie aus
             if (latestSubmittedVersion) {
                 versionSelect.value = latestSubmittedVersion;
