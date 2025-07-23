@@ -48,16 +48,9 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <!-- Für Lehrer: Link zum Teacher Dashboard, für Schüler: kein Link -->
-            <a th:if="${#authorization.expression('hasRole(''TEACHER'')')}" 
-               class="navbar-brand" 
-               th:href="@{/teacher/dashboard}">
+            <a class="navbar-brand" th:href="@{/dashboard}">
                 <i class="fas fa-user-graduate"></i> Schüler-Bereich
             </a>
-            <span th:unless="${#authorization.expression('hasRole(''TEACHER'')')}" 
-                  class="navbar-brand">
-                <i class="fas fa-user-graduate"></i> Schüler-Bereich
-            </span>
             <div class="navbar-nav me-auto">
                 <a class="nav-link" th:href="@{/student/dashboard}">Dashboard</a>
                 <a class="nav-link active" th:href="@{/student/tasks}">Aufgaben</a>
