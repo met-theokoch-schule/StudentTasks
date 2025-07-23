@@ -54,17 +54,16 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" th:href="@{/teacher/dashboard}">
+            <a class="navbar-brand" th:href="@{/student/dashboard}">
                 <i class="fas fa-chalkboard-teacher"></i> Lehrer-Bereich
             </a>
             <div class="navbar-nav me-auto">
                 <a class="nav-link" th:href="@{/teacher/dashboard}">Dashboard</a>
                 <a class="nav-link" th:href="@{/teacher/tasks}">Aufgaben</a>
                 <a class="nav-link" th:href="@{/teacher/groups}">Gruppen</a>
-                <a class="nav-link active" th:href="@{/teacher/reviews/pending}">Bewertungen</a>
             </div>
             <div class="navbar-nav ms-auto">
-                <span class="navbar-text me-3" sec:authentication="principal.attributes['name']">Lehrer</span>
+                <span class="navbar-text me-3" sec:authentication="principal.attributes['name']"></span>
                 <a class="btn btn-outline-light" th:href="@{/logout}">Abmelden</a>
             </div>
         </div>
