@@ -6,6 +6,7 @@ import com.example.studenttask.model.UserTask;
 import com.example.studenttask.model.TaskStatus;
 import com.example.studenttask.model.Submission;
 import com.example.studenttask.repository.TaskReviewRepository;
+import com.example.studenttask.repository.UserTaskRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,16 +19,16 @@ import java.util.ArrayList;
 public class TaskReviewService {
 
     private final TaskReviewRepository taskReviewRepository;
-    private final UserTaskService userTaskService;
+    private final UserTaskRepository userTaskRepository;
     private final TaskStatusService taskStatusService;
     private final SubmissionService submissionService;
 
     public TaskReviewService(TaskReviewRepository taskReviewRepository,
-                           UserTaskService userTaskService,
+                           UserTaskRepository userTaskRepository,
                            TaskStatusService taskStatusService,
                            SubmissionService submissionService) {
         this.taskReviewRepository = taskReviewRepository;
-        this.userTaskService = userTaskService;
+        this.userTaskRepository = userTaskRepository;
         this.taskStatusService = taskStatusService;
         this.submissionService = submissionService;
     }
@@ -72,6 +73,36 @@ public class TaskReviewService {
      */
     public List<TaskReview> findByUserTask(UserTask userTask) {
         return taskReviewRepository.findByUserTaskOrderByReviewedAtDesc(userTask);
+    }
+
+    @Transactional
+    public TaskReview createReview(UserTask userTask, User reviewer, Long statusId, String comment,
+                                 Long submissionId, Integer version) {
+        TaskReview review = new TaskReview();
+        review.setUserTask(userTask);
+        review.setReviewer(reviewer);
+        review.setComment(comment);
+        review.setReviewedAt(LocalDateTime.now());
+        review.setVersion(version);
+
+        // Set status if provided
+        if (statusId != null) {
+            Optional<TaskStatus> statusOpt = taskStatusService.findById(statusId);
+            if (statusOpt.isPresent()) {
+                TaskStatus status = statusOpt.get();
+                review.setStatus(status);
+                // Update the user task status as well
+                userTask.setStatus(status);
+                userTask.setLastModified(LocalDateTime.now());
+
+                // Save UserTask explicitly to ensure status change is persisted
+                userTaskRepository.save(userTask);
+            }
+        }
+
+        // Set submission reference if provided (for version-specific reviews)
+
+        return save(review);
     }
 
     /**
