@@ -126,11 +126,11 @@ public class StudentController {
         }
 
         Task task = taskOpt.get();
-        
+
         // Check if student has access to this task
         boolean hasAccess = task.getAssignedGroups().stream()
             .anyMatch(group -> student.getGroups().contains(group));
-        
+
         if (!hasAccess) {
             return "redirect:/student/dashboard";
         }
@@ -153,7 +153,7 @@ public class StudentController {
 
         // Get all content versions
         List<TaskContent> contentVersions = taskContentService.getAllContentVersions(userTask);
-        
+
         // Get all reviews for this task
         List<TaskReview> reviews = taskReviewService.findByUserTaskOrderByReviewedAtDesc(userTask);
 
@@ -181,11 +181,11 @@ public class StudentController {
         }
 
         Task task = taskOpt.get();
-        
+
         // Check if student has access to this task
         boolean hasAccess = task.getAssignedGroups().stream()
             .anyMatch(group -> student.getGroups().contains(group));
-        
+
         if (!hasAccess) {
             return "redirect:/student/dashboard";
         }
@@ -225,16 +225,15 @@ public class StudentController {
         User student = userService.findByOpenIdSubject(principal.getName())
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
-        // Alle aktiven Aufgaben finden, die einer Gruppe des Benutzers zugewiesen sind
+        // Alle Aufgaben finden, die einer Gruppe des Benutzers zugewiesen sind
         List<UserTask> userTasks = getOrCreateUserTasksForStudent(student);
 
-        // Nur aktive Aufgaben anzeigen
-        List<UserTask> activeTasks = userTasks.stream()
-            .filter(ut -> ut.getTask().getIsActive())
-            .collect(Collectors.toList());
+        // Aktive Aufgaben und bereits begonnene inaktive Aufgaben anzeigen
+        // (UserTasks werden nur erstellt wenn der Schüler Zugang zur Aufgabe hat/hatte)
+        List<UserTask> visibleTasks = userTasks;
 
         model.addAttribute("student", student);
-        model.addAttribute("userTasks", activeTasks);
+        model.addAttribute("userTasks", visibleTasks);
 
         return "student/dashboard";
     }
@@ -299,16 +298,15 @@ public class StudentController {
         User student = userService.findByOpenIdSubject(principal.getName())
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
-        // Alle aktiven Aufgaben finden, die einer Gruppe des Benutzers zugewiesen sind
+        // Alle Aufgaben finden, die einer Gruppe des Benutzers zugewiesen sind
         List<UserTask> userTasks = getOrCreateUserTasksForStudent(student);
 
-        // Nur aktive Aufgaben anzeigen
-        List<UserTask> activeTasks = userTasks.stream()
-            .filter(ut -> ut.getTask().getIsActive())
-            .collect(Collectors.toList());
+        // Aktive Aufgaben und bereits begonnene inaktive Aufgaben anzeigen
+        // (UserTasks werden nur erstellt wenn der Schüler Zugang zur Aufgabe hat/hatte)
+        List<UserTask> visibleTasks = userTasks;
 
         model.addAttribute("student", student);
-        model.addAttribute("userTasks", activeTasks);
+        model.addAttribute("userTasks", visibleTasks);
 
         return "student/tasks-list";
     }
