@@ -257,11 +257,8 @@ public class GroupService {
     }
 
     public Map<String, Object> getStudentTaskMatrix(Group group, User teacher) {
-        // Alle Schüler der Gruppe - verwende Repository-Methode für bessere Performance
-        List<User> students = userRepository.findByGroupsContaining(group).stream()
-            .filter(user -> user.getRoles().stream()
-                .anyMatch(role -> "STUDENT".equals(role.getName())))
-            .collect(Collectors.toList());
+        // Alle Benutzer der Gruppe (ohne Rolle-Filterung)
+        List<User> students = userRepository.findByGroupsContaining(group);
 
         // Alle aktiven Aufgaben des Lehrers für diese Gruppe
         List<Task> tasks = taskRepository.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher)
@@ -301,21 +298,14 @@ public class GroupService {
         
         // Debug-Ausgabe
         System.out.println("Matrix Debug - Group: " + group.getName() + " (ID: " + group.getId() + ")");
-        System.out.println("All users in group: " + userRepository.findByGroupsContaining(group).size());
-        System.out.println("Students after role filter: " + students.size());
+        System.out.println("All users in group: " + students.size());
         System.out.println("Tasks found: " + tasks.size());
         System.out.println("StatusMap size: " + statusMap.size());
         
-        // Debug: Liste der Schüler
+        // Debug: Liste der Benutzer
         for (User student : students) {
-            System.out.println("Student: " + student.getName() + " (ID: " + student.getId() + ")");
-        }
-        
-        // Debug: Liste der Rollen aller Benutzer in der Gruppe
-        List<User> allGroupUsers = userRepository.findByGroupsContaining(group);
-        for (User user : allGroupUsers) {
-            System.out.println("User: " + user.getName() + ", Roles: " + 
-                user.getRoles().stream().map(role -> role.getName()).collect(Collectors.joining(", ")));
+            System.out.println("User: " + student.getName() + " (ID: " + student.getId() + "), Roles: " + 
+                student.getRoles().stream().map(role -> role.getName()).collect(Collectors.joining(", ")));
         }
 
         return matrix;
