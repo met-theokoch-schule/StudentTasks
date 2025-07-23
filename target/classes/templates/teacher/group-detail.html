@@ -8,6 +8,116 @@
     <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
     <link th:href="@{/css/custom.css}" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .task-matrix-container {
+            position: relative;
+            overflow: auto;
+            max-height: 600px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+        }
+        
+        .task-matrix {
+            border-collapse: separate;
+            border-spacing: 0;
+            min-width: 100%;
+        }
+        
+        .task-matrix th,
+        .task-matrix td {
+            border: 1px solid #dee2e6;
+            text-align: center;
+            vertical-align: middle;
+            padding: 8px;
+            position: relative;
+        }
+        
+        /* Sticky header and first column */
+        .task-matrix thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa;
+            z-index: 10;
+        }
+        
+        .task-matrix tbody th {
+            position: sticky;
+            left: 0;
+            background-color: #f8f9fa;
+            z-index: 5;
+            min-width: 150px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        /* Corner cell (top-left) */
+        .task-matrix thead th:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 15;
+            background-color: #e9ecef;
+        }
+        
+        /* Task name cells with rotation */
+        .task-header {
+            height: 120px;
+            width: 50px;
+            min-width: 50px;
+            max-width: 50px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .task-name-rotated {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-90deg);
+            transform-origin: center bottom;
+            white-space: nowrap;
+            font-weight: 600;
+            font-size: 0.85em;
+            max-width: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* Status cells */
+        .status-cell {
+            width: 50px;
+            height: 50px;
+            min-width: 50px;
+            max-width: 50px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .status-cell:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .status-icon {
+            font-size: 1.5em;
+        }
+        
+        /* Status colors */
+        .status-nicht-begonnen { color: #6c757d; }
+        .status-in-bearbeitung { color: #0d6efd; }
+        .status-abgegeben { color: #ffc107; }
+        .status-ueberarbeitung-noetig { color: #dc3545; }
+        .status-vollstaendig { color: #198754; }
+        
+        /* Student name styling */
+        .student-name {
+            font-size: 0.9em;
+        }
+        
+        .student-email {
+            font-size: 0.75em;
+            color: #6c757d;
+            font-weight: normal;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -81,60 +191,78 @@
                     </div>
                 </div>
 
-                <!-- Schüler und ihre Aufgaben -->
+                <!-- Schüler-Aufgaben-Matrix -->
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="mb-0"><i class="fas fa-graduation-cap"></i> Schüler und zugeordnete Aufgaben</h5>
+                        <h5 class="mb-0"><i class="fas fa-table"></i> Schüler und zugeordnete Aufgaben - Übersicht</h5>
+                        <small class="text-muted">Horizontales und vertikales Scrollen möglich. Erste Zeile und Spalte bleiben sichtbar.</small>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-0">
                         <div th:if="${studentTasks != null and !studentTasks.isEmpty()}">
-                            <div th:each="studentTask : ${studentTasks}" class="border rounded p-3 mb-3">
-                                <!-- Schüler-Header -->
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h6 class="mb-0">
-                                        <i class="fas fa-user"></i> 
-                                        <span th:text="${studentTask.student.name}">Max Mustermann</span>
-                                        <small class="text-muted" th:text="'(' + ${studentTask.student.email} + ')'">
-                                            (max@school.de)
-                                        </small>
-                                    </h6>
-                                    <span class="badge bg-secondary" 
-                                          th:text="${studentTask.tasks.size()} + ' Aufgaben'">3 Aufgaben</span>
-                                </div>
-
-                                <!-- Aufgaben-Liste für diesen Schüler -->
+                            <div class="task-matrix-container">
+                                <table class="task-matrix">
+                                    <thead>
+                                        <tr>
+                                            <th>Schüler</th>
+                                            <!-- Task headers with rotated names -->
+                                            <th th:each="task : ${allTasks}" class="task-header">
+                                                <div class="task-name-rotated" th:text="${task.title}" th:title="${task.title}">
+                                                    Aufgabentitel
+                                                </div>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="studentTask : ${studentTasks}">
+                                            <!-- Student name column -->
+                                            <th class="student-name">
+                                                <div th:text="${studentTask.student.name}">Max Mustermann</div>
+                                                <div class="student-email" th:text="${studentTask.student.email}">max@school.de</div>
+                                            </th>
+                                            <!-- Status cells for each task -->
+                                            <td th:each="task : ${allTasks}" class="status-cell">
+                                                <div th:with="taskInfo=${studentTask.getTaskInfo(task.id)}">
+                                                    <i th:if="${taskInfo != null}"
+                                                       th:class="'fas status-icon ' + 
+                                                               (${taskInfo.status?.name == 'VOLLSTÄNDIG'} ? 'fa-check-circle status-vollstaendig' : 
+                                                                ${taskInfo.status?.name == 'IN_BEARBEITUNG'} ? 'fa-edit status-in-bearbeitung' : 
+                                                                ${taskInfo.status?.name == 'ABGEGEBEN'} ? 'fa-hourglass-half status-abgegeben' :
+                                                                ${taskInfo.status?.name == 'ÜBERARBEITUNG_NÖTIG'} ? 'fa-redo status-ueberarbeitung-noetig' : 'fa-circle status-nicht-begonnen')"
+                                                       th:title="${taskInfo.status?.name ?: 'NICHT_BEGONNEN'}"
+                                                       th:onclick="'window.location.href=\'/teacher/submissions/' + ${taskInfo.userTaskId} + '\''">
+                                                    </i>
+                                                    <i th:unless="${taskInfo != null}"
+                                                       class="fas fa-circle status-icon status-nicht-begonnen"
+                                                       title="NICHT_BEGONNEN">
+                                                    </i>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Legende -->
+                            <div class="mt-3 p-3 bg-light">
+                                <h6><i class="fas fa-info-circle"></i> Legende:</h6>
                                 <div class="row">
-                                    <div th:each="taskInfo : ${studentTask.tasks}" class="col-md-6 col-lg-4 mb-2">
-                                        <div class="card card-sm">
-                                            <div class="card-body p-2">
-                                                <div class="d-flex justify-content-between align-items-start mb-1">
-                                                    <h6 class="card-title mb-1 small" th:text="${taskInfo.task.title}">
-                                                        Aufgabentitel
-                                                    </h6>
-                                                    <span th:class="'badge badge-sm ' + ${taskInfo.statusBadgeClass}" 
-                                                          th:text="${taskInfo.status.name}">Status</span>
-                                                </div>
-                                                <p class="card-text small text-muted mb-2">
-                                                    <i class="fas fa-calendar"></i> 
-                                                    Fällig: <span th:text="${#temporals.format(taskInfo.task.dueDate, 'dd.MM.yyyy')}">
-                                                        31.12.2024
-                                                    </span>
-                                                </p>
-                                                <div class="d-flex gap-1">
-                                                    <a th:href="@{/teacher/tasks/{taskId}/submissions(taskId=${taskInfo.task.id})}" 
-                                                       class="btn btn-outline-primary btn-sm flex-fill">
-                                                        <i class="fas fa-eye"></i> Details
-                                                    </a>
-                                                    <a th:if="${taskInfo.hasSubmissions}" 
-                                                       th:href="@{/teacher/submissions/{userTaskId}/history(userTaskId=${taskInfo.userTaskId})}" 
-                                                       class="btn btn-outline-info btn-sm">
-                                                        <i class="fas fa-history"></i>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
+                                    <div class="col-md-2">
+                                        <i class="fas fa-circle status-icon status-nicht-begonnen"></i> Nicht begonnen
+                                    </div>
+                                    <div class="col-md-2">
+                                        <i class="fas fa-edit status-icon status-in-bearbeitung"></i> In Bearbeitung
+                                    </div>
+                                    <div class="col-md-2">
+                                        <i class="fas fa-hourglass-half status-icon status-abgegeben"></i> Abgegeben
+                                    </div>
+                                    <div class="col-md-3">
+                                        <i class="fas fa-redo status-icon status-ueberarbeitung-noetig"></i> Überarbeitung nötig
+                                    </div>
+                                    <div class="col-md-2">
+                                        <i class="fas fa-check-circle status-icon status-vollstaendig"></i> Vollständig
                                     </div>
                                 </div>
+                                <small class="text-muted mt-2 d-block">Klicken Sie auf ein Status-Icon, um zur Detailansicht der Aufgabe zu gelangen.</small>
                             </div>
                         </div>
 
@@ -154,19 +282,5 @@
     </div>
 
     <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
-    
-    <style>
-        .card-sm .card-body {
-            padding: 0.75rem;
-        }
-        .badge-sm {
-            font-size: 0.7em;
-        }
-        .bg-primary { background-color: #0d6efd !important; }
-        .bg-success { background-color: #198754 !important; }
-        .bg-warning { background-color: #ffc107 !important; }
-        .bg-danger { background-color: #dc3545 !important; }
-        .bg-info { background-color: #0dcaf0 !important; }
-    </style>
 </body>
 </html>
