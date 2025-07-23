@@ -37,20 +37,20 @@
         <!-- Hauptstatistik -->
         <div class="row mt-4">
             <div class="col-md-4 mx-auto">
-                <div class="card bg-warning text-white stats-card">
-                    <div class="card-body text-center">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div class="w-100">
+                <div class="card bg-warning text-white h-100">
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex align-items-center flex-grow-1">
+                            <div class="flex-grow-1">
                                 <h5 class="card-title">Zu bewertende Aufgaben</h5>
-                                <h1 class="display-4" th:text="${pendingReviews ?: 0}">0</h1>
-                                <p class="mb-0">Abgegebene Schülerergebnisse</p>
+                                <h1 class="display-4 mb-2" th:text="${pendingReviews ?: 0}">0</h1>
+                                <p class="mb-0 small">Abgegebene Schülerergebnisse</p>
                             </div>
-                            <div class="ms-3">
+                            <div class="ms-3 flex-shrink-0">
                                 <i class="fas fa-clipboard-check fa-3x"></i>
                             </div>
                         </div>
                         <div class="mt-3" th:if="${pendingReviews != null and pendingReviews > 0}">
-                            <a th:href="@{/teacher/tasks}" class="btn btn-light">
+                            <a th:href="@{/teacher/tasks}" class="btn btn-light btn-sm">
                                 <i class="fas fa-arrow-right"></i> Zur Bewertung
                             </a>
                         </div>
