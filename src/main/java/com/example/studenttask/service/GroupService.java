@@ -264,7 +264,7 @@ public class GroupService {
             .collect(Collectors.toList()));
 
         // Alle aktiven Aufgaben des Lehrers für diese Gruppe
-        List<Task> tasks = taskService.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher)
+        List<Task> tasks = taskRepository.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher)
             .stream()
             .filter(task -> task.getAssignedGroups().contains(group))
             .collect(Collectors.toList());
@@ -298,6 +298,10 @@ public class GroupService {
         matrix.put("students", students);
         matrix.put("tasks", tasks);
         matrix.put("statusMap", statusMap);
+        
+        // Debug-Ausgabe
+        System.out.println("Matrix Debug - Students: " + students.size() + ", Tasks: " + tasks.size());
+        System.out.println("StatusMap size: " + statusMap.size());
 
         return matrix;
     }
