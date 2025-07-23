@@ -128,8 +128,6 @@
                                     <tr th:each="userTask : ${taskEntry.value}" class="submission-row">
                                         <td>
                                             <strong th:text="${userTask.user.name}">Schülername</strong>
-                                            <br>
-                                            <small class="text-muted" th:text="${userTask.user.email}">email@example.com</small>
                                         </td>
                                         <td>
                                             <span th:if="${userTask.lastModified}" 
@@ -141,8 +139,9 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <div th:each="group : ${userTask.user.groups}" class="d-inline">
-                                                <span class="badge bg-info me-1" th:text="${group.name}">Gruppe</span>
+                                            <div th:each="userGroup : ${userTask.user.groups}" class="d-inline">
+                                                <span th:if="${taskEntry.key.assignedGroups.contains(userGroup)}" 
+                                                      class="badge bg-info me-1" th:text="${userGroup.name}">Gruppe</span>
                                             </div>
                                         </td>
                                         <td>
