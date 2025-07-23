@@ -33,19 +33,68 @@
             </div>
         </div>
 
-        <!-- Statistik Card -->
+        <!-- Statistik Cards -->
         <div class="row mt-4">
-            <div class="col-md-4 mx-auto">
-                <div class="card bg-warning text-white stats-card">
-                    <div class="card-body text-center">
-                        <div class="mb-3">
-                            <i class="fas fa-clipboard-check fa-3x"></i>
+            <div class="col-md-3">
+                <div class="card bg-primary text-white stats-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h5 class="card-title">Aufgaben</h5>
+                                <h2 th:text="${totalTasks ?: 0}">0</h2>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-tasks fa-2x"></i>
+                            </div>
                         </div>
-                        <h3 class="card-title">Noch zu bewertende Aufgaben</h3>
-                        <h1 class="display-4" th:text="${pendingReviews ?: 0}">0</h1>
-                        <p class="card-text mt-2">
-                            Schülerabgaben mit Status "Abgegeben" aus Ihren Gruppen
-                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card bg-info text-white stats-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h5 class="card-title">Aktive Aufgaben</h5>
+                                <h2>0</h2>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-play-circle fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card bg-warning text-white stats-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h5 class="card-title">Zu bewerten</h5>
+                                <h2>0</h2>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-check-circle fa-2x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card bg-success text-white stats-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h5 class="card-title">Gruppen</h5>
+                                <h2>0</h2>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-users fa-2x"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
