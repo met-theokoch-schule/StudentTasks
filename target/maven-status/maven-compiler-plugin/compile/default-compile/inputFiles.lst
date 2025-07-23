@@ -28,8 +28,8 @@
 /home/runner/workspace/src/main/java/com/example/studenttask/controller/HomeController.java
 /home/runner/workspace/src/main/java/com/example/studenttask/controller/StudentController.java
 /home/runner/workspace/src/main/java/com/example/studenttask/service/TaskReviewService.java
-/home/runner/workspace/src/main/java/com/example/studenttask/repository/UserTaskRepository.java
 /home/runner/workspace/src/main/java/com/example/studenttask/repository/UnitTitleRepository.java
+/home/runner/workspace/src/main/java/com/example/studenttask/repository/UserTaskRepository.java
 /home/runner/workspace/src/main/java/com/example/studenttask/service/UserTaskService.java
 /home/runner/workspace/src/main/java/com/example/studenttask/service/TaskViewService.java
 /home/runner/workspace/src/main/java/com/example/studenttask/controller/ErrorController.java
