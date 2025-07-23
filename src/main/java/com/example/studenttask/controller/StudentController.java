@@ -7,8 +7,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -230,20 +230,29 @@ public class StudentController {
      */
     @GetMapping("/dashboard")
     public String dashboard(Model model, Principal principal) {
-        User student = userService.findByOpenIdSubject(principal.getName())
+        User currentUser = userService.findByOpenIdSubject(principal.getName())
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
-        // Alle aktiven Aufgaben finden, die einer Gruppe des Benutzers zugewiesen sind
-        List<UserTask> userTasks = getOrCreateUserTasksForStudent(student);
+        // UserTasks für das Dashboard erstellen/finden
+        List<UserTask> allUserTasks = getOrCreateUserTasksForStudent(currentUser);
 
-        // Nur aktive Aufgaben anzeigen
-        List<UserTask> activeTasks = userTasks.stream()
-            .filter(ut -> ut.getTask().getIsActive())
+        // Nur die 3 zuletzt bearbeiteten Aufgaben für das Dashboard
+        List<UserTask> recentUserTasks = allUserTasks.stream()
+            .filter(ut -> ut.getLastModified() != null || ut.getStartedAt() != null)
+            .sorted((ut1, ut2) -> {
+                LocalDateTime time1 = ut1.getLastModified() != null ? ut1.getLastModified() : ut1.getStartedAt();
+                LocalDateTime time2 = ut2.getLastModified() != null ? ut2.getLastModified() : ut2.getStartedAt();
+                if (time1 == null && time2 == null) return 0;
+                if (time1 == null) return 1;
+                if (time2 == null) return -1;
+                return time2.compareTo(time1); // Neueste zuerst
+            })
+            .limit(3)
             .collect(Collectors.toList());
 
-        model.addAttribute("student", student);
-        model.addAttribute("userTasks", activeTasks);
-
+        model.addAttribute("student", currentUser);
+        model.addAttribute("userTasks", recentUserTasks);
+        model.addAttribute("totalTaskCount", allUserTasks.size());
         return "student/dashboard";
     }
 
