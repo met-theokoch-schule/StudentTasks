@@ -21,9 +21,6 @@ public class GroupService {
     private GroupRepository groupRepository;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
     private TaskRepository taskRepository;
 
     @Autowired
