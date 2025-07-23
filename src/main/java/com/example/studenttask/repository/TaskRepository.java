@@ -40,4 +40,5 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     List<Task> findByIsActiveTrueOrderByCreatedAtDesc();
     List<Task> findByIsActiveTrueAndAssignedGroupsContainsOrderByCreatedAtDesc(Group group);
+    List<Task> findByAssignedGroupsContainingAndIsActiveTrue(Group group);
 }
