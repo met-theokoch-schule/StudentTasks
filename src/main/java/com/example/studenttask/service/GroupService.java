@@ -1,22 +1,17 @@
 package com.example.studenttask.service;
 
-import com.example.studenttask.model.Group;
-import com.example.studenttask.model.Task;
-import com.example.studenttask.model.User;
-import com.example.studenttask.model.UserTask;
-import com.example.studenttask.dto.GroupStatistics;
-import com.example.studenttask.dto.StudentTaskInfo;
-import com.example.studenttask.dto.TaskInfo;
-import com.example.studenttask.repository.GroupRepository;
-import com.example.studenttask.repository.TaskRepository;
-import com.example.studenttask.repository.UserRepository;
-import com.example.studenttask.repository.UserTaskRepository;
-import com.example.studenttask.repository.TaskContentRepository;
+import com.example.studenttask.controller.TeacherGroupController.*;
+import com.example.studenttask.model.*;
+import com.example.studenttask.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -47,32 +42,6 @@ public class GroupService {
     /**
      * Findet alle Gruppen mit aktiven Aufgaben eines Lehrers
      */
-    public static class GroupInfo {
-        private Group group;
-        private int activeTaskCount;
-        private int studentCount;
-        private int pendingSubmissions;
-        private int completedSubmissions;
-        private LocalDateTime lastActivity;
-
-        public GroupInfo(Group group, int activeTaskCount, int studentCount, int pendingSubmissions, int completedSubmissions, LocalDateTime lastActivity) {
-            this.group = group;
-            this.activeTaskCount = activeTaskCount;
-            this.studentCount = studentCount;
-            this.pendingSubmissions = pendingSubmissions;
-            this.completedSubmissions = completedSubmissions;
-            this.lastActivity = lastActivity;
-        }
-
-        // Getters
-        public Group getGroup() { return group; }
-        public int getActiveTaskCount() { return activeTaskCount; }
-        public int getStudentCount() { return studentCount; }
-        public int getPendingSubmissions() { return pendingSubmissions; }
-        public int getCompletedSubmissions() { return completedSubmissions; }
-        public LocalDateTime getLastActivity() { return lastActivity; }
-    }
-
     public List<GroupInfo> getGroupsWithActiveTasksByTeacher(User teacher) {
         List<GroupInfo> result = new ArrayList<>();
 
@@ -96,7 +65,7 @@ public class GroupService {
                 // Letzte Aktivität
                 LocalDateTime lastActivity = getLastActivityForGroup(group, teacher);
 
-                result.add(new GroupInfo(group, activeTaskCount, studentCount, pendingSubmissions, (int) pendingSubmissions, lastActivity));
+                result.add(new GroupInfo(group, studentCount, activeTaskCount, pendingSubmissions, lastActivity));
             });
 
         return result;

@@ -30,9 +30,6 @@ public class UserService {
     @Autowired
     private GroupRepository groupRepository;
 
-    @Autowired
-    private com.example.studenttask.repository.UserTaskRepository userTaskRepository; // Inject UserTaskRepository
-
     public User findOrCreateUserFromOAuth2(OAuth2User oauth2User) {
         String openIdSubject = oauth2User.getAttribute("sub");
 
@@ -331,10 +328,6 @@ public class UserService {
         return userRepository.findByOpenIdSubject(openIdSubject);
     }
 
-    public List<User> findByGroupsContaining(Group group) {
-        return userRepository.findByGroupsContaining(group);
-    }
-
     /**
      * Überprüft, ob ein Benutzer (identifiziert durch openIdSubject) eine Lehrerrolle hat
      */
@@ -343,12 +336,12 @@ public class UserService {
         if (userOpt.isEmpty()) {
             return false;
         }
-
+        
         User user = userOpt.get();
         if (user.getRoles() == null) {
             return false;
         }
-
+        
         return user.getRoles().stream()
             .anyMatch(role -> {
                 String roleName = role.getName();
@@ -374,9 +367,5 @@ public class UserService {
 
     public User findByPreferredUsername(String preferredUsername) {
         return userRepository.findByPreferredUsername(preferredUsername);
-    }
-
-    public Optional<com.example.studenttask.model.UserTask> findByUserAndTask(com.example.studenttask.model.User user, com.example.studenttask.model.Task task) {
-        return userTaskRepository.findByUserAndTask(user, task);
     }
 }
