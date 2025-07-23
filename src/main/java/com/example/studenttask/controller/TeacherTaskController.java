@@ -228,7 +228,7 @@ public class TeacherTaskController {
     public String createTask(@ModelAttribute Task task,
             @RequestParam String taskViewId,
             @RequestParam(required = false) String unitTitleId,
-            @RequestParam List<Long> selectedGroups,
+            @RequestParam(required = false) List<Long> selectedGroups,
             Authentication authentication) {
 
         User teacher = userService.findByOpenIdSubject(authentication.getName())
