@@ -349,7 +349,8 @@ public class StudentController {
      */
     @GetMapping("/tasks")
     public String taskList(Model model, Principal principal) {
-        User student = userService.findByOpenIdSubject(principal.getName());
+       User student = userService.findByOpenIdSubject(principal.getName())
+            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
         List<UserTask> userTasks = getOrCreateUserTasksForStudent(student);
 
         // Gruppiere Aufgaben nach UnitTitle und sortiere sie
