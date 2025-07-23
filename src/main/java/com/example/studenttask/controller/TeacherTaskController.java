@@ -416,7 +416,7 @@ public class TeacherTaskController {
         }
 
         taskContent.setContent(content);
-        taskContentService.save(taskContent);
+        taskContentService.saveContent(userTask, content, false);
 
         return ResponseEntity.ok("Content saved successfully");
     }
@@ -434,7 +434,8 @@ public class TeacherTaskController {
         User user = userService.findByOpenIdSubject(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        TaskStatus submittedStatus = taskStatusService.findByName("ABGEGEBEN");
+        TaskStatus submittedStatus = taskStatusService.findByName("ABGEGEBEN")
+                .orElseThrow(() -> new RuntimeException("TaskStatus nicht gefunden: ABGEGEBEN"));
         userTask.setStatus(submittedStatus);
         userTaskService.save(userTask);
 
