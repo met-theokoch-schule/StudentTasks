@@ -8,8 +8,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -17,6 +19,9 @@ public class GroupService {
 
     @Autowired
     private GroupRepository groupRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private TaskRepository taskRepository;
@@ -236,5 +241,13 @@ public class GroupService {
      */
     public List<Group> findAllById(List<Long> ids) {
         return groupRepository.findAllById(ids);
+    }
+
+    public Set<Group> findGroupsByUserId(Long userId) {
+        Optional<User> user = userRepository.findById(userId);
+        if (user.isPresent()) {
+            return user.get().getGroups();
+        }
+        return new HashSet<>();
     }
 }
