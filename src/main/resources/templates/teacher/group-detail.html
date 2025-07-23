@@ -205,7 +205,7 @@
                                             <th>Schüler</th>
                                             <!-- Task headers with rotated names -->
                                             <th th:each="task : ${tasks}" class="task-header">
-                                                <div class="task-name-rotated" th:text="${task.title}" th:title="${task.title}">
+                                                <div class="task-name-rotated" th:text="${task.taskTitle}" th:title="${task.taskTitle}">
                                                     Aufgabentitel
                                                 </div>
                                             </th>
@@ -220,7 +220,7 @@
                                             </th>
                                             <!-- Status cells for each task -->
                                             <td th:each="task : ${tasks}" class="status-cell">
-                                                <div th:with="statusName=${studentTask.taskStatuses[task.id] ?: 'NICHT_BEGONNEN'}">
+                                                <div th:with="statusName=${studentTask.taskStatuses[task.taskId] ?: 'NICHT_BEGONNEN'}">
                                                     <i th:class="'fas status-icon ' + 
                                                                (${statusName == 'VOLLSTÄNDIG'} ? 'fa-check-circle status-vollstaendig' : 
                                                                 ${statusName == 'IN_BEARBEITUNG'} ? 'fa-edit status-in-bearbeitung' : 
