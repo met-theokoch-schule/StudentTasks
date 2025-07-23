@@ -70,7 +70,14 @@ public class SecurityConfig {
     public AuthenticationSuccessHandler customAuthenticationSuccessHandler() {
         return (request, response, authentication) -> {
             System.out.println("🔄 Custom OAuth2 Success Handler called");
+            System.out.println("🔍 Authentication type: " + authentication.getClass().getName());
+            System.out.println("🔍 Principal type: " + authentication.getPrincipal().getClass().getName());
             System.out.println("🔍 Current authorities: " + authentication.getAuthorities());
+            
+            // Log each authority individually
+            authentication.getAuthorities().forEach(authority -> {
+                System.out.println("   👤 Authority: " + authority.getAuthority() + " (Type: " + authority.getClass().getName() + ")");
+            });
             
             response.sendRedirect("/dashboard");
         };
