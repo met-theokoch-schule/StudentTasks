@@ -23,6 +23,7 @@
 /home/runner/workspace/src/main/java/com/example/studenttask/service/TaskContentService.java
 /home/runner/workspace/src/main/java/com/example/studenttask/model/TaskContent.java
 /home/runner/workspace/src/main/java/com/example/studenttask/model/UnitTitle.java
+/home/runner/workspace/src/main/java/com/example/studenttask/dto/StudentTaskInfo.java
 /home/runner/workspace/src/main/java/com/example/studenttask/dto/TaskInfo.java
 /home/runner/workspace/src/main/java/com/example/studenttask/service/UserService.java
 /home/runner/workspace/src/main/java/com/example/studenttask/repository/TaskContentRepository.java
