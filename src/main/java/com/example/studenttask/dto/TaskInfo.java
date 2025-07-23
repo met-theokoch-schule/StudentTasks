@@ -8,6 +8,8 @@ public class TaskInfo {
     private String taskTitle;
     private TaskStatus status;
     private Long userTaskId;
+    private Task task;
+    private boolean hasSubmissions;
 
     // Constructors
     public TaskInfo() {}
@@ -19,9 +21,20 @@ public class TaskInfo {
         this.userTaskId = userTaskId;
     }
 
+    public TaskInfo(Long userTaskId, Task task, TaskStatus status, boolean hasSubmissions) {
+        this.userTaskId = userTaskId;
+        this.task = task;
+        this.status = status;
+        this.hasSubmissions = hasSubmissions;
+        if (task != null) {
+            this.taskId = task.getId();
+            this.taskTitle = task.getTitle();
+        }
+    }
+
     // Getters and Setters
     public Long getTaskId() {
-        return taskId;
+        return taskId != null ? taskId : (task != null ? task.getId() : null);
     }
 
     public void setTaskId(Long taskId) {
@@ -29,7 +42,7 @@ public class TaskInfo {
     }
 
     public String getTaskTitle() {
-        return taskTitle;
+        return taskTitle != null ? taskTitle : (task != null ? task.getTitle() : null);
     }
 
     public void setTaskTitle(String taskTitle) {
@@ -51,31 +64,6 @@ public class TaskInfo {
     public void setUserTaskId(Long userTaskId) {
         this.userTaskId = userTaskId;
     }
-}
-import com.example.studenttask.model.TaskStatus;
-
-public class TaskInfo {
-    private Long userTaskId;
-    private Task task;
-    private TaskStatus status;
-    private boolean hasSubmissions;
-
-    public TaskInfo() {}
-
-    public TaskInfo(Long userTaskId, Task task, TaskStatus status, boolean hasSubmissions) {
-        this.userTaskId = userTaskId;
-        this.task = task;
-        this.status = status;
-        this.hasSubmissions = hasSubmissions;
-    }
-
-    public Long getUserTaskId() {
-        return userTaskId;
-    }
-
-    public void setUserTaskId(Long userTaskId) {
-        this.userTaskId = userTaskId;
-    }
 
     public Task getTask() {
         return task;
@@ -83,18 +71,10 @@ public class TaskInfo {
 
     public void setTask(Task task) {
         this.task = task;
-    }
-
-    public Long getTaskId() {
-        return task != null ? task.getId() : null;
-    }
-
-    public TaskStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(TaskStatus status) {
-        this.status = status;
+        if (task != null) {
+            this.taskId = task.getId();
+            this.taskTitle = task.getTitle();
+        }
     }
 
     public boolean isHasSubmissions() {
