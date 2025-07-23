@@ -328,6 +328,10 @@ public class UserService {
         return userRepository.findByOpenIdSubject(openIdSubject);
     }
 
+    public List<User> findByGroupsContaining(Group group) {
+        return userRepository.findByGroupsContaining(group);
+    }
+
     /**
      * Überprüft, ob ein Benutzer (identifiziert durch openIdSubject) eine Lehrerrolle hat
      */
