@@ -12,6 +12,7 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -69,28 +70,8 @@ public class SecurityConfig {
     public AuthenticationSuccessHandler customAuthenticationSuccessHandler() {
         return (request, response, authentication) -> {
             System.out.println("🔄 Custom OAuth2 Success Handler called");
-
-            // Hole den aktuellen User aus der Datenbank
-            OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
-            User user = userService.findOrCreateUserFromOAuth2(oauth2User);
-
-            // Erstelle neue Authentication mit den richtigen Authorities
-            List<GrantedAuthority> authorities = new ArrayList<>();
-            user.getRoles().forEach(role -> {
-                authorities.add(new SimpleGrantedAuthority(role.getName()));
-                System.out.println("🔑 Added authority: " + role.getName());
-            });
-
-            // Erstelle neue Authentication
-            OAuth2AuthenticationToken newAuth = new OAuth2AuthenticationToken(
-                oauth2User, 
-                authorities, 
-                ((OAuth2AuthenticationToken) authentication).getAuthorizedClientRegistrationId()
-            );
-
-            // Setze die neue Authentication
-            SecurityContextHolder.getContext().setAuthentication(newAuth);
-
+            System.out.println("🔍 Current authorities: " + authentication.getAuthorities());
+            
             response.sendRedirect("/dashboard");
         };
     }
@@ -116,14 +97,15 @@ public class SecurityConfig {
                 User user = userService.findOrCreateUserFromOAuth2(oauth2User);
                 System.out.println("✅ User created/updated: " + user.getName());
 
-                // Create custom OAuth2User with authorities from database
+                // Create authorities from database roles
                 List<GrantedAuthority> authorities = new ArrayList<>();
                 user.getRoles().forEach(role -> {
                     authorities.add(new SimpleGrantedAuthority(role.getName()));
                     System.out.println("🔑 Added authority: " + role.getName());
                 });
 
-                return new CustomOAuth2User(oauth2User, authorities);
+                // Return DefaultOAuth2User with correct authorities
+                return new DefaultOAuth2User(authorities, oauth2User.getAttributes(), "name");
             }
         };
     }
