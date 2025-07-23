@@ -20,9 +20,8 @@
                 <a class="nav-link" th:href="@{/student/tasks}">Aufgaben</a>
             </div>
             <div class="navbar-nav ms-auto">
-                <span class="navbar-text me-3" th:text="${student?.name ?: 'Schüler'}"></span>
-                <a class="btn btn-outline-light" th:href="@{/dashboard}">Hauptmenü</a>
-                <a class="btn btn-outline-light ms-2" th:href="@{/logout}">Abmelden</a>
+                <span class="navbar-text me-3" th:text="${student?.name ?: 'Unbekannter Benutzer'}"></span>
+                <a class="btn btn-outline-light" th:href="@{/logout}">Abmelden</a>
             </div>
         </div>
     </nav>
