@@ -56,7 +56,7 @@
                 <a class="nav-link active" th:href="@{/student/tasks}">Aufgaben</a>
             </div>
             <div class="navbar-nav ms-auto">
-                <span class="navbar-text me-3" th:text="${student?.name ?: 'Unbekannter Benutzer'}"></span>
+                <span class="navbar-text me-3" sec:authentication="name"></span>
                 <a class="btn btn-outline-light" th:href="@{/logout}">Abmelden</a>
             </div>
         </div>
