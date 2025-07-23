@@ -133,7 +133,7 @@ public class TeacherTaskController {
         return "teacher/task-submissions";
     }
 
-    
+
 
     @PostMapping("/submissions/{userTaskId}/review")
     public String submitReview(@PathVariable Long userTaskId,
@@ -166,7 +166,7 @@ public class TeacherTaskController {
         }
 
         taskReviewService.createReview(userTask, reviewer, statusId, comment, submissionId, currentVersion);
-        
+
         // Explicitly save the UserTask to ensure status change is persisted
         userTaskService.save(userTask);
 
@@ -236,7 +236,10 @@ public class TeacherTaskController {
         task.setCreatedBy(teacher);
 
         // Assign selected groups to the task
-        List<Group> groups = groupService.findAllById(selectedGroups);
+        List<Group> groups = new ArrayList<>();
+        if (selectedGroups != null && !selectedGroups.isEmpty()) {
+            groups = groupService.findAllById(selectedGroups);
+        }
         task.setAssignedGroups(new HashSet<>(groups));
 
         // Set task view
