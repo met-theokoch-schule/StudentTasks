@@ -9,5 +9,5 @@ import java.util.List;
 
 @Repository
 public interface UnitTitleRepository extends JpaRepository<UnitTitle, String> {
-    List<UnitTitle> findByIsActiveTrueOrderByName();
+    List<UnitTitle> findByIsActiveTrueOrderByWeightAscNameAsc();
 }

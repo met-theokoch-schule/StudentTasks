@@ -82,27 +82,34 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     private void initializeUnitTitles() {
-        // Beispiel Unit Titles - können hier einfach erweitert werden
-        unitTitleService.createIfNotExists("einfuehrung-programmierung",
+        // Unit Titles mit Gewichtung für die Anzeige-Reihenfolge
+        // Niedrigere weight-Werte werden zuerst angezeigt
+        unitTitleService.createOrUpdate("einfuehrung-programmierung",
             "Einführung in die Programmierung",
-            "Grundlagen der Programmierung und erste Schritte");
+            "Grundlagen der Programmierung und erste Schritte",
+            10);
 
-        unitTitleService.createIfNotExists("html-css",
+        unitTitleService.createOrUpdate("html-css",
             "HTML & CSS",
-            "Webentwicklung mit HTML und CSS");
+            "Webentwicklung mit HTML und CSS",
+            20);
 
-        unitTitleService.createIfNotExists("javascript-basics",
+        unitTitleService.createOrUpdate("javascript-basics",
             "JavaScript Grundlagen",
-            "Einführung in JavaScript und DOM-Manipulation");
+            "Einführung in JavaScript und DOM-Manipulation",
+            30);
 
-        unitTitleService.createIfNotExists("datenbanken",
+        unitTitleService.createOrUpdate("datenbanken",
             "Datenbanken",
-            "Grundlagen von Datenbanken und SQL");
+            "Grundlagen von Datenbanken und SQL",
+            40);
 
-        unitTitleService.createIfNotExists("objektorientierung",
+        unitTitleService.createOrUpdate("objektorientierung",
             "Objektorientierte Programmierung",
-            "Klassen, Objekte und Vererbung");
+            "Klassen, Objekte und Vererbung",
+            50);
 
-        // Hier können weitere Unit Titles hinzugefügt werden
+        // Weitere Unit Titles können hier hinzugefügt werden
+        // Die Gewichtung bestimmt die Reihenfolge auf der Schüler-Seite
     }
 }

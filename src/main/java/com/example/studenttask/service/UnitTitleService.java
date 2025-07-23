@@ -14,7 +14,7 @@ public class UnitTitleService {
     private UnitTitleRepository unitTitleRepository;
 
     public List<UnitTitle> findAllActive() {
-        return unitTitleRepository.findByIsActiveTrueOrderByName();
+        return unitTitleRepository.findByIsActiveTrueOrderByWeightAscNameAsc();
     }
 
     public UnitTitle findById(String id) {
@@ -25,12 +25,16 @@ public class UnitTitleService {
         return unitTitleRepository.save(unitTitle);
     }
 
-    public UnitTitle createIfNotExists(String id, String name, String description) {
+    public UnitTitle createOrUpdate(String id, String name, String description, int weight) {
         UnitTitle existing = unitTitleRepository.findById(id).orElse(null);
         if (existing == null) {
-            existing = new UnitTitle(id, name, description);
-            return unitTitleRepository.save(existing);
+            existing = new UnitTitle(id, name, description, weight);
+        } else {
+            // Update existing properties
+            existing.setName(name);
+            existing.setDescription(description);
+            existing.setWeight(weight);
         }
-        return existing;
+        return unitTitleRepository.save(existing);
     }
 }
