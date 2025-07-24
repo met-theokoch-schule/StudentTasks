@@ -143,6 +143,7 @@ public class TeacherTaskController {
                              @RequestParam Long statusId,
                              @RequestParam(required = false) String comment,
                              @RequestParam(required = false) String submissionIdStr,
+                             @RequestParam(required = false) String returnUrl,
                              Authentication authentication,
                              HttpServletRequest request) {
 
@@ -172,6 +173,11 @@ public class TeacherTaskController {
 
         // Explicitly save the UserTask to ensure status change is persisted
         userTaskService.save(userTask);
+
+        // Redirect back to the original page if returnUrl is provided
+        if (returnUrl != null && !returnUrl.trim().isEmpty()) {
+            return "redirect:" + returnUrl;
+        }
 
         return "redirect:/teacher/submissions/" + userTaskId;
     }
