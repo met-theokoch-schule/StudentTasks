@@ -655,7 +655,7 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
             });
 
             editor.on('change', function() {
-                if (projectData.currentFile) {
+                if (projectData.currentFile && projectData.files[projectData.currentFile]) {
                     projectData.files[projectData.currentFile].content = editor.getValue();
                     markAsChanged();
                     // Automatische Vorschau-Aktualisierung bei HTML- und CSS-Dateien
@@ -669,6 +669,9 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
             // Standardnachricht wenn kein File ausgewählt
             editor.setValue('// Wählen Sie eine Datei aus oder erstellen Sie eine neue');
             editor.setOption('readOnly', true);
+            
+            // Initial Status setzen
+            updateSaveStatus('saved');
         }
 
         function createNewFile(type) {
@@ -931,8 +934,11 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
         }
 
         function markAsChanged() {
-            hasUnsavedChanges = true;
-            updateSaveStatus('ready');
+            // Nur als geändert markieren wenn tatsächlich Projektinhalt geändert wurde
+            if (projectData.currentFile && Object.keys(projectData.files).length > 0) {
+                hasUnsavedChanges = true;
+                updateSaveStatus('ready');
+            }
         }
 
         function updateSaveStatus(status) {
