@@ -402,21 +402,19 @@ public class TeacherTaskController {
 
         // Get all task contents with submission status
         List<TaskContent> taskContents = taskContentService.findByUserTaskOrderByVersionDesc(userTask);
-        List<VersionWithStatus> versionsWithStatus = new ArrayList<>();
+        List<VersionWithSubmissionStatus> versionsWithStatus = new ArrayList<>();
 
         for (TaskContent content : taskContents) {
-            Optional<Submission> submission = submissionService.findByTaskContent(content);
-            boolean hasReview = taskReviewService.hasReviewsForVersion(userTask, content.getVersion());
-
-            String statusSymbol;
-            if (submission.isPresent()) {
-                statusSymbol = hasReview ? "👁️" : "⏳"; // Auge wenn reviewed, Sanduhr wenn noch pending
+            String displayText = "v" + content.getVersion();
+            if (content.isSubmitted()) {
+                displayText += " (Eingereicht)";
+                if (taskReviewService.hasReviewsForVersion(userTask, content.getVersion())) {
+                    displayText += " - Bewertet";
+                }
             } else {
-                statusSymbol = "📝"; // Stift für Entwürfe
+                displayText += " (Entwurf)";
             }
-
-            String displayText = String.format("Version %d %s", content.getVersion(), statusSymbol);
-            versionsWithStatus.add(new VersionWithStatus(content.getVersion(), displayText));
+            versionsWithStatus.add(new VersionWithSubmissionStatus(content.getVersion(), content.isSubmitted(), displayText));
         }
 
         model.addAttribute("versionsWithStatus", versionsWithStatus);
