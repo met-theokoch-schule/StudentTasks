@@ -101,6 +101,9 @@
 
                             <!-- Hidden field for current version -->
                             <input type="hidden" id="currentVersion" name="currentVersion" value="">
+                            
+                            <!-- Hidden field for return URL -->
+                            <input type="hidden" name="returnUrl" th:value="${returnUrl}">
 
                             <button type="submit" class="btn btn-primary">Bewertung speichern</button>
                         </form>
