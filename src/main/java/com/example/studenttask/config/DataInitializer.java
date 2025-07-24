@@ -68,6 +68,15 @@ public class DataInitializer implements ApplicationRunner {
             System.out.println("TaskView with templatePath '" + simpleTextTemplatePath + "' initialized");
         }
 
+        String htmlCssEditor = "taskviews/html-css-editor";
+
+        if (taskViewRepository.findByTemplatePath(htmlCssEditor) == null) {
+            TaskView htmlCSS = new TaskView("HTML+CSS Editor", htmlCssEditor);
+                htmlCSS.setDescription("Erstellen von HTML-Seiten mit CSS und Bildern!");
+            taskViewRepository.save(htmlCSS);
+            System.out.println("TaskView with templatePath '" + htmlCssEditor + "' initialized");
+        }
+
         // Hier können weitere TaskViews hinzugefügt werden
         // Beispiel für weitere TaskViews:
         /*
