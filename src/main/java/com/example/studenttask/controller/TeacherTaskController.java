@@ -379,4 +379,48 @@ public class TeacherTaskController {
 
         return "teacher/submission-review";
     }
+@GetMapping("/submissions/{userTaskId}")
+    public String reviewSubmission(@PathVariable Long userTaskId, 
+                                 @RequestParam(required = false) String returnUrl,
+                                 Model model, Authentication authentication) {
+        Optional<UserTask> userTaskOpt = userTaskService.findById(userTaskId);
+        if (userTaskOpt.isEmpty()) {
+            return "redirect:/teacher/tasks";
+        }
+
+        UserTask userTask = userTaskOpt.get();
+        model.addAttribute("userTask", userTask);
+        model.addAttribute("returnUrl", returnUrl);
+
+        // Get all reviews for this user task
+        List<TaskReview> reviews = taskReviewService.findByUserTaskOrderByReviewedAtDesc(userTask);
+        model.addAttribute("reviews", reviews);
+
+        // Get available statuses for teacher reviews
+        List<TaskStatus> statuses = taskReviewService.getTeacherReviewStatuses();
+        model.addAttribute("statuses", statuses);
+
+        // Get all task contents with submission status
+        List<TaskContent> taskContents = taskContentService.findByUserTaskOrderByVersionDesc(userTask);
+        List<VersionWithStatus> versionsWithStatus = new ArrayList<>();
+
+        for (TaskContent content : taskContents) {
+            Optional<Submission> submission = submissionService.findByTaskContent(content);
+            boolean hasReview = taskReviewService.hasReviewsForVersion(userTask, content.getVersion());
+
+            String statusSymbol;
+            if (submission.isPresent()) {
+                statusSymbol = hasReview ? "👁️" : "⏳"; // Auge wenn reviewed, Sanduhr wenn noch pending
+            } else {
+                statusSymbol = "📝"; // Stift für Entwürfe
+            }
+
+            String displayText = String.format("Version %d %s", content.getVersion(), statusSymbol);
+            versionsWithStatus.add(new VersionWithStatus(content.getVersion(), displayText));
+        }
+
+        model.addAttribute("versionsWithStatus", versionsWithStatus);
+
+        return "teacher/submission-review";
+    }
 }
