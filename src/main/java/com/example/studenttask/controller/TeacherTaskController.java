@@ -348,37 +348,7 @@ public class TeacherTaskController {
         return "redirect:/teacher/tasks";
     }
 
-    @GetMapping("/submissions/{userTaskId}/review")
-    public String viewSubmissionReview(@PathVariable Long userTaskId, 
-                                     @RequestParam(required = false) Integer version,
-                                     Model model, Authentication authentication) {
-
-        // Get UserTask with all necessary data
-        Optional<UserTask> userTaskOpt = userTaskService.findById(userTaskId);
-        if (userTaskOpt.isEmpty()) {
-            return "redirect:/teacher/dashboard";
-        }
-        UserTask userTask = userTaskOpt.get();
-
-        // Get all reviews for this UserTask
-        List<TaskReview> reviews = taskReviewService.findByUserTask(userTask);
-
-        // Get only review-relevant task statuses (ÜBERARBEITUNG_NÖTIG and VOLLSTÄNDIG)
-        List<TaskStatus> allStatuses = taskStatusService.findAllActive();
-        List<TaskStatus> statuses = allStatuses.stream()
-                .filter(status -> "ÜBERARBEITUNG_NÖTIG".equals(status.getName()) || "VOLLSTÄNDIG".equals(status.getName()))
-                .collect(java.util.stream.Collectors.toList());
-
-        // Get versions with submission status for the dropdown
-        List<VersionWithSubmissionStatus> versionsWithStatus = taskContentService.getVersionsWithSubmissionStatus(userTaskId);
-
-        model.addAttribute("userTask", userTask);
-        model.addAttribute("reviews", reviews);
-        model.addAttribute("statuses", statuses);
-        model.addAttribute("versionsWithStatus", versionsWithStatus);
-
-        return "teacher/submission-review";
-    }
+    
 @GetMapping("/submissions/{userTaskId}")
     public String reviewSubmission(@PathVariable Long userTaskId, 
                                  @RequestParam(required = false) String returnUrl,
