@@ -1153,7 +1153,7 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
             togglePreviewControls();
         });
 
-        // Prüft ob Inhalt vorhanden und nicht leer ist
+        // Prüft ob vom Server tatsächlich Inhalt geliefert wurde
         function hasValidContent(content) {
             if (!content || content === null || content === undefined) {
                 return false;
@@ -1166,21 +1166,16 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
                 return false;
             }
             
-            // Prüfe ob es nur aus Standard-Beispieltext besteht (für Task Description)
-            const defaultTaskText = `# HTML/CSS Grundlagen
-
-## Lernziele
-In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.`;
+            // Hole den Beispieltext aus den versteckten DIVs
+            const taskDescriptionDiv = document.getElementById('default-task-description');
+            const tutorialDiv = document.getElementById('default-tutorial-content');
             
-            // Prüfe ob es der Standard-Tutorial-Text ist
-            const defaultTutorialStart = `[
-    {
-        "title": "HTML Grundlagen",
-        "content": "# Tutorial 1: HTML Grundlagen`;
+            const defaultTaskText = taskDescriptionDiv ? taskDescriptionDiv.textContent.trim() : '';
+            const defaultTutorialText = tutorialDiv ? tutorialDiv.textContent.trim() : '';
             
-            // Wenn es der Standard-Beispieltext ist, als "kein Inhalt" betrachten
-            if (trimmedContent.startsWith(defaultTaskText.trim()) || 
-                trimmedContent.startsWith(defaultTutorialStart.trim())) {
+            // Wenn der Inhalt exakt dem Standard-Beispieltext entspricht, 
+            // dann wurde vom Server kein Inhalt geliefert
+            if (trimmedContent === defaultTaskText || trimmedContent === defaultTutorialText) {
                 return false;
             }
             
