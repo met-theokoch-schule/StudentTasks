@@ -1,11 +1,16 @@
+
 package com.example.studenttask.controller;
 
 import com.example.studenttask.model.Submission;
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.User;
+import com.example.studenttask.model.UserTask;
+import com.example.studenttask.model.TaskContent;
 import com.example.studenttask.service.SubmissionService;
 import com.example.studenttask.service.TaskService;
 import com.example.studenttask.service.UserService;
+import com.example.studenttask.service.UserTaskService;
+import com.example.studenttask.service.TaskContentService;
 import com.example.studenttask.service.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -16,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Optional;
+import java.util.List;
 
 /**
  * Debug Controller - nur für Entwicklungszwecke
@@ -33,6 +39,12 @@ public class DebugController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private UserTaskService userTaskService;
+
+    @Autowired
+    private TaskContentService taskContentService;
 
     @Autowired
     private AuthenticationService authenticationService;
@@ -65,35 +77,43 @@ public class DebugController {
 
         Task task = taskOpt.get();
 
-        // Submission suchen
-        Submission submission;
-        if (version != null) {
-            // Spezifische Version
-            Optional<Submission> submissionOpt = submissionService.findByUserAndTaskAndVersion(currentUser, task, version);
-            if (submissionOpt.isEmpty()) {
-                model.addAttribute("error", 
-                    "Keine Submission für Aufgabe '" + task.getTitle() + "' in Version " + version + " gefunden");
-                return "debug/content-viewer";
-            }
-            submission = submissionOpt.get();
-        } else {
-            // Neueste Version
-            Optional<Submission> submissionOpt = submissionService.findLatestByUserAndTask(currentUser, task);
-            if (submissionOpt.isEmpty()) {
-                model.addAttribute("error", 
-                    "Keine Submission für Aufgabe '" + task.getTitle() + "' gefunden");
-                return "debug/content-viewer";
-            }
-            submission = submissionOpt.get();
+        // UserTask für aktuellen Benutzer und Task finden
+        Optional<UserTask> userTaskOpt = userTaskService.findByUserAndTask(currentUser, task);
+        if (userTaskOpt.isEmpty()) {
+            model.addAttribute("error", "Keine UserTask für Benutzer " + currentUser.getUsername() + " und Task " + taskId + " gefunden");
+            return "debug/content-viewer";
         }
 
-        // Daten für Template
-        model.addAttribute("submission", submission);
-        model.addAttribute("user", currentUser);
-        model.addAttribute("task", task);
-        model.addAttribute("content", submission.getContent());
-        model.addAttribute("version", submission.getVersion());
-        model.addAttribute("submittedAt", submission.getSubmittedAt());
+        UserTask userTask = userTaskOpt.get();
+
+        // TaskContent basierend auf Version abrufen
+        Optional<TaskContent> taskContentOpt;
+        if (version != null) {
+            // Spezifische Version
+            taskContentOpt = taskContentService.findByUserTaskAndVersion(userTask, version);
+            if (taskContentOpt.isEmpty()) {
+                model.addAttribute("error", "Version " + version + " für Task " + taskId + " nicht gefunden");
+                return "debug/content-viewer";
+            }
+        } else {
+            // Neueste Version
+            taskContentOpt = taskContentService.findLatestByUserTask(userTask);
+            if (taskContentOpt.isEmpty()) {
+                model.addAttribute("error", "Keine TaskContent für Task " + taskId + " gefunden");
+                return "debug/content-viewer";
+            }
+        }
+
+        TaskContent taskContent = taskContentOpt.get();
+
+        // Informationen für Template vorbereiten
+        model.addAttribute("taskId", taskId);
+        model.addAttribute("taskTitle", task.getTitle());
+        model.addAttribute("username", currentUser.getUsername());
+        model.addAttribute("content", taskContent.getContent());
+        model.addAttribute("version", taskContent.getVersion());
+        model.addAttribute("savedAt", taskContent.getSavedAt());
+        model.addAttribute("isSubmitted", taskContent.isSubmitted());
 
         return "debug/content-viewer";
     }
