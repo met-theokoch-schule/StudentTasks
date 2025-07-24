@@ -84,7 +84,7 @@
                              <!-- Thema der Unterrichtseinheit -->
                             <div class="mb-3">
                                 <label for="unitTitleId" class="form-label">Thema der Unterrichtseinheit</label>
-                                <select id="unitTitleId" name="unitTitleId" class="form-select">
+                                <select id="unitTitleId" name="unitTitleId" class="form-select" th:field="*{unitTitle}">
                                     <option value="">Kein Thema zuweisen</option>
                                     <option th:each="unitTitle : ${unitTitles}" 
                                             th:value="${unitTitle.id}" 
@@ -92,7 +92,7 @@
                                         UnitTitle Name
                                     </option>
                                 </select>
-                                 <div class="form-text">
+                                <div class="form-text">
                                     Optional: Wählen Sie das Thema der Unterrichtseinheit für diese Aufgabe.
                                 </div>
                             </div>
