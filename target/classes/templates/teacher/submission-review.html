@@ -101,7 +101,7 @@
 
                             <!-- Hidden field for current version -->
                             <input type="hidden" id="currentVersion" name="currentVersion" value="">
-                            
+
                             <!-- Hidden field for return URL -->
                             <input type="hidden" name="returnUrl" th:value="${returnUrl}">
 
@@ -233,8 +233,8 @@
                     const text = option.text;
                     const versionNumber = parseInt(option.value);
 
-                    // Prüfe ob die Version Sanduhr (⏳) oder Auge (👁️) Symbol enthält
-                    if ((text.includes('⏳') || text.includes('👁️')) && versionNumber > latestVersionNumber) {
+                    // Prüfe ob die Version Auge (👁) oder Sanduhr (⏳) Symbol enthält
+                    if ((text.includes('👁') || text.includes('⏳')) && versionNumber > latestVersionNumber) {
                         latestSubmittedVersion = option.value;
                         latestVersionNumber = versionNumber;
                     }
