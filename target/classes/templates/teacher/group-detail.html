@@ -199,9 +199,8 @@
 
         // Click-Handler für Status-Zellen
         function handleStatusClick(studentId, taskId, userTaskId) {
-            const currentUrl = encodeURIComponent(window.location.href);
             if (userTaskId && userTaskId !== 'null') {
-                window.location.href = `/teacher/submissions/${userTaskId}?returnUrl=${currentUrl}`;
+                window.location.href = `/teacher/submissions/${userTaskId}`;
             } else {
                 // Falls noch keine UserTask existiert, zur Aufgaben-Übersicht
                 window.location.href = `/teacher/tasks/${taskId}/submissions`;

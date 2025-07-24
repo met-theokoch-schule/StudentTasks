@@ -313,6 +313,4 @@ public class TeacherController {
         // Return the appropriate task view template
         return "taskviews/" + task.getTaskView().getId();
     }
-
-    
 }
