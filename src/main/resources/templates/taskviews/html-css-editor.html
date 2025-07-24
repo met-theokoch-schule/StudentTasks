@@ -166,32 +166,7 @@
             box-sizing: border-box;
         }
         
-        .save-status {
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.25rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
         
-        .save-status.saved {
-            background: #d1e7dd;
-            color: #0f5132;
-        }
-        
-        .save-status.saving {
-            background: #fff3cd;
-            color: #664d03;
-        }
-        
-        .save-status.error {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        
-        .save-status.ready {
-            background: #cff4fc;
-            color: #055160;
-        }
         
         .file-explorer {
             background: #f8f9fa;
@@ -512,8 +487,13 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
                     <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('imageUpload').click()">
                         <i class="fas fa-image"></i> Bild
                     </button>
-                    <div class="ms-auto d-flex gap-2">
-                        <span id="save-status" class="save-status">Bereit</span>
+                    <div class="ms-auto d-flex gap-2 align-items-center">
+                        <span id="save-status-icon" 
+                              class="fas fa-circle text-muted" 
+                              style="font-size: 0.8rem; cursor: help;"
+                              data-bs-toggle="tooltip" 
+                              data-bs-placement="top" 
+                              title="Bereit zum Speichern"></span>
                         <button class="btn btn-sm btn-success" onclick="saveContent()" id="saveButton">
                             <i class="fas fa-save"></i> Speichern
                         </button>
@@ -956,33 +936,41 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
         }
 
         function updateSaveStatus(status) {
-            const statusElement = document.getElementById('save-status');
-            statusElement.className = 'save-status';
+            const statusIcon = document.getElementById('save-status-icon');
+            const tooltip = bootstrap.Tooltip.getInstance(statusIcon) || new bootstrap.Tooltip(statusIcon);
             
             switch (status) {
                 case 'saved':
-                    statusElement.textContent = 'Gespeichert';
-                    statusElement.classList.add('saved');
+                    statusIcon.className = 'fas fa-circle text-success';
+                    statusIcon.setAttribute('title', 'Änderungen gespeichert');
                     hasUnsavedChanges = false;
                     break;
                 case 'saving':
-                    statusElement.textContent = 'Speichert...';
-                    statusElement.classList.add('saving');
+                    statusIcon.className = 'fas fa-spinner fa-spin text-primary';
+                    statusIcon.setAttribute('title', 'Speichere...');
                     break;
                 case 'error':
-                    statusElement.textContent = 'Fehler';
-                    statusElement.classList.add('error');
+                    statusIcon.className = 'fas fa-circle text-danger';
+                    statusIcon.setAttribute('title', 'Fehler beim Speichern');
                     break;
                 case 'ready':
-                    statusElement.textContent = 'Nicht gespeichert';
-                    statusElement.classList.add('ready');
+                    statusIcon.className = 'fas fa-circle text-warning';
+                    statusIcon.setAttribute('title', 'Ungespeicherte Änderungen');
                     break;
                 case 'submitted':
-                    statusElement.textContent = 'Abgegeben';
-                    statusElement.classList.add('saved');
+                    statusIcon.className = 'fas fa-circle text-success';
+                    statusIcon.setAttribute('title', 'Aufgabe abgegeben');
                     hasUnsavedChanges = false;
                     break;
+                default:
+                    statusIcon.className = 'fas fa-circle text-muted';
+                    statusIcon.setAttribute('title', 'Bereit zum Speichern');
+                    break;
             }
+            
+            // Update tooltip
+            tooltip.dispose();
+            new bootstrap.Tooltip(statusIcon);
         }
 
         function getContentFromView() {
@@ -1151,6 +1139,12 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
             
             // Initial state setzen
             togglePreviewControls();
+            
+            // Initialize tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
         });
 
         // Prüft ob Thymeleaf tatsächlich einen leeren Wert eingefügt hat
