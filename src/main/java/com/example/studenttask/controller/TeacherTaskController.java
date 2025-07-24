@@ -438,19 +438,19 @@ public class TeacherTaskController {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yy HH:mm");
 
         for (TaskContent content : taskContents) {
-            LocalDateTime submissionDateTime = content.getUpdatedAt();
+            LocalDateTime submissionDateTime = content.getSavedAt();
             String formattedDateTime = submissionDateTime != null ? submissionDateTime.format(formatter) : "Unbekanntes Datum";
             String displayText = "v" + content.getVersion() + " " + formattedDateTime;
 
             if (content.isSubmitted()) {
                 long reviewCount = taskReviewService.countReviewsForVersion(userTask, content.getVersion());
-                String statusIcon = reviewCount > 0 ? "\uD83D\uDDE0" : "\u23F3"; // Auge : Sanduhr
+                String statusIcon = reviewCount > 0 ? "\uD83D\uDC41" : "\u23F3"; // Auge : Sanduhr
                 displayText += " " + statusIcon;
             } else {
-		 LocalDateTime updateDateTime = content.getUpdatedAt();
+                LocalDateTime updateDateTime = content.getSavedAt();
                 String formattedUpdateDateTime = updateDateTime != null ? updateDateTime.format(formatter) : "Unbekanntes Datum";
                 displayText = "v" + content.getVersion() + " " + formattedUpdateDateTime;
-	    }
+            }
             versionsWithStatus.add(new VersionWithSubmissionStatus(content.getVersion(), content.isSubmitted(), displayText));
         }
 

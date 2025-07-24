@@ -138,4 +138,8 @@ public class TaskReviewService {
     public boolean hasReviewsForVersion(UserTask userTask, Integer version) {
         return taskReviewRepository.existsByUserTaskAndVersion(userTask, version);
     }
+
+    public long countReviewsForVersion(UserTask userTask, Integer version) {
+        return taskReviewRepository.countByUserTaskAndVersion(userTask, version);
+    }
 }
