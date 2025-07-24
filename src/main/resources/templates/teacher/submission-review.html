@@ -101,7 +101,7 @@
 
                             <!-- Hidden field for current version -->
                             <input type="hidden" id="currentVersion" name="currentVersion" value="">
-
+                            
                             <!-- Hidden field for return URL -->
                             <input type="hidden" name="returnUrl" th:value="${returnUrl}">
 
@@ -220,34 +220,34 @@
             console.log('  - UserTask ID:', userTaskId);
             console.log('  - Available versions:', document.querySelectorAll('#versionSelect option').length - 1);
 
-            // Finde die neueste Version mit Auge (👁️) oder Sanduhr (⏳) Symbol
+            // Finde die neueste Version mit Sanduhr (⏳) oder Auge (👁️) Symbol
             const versionSelect = document.getElementById('versionSelect');
             const options = Array.from(versionSelect.options);
 
-            // Suche nach der höchsten Versionsnummer mit Auge oder Sanduhr
-            let latestSymbolVersion = null;
-            let latestSymbolVersionNumber = -1;
+            // Suche nach der höchsten Versionsnummer mit Sanduhr oder Auge
+            let latestSubmittedVersion = null;
+            let latestVersionNumber = -1;
 
             options.forEach(option => {
                 if (option.value && option.value !== '') {
                     const text = option.text;
                     const versionNumber = parseInt(option.value);
 
-                    // Prüfe ob die Version Auge (👁️) oder Sanduhr (⏳) Symbol enthält
-                    if ((text.includes('👁️') || text.includes('⏳')) && versionNumber > latestSymbolVersionNumber) {
-                        latestSymbolVersion = option.value;
-                        latestSymbolVersionNumber = versionNumber;
+                    // Prüfe ob die Version Sanduhr (⏳) oder Auge (👁️) Symbol enthält
+                    if ((text.includes('⏳') || text.includes('👁️')) && versionNumber > latestVersionNumber) {
+                        latestSubmittedVersion = option.value;
+                        latestVersionNumber = versionNumber;
                     }
                 }
             });
 
-            // Wenn eine Version mit Symbol gefunden wurde, wähle sie aus
-            if (latestSymbolVersion) {
-                versionSelect.value = latestSymbolVersion;
+            // Wenn eine abgegebene Version gefunden wurde, wähle sie aus
+            if (latestSubmittedVersion) {
+                versionSelect.value = latestSubmittedVersion;
                 changeVersion(); // Lade die entsprechende Version
-                console.log('🎯 Auto-selected latest version with symbol:', latestSymbolVersion);
+                console.log('🎯 Auto-selected latest submitted version:', latestSubmittedVersion);
             } else {
-                console.log('ℹ️ No version with symbol found, keeping default selection');
+                console.log('ℹ️ No submitted version found, keeping default selection');
             }
         });
     </script>
