@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="de" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -66,10 +65,10 @@
                         <strong>UserTask Status:</strong> 
                         <span th:if="${userTask.status}" th:text="${userTask.status.name}" class="badge bg-secondary">Status</span>
                         <span th:unless="${userTask.status}" class="badge bg-light text-dark">Kein Status</span>
-                        
+
                         <strong class="ms-3">Gestartet:</strong> 
                         <span th:text="${userTask.startedAt != null ? #temporals.format(userTask.startedAt, 'dd.MM.yyyy HH:mm') : 'Nicht gestartet'}">Startzeit</span>
-                        
+
                         <strong class="ms-3">Zuletzt geändert:</strong> 
                         <span th:text="${userTask.lastModified != null ? #temporals.format(userTask.lastModified, 'dd.MM.yyyy HH:mm') : 'Nie'}">Änderungszeit</span>
                     </div>
@@ -115,11 +114,11 @@
                         <div class="mb-3">
                             <strong>Gespeichert am:</strong> 
                             <span th:text="${#temporals.format(content.savedAt, 'dd.MM.yyyy HH:mm:ss')}">Zeitstempel</span>
-                            
+
                             <strong class="ms-3">Content-Länge:</strong> 
                             <span th:text="${#strings.length(content.content)}">0</span> Zeichen
                         </div>
-                        
+
                         <div class="mb-2">
                             <div class="btn-group" role="group">
                                 <a th:href="@{'/debug/api/content/' + ${user.id} + '/' + ${task.id} + (requestedVersion != null ? '?version=' + requestedVersion : '')}" 
@@ -131,9 +130,27 @@
                                 </button>
                             </div>
                         </div>
-                        
+
                         <div class="content-display" id="content-display" th:text="${content.content}">
                             Content wird hier angezeigt...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submission Info -->
+                <div th:if="${content}" class="submission-info">
+                    <h5><i class="fas fa-file-alt"></i> Content Details</h5>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <strong>Version:</strong> <span th:text="${version}">1</span>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Status:</strong>
+                            <span th:if="${isSubmitted}" class="badge bg-success">Eingereicht</span>
+                            <span th:unless="${isSubmitted}" class="badge bg-warning">Entwurf</span>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Gespeichert:</strong> <span th:text="${#temporals.format(savedAt, 'dd.MM.yyyy HH:mm')}">01.01.2024 12:00</span>
                         </div>
                     </div>
                 </div>
@@ -180,7 +197,7 @@
                 btn.innerHTML = '<i class="fas fa-check"></i> Kopiert!';
                 btn.classList.remove('btn-outline-secondary');
                 btn.classList.add('btn-success');
-                
+
                 setTimeout(function() {
                     btn.innerHTML = originalText;
                     btn.classList.remove('btn-success');
