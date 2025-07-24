@@ -8,7 +8,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
 import java.util.Map;
@@ -283,5 +286,34 @@ public class TeacherGroupController {
 
         public String getStatusBadgeClass() { return statusBadgeClass; }
         public void setStatusBadgeClass(String statusBadgeClass) { this.statusBadgeClass = statusBadgeClass; }
+    }
+
+    @GetMapping("/{groupId}")
+    public String groupDetail(@PathVariable Long groupId, Model model, Principal principal, HttpServletRequest request) {
+        User teacher = userService.findByOpenIdSubject(principal.getName())
+            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+        if (teacher == null) {
+            return "redirect:/dashboard";
+        }
+
+        Group group = groupService.findById(groupId);
+        if (group == null) {
+            return "redirect:/teacher/groups";
+        }
+
+        // Lade Gruppenstatistiken
+        GroupStatistics statistics = groupService.getGroupStatistics(group, teacher);
+
+        // Current URL für returnUrl
+        String currentUrl = request.getRequestURL().toString();
+        if (request.getQueryString() != null) {
+            currentUrl += "?" + request.getQueryString();
+        }
+
+        model.addAttribute("group", group);
+        model.addAttribute("statistics", statistics);
+        model.addAttribute("currentUrl", currentUrl);
+
+        return "teacher/group-detail";
     }
 }
