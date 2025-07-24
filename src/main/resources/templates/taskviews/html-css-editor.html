@@ -1101,7 +1101,7 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
                 if (response.ok) {
                     updateSaveStatus(isSubmission ? 'submitted' : 'saved');
                     if (isSubmission) {
-                        document.getElementById('submitButton').style.display = 'none';
+                        document.getElementById('submitButton').disabled = true;
                         editor.setOption('readOnly', true);
                     }
                     
