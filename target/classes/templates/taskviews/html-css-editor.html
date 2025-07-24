@@ -1094,10 +1094,6 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
             .then(response => {
                 if (response.ok) {
                     updateSaveStatus(isSubmission ? 'submitted' : 'saved');
-                    if (isSubmission) {
-                        document.getElementById('submitButton').disabled = true;
-                        editor.setOption('readOnly', true);
-                    }
                     
                     if (isTeacherView) {
                         // Notify parent window about save
