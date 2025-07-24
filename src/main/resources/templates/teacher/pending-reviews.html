@@ -144,7 +144,7 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <a th:href="@{'/teacher/submissions/' + ${userTask.id}}" 
+                                            <a th:href="@{'/teacher/submissions/' + ${userTask.id}(returnUrl='/teacher/pending-reviews')}" 
                                                class="btn btn-warning btn-sm">
                                                 <i class="fas fa-star"></i> Review
                                             </a>
