@@ -538,12 +538,12 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
                     
                     <!-- Preview controls - only visible when preview tab is active -->
                     <div class="d-flex align-items-center gap-2 me-3" id="previewControls">
-                        <button class="btn btn-sm btn-outline-secondary" onclick="refreshPreview()">
-                            <i class="fas fa-sync-alt"></i> Aktualisieren
-                        </button>
                         <select class="form-select form-select-sm" style="width: auto;" id="previewFile" onchange="switchPreviewFile()">
                             <option value="">Datei auswählen...</option>
                         </select>
+                        <a href="/student/dashboard" class="btn btn-sm btn-outline-secondary" title="Zum Dashboard">
+                            <i class="fas fa-home"></i>
+                        </a>
                     </div>
                 </div>
 
