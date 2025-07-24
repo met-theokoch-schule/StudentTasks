@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="de" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
@@ -98,7 +99,7 @@
                                th:text="${unitEntry.key.description}">Beschreibung</small>
                     </div>
                 </div>
-
+                
                 <div class="unit-content collapse show" th:id="'unit-' + ${unitEntry.key?.id ?: 'no-unit'}">
                     <!-- Aufgaben innerhalb des Themas -->
                     <div th:each="taskEntry : ${unitEntry.value}">
@@ -110,7 +111,7 @@
                                 Fällig: <span th:text="${#temporals.format(taskEntry.key.dueDate, 'dd.MM.yyyy')}"></span>
                             </small>
                         </div>
-
+                        
                         <!-- Schüler-Submissions für diese Aufgabe -->
                         <div class="table-responsive">
                             <table class="table table-hover mb-0">
@@ -143,7 +144,7 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <a th:href="@{'/teacher/submissions/' + ${userTask.id} + '?returnUrl=/teacher/reviews/pending'}" 
+                                            <a th:href="@{'/teacher/submissions/' + ${userTask.id}}" 
                                                class="btn btn-warning btn-sm">
                                                 <i class="fas fa-star"></i> Review
                                             </a>
@@ -172,21 +173,21 @@
     <script>
         // LocalStorage-Schlüssel für die Unit-Zustände
         const STORAGE_KEY = 'teacher-pending-reviews-unit-states';
-
+        
         // Initialisierung beim Laden der Seite
         document.addEventListener('DOMContentLoaded', function() {
             // Gespeicherte Zustände aus localStorage laden
             const savedStates = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-
+            
             // Alle Unit-Header finden und Zustände anwenden
             document.querySelectorAll('.unit-header').forEach(header => {
                 const unitId = header.getAttribute('data-unit-id');
                 const content = document.getElementById('unit-' + unitId);
-
+                
                 if (content) {
                     // Standardmäßig aufgeklappt, außer gespeicherter Zustand sagt etwas anderes
                     const isCollapsed = savedStates[unitId] === 'collapsed';
-
+                    
                     if (isCollapsed) {
                         header.classList.add('collapsed');
                         content.classList.remove('show');
@@ -194,15 +195,15 @@
                 }
             });
         });
-
+        
         // Funktion zum Ein-/Ausklappen einer Unit
         function toggleUnit(header) {
             const unitId = header.getAttribute('data-unit-id');
             const content = document.getElementById('unit-' + unitId);
-
+            
             if (content) {
                 const isCurrentlyCollapsed = header.classList.contains('collapsed');
-
+                
                 if (isCurrentlyCollapsed) {
                     // Aufklappen
                     header.classList.remove('collapsed');
@@ -212,7 +213,7 @@
                     header.classList.add('collapsed');
                     content.classList.remove('show');
                 }
-
+                
                 // Zustand in localStorage speichern
                 const savedStates = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
                 savedStates[unitId] = isCurrentlyCollapsed ? 'expanded' : 'collapsed';
