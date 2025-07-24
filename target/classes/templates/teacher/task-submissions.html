@@ -66,8 +66,8 @@
                                     <td th:text="${userTask.startedAt != null ? #temporals.format(userTask.startedAt, 'dd.MM.yyyy HH:mm') : 'Nicht gestartet'}">Startdatum</td>
                                     <td th:text="${userTask.lastModified != null ? #temporals.format(userTask.lastModified, 'dd.MM.yyyy HH:mm') : 'Nie'}">Änderungsdatum</td>
                                     <td>
-                                        <a th:href="@{'/teacher/submissions/' + ${userTask.id}(returnUrl=${currentUrl})}" class="btn btn-sm btn-primary">
-                                            Review
+                                        <a th:href="@{'/teacher/submissions/' + ${userTask.id}(returnUrl=${currentUrl})}" class="btn btn-warning btn-sm">
+                                            <i class="fas fa-star"></i> Review
                                         </a>
                                     </td>
                                 </tr>
