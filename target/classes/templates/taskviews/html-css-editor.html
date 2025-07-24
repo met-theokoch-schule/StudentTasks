@@ -1153,47 +1153,21 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
             togglePreviewControls();
         });
 
-        // Prüft ob vom Server tatsächlich Inhalt geliefert wurde
+        // Prüft ob Thymeleaf tatsächlich einen leeren Wert eingefügt hat
         function hasValidContent(content) {
+            // Null, undefined oder komplett leer = kein Inhalt vom Server
             if (!content || content === null || content === undefined) {
                 return false;
             }
             
             const trimmedContent = content.toString().trim();
             
-            // Leere Strings, leere Objekte/Arrays
-            if (trimmedContent === '' || trimmedContent === '{}' || trimmedContent === '[]') {
+            // Nur wenn komplett leer (Thymeleaf hat "" eingefügt)
+            if (trimmedContent === '') {
                 return false;
             }
             
-            // Für Task Description: Wenn Thymeleaf th:text="${task?.description ?: ''}" 
-            // einen leeren/null Wert hat, wird der DIV-Inhalt verwendet
-            if (content === window.taskDescription) {
-                const taskDescriptionDiv = document.getElementById('default-task-description');
-                const defaultTaskText = taskDescriptionDiv ? taskDescriptionDiv.textContent.trim() : '';
-                
-                // Prüfe ob es sich um Standard-Beispieltext handelt
-                if (trimmedContent === defaultTaskText && 
-                    (defaultTaskText.includes('# HTML/CSS Grundlagen') || 
-                     defaultTaskText.includes('## Lernziele'))) {
-                    return false;
-                }
-            }
-            
-            // Für Tutorial Content: Ähnliche Logik
-            if (content === window.tutorialContent || 
-                (typeof content === 'string' && content.startsWith('['))) {
-                const tutorialDiv = document.getElementById('default-tutorial-content');
-                const defaultTutorialText = tutorialDiv ? tutorialDiv.textContent.trim() : '';
-                
-                // Prüfe ob es sich um Standard-Beispieltext handelt
-                if (trimmedContent === defaultTutorialText && 
-                    (defaultTutorialText.includes('HTML Grundlagen') || 
-                     defaultTutorialText.includes('Tutorial 1:'))) {
-                    return false;
-                }
-            }
-            
+            // Alles andere (einschließlich Beispieltext) = gültiger Inhalt
             return true;
         }
 
