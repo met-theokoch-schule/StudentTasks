@@ -1,17 +1,13 @@
 package com.example.studenttask.service;
 
-import com.example.studenttask.controller.TeacherGroupController;
 import com.example.studenttask.model.*;
 import com.example.studenttask.repository.*;
+import com.example.studenttask.controller.TeacherGroupController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.Map;
 import java.util.HashMap;
@@ -79,13 +75,13 @@ public class GroupService {
         return result;
     }
 
-    
+
 
     /**
      * Lädt alle Schüler einer Gruppe mit ihren Aufgaben
      */
-    public List<StudentTaskInfo> getStudentTasksForGroup(Group group, User teacher) {
-        List<StudentTaskInfo> result = new ArrayList<>();
+    public List<TeacherGroupController.StudentTaskInfo> getStudentTaskInfoForGroup(Group group, User teacher) {
+        List<TeacherGroupController.StudentTaskInfo> result = new ArrayList<>();
 
         // Alle Schüler der Gruppe
         List<User> students = userRepository.findByGroupsContaining(group);
@@ -97,7 +93,7 @@ public class GroupService {
             .collect(Collectors.toList());
 
         for (User student : students) {
-            List<TaskInfo> taskInfos = new ArrayList<>();
+            List<TeacherGroupController.TaskInfo> taskInfos = new ArrayList<>();
 
             for (Task task : groupTasks) {
                 // UserTask für diesen Schüler und diese Aufgabe
@@ -107,7 +103,7 @@ public class GroupService {
 
                     boolean hasSubmissions = taskContentRepository.countByUserTaskAndIsSubmittedTrue(userTask) > 0;
 
-                    TaskInfo taskInfo = new TaskInfo(
+                    TeacherGroupController.TaskInfo taskInfo = new TeacherGroupController.TaskInfo(
                         userTask.getId(),
                         task,
                         userTask.getStatus(),
@@ -118,7 +114,7 @@ public class GroupService {
             }
 
             if (!taskInfos.isEmpty()) {
-                result.add(new StudentTaskInfo(student, taskInfos));
+                result.add(new TeacherGroupController.StudentTaskInfo(student, taskInfos));
             }
         }
 
@@ -364,5 +360,5 @@ public class GroupService {
         );
     }
 
-    
+
 }
