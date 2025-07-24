@@ -60,7 +60,6 @@
                                             <tr>
                                                 <th>Titel</th>
                                                 <th>Task View</th>
-                                                <th>Erstellt</th>
                                                 <th>Fälligkeitsdatum</th>
                                                 <th>Status</th>
                                                 <th>Aktionen</th>
@@ -72,7 +71,6 @@
                                                     <strong th:text="${task.title}">Aufgabentitel</strong>
                                                 </td>
                                                 <td th:text="${task.taskView?.name ?: 'Kein View'}">Task View</td>
-                                                <td th:text="${#temporals.format(task.createdAt, 'dd.MM.yyyy HH:mm')}">01.01.2024 10:00</td>
                                                 <td th:text="${task.dueDate != null ? #temporals.format(task.dueDate, 'dd.MM.yyyy') : 'Kein Datum'}">31.12.2024</td>
                                                 <td>
                                                     <span class="badge bg-success" th:if="${task.isActive}">Aktiv</span>
