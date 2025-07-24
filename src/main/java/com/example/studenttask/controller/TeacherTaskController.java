@@ -348,7 +348,7 @@ public class TeacherTaskController {
         return "redirect:/teacher/tasks";
     }
 
-    @GetMapping("/submissions/{userTaskId}")
+    @GetMapping("/submissions/{userTaskId}/review")
     public String viewSubmissionReview(@PathVariable Long userTaskId, 
                                      @RequestParam(required = false) Integer version,
                                      Model model, Authentication authentication) {
