@@ -136,6 +136,19 @@ pre {
     position: relative;
 }
 
+/* Trennlinien zwischen Schülerzeilen */
+.task-matrix tbody tr {
+    border-bottom: 1px solid #e9ecef;
+}
+
+.task-matrix tbody tr:last-child {
+    border-bottom: none;
+}
+
+.matrix-student-col {
+    border-bottom: 1px solid #e9ecef;
+}
+
 .status-cell:hover {
     background-color: #f8f9fa;
 }
