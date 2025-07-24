@@ -10,6 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
+import java.time.format.DateTimeFormatter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -434,16 +435,22 @@ public class TeacherTaskController {
         List<TaskContent> taskContents = taskContentService.getAllContentVersions(userTask);
         List<VersionWithSubmissionStatus> versionsWithStatus = new ArrayList<>();
 
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yy HH:mm");
+
         for (TaskContent content : taskContents) {
-            String displayText = "v" + content.getVersion();
+            LocalDateTime submissionDateTime = content.getUpdatedAt();
+            String formattedDateTime = submissionDateTime != null ? submissionDateTime.format(formatter) : "Unbekanntes Datum";
+            String displayText = "v" + content.getVersion() + " " + formattedDateTime;
+
             if (content.isSubmitted()) {
-                displayText += " (Eingereicht)";
-                if (taskReviewService.hasReviewsForVersion(userTask, content.getVersion())) {
-                    displayText += " - Bewertet";
-                }
+                long reviewCount = taskReviewService.countReviewsForVersion(userTask, content.getVersion());
+                String statusIcon = reviewCount > 0 ? "\uD83D\uDDE0" : "\u23F3"; // Auge : Sanduhr
+                displayText += " " + statusIcon;
             } else {
-                displayText += " (Entwurf)";
-            }
+		 LocalDateTime updateDateTime = content.getUpdatedAt();
+                String formattedUpdateDateTime = updateDateTime != null ? updateDateTime.format(formatter) : "Unbekanntes Datum";
+                displayText = "v" + content.getVersion() + " " + formattedUpdateDateTime;
+	    }
             versionsWithStatus.add(new VersionWithSubmissionStatus(content.getVersion(), content.isSubmitted(), displayText));
         }
 
