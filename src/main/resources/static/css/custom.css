@@ -1,3 +1,4 @@
+
 /* Custom CSS for Student Task Management System */
 
 .navbar-brand {
@@ -137,7 +138,7 @@ pre {
 
 /* Trennlinien zwischen Schülerzeilen */
 .task-matrix tbody tr {
-    border-bottom: 3px solid #dee2e6;
+    border-bottom: 2px solid #dee2e6;
 }
 
 .task-matrix tbody tr:last-child {
@@ -145,11 +146,7 @@ pre {
 }
 
 .matrix-student-col {
-    border-bottom: none;
-}
-
-.status-cell {
-    border-bottom: 3px solid #dee2e6;
+    border-bottom: 2px solid #dee2e6;
 }
 
 .status-cell:hover {
@@ -170,18 +167,18 @@ pre {
     .task-matrix-container {
         max-height: 50vh;
     }
-
+    
     .matrix-student-col {
         min-width: 120px;
         font-size: 0.8rem;
     }
-
+    
     .status-cell {
         width: 35px;
         height: 35px;
         padding: 4px;
     }
-
+    
     .rotated-text {
         max-height: 100px;
         font-size: 0.75rem;
