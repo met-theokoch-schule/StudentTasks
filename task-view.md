@@ -37,8 +37,7 @@ Jeder TaskView **MUSS** folgende Funktionen implementieren:
 - Bestätigungsdialog vor Abgabe
 
 #### c) Status-Anzeige
-- Visuelles Feedback für Speicher-/Abgabe-Status
-- Auto-Save-Indikator
+- Visuelles Feedback für Verändert-/Speicher-/Abgabe-Status
 
 #### d) Responsive Design
 - Bootstrap 5 kompatibel
