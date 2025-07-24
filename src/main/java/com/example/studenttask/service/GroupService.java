@@ -50,8 +50,8 @@ public class GroupService {
     /**
      * Findet alle Gruppen mit aktiven Aufgaben eines Lehrers
      */
-    public List<GroupInfo> getGroupsWithActiveTasksByTeacher(User teacher) {
-        List<GroupInfo> result = new ArrayList<>();
+    public List<TeacherGroupController.GroupInfo> getGroupsWithActiveTasksByTeacher(User teacher) {
+        List<TeacherGroupController.GroupInfo> result = new ArrayList<>();
 
         // Alle aktiven Aufgaben des Lehrers
         List<Task> activeTasks = taskRepository.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher);
@@ -73,29 +73,13 @@ public class GroupService {
                 // Letzte Aktivität
                 LocalDateTime lastActivity = getLastActivityForGroup(group, teacher);
 
-                result.add(new GroupInfo(group, studentCount, activeTaskCount, pendingSubmissions, lastActivity));
+                result.add(new TeacherGroupController.GroupInfo(group, studentCount, activeTaskCount, pendingSubmissions, lastActivity));
             });
 
         return result;
     }
 
-    /**
-     * Erstellt Statistiken für eine Gruppe
-     */
-    public GroupStatistics getGroupStatistics(Group group, User teacher) {
-        int totalStudents = userRepository.countByGroupsContaining(group);
-
-        List<Task> activeTasks = taskRepository.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher)
-            .stream()
-            .filter(task -> task.getAssignedGroups().contains(group))
-            .collect(Collectors.toList());
-
-        int activeTaskCount = activeTasks.size();
-        int pendingSubmissions = countPendingSubmissionsForGroup(group, teacher);
-        int completedSubmissions = countCompletedSubmissionsForGroup(group, teacher);
-
-        return new GroupStatistics(totalStudents, activeTaskCount, pendingSubmissions, completedSubmissions);
-    }
+    
 
     /**
      * Lädt alle Schüler einer Gruppe mit ihren Aufgaben
@@ -380,83 +364,5 @@ public class GroupService {
         );
     }
 
-    // Inner classes for data transfer
-    public static class GroupInfo {
-        private final Group group;
-        private final int studentCount;
-        private final int activeTaskCount;
-        private final int pendingSubmissions;
-        private final LocalDateTime lastActivity;
-
-        public GroupInfo(Group group, int studentCount, int activeTaskCount, int pendingSubmissions, LocalDateTime lastActivity) {
-            this.group = group;
-            this.studentCount = studentCount;
-            this.activeTaskCount = activeTaskCount;
-            this.pendingSubmissions = pendingSubmissions;
-            this.lastActivity = lastActivity;
-        }
-
-        public Group getGroup() { return group; }
-        public int getStudentCount() { return studentCount; }
-        public int getActiveTaskCount() { return activeTaskCount; }
-        public int getPendingSubmissions() { return pendingSubmissions; }
-        public LocalDateTime getLastActivity() { return lastActivity; }
-    }
-
-    public static class GroupStatistics {
-        private final int totalStudents;
-        private final int activeTaskCount;
-        private final int pendingSubmissions;
-        private final int completedSubmissions;
-
-        public GroupStatistics(int totalStudents, int activeTaskCount, int pendingSubmissions, int completedSubmissions) {
-            this.totalStudents = totalStudents;
-            this.activeTaskCount = activeTaskCount;
-            this.pendingSubmissions = pendingSubmissions;
-            this.completedSubmissions = completedSubmissions;
-        }
-
-        public int getTotalStudents() { return totalStudents; }
-        public int getActiveTaskCount() { return activeTaskCount; }
-        public int getPendingSubmissions() { return pendingSubmissions; }
-        public int getCompletedSubmissions() { return completedSubmissions; }
-    }
-
-    public static class StudentTaskInfo {
-        private final User student;
-        private final List<TaskInfo> tasks;
-        private final int completedTasks;
-        private final int pendingTasks;
-
-        public StudentTaskInfo(User student, List<TaskInfo> tasks) {
-            this.student = student;
-            this.tasks = tasks;
-            this.completedTasks = 0;
-            this.pendingTasks = 0;
-        }
-
-        public User getStudent() { return student; }
-        public List<TaskInfo> getTasks() { return tasks; }
-        public int getCompletedTasks() { return completedTasks; }
-        public int getPendingTasks() { return pendingTasks; }
-    }
-
-    public static class TaskInfo {
-        private final Long userTaskId;
-        private final Task task;
-        private final TaskStatus status;
-        private final boolean hasSubmissions;
-
-        public TaskInfo(Long userTaskId, Task task, TaskStatus status, boolean hasSubmissions) {
-            this.userTaskId = userTaskId;
-            this.task = task;
-            this.status = status;
-            this.hasSubmissions = hasSubmissions;
-        }
-
-        public Long getUserTaskId() { return userTaskId; }
-        public Task getTask() { return task; }
-        public TaskStatus getStatus() { return status; }
-        public boolean getHasSubmissions() { return hasSubmissions; }
-    }
+    
 }
