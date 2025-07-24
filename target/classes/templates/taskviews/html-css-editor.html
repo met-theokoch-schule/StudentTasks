@@ -676,20 +676,21 @@ Erstellen Sie ein Header-Navigation-Content Layout:
     </script>
     
     <!-- JavaScript-Konfiguration -->
-    <script>
-        // Diese Werte werden normalerweise vom Server gesetzt
-        console.log('🔧 Initialisiere Konfiguration...');
-        if (typeof window.taskId === 'undefined') window.taskId = 1;
-        if (typeof window.isTeacherView === 'undefined') window.isTeacherView = false;
-        if (typeof window.userTaskId === 'undefined') window.userTaskId = null;
-        if (typeof window.currentContent === 'undefined') window.currentContent = '{}';
-        if (typeof window.canEdit === 'undefined') window.canEdit = true;
-        if (typeof window.isSubmitted === 'undefined') window.isSubmitted = false;
+    <script th:inline="javascript">
+        // Get values from Thymeleaf
+        window.taskId = [[${task.id}]];
+        window.isTeacherView = [[${isTeacherView ?: false}]];
+        window.userTaskId = [[${userTask?.id}]];
+        window.currentContent = [[${currentContent ?: '{}'}]];
+        window.canEdit = [[${canEdit ?: true}]];
+        window.isSubmitted = [[${userTask?.status?.name == 'VOLLSTÄNDIG'}]];
         
         console.log('✅ Konfiguration geladen:', {
             taskId: window.taskId,
             canEdit: window.canEdit,
-            isSubmitted: window.isSubmitted
+            isSubmitted: window.isSubmitted,
+            isTeacherView: window.isTeacherView,
+            userTaskId: window.userTaskId
         });
     </script>
 
@@ -1269,27 +1270,30 @@ Erstellen Sie ein Header-Navigation-Content Layout:
             updateSaveStatus('saving');
 
             const content = getContentFromView();
-            const url = isSubmission ? 
-                `/api/tasks/${window.taskId}/submit` : 
-                (window.isTeacherView && window.userTaskId ? `/api/usertasks/${window.userTaskId}/content` : `/api/tasks/${window.taskId}/content`);
-
-            // Simulation für Standalone-Test
-            if (window.location.protocol === 'file:' || !window.taskId || window.taskId === 1) {
-                setTimeout(() => {
-                    updateSaveStatus(isSubmission ? 'submitted' : 'saved');
-                    if (isSubmission) {
-                        document.getElementById('submitButton').style.display = 'none';
-                        editor.setOption('readOnly', true);
-                    }
-                    console.log('✅ Simulation: Inhalt gespeichert');
-                }, 1000);
-                return;
+            
+            // Check if we're in teacher view mode (iframe)
+            const isTeacherView = window.isTeacherView || false;
+            const userTaskId = window.userTaskId;
+            
+            let saveUrl, saveBody;
+            if (isTeacherView && userTaskId) {
+                // Save to student's history when in teacher view
+                saveUrl = isSubmission ? 
+                    `/api/tasks/${window.taskId}/submit` : 
+                    `/api/usertasks/${userTaskId}/content`;
+                saveBody = JSON.stringify({ content: content });
+            } else {
+                // Normal student save
+                saveUrl = isSubmission ? 
+                    `/api/tasks/${window.taskId}/submit` : 
+                    `/api/tasks/${window.taskId}/content`;
+                saveBody = JSON.stringify({ content: content });
             }
 
-            fetch(url, {
+            fetch(saveUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: content })
+                body: saveBody
             })
             .then(response => {
                 if (response.ok) {
@@ -1297,6 +1301,13 @@ Erstellen Sie ein Header-Navigation-Content Layout:
                     if (isSubmission) {
                         document.getElementById('submitButton').style.display = 'none';
                         editor.setOption('readOnly', true);
+                    }
+                    
+                    if (isTeacherView) {
+                        // Notify parent window about save
+                        if (window.parent && window.parent !== window) {
+                            window.parent.postMessage('content-saved', '*');
+                        }
                     }
                     console.log('✅ Inhalt erfolgreich gespeichert');
                 } else {
