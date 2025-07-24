@@ -98,7 +98,7 @@ public class TeacherTaskController {
      * Zeigt die Abgaben für eine bestimmte Aufgabe
      */
     @GetMapping("/tasks/{taskId}/submissions")
-    public String viewTaskSubmissions(@PathVariable Long taskId, Model model, Principal principal) {
+    public String viewTaskSubmissions(@PathVariable Long taskId, Model model, Principal principal, HttpServletRequest request) {
         User teacher = userService.findByOpenIdSubject(principal.getName())
                 .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
         Optional<Task> taskOpt = taskService.findById(taskId);
@@ -112,9 +112,16 @@ public class TeacherTaskController {
 
         List<UserTask> userTasks = userTaskService.findByTask(task);
 
+        // Current URL für returnUrl
+        String currentUrl = request.getRequestURL().toString();
+        if (request.getQueryString() != null) {
+            currentUrl += "?" + request.getQueryString();
+        }
+
         model.addAttribute("teacher", teacher);
         model.addAttribute("task", task);
         model.addAttribute("userTasks", userTasks);
+        model.addAttribute("currentUrl", currentUrl);
 
         return "teacher/task-submissions";
     }
