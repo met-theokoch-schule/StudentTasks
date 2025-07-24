@@ -38,6 +38,7 @@ com/example/studenttask/model/TaskContent.class
 com/example/studenttask/config/DataInitializer.class
 com/example/studenttask/controller/TeacherGroupController$GroupStatistics.class
 com/example/studenttask/controller/TeacherController.class
+com/example/studenttask/controller/DebugController.class
 com/example/studenttask/repository/UserTaskRepository.class
 com/example/studenttask/controller/TeacherGroupController.class
 com/example/studenttask/model/Role.class
