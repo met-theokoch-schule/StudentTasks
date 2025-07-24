@@ -393,16 +393,9 @@
     </style>
 </head>
 <body>
-    <!-- Versteckte Variablen für JavaScript -->
-    <script>
-        // Default values for standalone testing
-        window.taskId = 1;
-        window.isTeacherView = false;
-        window.userTaskId = null;
-        window.currentContent = '{}';
-        window.canEdit = true;
-        window.isSubmitted = false;
-        window.taskDescription = `# HTML/CSS Grundlagen
+    <!-- Versteckte Content-Divs für JavaScript -->
+    <div id="default-task-description" style="display: none;" th:text="${task?.description ?: ''}">
+# HTML/CSS Grundlagen
 
 ## Lernziele
 In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
@@ -415,10 +408,10 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
 ## Anforderungen
 1. Erstellen Sie eine **index.html** Datei als Startseite
 2. Fügen Sie mindestens die folgenden HTML-Elemente hinzu:
-   - \`<h1>\` für die Hauptüberschrift
-   - \`<p>\` für Textabsätze
-   - \`<a>\` für Links
-   - \`<img>\` für Bilder (optional)
+   - `<h1>` für die Hauptüberschrift
+   - `<p>` für Textabsätze
+   - `<a>` für Links
+   - `<img>` für Bilder (optional)
 
 3. Erstellen Sie eine **style.css** Datei für das Styling
 4. Verknüpfen Sie die CSS-Datei mit Ihrer HTML-Seite
@@ -429,250 +422,57 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
 - ✅ Sauberer und lesbarer Code
 - ✅ Responsive Design (optional)
 
-**Viel Erfolg!** 🚀`;
+**Viel Erfolg!** 🚀
+    </div>
+
+    <div id="default-tutorial-content" style="display: none;" th:text="${task?.tutorial ?: ''}">
+[
+    {
+        "title": "HTML Grundlagen",
+        "content": "# Tutorial 1: HTML Grundlagen\n\n## Was ist HTML?\n**HTML** (HyperText Markup Language) ist die Grundlage jeder Webseite. Es definiert die Struktur und den Inhalt.\n\n### Grundstruktur einer HTML-Datei\n\n```html\n<!DOCTYPE html>\n<html lang=\"de\">\n<head>\n    <meta charset=\"UTF-8\">\n    <title>Meine erste Webseite</title>\n</head>\n<body>\n    <h1>Willkommen!</h1>\n    <p>Das ist mein erster Paragraph.</p>\n</body>\n</html>\n```\n\n## Wichtige HTML-Elemente\n\n### Überschriften\n```html\n<h1>Hauptüberschrift</h1>\n<h2>Unterüberschrift</h2>\n<h3>Weitere Ebene</h3>\n```\n\n### Textformatierung\n```html\n<p>Ein normaler Paragraph</p>\n<strong>Fettgedruckter Text</strong>\n<em>Kursiver Text</em>\n```\n\n### Links und Bilder\n```html\n<a href=\"seite2.html\">Link zu einer anderen Seite</a>\n<img src=\"bild.jpg\" alt=\"Beschreibung des Bildes\">\n```\n\n## Aufgaben\n- [ ] Erstellen Sie eine HTML-Datei mit der Grundstruktur\n- [ ] Fügen Sie verschiedene Überschriften hinzu\n- [ ] Schreiben Sie mehrere Paragraphen\n- [ ] Erstellen Sie Links zwischen Seiten\n\n**Weiter zum nächsten Tutorial: CSS Grundlagen →**"
+    },
+    {
+        "title": "CSS Grundlagen",
+        "content": "# Tutorial 2: CSS Grundlagen\n\n## Was ist CSS?\n**CSS** (Cascading Style Sheets) bestimmt das **Aussehen** Ihrer Webseite - Farben, Schriftarten, Layout und mehr!\n\n### CSS mit HTML verknüpfen\n\n```html\n<head>\n    <link rel=\"stylesheet\" href=\"style.css\">\n</head>\n```\n\n### Grundlegende CSS-Syntax\n\n```css\nselektor {\n    eigenschaft: wert;\n    weitere-eigenschaft: wert;\n}\n```\n\n## Wichtige CSS-Eigenschaften\n\n### Farben und Text\n```css\nh1 {\n    color: #3498db;        /* Textfarbe */\n    background-color: #f8f9fa;  /* Hintergrundfarbe */\n    font-size: 2em;        /* Schriftgröße */\n    font-family: Arial, sans-serif;  /* Schriftart */\n}\n```\n\n### Layout und Spacing\n```css\n.container {\n    width: 80%;           /* Breite */\n    margin: 0 auto;       /* Zentrierung */\n    padding: 20px;        /* Innenabstand */\n    border: 1px solid #ddd;  /* Rahmen */\n}\n```\n\n### Hover-Effekte\n```css\nbutton:hover {\n    background-color: #2980b9;\n    cursor: pointer;\n}\n```\n\n## Praktische Übung\nProbieren Sie folgende Styles in Ihrer CSS-Datei:\n\n```css\nbody {\n    font-family: Arial, sans-serif;\n    line-height: 1.6;\n    margin: 0;\n    padding: 20px;\n}\n\nh1 {\n    color: #2c3e50;\n    text-align: center;\n}\n\np {\n    color: #34495e;\n    margin-bottom: 15px;\n}\n```\n\n## Aufgaben\n- [ ] Erstellen Sie eine CSS-Datei\n- [ ] Verknüpfen Sie CSS mit HTML\n- [ ] Experimentieren Sie mit Farben\n- [ ] Probieren Sie verschiedene Schriftarten aus\n\n**← Zurück | Weiter →**"
+    },
+    {
+        "title": "Layout mit CSS",
+        "content": "# Tutorial 3: Layout mit CSS\n\n## Flexbox - Modernes Layout\n**Flexbox** macht es einfach, Elemente zu positionieren und auszurichten.\n\n### Flex Container erstellen\n```css\n.container {\n    display: flex;\n    justify-content: center;  /* horizontal zentrieren */\n    align-items: center;      /* vertikal zentrieren */\n    gap: 20px;               /* Abstand zwischen Elementen */\n}\n```\n\n### Flex Richtung\n```css\n.row {\n    display: flex;\n    flex-direction: row;     /* nebeneinander */\n}\n\n.column {\n    display: flex;\n    flex-direction: column;  /* untereinander */\n}\n```\n\n## Grid - Raster-Layout\n**CSS Grid** ist perfekt für komplexere Layouts.\n\n```css\n.grid-container {\n    display: grid;\n    grid-template-columns: 1fr 2fr 1fr;  /* 3 Spalten */\n    grid-gap: 20px;\n}\n```\n\n## Responsive Design\nIhre Webseite soll auf allen Geräten gut aussehen!\n\n### Media Queries\n```css\n/* Desktop */\n.container {\n    max-width: 1200px;\n}\n\n/* Tablet */\n@media (max-width: 768px) {\n    .container {\n        max-width: 100%;\n        padding: 10px;\n    }\n}\n\n/* Handy */\n@media (max-width: 480px) {\n    .grid-container {\n        grid-template-columns: 1fr;  /* nur 1 Spalte */\n    }\n}\n```\n\n## Praktisches Beispiel\nErstellen Sie ein Header-Navigation-Content Layout:\n\n```css\n.page-layout {\n    display: grid;\n    grid-template-rows: auto 1fr auto;\n    min-height: 100vh;\n}\n\n.header {\n    background: #3498db;\n    color: white;\n    padding: 1rem;\n}\n\n.content {\n    padding: 2rem;\n}\n\n.footer {\n    background: #2c3e50;\n    color: white;\n    padding: 1rem;\n    text-align: center;\n}\n```\n\n## Aufgaben\n- [ ] Experimentieren Sie mit Flexbox\n- [ ] Probieren Sie Grid-Layout aus\n- [ ] Machen Sie Ihr Design responsive\n- [ ] Testen Sie verschiedene Bildschirmgrößen\n\n**← Zurück zum Anfang**"
+    }
+]
+    </div>
+
+    <!-- Versteckte Variablen für JavaScript -->
+    <script>
+        // Default values for standalone testing
+        window.taskId = 1;
+        window.isTeacherView = false;
+        window.userTaskId = null;
+        window.currentContent = '{}';
+        window.canEdit = true;
+        window.isSubmitted = false;
         
-        window.tutorialContent = [
-            {
-                title: "HTML Grundlagen",
-                content: `# Tutorial 1: HTML Grundlagen
-
-## Was ist HTML?
-**HTML** (HyperText Markup Language) ist die Grundlage jeder Webseite. Es definiert die Struktur und den Inhalt.
-
-### Grundstruktur einer HTML-Datei
-
-\`\`\`html
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <title>Meine erste Webseite</title>
-</head>
-<body>
-    <h1>Willkommen!</h1>
-    <p>Das ist mein erster Paragraph.</p>
-</body>
-</html>
-\`\`\`
-
-## Wichtige HTML-Elemente
-
-### Überschriften
-\`\`\`html
-<h1>Hauptüberschrift</h1>
-<h2>Unterüberschrift</h2>
-<h3>Weitere Ebene</h3>
-\`\`\`
-
-### Textformatierung
-\`\`\`html
-<p>Ein normaler Paragraph</p>
-<strong>Fettgedruckter Text</strong>
-<em>Kursiver Text</em>
-\`\`\`
-
-### Links und Bilder
-\`\`\`html
-<a href="seite2.html">Link zu einer anderen Seite</a>
-<img src="bild.jpg" alt="Beschreibung des Bildes">
-\`\`\`
-
-## Aufgaben
-- [ ] Erstellen Sie eine HTML-Datei mit der Grundstruktur
-- [ ] Fügen Sie verschiedene Überschriften hinzu
-- [ ] Schreiben Sie mehrere Paragraphen
-- [ ] Erstellen Sie Links zwischen Seiten
-
-**Weiter zum nächsten Tutorial: CSS Grundlagen →**`
-            },
-            {
-                title: "CSS Grundlagen",
-                content: `# Tutorial 2: CSS Grundlagen
-
-## Was ist CSS?
-**CSS** (Cascading Style Sheets) bestimmt das **Aussehen** Ihrer Webseite - Farben, Schriftarten, Layout und mehr!
-
-### CSS mit HTML verknüpfen
-
-\`\`\`html
-<head>
-    <link rel="stylesheet" href="style.css">
-</head>
-\`\`\`
-
-### Grundlegende CSS-Syntax
-
-\`\`\`css
-selektor {
-    eigenschaft: wert;
-    weitere-eigenschaft: wert;
-}
-\`\`\`
-
-## Wichtige CSS-Eigenschaften
-
-### Farben und Text
-\`\`\`css
-h1 {
-    color: #3498db;        /* Textfarbe */
-    background-color: #f8f9fa;  /* Hintergrundfarbe */
-    font-size: 2em;        /* Schriftgröße */
-    font-family: Arial, sans-serif;  /* Schriftart */
-}
-\`\`\`
-
-### Layout und Spacing
-\`\`\`css
-.container {
-    width: 80%;           /* Breite */
-    margin: 0 auto;       /* Zentrierung */
-    padding: 20px;        /* Innenabstand */
-    border: 1px solid #ddd;  /* Rahmen */
-}
-\`\`\`
-
-### Hover-Effekte
-\`\`\`css
-button:hover {
-    background-color: #2980b9;
-    cursor: pointer;
-}
-\`\`\`
-
-## Praktische Übung
-Probieren Sie folgende Styles in Ihrer CSS-Datei:
-
-\`\`\`css
-body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-    margin: 0;
-    padding: 20px;
-}
-
-h1 {
-    color: #2c3e50;
-    text-align: center;
-}
-
-p {
-    color: #34495e;
-    margin-bottom: 15px;
-}
-\`\`\`
-
-## Aufgaben
-- [ ] Erstellen Sie eine CSS-Datei
-- [ ] Verknüpfen Sie CSS mit HTML
-- [ ] Experimentieren Sie mit Farben
-- [ ] Probieren Sie verschiedene Schriftarten aus
-
-**← Zurück | Weiter →**`
-            },
-            {
-                title: "Layout mit CSS",
-                content: `# Tutorial 3: Layout mit CSS
-
-## Flexbox - Modernes Layout
-**Flexbox** macht es einfach, Elemente zu positionieren und auszurichten.
-
-### Flex Container erstellen
-\`\`\`css
-.container {
-    display: flex;
-    justify-content: center;  /* horizontal zentrieren */
-    align-items: center;      /* vertikal zentrieren */
-    gap: 20px;               /* Abstand zwischen Elementen */
-}
-\`\`\`
-
-### Flex Richtung
-\`\`\`css
-.row {
-    display: flex;
-    flex-direction: row;     /* nebeneinander */
-}
-
-.column {
-    display: flex;
-    flex-direction: column;  /* untereinander */
-}
-\`\`\`
-
-## Grid - Raster-Layout
-**CSS Grid** ist perfekt für komplexere Layouts.
-
-\`\`\`css
-.grid-container {
-    display: grid;
-    grid-template-columns: 1fr 2fr 1fr;  /* 3 Spalten */
-    grid-gap: 20px;
-}
-\`\`\`
-
-## Responsive Design
-Ihre Webseite soll auf allen Geräten gut aussehen!
-
-### Media Queries
-\`\`\`css
-/* Desktop */
-.container {
-    max-width: 1200px;
-}
-
-/* Tablet */
-@media (max-width: 768px) {
-    .container {
-        max-width: 100%;
-        padding: 10px;
-    }
-}
-
-/* Handy */
-@media (max-width: 480px) {
-    .grid-container {
-        grid-template-columns: 1fr;  /* nur 1 Spalte */
-    }
-}
-\`\`\`
-
-## Praktisches Beispiel
-Erstellen Sie ein Header-Navigation-Content Layout:
-
-\`\`\`css
-.page-layout {
-    display: grid;
-    grid-template-rows: auto 1fr auto;
-    min-height: 100vh;
-}
-
-.header {
-    background: #3498db;
-    color: white;
-    padding: 1rem;
-}
-
-.content {
-    padding: 2rem;
-}
-
-.footer {
-    background: #2c3e50;
-    color: white;
-    padding: 1rem;
-    text-align: center;
-}
-\`\`\`
-
-## Aufgaben
-- [ ] Experimentieren Sie mit Flexbox
-- [ ] Probieren Sie Grid-Layout aus
-- [ ] Machen Sie Ihr Design responsive
-- [ ] Testen Sie verschiedene Bildschirmgrößen
-
-**← Zurück zum Anfang**`
+        // Content aus versteckten DIVs lesen
+        window.taskDescription = document.getElementById('default-task-description').textContent.trim();
+        
+        // Tutorial Content aus verstecktem DIV lesen und parsen
+        const tutorialText = document.getElementById('default-tutorial-content').textContent.trim();
+        try {
+            if (tutorialText.startsWith('[')) {
+                window.tutorialContent = JSON.parse(tutorialText);
+            } else {
+                // Falls es kein JSON Array ist, als einzelnes Tutorial behandeln
+                window.tutorialContent = [
+                    {
+                        title: "HTML/CSS Tutorial",
+                        content: tutorialText
+                    }
+                ];
             }
-        ];
+        } catch (error) {
+            console.warn('Fehler beim Parsen der Tutorial-Daten, verwende Fallback:', error);
+            window.tutorialContent = [];
+        }
     </script>
     
     <!-- JavaScript-Konfiguration -->
