@@ -453,10 +453,12 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
         window.isSubmitted = false;
         
         // Content aus versteckten DIVs lesen
-        window.taskDescription = document.getElementById('default-task-description').textContent.trim();
+        const taskDescriptionDiv = document.getElementById('default-task-description');
+        window.taskDescription = taskDescriptionDiv ? taskDescriptionDiv.textContent.trim() : '';
         
         // Tutorial Content aus verstecktem DIV lesen und parsen
-        const tutorialText = document.getElementById('default-tutorial-content').textContent.trim();
+        const tutorialDiv = document.getElementById('default-tutorial-content');
+        const tutorialText = tutorialDiv ? tutorialDiv.textContent.trim() : '';
         try {
             if (tutorialText.startsWith('[')) {
                 window.tutorialContent = JSON.parse(tutorialText);
@@ -1153,12 +1155,36 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
 
         // Prüft ob Inhalt vorhanden und nicht leer ist
         function hasValidContent(content) {
-            return content && 
-                   content !== null && 
-                   content !== undefined && 
-                   content.toString().trim() !== '' && 
-                   content.toString().trim() !== '{}' &&
-                   content.toString().trim() !== '[]';
+            if (!content || content === null || content === undefined) {
+                return false;
+            }
+            
+            const trimmedContent = content.toString().trim();
+            
+            // Leere Strings, leere Objekte/Arrays
+            if (trimmedContent === '' || trimmedContent === '{}' || trimmedContent === '[]') {
+                return false;
+            }
+            
+            // Prüfe ob es nur aus Standard-Beispieltext besteht (für Task Description)
+            const defaultTaskText = `# HTML/CSS Grundlagen
+
+## Lernziele
+In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.`;
+            
+            // Prüfe ob es der Standard-Tutorial-Text ist
+            const defaultTutorialStart = `[
+    {
+        "title": "HTML Grundlagen",
+        "content": "# Tutorial 1: HTML Grundlagen`;
+            
+            // Wenn es der Standard-Beispieltext ist, als "kein Inhalt" betrachten
+            if (trimmedContent.startsWith(defaultTaskText.trim()) || 
+                trimmedContent.startsWith(defaultTutorialStart.trim())) {
+                return false;
+            }
+            
+            return true;
         }
 
         // Zeigt/versteckt Tabs basierend auf verfügbarem Inhalt
