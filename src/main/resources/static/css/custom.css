@@ -90,7 +90,6 @@ pre {
     background: #f8f9fa;
     z-index: 5;
     border-right: 2px solid #dee2e6;
-    border-bottom: 2px solid #dee2e6;
     min-width: 150px;
     max-width: 200px;
     overflow: hidden;
@@ -139,7 +138,12 @@ pre {
 
 /* Trennlinien zwischen Schülerzeilen */
 .task-matrix tbody tr {
-    border-bottom: 2px solid #dee2e6;
+    border-top: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.task-matrix tbody tr:first-child {
+    border-top: none;
 }
 
 .task-matrix tbody tr:last-child {
