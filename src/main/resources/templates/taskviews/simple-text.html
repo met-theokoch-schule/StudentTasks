@@ -104,10 +104,10 @@
                     </div>
                 </div>
 
-                <!-- Auto-Save Status -->
+                <!-- Save Status -->
                 <div class="mt-2">
                     <small id="save-status" class="text-muted">
-                        <i class="fas fa-circle text-success"></i> Alle Änderungen gespeichert
+                        <i class="fas fa-circle text-muted"></i> Bereit zum Speichern
                     </small>
                 </div>
             </div>
@@ -119,10 +119,6 @@
         // Get taskId from Thymeleaf
         const taskId = [[${task.id}]];
         console.log('🔍 TaskId from Thymeleaf:', taskId);
-
-        // Auto-Save Funktionalität
-        let saveTimeout;
-        let hasUnsavedChanges = false;
 
         function saveContent() {
             const content = document.getElementById('submission-content').value;
@@ -153,7 +149,6 @@
             .then(response => {
                 if (response.ok) {
                     updateSaveStatus('saved');
-                    hasUnsavedChanges = false;
                     if (isTeacherView) {
                         // Notify parent window about save
                         if (window.parent && window.parent !== window) {
@@ -200,28 +195,11 @@
             }
         }
 
-        function autoSave() {
-            if (hasUnsavedChanges) {
-                saveContent();
-            }
-        }
-
-        function onContentChange() {
-            hasUnsavedChanges = true;
-            updateSaveStatus('unsaved');
-
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(autoSave, 2000); // Auto-save nach 2 Sekunden
-        }
-
         function updateSaveStatus(status) {
             const statusElement = document.getElementById('save-status');
             switch (status) {
                 case 'saved':
-                    statusElement.innerHTML = '<i class="fas fa-circle text-success"></i> Alle Änderungen gespeichert';
-                    break;
-                case 'unsaved':
-                    statusElement.innerHTML = '<i class="fas fa-circle text-warning"></i> Ungespeicherte Änderungen...';
+                    statusElement.innerHTML = '<i class="fas fa-circle text-success"></i> Änderungen gespeichert';
                     break;
                 case 'saving':
                     statusElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Speichere...';
@@ -232,16 +210,11 @@
                 case 'submitted':
                     statusElement.innerHTML = '<i class="fas fa-circle text-success"></i> Aufgabe abgegeben';
                     break;
+                default:
+                    statusElement.innerHTML = '<i class="fas fa-circle text-muted"></i> Bereit zum Speichern';
+                    break;
             }
         }
-
-        // Warnung vor dem Verlassen der Seite bei ungespeicherten Änderungen
-        window.addEventListener('beforeunload', function (e) {
-            if (hasUnsavedChanges) {
-                e.preventDefault();
-                e.returnValue = '';
-            }
-        });
 
         // Check if task is already submitted and disable editing
         window.addEventListener('DOMContentLoaded', function() {
@@ -251,6 +224,8 @@
                 document.getElementById('save-btn').disabled = true;
                 document.getElementById('submit-btn').disabled = true;
                 updateSaveStatus('submitted');
+            } else {
+                updateSaveStatus('ready');
             }
         });
     </script>

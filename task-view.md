@@ -30,7 +30,7 @@ Jeder TaskView **MUSS** folgende Funktionen implementieren:
 #### a) Content-Speicherung
 - JavaScript-Funktion `saveContent(isSubmission = false)`
 - Senden des Inhalts via POST an `/api/tasks/${taskId}/content`
-- Unterstützung für Auto-Save
+- Explizite Speicherung durch Benutzeraktion
 
 #### b) Content-Abgabe
 - JavaScript-Funktion `submitTask()`
@@ -142,24 +142,15 @@ function submitTask() {
     }
 }
 
-// Auto-Save implementieren
-function onContentChange() {
-    hasUnsavedChanges = true;
-    updateSaveStatus('unsaved');
-    
-    clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(() => saveContent(false), 2000);
-}
-
 // Status-Anzeige aktualisieren
 function updateSaveStatus(status) {
     const statusElement = document.getElementById('save-status');
     switch (status) {
         case 'saved': /* Gespeichert */ break;
-        case 'unsaved': /* Ungespeichert */ break;
         case 'saving': /* Speichert... */ break;
         case 'error': /* Fehler */ break;
         case 'submitted': /* Abgegeben */ break;
+        case 'ready': /* Bereit zum Speichern */ break;
     }
 }
 ```
@@ -293,41 +284,20 @@ if (userTaskStatus === 'VOLLSTÄNDIG') {
 
 ## Performance-Richtlinien
 
-### Auto-Save Optimierung
-```javascript
-// Debouncing für häufige Änderungen
-let saveTimeout;
-function scheduleAutoSave() {
-    clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(() => saveContent(false), 2000);
-}
-
-// Content-Vergleich vor Speicherung
-let lastSavedContent = '';
-function saveIfChanged() {
-    const currentContent = getContentFromView();
-    if (currentContent !== lastSavedContent) {
-        saveContent(false);
-        lastSavedContent = currentContent;
-    }
-}
-```
-
 ### Memory Management
 ```javascript
-// Event Listener cleanup
+// Event Listener cleanup bei Bedarf
 window.addEventListener('beforeunload', function() {
-    clearTimeout(saveTimeout);
-    // Weitere Cleanup-Aktionen
+    // Cleanup-Aktionen falls erforderlich
 });
 ```
 
 ## Testing
 
 ### Pflicht-Tests für jeden TaskView
-1. **Content-Speicherung**: Kann Inhalt gespeichert werden?
+1. **Content-Speicherung**: Kann Inhalt manuell gespeichert werden?
 2. **Content-Ladung**: Wird gespeicherter Inhalt korrekt geladen?
-3. **Auto-Save**: Funktioniert automatisches Speichern?
+3. **Explizite Speicherung**: Funktioniert manuelle Speicherung?
 4. **Abgabe**: Kann Aufgabe abgegeben werden?
 5. **Status-Updates**: Werden Status-Änderungen angezeigt?
 6. **Mobile-Ansicht**: Funktioniert auf kleinen Bildschirmen?
@@ -363,7 +333,7 @@ VALUES ('Mein Custom View', 'Beschreibung', 'taskviews/my-custom-view.html', tru
 
 ### Häufige Probleme
 - **TaskId undefined**: Thymeleaf-Variablen prüfen
-- **Auto-Save funktioniert nicht**: Event-Listener überprüfen
+- **Speicherung funktioniert nicht**: API-Endpoints überprüfen
 - **iFrame-Kommunikation**: PostMessage-Events kontrollieren
 - **Status nicht aktualisiert**: DOM-Elemente validieren
 
