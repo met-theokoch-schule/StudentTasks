@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 import java.security.Principal;
@@ -47,22 +48,7 @@ public class TeacherGroupController {
         return "teacher/groups-list";
     }
 
-    /**
-     * Zeigt Details einer Gruppe mit allen Schülern und ihren Aufgaben
-     */
-    @GetMapping("/{groupId}")
-    public String showGroupDetail(@PathVariable Long groupId, Model model, Principal principal) {
-        User teacher = userService.findByOpenIdSubject(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-
-        // Lade Gruppe
-        Group group = groupService.findById(groupId);
-        if (group == null) {
-            throw new RuntimeException("Gruppe nicht gefunden");
-        }
-
-        // Lade Statistiken für die Gruppe
-        GroupStatistics statistics = groupService.getGroupStatistics(group, teacher);
+    
 
         // Lade Matrix-Daten für die Gruppe
         Map<String, Object> matrix = groupService.getStudentTaskMatrix(group, teacher);
