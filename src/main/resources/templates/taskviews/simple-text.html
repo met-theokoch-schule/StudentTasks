@@ -82,24 +82,7 @@
                           placeholder="Hier deine Antwort eingeben..."></textarea>
             </div>
 
-            <div class="d-flex gap-2 mb-3">
-                <button type="button" 
-                        class="btn btn-secondary" 
-                        onclick="saveContent(false)"
-                        id="saveButton">
-                    <i class="fas fa-save"></i> Speichern
-                </button>
-                <button type="button" 
-                        class="btn btn-success" 
-                        onclick="saveContent(true)"
-                        id="submitButton">
-                    <i class="fas fa-check"></i> Abgeben
-                </button>
-                <a th:href="@{'/student/tasks/' + ${task.id} + '/history'}" 
-                   class="btn btn-outline-info">
-                    <i class="fas fa-history"></i> Historie anzeigen
-                </a>
-            </div>
+            
 </div>
                     </div>
                 </div>
