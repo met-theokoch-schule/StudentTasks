@@ -24,7 +24,6 @@ import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-import javax.servlet.http.HttpServletRequest;
 
 @Controller
 @RequestMapping("/teacher")
@@ -315,53 +314,5 @@ public class TeacherController {
         return "taskviews/" + task.getTaskView().getId();
     }
 
-    @GetMapping("/groups/{groupId}")
-    public String groupDetail(@PathVariable Long groupId, Model model, Principal principal, HttpServletRequest request) {
-        Group group = groupService.findById(groupId);
-        if (group == null) {
-            return "redirect:/teacher/groups";
-        }
-
-        List<User> students = group.getUsers().stream()
-            .filter(user -> user.getRoles().stream().anyMatch(role -> role.getName().equals("ROLE_STUDENT")))
-            .collect(Collectors.toList());
-
-        Map<User, Double> statistics = new HashMap<>();
-        for (User student : students) {
-            List<UserTask> userTasks = userTaskService.findByUser(student);
-            long gradedTasks = userTasks.stream().filter(ut -> ut.getGrade() != null).count();
-            double percentage = userTasks.isEmpty() ? 0 : (double) gradedTasks / userTasks.size() * 100;
-            statistics.put(student, percentage);
-        }
-
-        // Erstelle eine Matrix: Student x Aufgabe => Note
-        List<Task> tasks = taskService.findAllByAssignedGroupsContains(group);
-        Map<User, Map<Task, String>> matrix = new LinkedHashMap<>();
-
-        for (User student : students) {
-            matrix.put(student, new LinkedHashMap<>());
-            for (Task task : tasks) {
-                Optional<UserTask> userTaskOpt = userTaskService.findByUserAndTask(student, task);
-                if (userTaskOpt.isPresent()) {
-                    UserTask userTask = userTaskOpt.get();
-                    matrix.get(student).put(task, userTask.getGrade() != null ? userTask.getGrade() : "-");
-                } else {
-                    matrix.get(student).put(task, "-");
-                }
-            }
-        }
-
-        // Current URL für returnUrl
-        String currentUrl = request.getRequestURL().toString();
-        if (request.getQueryString() != null) {
-            currentUrl += "?" + request.getQueryString();
-        }
-
-        model.addAttribute("group", group);
-        model.addAttribute("statistics", statistics);
-        model.addAttribute("matrix", matrix);
-        model.addAttribute("currentUrl", currentUrl);
-
-        return "teacher/group-detail";
-    }
+    
 }
