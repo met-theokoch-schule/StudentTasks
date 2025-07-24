@@ -1,6 +1,6 @@
 package com.example.studenttask.service;
 
-import com.example.studenttask.controller.TeacherGroupController.*;
+import com.example.studenttask.controller.TeacherGroupController;
 import com.example.studenttask.model.*;
 import com.example.studenttask.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -337,7 +337,7 @@ public class GroupService {
         }
     }
 
-    public TeacherGroupController.GroupStatistics calculateGroupStatistics(Group group, User teacher) {
+    public TeacherGroupController.GroupStatistics getGroupStatistics(Group group, User teacher) {
         // Anzahl der Schüler in der Gruppe
         int totalStudents = (int) userRepository.countByGroupsContaining(group);
 
