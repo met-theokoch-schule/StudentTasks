@@ -39,6 +39,11 @@ import java.util.HashSet;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+
 @Controller
 @RequestMapping("/teacher")
 @PreAuthorize("hasAnyAuthority('ROLE_TEACHER', 'ROLE_ADMIN') or @userService.hasTeacherRole(authentication.name)")
@@ -75,24 +80,54 @@ public class TeacherTaskController {
      * Zeigt die Übersicht aller Aufgaben des Lehrers
      */
     @GetMapping("/tasks")
-    @PreAuthorize("hasAnyAuthority('ROLE_TEACHER', 'ROLE_ADMIN') or @userService.hasTeacherRole(authentication.name)")
-    public String listTasks(Model model, Principal principal) {
-        User teacher = userService.findByOpenIdSubject(principal.getName())
+    public String listTasks(Model model, Authentication authentication) {
+        User teacher = userService.findByOpenIdSubject(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
         System.out.println("🔍 === DEBUG: Task List Loading ===");
         System.out.println("   - Loading tasks for teacher: " + teacher.getName() + " (ID: " + teacher.getId() + ")");
 
-        List<Task> tasks = taskService.findByCreatedBy(teacher);
-        System.out.println("   - Found " + tasks.size() + " tasks in task list");
-        for (Task task : tasks) {
-            System.out.println("   - Task: " + task.getTitle() + " (ID: " + task.getId() + ", Active: "
-                    + task.getIsActive() + ")");
+        List<Task> allTasks = taskService.findByCreatedBy(teacher);
+
+        System.out.println("   - Found " + allTasks.size() + " tasks in task list");
+
+        // Gruppiere Aufgaben nach UnitTitle, ähnlich wie in der Schüler-Ansicht
+        Map<UnitTitle, List<Task>> tasksByUnitTitle = new LinkedHashMap<>();
+
+        // Sammle alle UnitTitles und sortiere sie alphabetisch
+        Set<UnitTitle> unitTitles = allTasks.stream()
+            .map(Task::getUnitTitle)
+            .collect(Collectors.toSet());
+
+        List<UnitTitle> sortedUnitTitles = unitTitles.stream()
+            .sorted((ut1, ut2) -> {
+                // null-Werte (Aufgaben ohne Thema) kommen zuletzt
+                if (ut1 == null && ut2 == null) return 0;
+                if (ut1 == null) return 1;
+                if (ut2 == null) return -1;
+                // Sortierung nach weight (aufsteigend), dann nach Name
+                int weightComparison = Integer.compare(ut1.getWeight(), ut2.getWeight());
+                if (weightComparison != 0) {
+                    return weightComparison;
+                }
+                return ut1.getName().compareTo(ut2.getName());
+            })
+            .collect(Collectors.toList());
+
+        // Gruppiere Aufgaben nach UnitTitle
+        for (UnitTitle unitTitle : sortedUnitTitles) {
+            List<Task> tasksForUnit = allTasks.stream()
+                .filter(task -> Objects.equals(task.getUnitTitle(), unitTitle))
+                .sorted((t1, t2) -> t1.getTitle().compareTo(t2.getTitle()))
+                .collect(Collectors.toList());
+
+            if (!tasksForUnit.isEmpty()) {
+                tasksByUnitTitle.put(unitTitle, tasksForUnit);
+            }
         }
 
-        model.addAttribute("teacher", teacher);
-        model.addAttribute("tasks", tasks);
-
+        model.addAttribute("tasksByUnitTitle", tasksByUnitTitle);
+        model.addAttribute("tasks", allTasks); // Für Rückwärtskompatibilität
         return "teacher/tasks-list";
     }
 
@@ -363,7 +398,7 @@ public class TeacherTaskController {
         return "redirect:/teacher/tasks";
     }
 
-    
+
 @GetMapping("/submissions/{userTaskId}")
     public String reviewSubmission(@PathVariable Long userTaskId, 
                                  @RequestParam(required = false) String returnUrl,
@@ -376,7 +411,7 @@ public class TeacherTaskController {
 
         UserTask userTask = userTaskOpt.get();
         model.addAttribute("userTask", userTask);
-        
+
         // If no returnUrl is provided as parameter, get it from the HTTP Referer header
         String finalReturnUrl = returnUrl;
         if (finalReturnUrl == null || finalReturnUrl.trim().isEmpty()) {

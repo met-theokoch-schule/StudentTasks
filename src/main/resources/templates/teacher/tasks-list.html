@@ -40,56 +40,73 @@
 
         <div class="row">
             <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <div th:if="${tasks != null and !tasks.isEmpty()}">
-                            <div class="table-responsive">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Titel</th>
-                                            <th>Task View</th>
-                                            <th>Erstellt</th>
-                                            <th>Fälligkeitsdatum</th>
-                                            <th>Status</th>
-                                            <th>Aktionen</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr th:each="task : ${tasks}">
-                                            <td>
-                                                <strong th:text="${task.title}">Aufgabentitel</strong>
-                                            </td>
-                                            <td th:text="${task.taskView?.name ?: 'Kein View'}">Task View</td>
-                                            <td th:text="${#temporals.format(task.createdAt, 'dd.MM.yyyy HH:mm')}">01.01.2024 10:00</td>
-                                            <td th:text="${task.dueDate != null ? #temporals.format(task.dueDate, 'dd.MM.yyyy') : 'Kein Datum'}">31.12.2024</td>
-                                            <td>
-                                                <span class="badge bg-success" th:if="${task.isActive}">Aktiv</span>
-                                                <span class="badge bg-secondary" th:unless="${task.isActive}">Inaktiv</span>
-                                            </td>
-                                            <td>
-                                                <div class="btn-group" role="group">
-                                                    <a th:href="@{'/teacher/tasks/' + ${task.id} + '/edit'}" class="btn btn-sm btn-outline-secondary">
-                                                        <i class="fas fa-edit"></i> Bearbeiten
-                                                    </a>
-                                                    <a th:href="@{'/teacher/tasks/' + ${task.id} + '/submissions'}" class="btn btn-sm btn-primary">
-                                                        <i class="fas fa-clipboard-list"></i> Abgaben
-                                                    </a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                <div th:if="${tasksByUnitTitle != null and !tasksByUnitTitle.isEmpty()}">
+                    <!-- Gruppierte Aufgaben nach UnitTitle -->
+                    <div th:each="unitEntry : ${tasksByUnitTitle}" class="mb-4">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-book-open me-2"></i>
+                                    <span th:text="${unitEntry.key?.name ?: 'Aufgaben ohne Thema'}">Thema</span>
+                                    <span class="badge bg-primary ms-2" th:text="${unitEntry.value.size()}">0</span>
+                                </h5>
+                                <small class="text-muted" th:if="${unitEntry.key?.description}" 
+                                       th:text="${unitEntry.key.description}">Beschreibung</small>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-striped mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Titel</th>
+                                                <th>Task View</th>
+                                                <th>Erstellt</th>
+                                                <th>Fälligkeitsdatum</th>
+                                                <th>Status</th>
+                                                <th>Aktionen</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="task : ${unitEntry.value}">
+                                                <td>
+                                                    <strong th:text="${task.title}">Aufgabentitel</strong>
+                                                </td>
+                                                <td th:text="${task.taskView?.name ?: 'Kein View'}">Task View</td>
+                                                <td th:text="${#temporals.format(task.createdAt, 'dd.MM.yyyy HH:mm')}">01.01.2024 10:00</td>
+                                                <td th:text="${task.dueDate != null ? #temporals.format(task.dueDate, 'dd.MM.yyyy') : 'Kein Datum'}">31.12.2024</td>
+                                                <td>
+                                                    <span class="badge bg-success" th:if="${task.isActive}">Aktiv</span>
+                                                    <span class="badge bg-secondary" th:unless="${task.isActive}">Inaktiv</span>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group" role="group">
+                                                        <a th:href="@{'/teacher/tasks/' + ${task.id} + '/edit'}" class="btn btn-sm btn-outline-secondary">
+                                                            <i class="fas fa-edit"></i> Bearbeiten
+                                                        </a>
+                                                        <a th:href="@{'/teacher/tasks/' + ${task.id} + '/submissions'}" class="btn btn-sm btn-primary">
+                                                            <i class="fas fa-clipboard-list"></i> Abgaben
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
-                        <div th:if="${tasks == null or tasks.isEmpty()}" class="text-center py-5">
-                            <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
-                            <h3 class="text-muted">Noch keine Aufgaben erstellt</h3>
-                            <p class="text-muted">Erstellen Sie Ihre erste Aufgabe, um loszulegen.</p>
-                            <a th:href="@{/teacher/tasks/create}" class="btn btn-success btn-lg">
-                                <i class="fas fa-plus"></i> Erste Aufgabe erstellen
-                            </a>
-                        </div>
+                    </div>
+                </div>
+
+                <!-- Fallback für keine Aufgaben -->
+                <div th:if="${tasksByUnitTitle == null or tasksByUnitTitle.isEmpty()}" 
+                     class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                        <h3 class="text-muted">Noch keine Aufgaben erstellt</h3>
+                        <p class="text-muted">Erstellen Sie Ihre erste Aufgabe, um loszulegen.</p>
+                        <a th:href="@{/teacher/tasks/create}" class="btn btn-success btn-lg">
+                            <i class="fas fa-plus"></i> Erste Aufgabe erstellen
+                        </a>
                     </div>
                 </div>
             </div>
