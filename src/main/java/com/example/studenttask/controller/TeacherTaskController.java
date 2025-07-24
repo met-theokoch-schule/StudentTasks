@@ -401,7 +401,7 @@ public class TeacherTaskController {
         model.addAttribute("statuses", statuses);
 
         // Get all task contents with submission status
-        List<TaskContent> taskContents = taskContentService.findByUserTaskOrderByVersionDesc(userTask);
+        List<TaskContent> taskContents = taskContentService.getAllContentVersions(userTask);
         List<VersionWithSubmissionStatus> versionsWithStatus = new ArrayList<>();
 
         for (TaskContent content : taskContents) {
