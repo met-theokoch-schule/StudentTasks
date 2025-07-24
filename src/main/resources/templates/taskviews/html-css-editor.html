@@ -1,36 +1,37 @@
+
 <!DOCTYPE html>
 <html lang="de" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HTML/CSS Editor - [[${task.title ?: 'HTML/CSS Editor'}]]</title>
-
+    
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
+    
     <!-- CodeMirror CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/theme/material.min.css">
-
+    
     <!-- Font Awesome für Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+    
     <!-- Marked.js für Markdown-Verarbeitung -->
     <script src="https://cdn.jsdelivr.net/npm/marked@5.1.1/marked.min.js"></script>
-
+    
     <style>
         body, html {
             height: 100%;
             margin: 0;
             padding: 0;
         }
-
+        
         .main-container {
             height: 100vh;
             min-height: 600px;
             overflow: hidden;
         }
-
+        
         .left-panel {
             height: 100%;
             border-right: 1px solid #dee2e6;
@@ -38,46 +39,46 @@
             flex-direction: column;
             min-height: 600px;
         }
-
+        
         .right-panel {
             height: 100%;
             display: flex;
             flex-direction: column;
             min-height: 600px;
         }
-
+        
         .editor-container {
             flex: 1;
             position: relative;
             overflow: hidden;
             min-height: 400px;
         }
-
+        
         .preview-container {
             flex: 1;
             position: relative;
             min-height: 400px;
         }
-
+        
         /* Responsive Anpassungen */
         @media (max-width: 768px) {
             .left-panel, .right-panel {
                 height: 600px;
                 min-height: 600px;
             }
-
+            
             .editor-container, .preview-container {
                 min-height: 450px;
             }
         }
-
+        
         .preview-iframe {
             width: 100%;
             height: 100%;
             border: none;
             background: white;
         }
-
+        
         .file-tabs {
             background: #f8f9fa;
             border-bottom: 1px solid #dee2e6;
@@ -87,7 +88,7 @@
             gap: 0.25rem;
             min-height: 60px;
         }
-
+        
         .file-tab {
             background: white;
             border: 1px solid #dee2e6;
@@ -100,38 +101,38 @@
             font-size: 0.875rem;
             transition: all 0.2s;
         }
-
+        
         .file-tab:hover {
             background: #e9ecef;
         }
-
+        
         .file-tab.active {
             background: #0d6efd;
             color: white;
             border-color: #0d6efd;
         }
-
+        
         .file-tab .close-btn {
             margin-left: 0.25rem;
             cursor: pointer;
             opacity: 0.7;
             font-weight: bold;
         }
-
+        
         .file-tab .close-btn:hover {
             opacity: 1;
             color: #dc3545;
         }
-
+        
         .file-tab.active .close-btn:hover {
             color: #ffcccc;
         }
-
+        
         .CodeMirror {
             height: 100% !important;
             font-size: 14px;
         }
-
+        
         .toolbar {
             background: #f8f9fa;
             border-bottom: 1px solid #dee2e6;
@@ -141,63 +142,63 @@
             align-items: center;
             flex-wrap: wrap;
         }
-
+        
         .main-tabs {
             background: #e9ecef;
             border-bottom: 1px solid #dee2e6;
         }
-
+        
         .main-tabs .nav-link {
             border-radius: 0;
             border: none;
             background: transparent;
         }
-
+        
         .main-tabs .nav-link.active {
             background: white;
             border-bottom: 2px solid #0d6efd;
         }
-
+        
         .task-content {
             padding: 0.5rem 1rem;
             height: 100%;
             overflow-y: auto;
             box-sizing: border-box;
         }
-
+        
         .save-status {
             padding: 0.25rem 0.5rem;
             border-radius: 0.25rem;
             font-size: 0.875rem;
             font-weight: 500;
         }
-
+        
         .save-status.saved {
             background: #d1e7dd;
             color: #0f5132;
         }
-
+        
         .save-status.saving {
             background: #fff3cd;
             color: #664d03;
         }
-
+        
         .save-status.error {
             background: #f8d7da;
             color: #721c24;
         }
-
+        
         .save-status.ready {
             background: #cff4fc;
             color: #055160;
         }
-
+        
         .file-explorer {
             background: #f8f9fa;
             border-bottom: 1px solid #dee2e6;
             padding: 0.5rem;
         }
-
+        
         .file-item {
             display: flex;
             align-items: center;
@@ -206,28 +207,28 @@
             cursor: pointer;
             border-radius: 0.25rem;
         }
-
+        
         .file-item:hover {
             background: #e9ecef;
         }
-
+        
         .file-item.active {
             background: #0d6efd;
             color: white;
         }
-
+        
         .image-preview {
             max-width: 100px;
             max-height: 100px;
             margin: 0.5rem 0;
         }
-
+        
         /* Markdown Content Styling */
         .markdown-content {
             line-height: 1.6;
             color: #333;
         }
-
+        
         .markdown-content h1 {
             color: #2c3e50;
             border-bottom: 3px solid #3498db;
@@ -235,7 +236,7 @@
             margin-top: 2rem;
             margin-bottom: 1rem;
         }
-
+        
         .markdown-content h2 {
             color: #34495e;
             border-bottom: 2px solid #95a5a6;
@@ -243,23 +244,23 @@
             margin-top: 1.5rem;
             margin-bottom: 0.8rem;
         }
-
+        
         .markdown-content h3 {
             color: #2c3e50;
             margin-top: 1.2rem;
             margin-bottom: 0.6rem;
         }
-
+        
         .markdown-content h4 {
             color: #34495e;
             margin-top: 1rem;
             margin-bottom: 0.5rem;
         }
-
+        
         .markdown-content p {
             margin-bottom: 1rem;
         }
-
+        
         .markdown-content code {
             background-color: #f8f9fa;
             padding: 0.2rem 0.4rem;
@@ -268,7 +269,7 @@
             font-size: 0.9em;
             color: #e74c3c;
         }
-
+        
         .markdown-content pre {
             background-color: #2c3e50;
             color: #ecf0f1;
@@ -277,22 +278,22 @@
             overflow-x: auto;
             margin: 1rem 0;
         }
-
+        
         .markdown-content pre code {
             background: none;
             color: #ecf0f1;
             padding: 0;
         }
-
+        
         .markdown-content ul, .markdown-content ol {
             margin-bottom: 1rem;
             padding-left: 2rem;
         }
-
+        
         .markdown-content li {
             margin-bottom: 0.5rem;
         }
-
+        
         .markdown-content blockquote {
             border-left: 4px solid #3498db;
             padding-left: 1rem;
@@ -301,35 +302,35 @@
             padding: 1rem;
             border-radius: 0 0.5rem 0.5rem 0;
         }
-
+        
         .markdown-content strong {
             font-weight: 600;
             color: #2c3e50;
         }
-
+        
         .markdown-content em {
             font-style: italic;
             color: #34495e;
         }
-
+        
         .markdown-content table {
             width: 100%;
             border-collapse: collapse;
             margin: 1rem 0;
         }
-
+        
         .markdown-content table th,
         .markdown-content table td {
             border: 1px solid #dee2e6;
             padding: 0.5rem;
             text-align: left;
         }
-
+        
         .markdown-content table th {
             background-color: #f8f9fa;
             font-weight: 600;
         }
-
+        
         /* Tutorial Navigation */
         .tutorial-navigation {
             position: sticky;
@@ -345,13 +346,13 @@
             border-bottom: 1px solid #dee2e6;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-
+        
         .tutorial-dots {
             display: flex;
             gap: 0.5rem;
             align-items: center;
         }
-
+        
         .tutorial-dot {
             width: 12px;
             height: 12px;
@@ -360,15 +361,15 @@
             cursor: pointer;
             transition: background-color 0.3s;
         }
-
+        
         .tutorial-dot.active {
             background-color: #0d6efd;
         }
-
+        
         .tutorial-dot:hover {
             background-color: #6c757d;
         }
-
+        
         .tutorial-arrow {
             background: none;
             border: none;
@@ -379,12 +380,12 @@
             border-radius: 0.25rem;
             transition: all 0.3s;
         }
-
+        
         .tutorial-arrow:hover:not(:disabled) {
             background-color: #e9ecef;
             color: #0d6efd;
         }
-
+        
         .tutorial-arrow:disabled {
             color: #dee2e6;
             cursor: not-allowed;
@@ -401,9 +402,279 @@
         window.currentContent = '{}';
         window.canEdit = true;
         window.isSubmitted = false;
-        // Task description and tutorial content are now loaded from Thymeleaf variables above
-    </script>
+        window.taskDescription = `# HTML/CSS Grundlagen
 
+## Lernziele
+In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
+
+### Was Sie erstellen werden:
+- Eine einfache HTML-Seite mit Struktur
+- CSS-Styling für ansprechende Gestaltung
+- Verknüpfung mehrerer Seiten
+
+## Anforderungen
+1. Erstellen Sie eine **index.html** Datei als Startseite
+2. Fügen Sie mindestens die folgenden HTML-Elemente hinzu:
+   - \`<h1>\` für die Hauptüberschrift
+   - \`<p>\` für Textabsätze
+   - \`<a>\` für Links
+   - \`<img>\` für Bilder (optional)
+
+3. Erstellen Sie eine **style.css** Datei für das Styling
+4. Verknüpfen Sie die CSS-Datei mit Ihrer HTML-Seite
+
+## Bewertungskriterien
+- ✅ Korrekte HTML-Struktur
+- ✅ Funktionierendes CSS-Styling
+- ✅ Sauberer und lesbarer Code
+- ✅ Responsive Design (optional)
+
+**Viel Erfolg!** 🚀`;
+        
+        window.tutorialContent = [
+            {
+                title: "HTML Grundlagen",
+                content: `# Tutorial 1: HTML Grundlagen
+
+## Was ist HTML?
+**HTML** (HyperText Markup Language) ist die Grundlage jeder Webseite. Es definiert die Struktur und den Inhalt.
+
+### Grundstruktur einer HTML-Datei
+
+\`\`\`html
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Meine erste Webseite</title>
+</head>
+<body>
+    <h1>Willkommen!</h1>
+    <p>Das ist mein erster Paragraph.</p>
+</body>
+</html>
+\`\`\`
+
+## Wichtige HTML-Elemente
+
+### Überschriften
+\`\`\`html
+<h1>Hauptüberschrift</h1>
+<h2>Unterüberschrift</h2>
+<h3>Weitere Ebene</h3>
+\`\`\`
+
+### Textformatierung
+\`\`\`html
+<p>Ein normaler Paragraph</p>
+<strong>Fettgedruckter Text</strong>
+<em>Kursiver Text</em>
+\`\`\`
+
+### Links und Bilder
+\`\`\`html
+<a href="seite2.html">Link zu einer anderen Seite</a>
+<img src="bild.jpg" alt="Beschreibung des Bildes">
+\`\`\`
+
+## Aufgaben
+- [ ] Erstellen Sie eine HTML-Datei mit der Grundstruktur
+- [ ] Fügen Sie verschiedene Überschriften hinzu
+- [ ] Schreiben Sie mehrere Paragraphen
+- [ ] Erstellen Sie Links zwischen Seiten
+
+**Weiter zum nächsten Tutorial: CSS Grundlagen →**`
+            },
+            {
+                title: "CSS Grundlagen",
+                content: `# Tutorial 2: CSS Grundlagen
+
+## Was ist CSS?
+**CSS** (Cascading Style Sheets) bestimmt das **Aussehen** Ihrer Webseite - Farben, Schriftarten, Layout und mehr!
+
+### CSS mit HTML verknüpfen
+
+\`\`\`html
+<head>
+    <link rel="stylesheet" href="style.css">
+</head>
+\`\`\`
+
+### Grundlegende CSS-Syntax
+
+\`\`\`css
+selektor {
+    eigenschaft: wert;
+    weitere-eigenschaft: wert;
+}
+\`\`\`
+
+## Wichtige CSS-Eigenschaften
+
+### Farben und Text
+\`\`\`css
+h1 {
+    color: #3498db;        /* Textfarbe */
+    background-color: #f8f9fa;  /* Hintergrundfarbe */
+    font-size: 2em;        /* Schriftgröße */
+    font-family: Arial, sans-serif;  /* Schriftart */
+}
+\`\`\`
+
+### Layout und Spacing
+\`\`\`css
+.container {
+    width: 80%;           /* Breite */
+    margin: 0 auto;       /* Zentrierung */
+    padding: 20px;        /* Innenabstand */
+    border: 1px solid #ddd;  /* Rahmen */
+}
+\`\`\`
+
+### Hover-Effekte
+\`\`\`css
+button:hover {
+    background-color: #2980b9;
+    cursor: pointer;
+}
+\`\`\`
+
+## Praktische Übung
+Probieren Sie folgende Styles in Ihrer CSS-Datei:
+
+\`\`\`css
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    color: #2c3e50;
+    text-align: center;
+}
+
+p {
+    color: #34495e;
+    margin-bottom: 15px;
+}
+\`\`\`
+
+## Aufgaben
+- [ ] Erstellen Sie eine CSS-Datei
+- [ ] Verknüpfen Sie CSS mit HTML
+- [ ] Experimentieren Sie mit Farben
+- [ ] Probieren Sie verschiedene Schriftarten aus
+
+**← Zurück | Weiter →**`
+            },
+            {
+                title: "Layout mit CSS",
+                content: `# Tutorial 3: Layout mit CSS
+
+## Flexbox - Modernes Layout
+**Flexbox** macht es einfach, Elemente zu positionieren und auszurichten.
+
+### Flex Container erstellen
+\`\`\`css
+.container {
+    display: flex;
+    justify-content: center;  /* horizontal zentrieren */
+    align-items: center;      /* vertikal zentrieren */
+    gap: 20px;               /* Abstand zwischen Elementen */
+}
+\`\`\`
+
+### Flex Richtung
+\`\`\`css
+.row {
+    display: flex;
+    flex-direction: row;     /* nebeneinander */
+}
+
+.column {
+    display: flex;
+    flex-direction: column;  /* untereinander */
+}
+\`\`\`
+
+## Grid - Raster-Layout
+**CSS Grid** ist perfekt für komplexere Layouts.
+
+\`\`\`css
+.grid-container {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;  /* 3 Spalten */
+    grid-gap: 20px;
+}
+\`\`\`
+
+## Responsive Design
+Ihre Webseite soll auf allen Geräten gut aussehen!
+
+### Media Queries
+\`\`\`css
+/* Desktop */
+.container {
+    max-width: 1200px;
+}
+
+/* Tablet */
+@media (max-width: 768px) {
+    .container {
+        max-width: 100%;
+        padding: 10px;
+    }
+}
+
+/* Handy */
+@media (max-width: 480px) {
+    .grid-container {
+        grid-template-columns: 1fr;  /* nur 1 Spalte */
+    }
+}
+\`\`\`
+
+## Praktisches Beispiel
+Erstellen Sie ein Header-Navigation-Content Layout:
+
+\`\`\`css
+.page-layout {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    min-height: 100vh;
+}
+
+.header {
+    background: #3498db;
+    color: white;
+    padding: 1rem;
+}
+
+.content {
+    padding: 2rem;
+}
+
+.footer {
+    background: #2c3e50;
+    color: white;
+    padding: 1rem;
+    text-align: center;
+}
+\`\`\`
+
+## Aufgaben
+- [ ] Experimentieren Sie mit Flexbox
+- [ ] Probieren Sie Grid-Layout aus
+- [ ] Machen Sie Ihr Design responsive
+- [ ] Testen Sie verschiedene Bildschirmgrößen
+
+**← Zurück zum Anfang**`
+            }
+        ];
+    </script>
+    
     <!-- JavaScript-Konfiguration -->
     <script th:inline="javascript">
         // Get values from Thymeleaf
@@ -413,9 +684,7 @@
         window.currentContent = [[${currentContent ?: '{}'}]];
         window.canEdit = [[${canEdit ?: true}]];
         window.isSubmitted = [[${userTask?.status?.name == 'VOLLSTÄNDIG'}]];
-        window.taskDescription = [[${task.description ?: null}]];
-        window.tutorialContent = [[${task.tutorial ?: null}]];
-
+        
         console.log('✅ Konfiguration geladen:', {
             taskId: window.taskId,
             canEdit: window.canEdit,
@@ -484,7 +753,7 @@
                             </button>
                         </li>
                     </ul>
-
+                    
                     <!-- Preview controls - only visible when preview tab is active -->
                     <div class="d-flex align-items-center gap-2 me-3" id="previewControls">
                         <button class="btn btn-sm btn-outline-secondary" onclick="refreshPreview()">
@@ -521,16 +790,16 @@
                                 <button class="tutorial-arrow" id="tutorial-prev" onclick="previousTutorial()" disabled>
                                     <i class="fas fa-chevron-left"></i>
                                 </button>
-
+                                
                                 <div class="tutorial-dots" id="tutorial-dots">
                                     <!-- Wird durch JavaScript generiert -->
                                 </div>
-
+                                
                                 <button class="tutorial-arrow" id="tutorial-next" onclick="nextTutorial()">
                                     <i class="fas fa-chevron-right"></i>
                                 </button>
                             </div>
-
+                            
                             <!-- Tutorial Content -->
                             <div id="tutorial-content" class="markdown-content">
                                 <!-- Wird durch JavaScript mit Tutorial-Inhalt gefüllt -->
@@ -544,7 +813,7 @@
 
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
+    
     <!-- CodeMirror JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/mode/xml/xml.min.js"></script>
@@ -561,7 +830,7 @@
             currentFile: null
         };
         let hasUnsavedChanges = false;
-
+        
         // Tutorial System
         let tutorialContents = [];
         let currentTutorialIndex = 0;
@@ -571,14 +840,14 @@
             console.log('🚀 Initialisiere HTML/CSS Editor...');
             initializeEditor();
             loadContent();
-
+            
             // Sofortige Initialisierung der Inhalte
             console.log('📝 Starte Content-Initialisierung...');
             setTimeout(() => {
                 initializeMarkdownContent();
                 initializeTutorial();
             }, 50);
-
+            
             // Auto-save entfernt - nur manuelle Speicherung
 
             // Warnung vor dem Verlassen der Seite
@@ -633,7 +902,7 @@
             // Prüfen ob bereits die richtige Erweiterung vorhanden ist
             const expectedExtension = `.${type}`;
             let fullName;
-
+            
             if (cleanName.toLowerCase().endsWith(expectedExtension.toLowerCase())) {
                 // Bereits korrekte Erweiterung vorhanden
                 fullName = cleanName;
@@ -735,13 +1004,13 @@
             console.log('🔄 Wechsle zu Datei:', fileName);
             projectData.currentFile = fileName;
             const file = projectData.files[fileName];
-
+            
             editor.setValue(file.content);
             editor.setOption('mode', file.type === 'html' ? 'htmlmixed' : 'css');
             editor.setOption('readOnly', !window.canEdit || window.isSubmitted);
-
+            
             updateFileTabs();
-
+            
             // Auto-preview für HTML Dateien
             if (file.type === 'html') {
                 document.getElementById('previewFile').value = fileName;
@@ -756,7 +1025,7 @@
 
             console.log('🗑️ Lösche Datei:', fileName);
             delete projectData.files[fileName];
-
+            
             if (projectData.currentFile === fileName) {
                 const remainingFiles = Object.keys(projectData.files);
                 if (remainingFiles.length > 0) {
@@ -767,7 +1036,7 @@
                     editor.setOption('readOnly', true);
                 }
             }
-
+            
             updateFileTabs();
             updatePreviewOptions();
             markAsChanged();
@@ -809,7 +1078,7 @@
         function updatePreviewOptions() {
             const select = document.getElementById('previewFile');
             select.innerHTML = '<option value="">Datei auswählen...</option>';
-
+            
             Object.keys(projectData.files).forEach(fileName => {
                 if (projectData.files[fileName].type === 'html') {
                     const option = document.createElement('option');
@@ -832,12 +1101,12 @@
             }
 
             let htmlContent = projectData.files[selectedFile].content;
-
+            
             // Nur verlinkte CSS-Dateien einbinden
             const cssFiles = Object.keys(projectData.files).filter(name => 
                 projectData.files[name].type === 'css'
             );
-
+            
             cssFiles.forEach(cssFile => {
                 // Prüfen ob diese CSS-Datei im HTML verlinkt ist
                 const linkRegex = new RegExp(`<link[^>]*href=["']${cssFile}["'][^>]*>`, 'gi');
@@ -887,13 +1156,14 @@
         function updateSaveStatus(status) {
             const statusElement = document.getElementById('save-status');
             statusElement.className = 'save-status';
-
+            
             switch (status) {
                 case 'saved':
                     statusElement.textContent = 'Gespeichert';
                     statusElement.classList.add('saved');
                     hasUnsavedChanges = false;
-                    break;case 'saving':
+                    break;
+                case 'saving':
                     statusElement.textContent = 'Speichert...';
                     statusElement.classList.add('saving');
                     break;
@@ -961,7 +1231,7 @@
 
                 updateFileTabs();
                 updatePreviewOptions();
-
+                
                 if (projectData.currentFile) {
                     switchToFile(projectData.currentFile);
                     const htmlFiles = Object.keys(projectData.files).filter(name => projectData.files[name].type === 'html');
@@ -969,7 +1239,7 @@
                         document.getElementById('previewFile').value = htmlFiles[0];
                     }
                 }
-
+                
                 updatePreview();
                 updateSaveStatus('saved');
                 console.log('✅ Inhalt erfolgreich geladen');
@@ -1000,11 +1270,11 @@
             updateSaveStatus('saving');
 
             const content = getContentFromView();
-
+            
             // Check if we're in teacher view mode (iframe)
             const isTeacherView = window.isTeacherView || false;
             const userTaskId = window.userTaskId;
-
+            
             let saveUrl, saveBody;
             if (isTeacherView && userTaskId) {
                 // Save to student's history when in teacher view
@@ -1032,7 +1302,7 @@
                         document.getElementById('submitButton').style.display = 'none';
                         editor.setOption('readOnly', true);
                     }
-
+                    
                     if (isTeacherView) {
                         // Notify parent window about save
                         if (window.parent && window.parent !== window) {
@@ -1064,19 +1334,19 @@
         document.addEventListener('DOMContentLoaded', function() {
             const previewControls = document.getElementById('previewControls');
             const tabButtons = document.querySelectorAll('#rightTabs button[data-bs-toggle="tab"]');
-
+            
             // Funktion zum Ein-/Ausblenden der Preview-Controls
             function togglePreviewControls() {
                 const previewTab = document.getElementById('preview-tab');
                 const isPreviewActive = previewTab.classList.contains('active');
                 previewControls.style.display = isPreviewActive ? 'flex' : 'none';
             }
-
+            
             // Event Listener für alle Tabs
             tabButtons.forEach(button => {
                 button.addEventListener('shown.bs.tab', togglePreviewControls);
             });
-
+            
             // Initial state setzen
             togglePreviewControls();
         });
@@ -1095,7 +1365,7 @@
         function updateTabVisibility() {
             const taskTabContainer = document.getElementById('task-tab-container');
             const tutorialTabContainer = document.getElementById('tutorial-tab-container');
-
+            
             // Task Tab anzeigen nur wenn Inhalt vorhanden
             if (hasValidContent(window.taskDescription)) {
                 console.log('✅ Task-Inhalt vorhanden - zeige Tab an');
@@ -1104,7 +1374,7 @@
                 console.log('❌ Kein Task-Inhalt - verstecke Tab');
                 taskTabContainer.style.display = 'none';
             }
-
+            
             // Tutorial Tab anzeigen nur wenn Inhalt vorhanden
             if (hasValidContent(window.tutorialContent) && 
                 ((Array.isArray(window.tutorialContent) && window.tutorialContent.length > 0) ||
@@ -1120,34 +1390,34 @@
         // Markdown Content Initialisierung
         function initializeMarkdownContent() {
             console.log('📝 Initialisiere Markdown-Inhalt...');
-
+            
             // Tab-Sichtbarkeit prüfen
             updateTabVisibility();
-
+            
             // Nur rendern wenn Task-Inhalt vorhanden
             if (!hasValidContent(window.taskDescription)) {
                 console.log('❌ Kein Task-Inhalt zum Rendern vorhanden');
                 return;
             }
-
+            
             // Task Description rendern
             const taskDescriptionElement = document.getElementById('task-description');
             if (!taskDescriptionElement) {
                 console.error('❌ Element task-description nicht gefunden');
                 return;
             }
-
+            
             console.log('📄 Task Description Element gefunden');
             console.log('🔍 taskDescription Type:', typeof window.taskDescription);
             console.log('🔍 taskDescription Content:', window.taskDescription ? window.taskDescription.substring(0, 100) + '...' : 'undefined');
-
+            
             try {
                 let content = window.taskDescription;
 
                 const renderedContent = typeof marked !== 'undefined' && marked.parse
                     ? marked.parse(content)
                     : parseMarkdownFallback(content);
-
+                
                 taskDescriptionElement.innerHTML = renderedContent;
                 console.log('✅ Aufgabenbeschreibung erfolgreich geladen');
                 console.log('📝 Gerenderte Länge:', renderedContent.length, 'Zeichen');
@@ -1162,16 +1432,16 @@
             console.log('📚 Initialisiere Tutorial-System...');
             console.log('Tutorial Content Type:', typeof window.tutorialContent);
             console.log('Tutorial Content:', window.tutorialContent);
-
+            
             // Tab-Sichtbarkeit prüfen
             updateTabVisibility();
-
+            
             // Nur initialisieren wenn Tutorial-Inhalt vorhanden
             if (!hasValidContent(window.tutorialContent)) {
                 console.log('❌ Kein Tutorial-Inhalt zum Initialisieren vorhanden');
                 return;
             }
-
+            
             // Tutorial Contents aus String parsen (für Thymeleaf-Kompatibilität)
             if (window.tutorialContent && Array.isArray(window.tutorialContent)) {
                 tutorialContents = window.tutorialContent;
@@ -1198,13 +1468,13 @@
                     return;
                 }
             }
-
+            
             // Nur fortfahren wenn tatsächlich Tutorials vorhanden sind
             if (!tutorialContents || tutorialContents.length === 0) {
                 console.log('❌ Keine gültigen Tutorial-Inhalte gefunden');
                 return;
             }
-
+            
             currentTutorialIndex = 0;
             updateTutorialNavigation();
             renderTutorial();
@@ -1215,12 +1485,12 @@
             const dotsContainer = document.getElementById('tutorial-dots');
             const prevButton = document.getElementById('tutorial-prev');
             const nextButton = document.getElementById('tutorial-next');
-
+            
             if (!dotsContainer) {
                 console.error('❌ Tutorial-dots Container nicht gefunden');
                 return;
             }
-
+            
             // Dots generieren
             dotsContainer.innerHTML = '';
             if (tutorialContents && tutorialContents.length > 0) {
@@ -1231,7 +1501,7 @@
                     dotsContainer.appendChild(dot);
                 });
             }
-
+            
             // Navigation Buttons
             if (prevButton) {
                 prevButton.disabled = currentTutorialIndex === 0;
@@ -1239,7 +1509,7 @@
             if (nextButton) {
                 nextButton.disabled = currentTutorialIndex >= (tutorialContents?.length || 0) - 1;
             }
-
+            
             console.log('🎯 Tutorial Navigation aktualisiert:', tutorialContents?.length || 0, 'Tutorials');
         }
 
@@ -1250,28 +1520,28 @@
                 console.error('❌ Tutorial-content Element nicht gefunden');
                 return;
             }
-
+            
             console.log('📚 Tutorial Content Element gefunden');
             console.log('🔍 tutorialContents:', tutorialContents);
             console.log('🔍 currentTutorialIndex:', currentTutorialIndex);
-
+            
             if (!tutorialContents || tutorialContents.length === 0) {
                 console.log('❌ Keine Tutorial-Inhalte verfügbar - Tab sollte versteckt sein');
                 return;
             }
-
+            
             const tutorial = tutorialContents[currentTutorialIndex];
             if (!tutorial) {
                 console.error('❌ Tutorial bei Index nicht gefunden:', currentTutorialIndex);
                 tutorialContentElement.innerHTML = '<div class="alert alert-warning">Tutorial nicht gefunden. Bitte laden Sie die Seite neu.</div>';
                 return;
             }
-
+            
             try {
                 const renderedContent = typeof marked !== 'undefined' && marked.parse
                     ? marked.parse(tutorial.content)
                     : parseMarkdownFallback(tutorial.content);
-
+                
                 tutorialContentElement.innerHTML = renderedContent;
                 console.log('✅ Tutorial erfolgreich gerendert:', tutorial.title);
                 console.log('📝 Gerenderte Tutorial-Länge:', renderedContent.length, 'Zeichen');
@@ -1316,4 +1586,22 @@
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                 .replace(/\*(.*?)\*/g, '<em>$1</em>')
                 .replace(/`(.*?)`/g, '<code>$1</code>')
-                .replace(/```([\s\S]*?)
+                .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/^(.*)$/gm, '<p>$1</p>')
+                .replace(/<p><\/p>/g, '')
+                .replace(/<p>(<h[1-6]>.*<\/h[1-6]>)<\/p>/g, '$1')
+                .replace(/<p>(<li>.*<\/li>)<\/p>/g, '<ul>$1</ul>');
+        }
+
+        // iFrame-Kommunikation für Lehrer-Integration
+        if (window.parent && window.parent !== window) {
+            window.addEventListener('message', function(event) {
+                if (event.data === 'save-content') {
+                    saveContent();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
