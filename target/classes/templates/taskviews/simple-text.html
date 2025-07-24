@@ -167,10 +167,6 @@
                 .then(response => {
                     if (response.ok) {
                         updateSaveStatus('submitted');
-                        // Disable further editing
-                        document.getElementById('submission-content').disabled = true;
-                        document.getElementById('save-btn').disabled = true;
-                        document.getElementById('submit-btn').disabled = true;
                         alert('Aufgabe erfolgreich abgegeben!');
                     } else {
                         alert('Fehler beim Abgeben der Aufgabe.');
@@ -223,7 +219,7 @@
         let originalContent = '';
         let hasUnsavedChanges = false;
 
-        // Check if task is already submitted and disable editing
+        // Initialize page without restrictions
         window.addEventListener('DOMContentLoaded', function() {
             const userTaskStatus = [[${userTask.status?.name}]];
             const contentTextarea = document.getElementById('submission-content');
@@ -231,26 +227,24 @@
             // Store original content
             originalContent = contentTextarea.value;
             
+            // Set initial status based on submission state
             if (userTaskStatus === 'VOLLSTÄNDIG') {
-                contentTextarea.disabled = true;
-                document.getElementById('save-btn').disabled = true;
-                document.getElementById('submit-btn').disabled = true;
                 updateSaveStatus('submitted');
             } else {
                 updateSaveStatus('ready');
-                
-                // Add change detection
-                contentTextarea.addEventListener('input', function() {
-                    const currentContent = contentTextarea.value;
-                    if (currentContent !== originalContent && !hasUnsavedChanges) {
-                        hasUnsavedChanges = true;
-                        updateSaveStatus('changed');
-                    } else if (currentContent === originalContent && hasUnsavedChanges) {
-                        hasUnsavedChanges = false;
-                        updateSaveStatus('ready');
-                    }
-                });
             }
+            
+            // Add change detection
+            contentTextarea.addEventListener('input', function() {
+                const currentContent = contentTextarea.value;
+                if (currentContent !== originalContent && !hasUnsavedChanges) {
+                    hasUnsavedChanges = true;
+                    updateSaveStatus('changed');
+                } else if (currentContent === originalContent && hasUnsavedChanges) {
+                    hasUnsavedChanges = false;
+                    updateSaveStatus('ready');
+                }
+            });
             
             // Initialize tooltips
             const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
