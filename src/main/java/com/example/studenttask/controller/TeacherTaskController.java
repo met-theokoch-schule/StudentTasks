@@ -9,6 +9,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -365,7 +367,8 @@ public class TeacherTaskController {
 @GetMapping("/submissions/{userTaskId}")
     public String reviewSubmission(@PathVariable Long userTaskId, 
                                  @RequestParam(required = false) String returnUrl,
-                                 Model model, Authentication authentication) {
+                                 Model model, Authentication authentication,
+                                 HttpServletRequest request) {
         Optional<UserTask> userTaskOpt = userTaskService.findById(userTaskId);
         if (userTaskOpt.isEmpty()) {
             return "redirect:/teacher/tasks";
@@ -373,7 +376,16 @@ public class TeacherTaskController {
 
         UserTask userTask = userTaskOpt.get();
         model.addAttribute("userTask", userTask);
-        model.addAttribute("returnUrl", returnUrl);
+        
+        // If no returnUrl is provided as parameter, get it from the HTTP Referer header
+        String finalReturnUrl = returnUrl;
+        if (finalReturnUrl == null || finalReturnUrl.trim().isEmpty()) {
+            String referer = request.getHeader("Referer");
+            if (referer != null && !referer.isEmpty()) {
+                finalReturnUrl = referer;
+            }
+        }
+        model.addAttribute("returnUrl", finalReturnUrl);
 
         // Get all reviews for this user task
         List<TaskReview> reviews = taskReviewService.findByUserTaskOrderByReviewedAtDesc(userTask);
