@@ -1185,14 +1185,14 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
                 taskTabContainer.style.display = 'none';
             }
             
-            // Tutorial Tab anzeigen nur wenn Inhalt vorhanden
-            if (hasValidContent(window.tutorialContent) && 
-                ((Array.isArray(window.tutorialContent) && window.tutorialContent.length > 0) ||
-                 (!Array.isArray(window.tutorialContent) && hasValidContent(window.tutorialContent)))) {
-                console.log('✅ Tutorial-Inhalt vorhanden - zeige Tab an');
+            // Tutorial Tab anzeigen nur wenn echter Server-Inhalt vorhanden
+            if (window.tutorialContent && 
+                typeof window.tutorialContent === 'string' && 
+                window.tutorialContent.trim() !== '') {
+                console.log('✅ Tutorial-Inhalt vom Server vorhanden - zeige Tab an');
                 tutorialTabContainer.style.display = 'block';
             } else {
-                console.log('❌ Kein Tutorial-Inhalt - verstecke Tab');
+                console.log('❌ Kein Tutorial-Inhalt vom Server - verstecke Tab');
                 tutorialTabContainer.style.display = 'none';
             }
         }
@@ -1246,9 +1246,10 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
             // Tab-Sichtbarkeit prüfen
             updateTabVisibility();
             
-            // Nur initialisieren wenn Tutorial-Inhalt vorhanden
-            if (!hasValidContent(window.tutorialContent)) {
-                console.log('❌ Kein Tutorial-Inhalt zum Initialisieren vorhanden');
+            // Prüfen ob Tutorial-Inhalt vom Server kam oder nur Beispieltext
+            if (!window.tutorialContent || 
+                (typeof window.tutorialContent === 'string' && window.tutorialContent.trim() === '')) {
+                console.log('❌ Kein Tutorial-Inhalt vom Server - Tab verstecken');
                 return;
             }
             
