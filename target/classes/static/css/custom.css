@@ -138,7 +138,7 @@ pre {
 
 /* Trennlinien zwischen Schülerzeilen */
 .task-matrix tbody tr {
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 2px solid #dee2e6;
 }
 
 .task-matrix tbody tr:last-child {
@@ -146,7 +146,7 @@ pre {
 }
 
 .matrix-student-col {
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 2px solid #dee2e6;
 }
 
 .status-cell:hover {
