@@ -1166,17 +1166,32 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
                 return false;
             }
             
-            // Hole den Beispieltext aus den versteckten DIVs
-            const taskDescriptionDiv = document.getElementById('default-task-description');
-            const tutorialDiv = document.getElementById('default-tutorial-content');
+            // Für Task Description: Wenn Thymeleaf th:text="${task?.description ?: ''}" 
+            // einen leeren/null Wert hat, wird der DIV-Inhalt verwendet
+            if (content === window.taskDescription) {
+                const taskDescriptionDiv = document.getElementById('default-task-description');
+                const defaultTaskText = taskDescriptionDiv ? taskDescriptionDiv.textContent.trim() : '';
+                
+                // Prüfe ob es sich um Standard-Beispieltext handelt
+                if (trimmedContent === defaultTaskText && 
+                    (defaultTaskText.includes('# HTML/CSS Grundlagen') || 
+                     defaultTaskText.includes('## Lernziele'))) {
+                    return false;
+                }
+            }
             
-            const defaultTaskText = taskDescriptionDiv ? taskDescriptionDiv.textContent.trim() : '';
-            const defaultTutorialText = tutorialDiv ? tutorialDiv.textContent.trim() : '';
-            
-            // Wenn der Inhalt exakt dem Standard-Beispieltext entspricht, 
-            // dann wurde vom Server kein Inhalt geliefert
-            if (trimmedContent === defaultTaskText || trimmedContent === defaultTutorialText) {
-                return false;
+            // Für Tutorial Content: Ähnliche Logik
+            if (content === window.tutorialContent || 
+                (typeof content === 'string' && content.startsWith('['))) {
+                const tutorialDiv = document.getElementById('default-tutorial-content');
+                const defaultTutorialText = tutorialDiv ? tutorialDiv.textContent.trim() : '';
+                
+                // Prüfe ob es sich um Standard-Beispieltext handelt
+                if (trimmedContent === defaultTutorialText && 
+                    (defaultTutorialText.includes('HTML Grundlagen') || 
+                     defaultTutorialText.includes('Tutorial 1:'))) {
+                    return false;
+                }
             }
             
             return true;
