@@ -1,4 +1,3 @@
-
 # TaskView Entwicklungsanleitung
 
 ## Übersicht
@@ -53,12 +52,13 @@ Jeder TaskView **MUSS** folgende Funktionen implementieren:
 <!-- Aufgaben-Grunddaten -->
 ${task.id}                    <!-- Long: Eindeutige Aufgaben-ID -->
 ${task.title}                 <!-- String: Aufgabentitel -->
-${task.description}           <!-- String: Aufgabenbeschreibung (HTML) -->
+${task.description}           <!-- String: Aufgabenbeschreibung (Markdown) -->
 ${task.dueDate}              <!-- LocalDateTime: Fälligkeitsdatum -->
 ${task.isActive}             <!-- Boolean: Ist Aufgabe aktiv? -->
 ${task.createdAt}            <!-- LocalDateTime: Erstellungsdatum -->
 ${task.lastModified}         <!-- LocalDateTime: Letzte Änderung -->
 ${task.defaultSubmission}    <!-- String: Standard-Abgabetext -->
+${task.tutorial}              <!-- String: Aufgaben-Tutorial (Markdown) -->
 
 <!-- Aufgaben-Beziehungen -->
 ${task.taskView.id}          <!-- Long: TaskView-ID -->
@@ -115,11 +115,11 @@ ${isSubmitted}               <!-- Boolean: Bereits abgegeben? -->
 // Content speichern
 function saveContent(isSubmission = false) {
     const content = getContentFromView(); // TaskView-spezifisch
-    
+
     const url = isSubmission ? 
         `/api/tasks/${taskId}/submit` : 
         `/api/tasks/${taskId}/content`;
-    
+
     fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -162,7 +162,7 @@ function updateSaveStatus(status) {
 function getContentFromView() {
     // Beispiel für simple-text:
     return document.getElementById('submission-content').value;
-    
+
     // Beispiel für complex content:
     return JSON.stringify({
         text: document.getElementById('text-field').value,
@@ -175,7 +175,7 @@ function getContentFromView() {
 function loadContentToView(content) {
     // Beispiel für simple-text:
     document.getElementById('submission-content').value = content;
-    
+
     // Beispiel für complex content:
     const data = JSON.parse(content);
     document.getElementById('text-field').value = data.text;
@@ -342,4 +342,3 @@ VALUES ('Mein Custom View', 'Beschreibung', 'taskviews/my-custom-view.html', tru
 console.log('🔍 TaskId from Thymeleaf:', taskId);
 console.log('📝 Content to save:', content);
 console.log('✅ Save successful');
-```
