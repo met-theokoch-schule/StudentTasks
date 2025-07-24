@@ -50,31 +50,31 @@
                         <div class="card bg-primary text-white">
                             <div class="card-body text-center">
                                 <div class="fs-2 fw-bold" th:text="${statistics.totalStudents}">12</div>
-                                <div>Schüler gesamt</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card bg-info text-white">
-                            <div class="card-body text-center">
-                                <div class="fs-2 fw-bold" th:text="${statistics.activeTasks}">5</div>
-                                <div>Aktive Aufgaben</div>
+                                <div>Anzahl SuS</div>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="card bg-warning text-white">
                             <div class="card-body text-center">
-                                <div class="fs-2 fw-bold" th:text="${statistics.pendingSubmissions}">23</div>
+                                <div class="fs-2 fw-bold" th:text="${statistics.submittedTasks}">5</div>
                                 <div>Offene Abgaben</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body text-center">
+                                <div class="fs-2 fw-bold" th:text="${statistics.needsRevisionTasks}">23</div>
+                                <div>Überarbeitung nötig</div>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="card bg-success text-white">
                             <div class="card-body text-center">
-                                <div class="fs-2 fw-bold" th:text="${statistics.completedSubmissions}">17</div>
-                                <div>Abgeschlossen</div>
+                                <div class="fs-2 fw-bold" th:text="${statistics.completedTasks}">17</div>
+                                <div>Vollständig</div>
                             </div>
                         </div>
                     </div>
