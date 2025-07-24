@@ -1,4 +1,3 @@
-
 package com.example.studenttask.controller;
 
 import com.example.studenttask.model.Task;
@@ -79,7 +78,7 @@ public class DebugController {
             Optional<UserTask> userTaskOpt = userTasks.stream()
                 .filter(ut -> ut.getTask().getId().equals(taskId))
                 .findFirst();
-                
+
             if (userTaskOpt.isEmpty()) {
                 model.addAttribute("error", "Keine UserTask für Benutzer " + currentUser.getName() + " und Task " + taskId + " gefunden");
                 return "debug/content-viewer";
@@ -88,30 +87,23 @@ public class DebugController {
             UserTask userTask = userTaskOpt.get();
 
             // TaskContent basierend auf Version abrufen
-            List<TaskContent> taskContents = taskContentService.findByUserTask(userTask);
             TaskContent taskContent = null;
-            
+
             if (version != null) {
                 // Spezifische Version suchen
-                taskContent = taskContents.stream()
-                    .filter(tc -> tc.getVersion().equals(version))
-                    .findFirst()
-                    .orElse(null);
-                    
+                taskContent = taskContentService.getContentByVersion(userTask, version);
                 if (taskContent == null) {
                     model.addAttribute("error", "Version " + version + " für Task " + taskId + " nicht gefunden");
                     return "debug/content-viewer";
                 }
             } else {
-                // Neueste Version (höchste Versionsnummer)
-                taskContent = taskContents.stream()
-                    .max((tc1, tc2) -> tc1.getVersion().compareTo(tc2.getVersion()))
-                    .orElse(null);
-                    
-                if (taskContent == null) {
+                // Neueste Version
+                Optional<TaskContent> latestContentOpt = taskContentService.getLatestContent(userTask);
+                if (latestContentOpt.isEmpty()) {
                     model.addAttribute("error", "Keine TaskContent für Task " + taskId + " gefunden");
                     return "debug/content-viewer";
                 }
+                taskContent = latestContentOpt.get();
             }
 
             // Informationen für Template vorbereiten
@@ -124,7 +116,7 @@ public class DebugController {
             model.addAttribute("isSubmitted", taskContent.isSubmitted());
 
             return "debug/content-viewer";
-            
+
         } catch (Exception e) {
             model.addAttribute("error", "Fehler beim Laden der Daten: " + e.getMessage());
             return "debug/content-viewer";
