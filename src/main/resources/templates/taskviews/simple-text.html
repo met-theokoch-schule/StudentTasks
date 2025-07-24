@@ -50,7 +50,13 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h6><i class="fas fa-edit"></i> Meine Lösung</h6>
-                        <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span id="save-status-icon" 
+                                  class="fas fa-circle text-muted" 
+                                  style="font-size: 0.8rem; cursor: help;"
+                                  data-bs-toggle="tooltip" 
+                                  data-bs-placement="top" 
+                                  title="Bereit zum Speichern"></span>
                             <button type="button" class="btn btn-success btn-sm" id="save-btn" onclick="saveContent()">
                                 <i class="fas fa-save"></i> Speichern
                             </button>
@@ -87,12 +93,7 @@
                     </div>
                 </div>
 
-                <!-- Save Status -->
-                <div class="mt-2">
-                    <small id="save-status" class="text-muted">
-                        <i class="fas fa-circle text-muted"></i> Bereit zum Speichern
-                    </small>
-                </div>
+                
             </div>
         </div>
     </div>
@@ -131,7 +132,11 @@
             })
             .then(response => {
                 if (response.ok) {
+                    // Update original content and reset change tracking
+                    originalContent = content;
+                    hasUnsavedChanges = false;
                     updateSaveStatus('saved');
+                    
                     if (isTeacherView) {
                         // Notify parent window about save
                         if (window.parent && window.parent !== window) {
@@ -179,37 +184,79 @@
         }
 
         function updateSaveStatus(status) {
-            const statusElement = document.getElementById('save-status');
+            const statusIcon = document.getElementById('save-status-icon');
+            const tooltip = bootstrap.Tooltip.getInstance(statusIcon) || new bootstrap.Tooltip(statusIcon);
+            
             switch (status) {
                 case 'saved':
-                    statusElement.innerHTML = '<i class="fas fa-circle text-success"></i> Änderungen gespeichert';
+                    statusIcon.className = 'fas fa-circle text-success';
+                    statusIcon.setAttribute('title', 'Änderungen gespeichert');
                     break;
                 case 'saving':
-                    statusElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Speichere...';
+                    statusIcon.className = 'fas fa-spinner fa-spin text-primary';
+                    statusIcon.setAttribute('title', 'Speichere...');
                     break;
                 case 'error':
-                    statusElement.innerHTML = '<i class="fas fa-circle text-danger"></i> Fehler beim Speichern';
+                    statusIcon.className = 'fas fa-circle text-danger';
+                    statusIcon.setAttribute('title', 'Fehler beim Speichern');
                     break;
                 case 'submitted':
-                    statusElement.innerHTML = '<i class="fas fa-circle text-success"></i> Aufgabe abgegeben';
+                    statusIcon.className = 'fas fa-circle text-success';
+                    statusIcon.setAttribute('title', 'Aufgabe abgegeben');
+                    break;
+                case 'changed':
+                    statusIcon.className = 'fas fa-circle text-warning';
+                    statusIcon.setAttribute('title', 'Ungespeicherte Änderungen');
                     break;
                 default:
-                    statusElement.innerHTML = '<i class="fas fa-circle text-muted"></i> Bereit zum Speichern';
+                    statusIcon.className = 'fas fa-circle text-muted';
+                    statusIcon.setAttribute('title', 'Bereit zum Speichern');
                     break;
             }
+            
+            // Update tooltip
+            tooltip.dispose();
+            new bootstrap.Tooltip(statusIcon);
         }
+
+        // Track original content and changes
+        let originalContent = '';
+        let hasUnsavedChanges = false;
 
         // Check if task is already submitted and disable editing
         window.addEventListener('DOMContentLoaded', function() {
             const userTaskStatus = [[${userTask.status?.name}]];
+            const contentTextarea = document.getElementById('submission-content');
+            
+            // Store original content
+            originalContent = contentTextarea.value;
+            
             if (userTaskStatus === 'VOLLSTÄNDIG') {
-                document.getElementById('submission-content').disabled = true;
+                contentTextarea.disabled = true;
                 document.getElementById('save-btn').disabled = true;
                 document.getElementById('submit-btn').disabled = true;
                 updateSaveStatus('submitted');
             } else {
                 updateSaveStatus('ready');
+                
+                // Add change detection
+                contentTextarea.addEventListener('input', function() {
+                    const currentContent = contentTextarea.value;
+                    if (currentContent !== originalContent && !hasUnsavedChanges) {
+                        hasUnsavedChanges = true;
+                        updateSaveStatus('changed');
+                    } else if (currentContent === originalContent && hasUnsavedChanges) {
+                        hasUnsavedChanges = false;
+                        updateSaveStatus('ready');
+                    }
+                });
             }
+            
+            // Initialize tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
         });
     </script>
 </body>
