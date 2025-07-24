@@ -295,13 +295,13 @@ public class GroupService {
         matrix.put("students", students);
         matrix.put("tasks", tasks);
         matrix.put("statusMap", statusMap);
-        
+
         // Debug-Ausgabe
         System.out.println("Matrix Debug - Group: " + group.getName() + " (ID: " + group.getId() + ")");
         System.out.println("All users in group: " + students.size());
         System.out.println("Tasks found: " + tasks.size());
         System.out.println("StatusMap size: " + statusMap.size());
-        
+
         // Debug: Liste der Benutzer
         for (User student : students) {
             System.out.println("User: " + student.getName() + " (ID: " + student.getId() + "), Roles: " + 
@@ -313,7 +313,7 @@ public class GroupService {
 
     private String determineStatusIcon(TaskStatus status) {
         if (status == null) return "fas fa-circle text-secondary";
-        
+
         switch (status.getName()) {
             case "NICHT_BEGONNEN": return "fas fa-circle text-secondary";
             case "IN_BEARBEITUNG": return "fas fa-edit text-primary";
@@ -326,7 +326,7 @@ public class GroupService {
 
     private String determineStatusColor(TaskStatus status) {
         if (status == null) return "text-secondary";
-        
+
         switch (status.getName()) {
             case "NICHT_BEGONNEN": return "text-secondary";
             case "IN_BEARBEITUNG": return "text-primary";
@@ -335,5 +335,48 @@ public class GroupService {
             case "VOLLSTÄNDIG": return "text-success";
             default: return "text-muted";
         }
+    }
+
+    public TeacherGroupController.GroupStatistics calculateGroupStatistics(Group group, User teacher) {
+        // Anzahl der Schüler in der Gruppe
+        int totalStudents = (int) userRepository.countByGroupsContaining(group);
+
+        // Alle aktiven Aufgaben des Lehrers finden
+        List<Task> activeTasks = taskRepository.findByCreatedByAndIsActiveOrderByCreatedAtDesc(teacher, true);
+
+        // Statistiken für spezifische Status zählen
+        int submittedTasks = 0;
+        int needsRevisionTasks = 0;
+        int completedTasks = 0;
+
+        for (Task task : activeTasks) {
+            if (task.getAssignedGroups().contains(group)) {
+                // UserTasks für diese Aufgabe und Gruppe zählen
+                List<User> groupUsers = userRepository.findByGroupsContaining(group);
+                for (User user : groupUsers) {
+                    Optional<UserTask> userTaskOpt = userTaskRepository.findByUserAndTask(user, task);
+                    if (userTaskOpt.isPresent()) {
+                        UserTask userTask = userTaskOpt.get();
+                        if (userTask.getStatus() != null) {
+                            String statusName = userTask.getStatus().getName();
+                            if ("ABGEGEBEN".equals(statusName)) {
+                                submittedTasks++;
+                            } else if ("ÜBERARBEITUNG_NÖTIG".equals(statusName)) {
+                                needsRevisionTasks++;
+                            } else if ("VOLLSTÄNDIG".equals(statusName)) {
+                                completedTasks++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return new TeacherGroupController.GroupStatistics(
+            totalStudents, 
+            submittedTasks, 
+            needsRevisionTasks, 
+            completedTasks
+        );
     }
 }
