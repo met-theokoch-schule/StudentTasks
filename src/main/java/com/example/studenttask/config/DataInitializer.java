@@ -72,51 +72,61 @@ public class DataInitializer implements ApplicationRunner {
 
         if (taskViewRepository.findByTemplatePath(htmlCssEditor) == null) {
             TaskView htmlCSS = new TaskView("HTML+CSS Editor", htmlCssEditor);
-                htmlCSS.setDescription("Erstellen von HTML-Seiten mit CSS und Bildern!");
+            htmlCSS.setDescription("Erstellen von HTML-Seiten mit CSS und Bildern!");
             taskViewRepository.save(htmlCSS);
             System.out.println("TaskView with templatePath '" + htmlCssEditor + "' initialized");
+        }
+
+        String struktogEditor = "taskviews/struktog";
+
+        if (taskViewRepository.findByTemplatePath(struktogEditor) == null) {
+            TaskView struktog = new TaskView("Struktogramm Editor", struktogEditor);
+            struktog.setDescription("Erstellen von Struktogrammen!");
+            taskViewRepository.save(struktog);
+            System.out.println("TaskView with templatePath '" + struktogEditor + "' initialized");
         }
 
         // Hier können weitere TaskViews hinzugefügt werden
         // Beispiel für weitere TaskViews:
         /*
-        String htmlEditorTemplatePath = "taskviews/html-editor";
-        if (taskViewRepository.findByTemplatePath(htmlEditorTemplatePath) == null) {
-            TaskView htmlEditor = new TaskView("HTML Editor", htmlEditorTemplatePath);
-            htmlEditor.setDescription("Rich-Text HTML Editor für Textaufgaben");
-            taskViewRepository.save(htmlEditor);
-            System.out.println("TaskView with templatePath '" + htmlEditorTemplatePath + "' initialized");
-        }
-        */
+         * String htmlEditorTemplatePath = "taskviews/html-editor";
+         * if (taskViewRepository.findByTemplatePath(htmlEditorTemplatePath) == null) {
+         * TaskView htmlEditor = new TaskView("HTML Editor", htmlEditorTemplatePath);
+         * htmlEditor.setDescription("Rich-Text HTML Editor für Textaufgaben");
+         * taskViewRepository.save(htmlEditor);
+         * System.out.println("TaskView with templatePath '" + htmlEditorTemplatePath +
+         * "' initialized");
+         * }
+         */
     }
 
     private void initializeUnitTitles() {
         // Unit Titles mit Gewichtung für die Anzeige-Reihenfolge
         // Niedrigere weight-Werte werden zuerst angezeigt
         unitTitleService.createOrUpdate("einfuehrung-programmierung",
-            "Einführung in die Programmierung",
-            "Grundlagen der Programmierung und erste Schritte",
-            10);
+                "Einführung in die Programmierung",
+                "Grundlagen der Programmierung und erste Schritte",
+                10);
 
         unitTitleService.createOrUpdate("html-css",
-            "HTML & CSS",
-            "Webentwicklung mit HTML und CSS",
-            20);
+                "HTML & CSS",
+                "Webentwicklung mit HTML und CSS",
+                20);
 
         unitTitleService.createOrUpdate("javascript-basics",
-            "JavaScript Grundlagen",
-            "Einführung in JavaScript und DOM-Manipulation",
-            30);
+                "JavaScript Grundlagen",
+                "Einführung in JavaScript und DOM-Manipulation",
+                30);
 
         unitTitleService.createOrUpdate("datenbanken",
-            "Datenbanken",
-            "Grundlagen von Datenbanken und SQL",
-            40);
+                "Datenbanken",
+                "Grundlagen von Datenbanken und SQL",
+                40);
 
         unitTitleService.createOrUpdate("objektorientierung",
-            "Objektorientierte Programmierung",
-            "Klassen, Objekte und Vererbung",
-            50);
+                "Objektorientierte Programmierung",
+                "Klassen, Objekte und Vererbung",
+                50);
 
         // Weitere Unit Titles können hier hinzugefügt werden
         // Die Gewichtung bestimmt die Reihenfolge auf der Schüler-Seite
