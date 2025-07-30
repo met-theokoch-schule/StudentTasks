@@ -104,11 +104,13 @@ public class StudentTaskApiController {
             System.out.println("   - Content length: " + (content != null ? content.length() : "null"));
 
             // Find the UserTask directly
-            UserTask userTask = userTaskService.findById(userTaskId);
-            if (userTask == null) {
+            Optional<UserTask> userTaskOpt = userTaskService.findById(userTaskId);
+            if (userTaskOpt.isEmpty()) {
                 System.out.println("   - UserTask not found with ID: " + userTaskId);
                 return ResponseEntity.notFound().build();
             }
+            
+            UserTask userTask = userTaskOpt.get();
 
             System.out.println("   - Found UserTask: " + userTask.getId() + " (User: " + userTask.getUser().getId() + ", Task: " + userTask.getTask().getId() + ")");
 
