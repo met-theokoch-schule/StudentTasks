@@ -28,330 +28,822 @@ class Config {
   constructor() {
     this.data = {
       InsertNode: {
-        color: 'rgb(255,255,243)'
+        color: "rgb(255,255,243)"
       },
       Placeholder: {
-        color: 'rgb(255,255,243)'
+        color: "rgb(255,255,243)"
       },
       InsertCase: {
-        color: 'rgb(250, 218, 209)'
+        color: "rgb(250, 218, 209)"
       },
       InputNode: {
         use: true,
-        id: 'InputButton',
-        text: 'Eingabe-Feld',
-        icon: 'taskIcon',
-        color: 'rgb(253, 237, 206)'
+        id: "InputButton",
+        text: "Eingabe-Feld",
+        icon: "taskIcon",
+        color: "rgb(253, 237, 206)"
       },
       OutputNode: {
         use: true,
-        id: 'OutputButton',
-        text: 'Ausgabe-Feld',
-        icon: 'taskIcon',
-        color: 'rgb(253, 237, 206)'
+        id: "OutputButton",
+        text: "Ausgabe-Feld",
+        icon: "taskIcon",
+        color: "rgb(253, 237, 206)"
       },
       TaskNode: {
         use: true,
-        id: 'TaskButton',
-        text: 'Anweisung',
-        icon: 'taskIcon',
-        color: 'rgb(253, 237, 206)'
+        id: "TaskButton",
+        text: "Anweisung",
+        icon: "taskIcon",
+        color: "rgb(253, 237, 206)"
       },
       CountLoopNode: {
         use: true,
-        id: 'CountLoopButton',
-        text: 'Zählergesteuerte Schleife',
-        icon: 'countLoopIcon',
-        color: 'rgb(220, 239, 231)'
+        id: "CountLoopButton",
+        text: "Zählergesteuerte Schleife",
+        icon: "countLoopIcon",
+        color: "rgb(220, 239, 231)"
       },
       HeadLoopNode: {
         use: true,
-        id: 'HeadLoopButton',
-        text: 'Kopfgesteuerte Schleife',
-        icon: 'countLoopIcon',
-        color: 'rgb(220, 239, 231)'
+        id: "HeadLoopButton",
+        text: "Kopfgesteuerte Schleife",
+        icon: "countLoopIcon",
+        color: "rgb(220, 239, 231)"
       },
       FootLoopNode: {
-        use: true,
-        id: 'FootLoopButton',
-        text: 'Fußgesteuerte Schleife',
-        icon: 'footLoopIcon',
-        color: 'rgb(220, 239, 231)'
+        use: false,
+        id: "FootLoopButton",
+        text: "Fußgesteuerte Schleife",
+        icon: "footLoopIcon",
+        color: "rgb(220, 239, 231)"
       },
       BranchNode: {
         use: true,
-        id: 'BranchButton',
-        text: 'Verzweigung',
-        icon: 'branchIcon',
-        color: 'rgb(250, 218, 209)'
+        id: "BranchButton",
+        text: "Verzweigung",
+        icon: "branchIcon",
+        color: "rgb(250, 218, 209)"
       },
       CaseNode: {
-        use: true,
-        id: 'CaseButton',
-        text: 'Fallunterscheidung',
-        icon: 'caseIcon',
-        color: 'rgb(250, 218, 209)'
+        use: false,
+        id: "CaseButton",
+        text: "Fallunterscheidung",
+        icon: "caseIcon",
+        color: "rgb(250, 218, 209)"
       },
       FunctionNode: {
         use: true,
-        id: 'FunctionButton',
-        text: 'Funktionsblock',
-        icon: 'funcIcon',
-        color: 'rgb(255, 255, 255)'
+        id: "FunctionButton",
+        text: "Funktionsblock",
+        icon: "funcIcon",
+        color: "rgb(255, 255, 255)"
       },
       TryCatchNode: {
         use: true,
-        id: 'TryCatchButton',
-        text: 'Try-Catch-Block',
-        icon: 'tryCatchIcon',
-        color: 'rgb(250, 218, 209)'
+        id: "TryCatchButton",
+        text: "Try-Catch-Block",
+        icon: "tryCatchIcon",
+        color: "rgb(250, 218, 209)"
       },
       showCodeButton: true
     };
     this.alternatives = {
       python: {
         InsertNode: {
-          color: 'rgb(255,255,243)'
+          color: "rgb(255,255,243)"
         },
         Placeholder: {
-          color: 'rgb(255,255,243)'
+          color: "rgb(255,255,243)"
         },
         InsertCase: {
-          color: 'rgb(250, 218, 209)'
+          color: "rgb(250, 218, 209)"
         },
         InputNode: {
           use: true,
-          id: 'InputButton',
-          text: 'Eingabe-Feld',
-          icon: 'taskIcon',
-          color: 'rgb(253, 237, 206)'
+          id: "InputButton",
+          text: "Eingabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
         },
         OutputNode: {
           use: true,
-          id: 'OutputButton',
-          text: 'Ausgabe-Feld',
-          icon: 'taskIcon',
-          color: 'rgb(253, 237, 206)'
+          id: "OutputButton",
+          text: "Ausgabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
         },
         TaskNode: {
           use: true,
-          id: 'TaskButton',
-          text: 'Anweisung',
-          icon: 'taskIcon',
-          color: 'rgb(253, 237, 206)'
+          id: "TaskButton",
+          text: "Anweisung",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
         },
         CountLoopNode: {
-          use: false,
-          id: 'CountLoopButton',
-          text: 'Zählergesteuerte Schleife',
-          icon: 'countLoopIcon',
-          color: 'rgb(220, 239, 231)'
+          use: true,
+          id: "CountLoopButton",
+          text: "Zählergesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)"
         },
         HeadLoopNode: {
           use: true,
-          id: 'HeadLoopButton',
-          text: 'Schleife',
-          icon: 'countLoopIcon',
-          color: 'rgb(220, 239, 231)'
+          id: "HeadLoopButton",
+          text: "Kopfgesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)"
         },
         FootLoopNode: {
           use: false,
-          id: 'FootLoopButton',
-          text: 'Fußgesteuerte Schleife',
-          icon: 'footLoopIcon',
-          color: 'rgb(220, 239, 231)'
+          id: "FootLoopButton",
+          text: "Fußgesteuerte Schleife",
+          icon: "footLoopIcon",
+          color: "rgb(220, 239, 231)"
         },
         BranchNode: {
           use: true,
-          id: 'BranchButton',
-          text: 'Verzweigung',
-          icon: 'branchIcon',
-          color: 'rgb(250, 218, 209)'
+          id: "BranchButton",
+          text: "Verzweigung",
+          icon: "branchIcon",
+          color: "rgb(250, 218, 209)"
         },
         CaseNode: {
-          use: true,
-          id: 'CaseButton',
-          text: 'Fallunterscheidung',
-          icon: 'caseIcon',
-          color: 'rgb(250, 218, 209)'
+          use: false,
+          id: "CaseButton",
+          text: "Fallunterscheidung",
+          icon: "caseIcon",
+          color: "rgb(250, 218, 209)"
         },
         FunctionNode: {
-          use: false,
-          id: 'FunctionButton',
-          text: 'Funktionsblock',
-          icon: 'funcIcon',
-          color: 'rgb(255, 255, 255)'
+          use: true,
+          id: "FunctionButton",
+          text: "Funktionsblock",
+          icon: "funcIcon",
+          color: "rgb(255, 255, 255)"
         },
         TryCatchNode: {
           use: true,
-          id: 'TryCatchButton',
-          text: 'Try-Catch-Block',
-          icon: 'tryCatchIcon',
-          color: 'rgb(250, 218, 209)'
+          id: "TryCatchButton",
+          text: "Try-Catch-Block",
+          icon: "tryCatchIcon",
+          color: "rgb(250, 218, 209)"
         },
         showCodeButton: true
       },
-      python_func: {
+      python_simple: {
         InsertNode: {
-          color: 'rgb(255,255,243)'
+          color: "rgb(255,255,243)"
         },
         Placeholder: {
-          color: 'rgb(255,255,243)'
+          color: "rgb(255,255,243)"
         },
         InsertCase: {
-          color: 'rgb(250, 218, 209)'
+          color: "rgb(250, 218, 209)"
         },
         InputNode: {
           use: true,
-          id: 'InputButton',
-          text: 'Eingabe-Feld',
-          icon: 'taskIcon',
-          color: 'rgb(253, 237, 206)'
+          id: "InputButton",
+          text: "Eingabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
         },
         OutputNode: {
           use: true,
-          id: 'OutputButton',
-          text: 'Ausgabe-Feld',
-          icon: 'taskIcon',
-          color: 'rgb(253, 237, 206)'
+          id: "OutputButton",
+          text: "Ausgabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
         },
         TaskNode: {
           use: true,
-          id: 'TaskButton',
-          text: 'Anweisung',
-          icon: 'taskIcon',
-          color: 'rgb(253, 237, 206)'
+          id: "TaskButton",
+          text: "Anweisung",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
         },
         CountLoopNode: {
-          use: true,
-          id: 'CountLoopButton',
-          text: 'Zählergesteuerte Schleife',
-          icon: 'countLoopIcon',
-          color: 'rgb(220, 239, 231)'
+          use: false,
+          id: "CountLoopButton",
+          text: "Zählergesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)"
         },
         HeadLoopNode: {
-          use: true,
-          id: 'HeadLoopButton',
-          text: 'Kopfgesteuerte Schleife',
-          icon: 'countLoopIcon',
-          color: 'rgb(220, 239, 231)'
+          use: false,
+          id: "HeadLoopButton",
+          text: "Kopfgesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)"
         },
         FootLoopNode: {
+          use: false,
+          id: "FootLoopButton",
+          text: "Fußgesteuerte Schleife",
+          icon: "footLoopIcon",
+          color: "rgb(220, 239, 231)"
+        },
+        BranchNode: {
+          use: false,
+          id: "BranchButton",
+          text: "Verzweigung",
+          icon: "branchIcon",
+          color: "rgb(250, 218, 209)"
+        },
+        CaseNode: {
+          use: false,
+          id: "CaseButton",
+          text: "Fallunterscheidung",
+          icon: "caseIcon",
+          color: "rgb(250, 218, 209)"
+        },
+        FunctionNode: {
+          use: false,
+          id: "FunctionButton",
+          text: "Funktionsblock",
+          icon: "funcIcon",
+          color: "rgb(255, 255, 255)"
+        },
+        TryCatchNode: {
+          use: false,
+          id: "TryCatchButton",
+          text: "Try-Catch-Block",
+          icon: "tryCatchIcon",
+          color: "rgb(250, 218, 209)"
+        },
+        showCodeButton: true
+      },
+      python_if: {
+        InsertNode: {
+          color: "rgb(255,255,243)"
+        },
+        Placeholder: {
+          color: "rgb(255,255,243)"
+        },
+        InsertCase: {
+          color: "rgb(250, 218, 209)"
+        },
+        InputNode: {
           use: true,
-          id: 'FootLoopButton',
-          text: 'Fußgesteuerte Schleife',
-          icon: 'footLoopIcon',
-          color: 'rgb(220, 239, 231)'
+          id: "InputButton",
+          text: "Eingabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
+        },
+        OutputNode: {
+          use: true,
+          id: "OutputButton",
+          text: "Ausgabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
+        },
+        TaskNode: {
+          use: true,
+          id: "TaskButton",
+          text: "Anweisung",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
+        },
+        CountLoopNode: {
+          use: false,
+          id: "CountLoopButton",
+          text: "Zählergesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)"
+        },
+        HeadLoopNode: {
+          use: false,
+          id: "HeadLoopButton",
+          text: "Kopfgesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)"
+        },
+        FootLoopNode: {
+          use: false,
+          id: "FootLoopButton",
+          text: "Fußgesteuerte Schleife",
+          icon: "footLoopIcon",
+          color: "rgb(220, 239, 231)"
         },
         BranchNode: {
           use: true,
-          id: 'BranchButton',
-          text: 'Verzweigung',
-          icon: 'branchIcon',
-          color: 'rgb(250, 218, 209)'
+          id: "BranchButton",
+          text: "Verzweigung",
+          icon: "branchIcon",
+          color: "rgb(250, 218, 209)"
         },
         CaseNode: {
+          use: false,
+          id: "CaseButton",
+          text: "Fallunterscheidung",
+          icon: "caseIcon",
+          color: "rgb(250, 218, 209)"
+        },
+        FunctionNode: {
+          use: false,
+          id: "FunctionButton",
+          text: "Funktionsblock",
+          icon: "funcIcon",
+          color: "rgb(255, 255, 255)"
+        },
+        TryCatchNode: {
+          use: false,
+          id: "TryCatchButton",
+          text: "Try-Catch-Block",
+          icon: "tryCatchIcon",
+          color: "rgb(250, 218, 209)"
+        },
+        showCodeButton: true
+      },
+      python_loop: {
+        InsertNode: {
+          color: "rgb(255,255,243)"
+        },
+        Placeholder: {
+          color: "rgb(255,255,243)"
+        },
+        InsertCase: {
+          color: "rgb(250, 218, 209)"
+        },
+        InputNode: {
           use: true,
-          id: 'CaseButton',
-          text: 'Fallunterscheidung',
-          icon: 'caseIcon',
-          color: 'rgb(250, 218, 209)'
+          id: "InputButton",
+          text: "Eingabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
+        },
+        OutputNode: {
+          use: true,
+          id: "OutputButton",
+          text: "Ausgabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
+        },
+        TaskNode: {
+          use: true,
+          id: "TaskButton",
+          text: "Anweisung",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
+        },
+        CountLoopNode: {
+          use: true,
+          id: "CountLoopButton",
+          text: "Zählergesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)"
+        },
+        HeadLoopNode: {
+          use: true,
+          id: "HeadLoopButton",
+          text: "Kopfgesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)"
+        },
+        FootLoopNode: {
+          use: false,
+          id: "FootLoopButton",
+          text: "Fußgesteuerte Schleife",
+          icon: "footLoopIcon",
+          color: "rgb(220, 239, 231)"
+        },
+        BranchNode: {
+          use: false,
+          id: "BranchButton",
+          text: "Verzweigung",
+          icon: "branchIcon",
+          color: "rgb(250, 218, 209)"
+        },
+        CaseNode: {
+          use: false,
+          id: "CaseButton",
+          text: "Fallunterscheidung",
+          icon: "caseIcon",
+          color: "rgb(250, 218, 209)"
+        },
+        FunctionNode: {
+          use: false,
+          id: "FunctionButton",
+          text: "Funktionsblock",
+          icon: "funcIcon",
+          color: "rgb(255, 255, 255)"
+        },
+        TryCatchNode: {
+          use: false,
+          id: "TryCatchButton",
+          text: "Try-Catch-Block",
+          icon: "tryCatchIcon",
+          color: "rgb(250, 218, 209)"
+        },
+        showCodeButton: true
+      },
+      python_for: {
+        InsertNode: {
+          color: "rgb(255,255,243)"
+        },
+        Placeholder: {
+          color: "rgb(255,255,243)"
+        },
+        InsertCase: {
+          color: "rgb(250, 218, 209)"
+        },
+        InputNode: {
+          use: true,
+          id: "InputButton",
+          text: "Eingabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
+        },
+        OutputNode: {
+          use: true,
+          id: "OutputButton",
+          text: "Ausgabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
+        },
+        TaskNode: {
+          use: true,
+          id: "TaskButton",
+          text: "Anweisung",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
+        },
+        CountLoopNode: {
+          use: true,
+          id: "CountLoopButton",
+          text: "Zählergesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)"
+        },
+        HeadLoopNode: {
+          use: false,
+          id: "HeadLoopButton",
+          text: "Kopfgesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)"
+        },
+        FootLoopNode: {
+          use: false,
+          id: "FootLoopButton",
+          text: "Fußgesteuerte Schleife",
+          icon: "footLoopIcon",
+          color: "rgb(220, 239, 231)"
+        },
+        BranchNode: {
+          use: false,
+          id: "BranchButton",
+          text: "Verzweigung",
+          icon: "branchIcon",
+          color: "rgb(250, 218, 209)"
+        },
+        CaseNode: {
+          use: false,
+          id: "CaseButton",
+          text: "Fallunterscheidung",
+          icon: "caseIcon",
+          color: "rgb(250, 218, 209)"
+        },
+        FunctionNode: {
+          use: false,
+          id: "FunctionButton",
+          text: "Funktionsblock",
+          icon: "funcIcon",
+          color: "rgb(255, 255, 255)"
+        },
+        TryCatchNode: {
+          use: false,
+          id: "TryCatchButton",
+          text: "Try-Catch-Block",
+          icon: "tryCatchIcon",
+          color: "rgb(250, 218, 209)"
+        },
+        showCodeButton: true
+      },
+      python_while: {
+        InsertNode: {
+          color: "rgb(255,255,243)"
+        },
+        Placeholder: {
+          color: "rgb(255,255,243)"
+        },
+        InsertCase: {
+          color: "rgb(250, 218, 209)"
+        },
+        InputNode: {
+          use: true,
+          id: "InputButton",
+          text: "Eingabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
+        },
+        OutputNode: {
+          use: true,
+          id: "OutputButton",
+          text: "Ausgabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
+        },
+        TaskNode: {
+          use: true,
+          id: "TaskButton",
+          text: "Anweisung",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
+        },
+        CountLoopNode: {
+          use: false,
+          id: "CountLoopButton",
+          text: "Zählergesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)"
+        },
+        HeadLoopNode: {
+          use: true,
+          id: "HeadLoopButton",
+          text: "Kopfgesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)"
+        },
+        FootLoopNode: {
+          use: false,
+          id: "FootLoopButton",
+          text: "Fußgesteuerte Schleife",
+          icon: "footLoopIcon",
+          color: "rgb(220, 239, 231)"
+        },
+        BranchNode: {
+          use: false,
+          id: "BranchButton",
+          text: "Verzweigung",
+          icon: "branchIcon",
+          color: "rgb(250, 218, 209)"
+        },
+        CaseNode: {
+          use: false,
+          id: "CaseButton",
+          text: "Fallunterscheidung",
+          icon: "caseIcon",
+          color: "rgb(250, 218, 209)"
+        },
+        FunctionNode: {
+          use: false,
+          id: "FunctionButton",
+          text: "Funktionsblock",
+          icon: "funcIcon",
+          color: "rgb(255, 255, 255)"
+        },
+        TryCatchNode: {
+          use: false,
+          id: "TryCatchButton",
+          text: "Try-Catch-Block",
+          icon: "tryCatchIcon",
+          color: "rgb(250, 218, 209)"
+        },
+        showCodeButton: true
+      },
+      python_if_loop: {
+        InsertNode: {
+          color: "rgb(255,255,243)"
+        },
+        Placeholder: {
+          color: "rgb(255,255,243)"
+        },
+        InsertCase: {
+          color: "rgb(250, 218, 209)"
+        },
+        InputNode: {
+          use: true,
+          id: "InputButton",
+          text: "Eingabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
+        },
+        OutputNode: {
+          use: true,
+          id: "OutputButton",
+          text: "Ausgabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
+        },
+        TaskNode: {
+          use: true,
+          id: "TaskButton",
+          text: "Anweisung",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
+        },
+        CountLoopNode: {
+          use: true,
+          id: "CountLoopButton",
+          text: "Zählergesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)"
+        },
+        HeadLoopNode: {
+          use: true,
+          id: "HeadLoopButton",
+          text: "Kopfgesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)"
+        },
+        FootLoopNode: {
+          use: false,
+          id: "FootLoopButton",
+          text: "Fußgesteuerte Schleife",
+          icon: "footLoopIcon",
+          color: "rgb(220, 239, 231)"
+        },
+        BranchNode: {
+          use: true,
+          id: "BranchButton",
+          text: "Verzweigung",
+          icon: "branchIcon",
+          color: "rgb(250, 218, 209)"
+        },
+        CaseNode: {
+          use: false,
+          id: "CaseButton",
+          text: "Fallunterscheidung",
+          icon: "caseIcon",
+          color: "rgb(250, 218, 209)"
+        },
+        FunctionNode: {
+          use: false,
+          id: "FunctionButton",
+          text: "Funktionsblock",
+          icon: "funcIcon",
+          color: "rgb(255, 255, 255)"
+        },
+        TryCatchNode: {
+          use: false,
+          id: "TryCatchButton",
+          text: "Try-Catch-Block",
+          icon: "tryCatchIcon",
+          color: "rgb(250, 218, 209)"
+        },
+        showCodeButton: true
+      },
+      python_function: {
+        InsertNode: {
+          color: "rgb(255,255,243)"
+        },
+        Placeholder: {
+          color: "rgb(255,255,243)"
+        },
+        InsertCase: {
+          color: "rgb(250, 218, 209)"
+        },
+        InputNode: {
+          use: true,
+          id: "InputButton",
+          text: "Eingabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
+        },
+        OutputNode: {
+          use: true,
+          id: "OutputButton",
+          text: "Ausgabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
+        },
+        TaskNode: {
+          use: true,
+          id: "TaskButton",
+          text: "Anweisung",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
+        },
+        CountLoopNode: {
+          use: true,
+          id: "CountLoopButton",
+          text: "Zählergesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)"
+        },
+        HeadLoopNode: {
+          use: true,
+          id: "HeadLoopButton",
+          text: "Kopfgesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)"
+        },
+        FootLoopNode: {
+          use: false,
+          id: "FootLoopButton",
+          text: "Fußgesteuerte Schleife",
+          icon: "footLoopIcon",
+          color: "rgb(220, 239, 231)"
+        },
+        BranchNode: {
+          use: true,
+          id: "BranchButton",
+          text: "Verzweigung",
+          icon: "branchIcon",
+          color: "rgb(250, 218, 209)"
+        },
+        CaseNode: {
+          use: false,
+          id: "CaseButton",
+          text: "Fallunterscheidung",
+          icon: "caseIcon",
+          color: "rgb(250, 218, 209)"
         },
         FunctionNode: {
           use: true,
-          id: 'FunctionButton',
-          text: 'Funktionsblock',
-          icon: 'funcIcon',
-          color: 'rgb(255, 255, 255)'
+          id: "FunctionButton",
+          text: "Funktionsblock",
+          icon: "funcIcon",
+          color: "rgb(255, 255, 255)"
         },
         TryCatchNode: {
-          use: true,
-          id: 'TryCatchButton',
-          text: 'Try-Catch-Block',
-          icon: 'tryCatchIcon',
-          color: 'rgb(250, 218, 209)'
+          use: false,
+          id: "TryCatchButton",
+          text: "Try-Catch-Block",
+          icon: "tryCatchIcon",
+          color: "rgb(250, 218, 209)"
         },
         showCodeButton: true
       },
       standard: {
         InsertNode: {
-          color: 'rgb(255,255,243)'
+          color: "rgb(255,255,243)"
         },
         Placeholder: {
-          color: 'rgb(255,255,243)'
+          color: "rgb(255,255,243)"
         },
         InsertCase: {
-          color: 'rgb(250, 218, 209)'
+          color: "rgb(250, 218, 209)"
         },
         InputNode: {
           use: true,
-          id: 'InputButton',
-          text: 'Eingabe-Feld',
-          icon: 'taskIcon',
-          color: 'rgb(253, 237, 206)'
+          id: "InputButton",
+          text: "Eingabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
         },
         OutputNode: {
           use: true,
-          id: 'OutputButton',
-          text: 'Ausgabe-Feld',
-          icon: 'taskIcon',
-          color: 'rgb(253, 237, 206)'
+          id: "OutputButton",
+          text: "Ausgabe-Feld",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
         },
         TaskNode: {
           use: true,
-          id: 'TaskButton',
-          text: 'Anweisung',
-          icon: 'taskIcon',
-          color: 'rgb(253, 237, 206)'
+          id: "TaskButton",
+          text: "Anweisung",
+          icon: "taskIcon",
+          color: "rgb(253, 237, 206)"
         },
         CountLoopNode: {
           use: true,
-          id: 'CountLoopButton',
-          text: 'Zählergesteuerte Schleife',
-          icon: 'countLoopIcon',
-          color: 'rgb(220, 239, 231)'
+          id: "CountLoopButton",
+          text: "Zählergesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)"
         },
         HeadLoopNode: {
           use: true,
-          id: 'HeadLoopButton',
-          text: 'Kopfgesteuerte Schleife',
-          icon: 'countLoopIcon',
-          color: 'rgb(220, 239, 231)'
+          id: "HeadLoopButton",
+          text: "Kopfgesteuerte Schleife",
+          icon: "countLoopIcon",
+          color: "rgb(220, 239, 231)"
         },
         FootLoopNode: {
           use: true,
-          id: 'FootLoopButton',
-          text: 'Fußgesteuerte Schleife',
-          icon: 'footLoopIcon',
-          color: 'rgb(220, 239, 231)'
+          id: "FootLoopButton",
+          text: "Fußgesteuerte Schleife",
+          icon: "footLoopIcon",
+          color: "rgb(220, 239, 231)"
         },
         BranchNode: {
           use: true,
-          id: 'BranchButton',
-          text: 'Verzweigung',
-          icon: 'branchIcon',
-          color: 'rgb(250, 218, 209)'
+          id: "BranchButton",
+          text: "Verzweigung",
+          icon: "branchIcon",
+          color: "rgb(250, 218, 209)"
         },
         CaseNode: {
           use: true,
-          id: 'CaseButton',
-          text: 'Fallunterscheidung',
-          icon: 'caseIcon',
-          color: 'rgb(250, 218, 209)'
+          id: "CaseButton",
+          text: "Fallunterscheidung",
+          icon: "caseIcon",
+          color: "rgb(250, 218, 209)"
         },
         FunctionNode: {
-          use: false,
-          id: 'FunctionButton',
-          text: 'Funktionsblock',
-          icon: 'funcIcon',
-          color: 'rgb(255, 255, 255)'
+          use: true,
+          id: "FunctionButton",
+          text: "Funktionsblock",
+          icon: "funcIcon",
+          color: "rgb(255, 255, 255)"
         },
         TryCatchNode: {
-          use: false,
-          id: 'TryCatchButton',
-          text: 'Try-Catch-Block',
-          icon: 'tryCatchIcon',
-          color: 'rgb(250, 218, 209)'
+          use: true,
+          id: "TryCatchButton",
+          text: "Try-Catch-Block",
+          icon: "tryCatchIcon",
+          color: "rgb(250, 218, 209)"
         },
         showCodeButton: true
       }
@@ -372,7 +864,7 @@ class Config {
         return name;
       }
     }
-    return 'default';
+    return "default";
   }
 }
 const config = new Config();
@@ -1298,7 +1790,7 @@ class Presenter {
     }
     //this.updateBrowserStore()
     for (const view of this.views) {
-      view.displaySourcecode('ToggleSourcecode');
+      view.displaySourcecode("ToggleSourcecode");
     }
   }
 
@@ -1309,234 +1801,234 @@ class Presenter {
    */
   insertNode(id, event) {
     switch (id) {
-      case 'InputButton':
+      case "InputButton":
         this.nextInsertElement = {
           id: guidGenerator(),
-          type: 'InputNode',
-          text: '',
+          type: "InputNode",
+          text: "",
           followElement: {
             id: guidGenerator(),
-            type: 'InsertNode',
+            type: "InsertNode",
             followElement: null
           }
         };
         break;
-      case 'OutputButton':
+      case "OutputButton":
         this.nextInsertElement = {
           id: guidGenerator(),
-          type: 'OutputNode',
-          text: '',
+          type: "OutputNode",
+          text: "",
           followElement: {
             id: guidGenerator(),
-            type: 'InsertNode',
+            type: "InsertNode",
             followElement: null
           }
         };
         break;
-      case 'TaskButton':
+      case "TaskButton":
         this.nextInsertElement = {
           id: guidGenerator(),
-          type: 'TaskNode',
-          text: 'Anweisung',
+          type: "TaskNode",
+          text: "Anweisung",
           followElement: {
             id: guidGenerator(),
-            type: 'InsertNode',
+            type: "InsertNode",
             followElement: null
           }
         };
         break;
-      case 'BranchButton':
+      case "BranchButton":
         this.nextInsertElement = {
           id: guidGenerator(),
-          type: 'BranchNode',
-          text: 'Bedingung',
+          type: "BranchNode",
+          text: "Bedingung",
           followElement: {
             id: guidGenerator(),
-            type: 'InsertNode',
+            type: "InsertNode",
             followElement: null
           },
           trueChild: {
             id: guidGenerator(),
-            type: 'InsertNode',
+            type: "InsertNode",
             followElement: {
-              type: 'Placeholder'
+              type: "Placeholder"
             }
           },
           falseChild: {
             id: guidGenerator(),
-            type: 'InsertNode',
+            type: "InsertNode",
             followElement: {
-              type: 'Placeholder'
+              type: "Placeholder"
             }
           }
         };
         break;
-      case 'CaseButton':
+      case "CaseButton":
         this.nextInsertElement = {
           id: guidGenerator(),
-          type: 'CaseNode',
-          text: 'Variable',
+          type: "CaseNode",
+          text: "Variable",
           followElement: {
             id: guidGenerator(),
-            type: 'InsertNode',
+            type: "InsertNode",
             followElement: null
           },
           defaultOn: true,
           defaultNode: {
             id: guidGenerator(),
-            type: 'InsertCase',
-            text: 'Sonst',
+            type: "InsertCase",
+            text: "Sonst",
             followElement: {
               id: guidGenerator(),
-              type: 'InsertNode',
+              type: "InsertNode",
               followElement: {
-                type: 'Placeholder'
+                type: "Placeholder"
               }
             }
           },
           cases: [{
             id: guidGenerator(),
-            type: 'InsertCase',
-            text: 'Fall',
+            type: "InsertCase",
+            text: "Fall",
             followElement: {
               id: guidGenerator(),
-              type: 'InsertNode',
+              type: "InsertNode",
               followElement: {
-                type: 'Placeholder'
+                type: "Placeholder"
               }
             }
           }, {
             id: guidGenerator(),
-            type: 'InsertCase',
-            text: 'Fall',
+            type: "InsertCase",
+            text: "Fall",
             followElement: {
               id: guidGenerator(),
-              type: 'InsertNode',
+              type: "InsertNode",
               followElement: {
-                type: 'Placeholder'
+                type: "Placeholder"
               }
             }
           }]
         };
         break;
-      case 'CountLoopButton':
+      case "CountLoopButton":
         this.nextInsertElement = {
           id: guidGenerator(),
-          type: 'CountLoopNode',
-          text: 'Zählbedingung',
+          type: "CountLoopNode",
+          text: "for i in range(n)",
           followElement: {
             id: guidGenerator(),
-            type: 'InsertNode',
+            type: "InsertNode",
             followElement: null
           },
           child: {
             id: guidGenerator(),
-            type: 'InsertNode',
+            type: "InsertNode",
             followElement: {
-              type: 'Placeholder'
+              type: "Placeholder"
             }
           }
         };
         break;
-      case 'HeadLoopButton':
+      case "HeadLoopButton":
         this.nextInsertElement = {
           id: guidGenerator(),
-          type: 'HeadLoopNode',
-          text: 'Gültigkeitsbedingung',
+          type: "HeadLoopNode",
+          text: "Gültigkeitsbedingung",
           followElement: {
             id: guidGenerator(),
-            type: 'InsertNode',
+            type: "InsertNode",
             followElement: null
           },
           child: {
             id: guidGenerator(),
-            type: 'InsertNode',
+            type: "InsertNode",
             followElement: {
-              type: 'Placeholder'
+              type: "Placeholder"
             }
           }
         };
         break;
-      case 'FunctionButton':
+      case "FunctionButton":
         this.nextInsertElement = {
           id: guidGenerator(),
-          type: 'FunctionNode',
-          text: '',
+          type: "FunctionNode",
+          text: "",
           parameters: [],
           followElement: {
             id: guidGenerator(),
-            type: 'InsertNode',
+            type: "InsertNode",
             followElement: null
           },
           child: {
             id: guidGenerator(),
-            type: 'InsertNode',
+            type: "InsertNode",
             followElement: {
-              type: 'Placeholder'
+              type: "Placeholder"
             }
           }
         };
         this.settingFunctionMode = true;
         break;
-      case 'FootLoopButton':
+      case "FootLoopButton":
         this.nextInsertElement = {
           id: guidGenerator(),
-          type: 'FootLoopNode',
-          text: 'Gültigkeitsbedingung',
+          type: "FootLoopNode",
+          text: "Gültigkeitsbedingung",
           followElement: {
             id: guidGenerator(),
-            type: 'InsertNode',
+            type: "InsertNode",
             followElement: null
           },
           child: {
             id: guidGenerator(),
-            type: 'InsertNode',
+            type: "InsertNode",
             followElement: {
-              type: 'Placeholder'
+              type: "Placeholder"
             }
           }
         };
         break;
-      case 'TryCatchButton':
+      case "TryCatchButton":
         this.nextInsertElement = {
           id: guidGenerator(),
-          type: 'TryCatchNode',
-          text: '',
+          type: "TryCatchNode",
+          text: "",
           followElement: {
             id: guidGenerator(),
-            type: 'InsertNode',
+            type: "InsertNode",
             followElement: null
           },
           tryChild: {
             id: guidGenerator(),
-            type: 'InsertNode',
+            type: "InsertNode",
             followElement: {
-              type: 'Placeholder'
+              type: "Placeholder"
             }
           },
           catchChild: {
             id: guidGenerator(),
-            type: 'InsertNode',
+            type: "InsertNode",
             followElement: {
-              type: 'Placeholder'
+              type: "Placeholder"
             }
           }
         };
         break;
     }
     if (event.dataTransfer !== undefined) {
-      event.dataTransfer.effectAllowed = 'move';
-      event.dataTransfer.setData('text', id);
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text", id);
     }
     const button = document.getElementById(id);
-    if (button.classList.contains('boldText')) {
+    if (button.classList.contains("boldText")) {
       this.resetButtons();
       this.reset();
     } else {
       // prepare insert by updating the model data
       this.resetButtons();
       this.insertMode = true;
-      button.classList.add('boldText');
+      button.classList.add("boldText");
     }
     // rerender the struktogramm
     this.renderAllViews();
@@ -1562,7 +2054,7 @@ class Presenter {
     this.checkUndo();
     //this.updateBrowserStore()
     this.renderAllViews();
-    document.getElementById('IEModal').classList.remove('active');
+    document.getElementById("IEModal").classList.remove("active");
   }
 
   /**
@@ -1572,7 +2064,7 @@ class Presenter {
    */
   switchDefaultState(uid) {
     this.updateUndo();
-    this.model.setTree(this.model.findAndAlterElement(uid, this.model.getTree(), this.model.switchDefaultCase, false, ''));
+    this.model.setTree(this.model.findAndAlterElement(uid, this.model.getTree(), this.model.switchDefaultCase, false, ""));
     this.checkUndo();
     //this.updateBrowserStore()
     this.renderAllViews();
@@ -1585,7 +2077,7 @@ class Presenter {
    */
   addCase(uid) {
     this.updateUndo();
-    this.model.setTree(this.model.findAndAlterElement(uid, this.model.getTree(), this.model.insertNewCase, false, ''));
+    this.model.setTree(this.model.findAndAlterElement(uid, this.model.getTree(), this.model.insertNewCase, false, ""));
     this.checkUndo();
     //this.updateBrowserStore()
     this.renderAllViews();
@@ -1599,44 +2091,44 @@ class Presenter {
   removeElement(uid) {
     const deleteElem = this.model.getElementInTree(uid, this.model.getTree());
     switch (deleteElem.type) {
-      case 'TaskNode':
-      case 'InputNode':
-      case 'OutputNode':
+      case "TaskNode":
+      case "InputNode":
+      case "OutputNode":
         this.removeNodeFromTree(uid);
         break;
-      case 'HeadLoopNode':
-      case 'CountLoopNode':
-      case 'FootLoopNode':
-      case 'FunctionNode':
-        if (deleteElem.child.followElement.type !== 'Placeholder') {
+      case "HeadLoopNode":
+      case "CountLoopNode":
+      case "FootLoopNode":
+      case "FunctionNode":
+        if (deleteElem.child.followElement.type !== "Placeholder") {
           this.prepareRemoveQuestion(uid);
         } else {
           this.removeNodeFromTree(uid);
         }
         break;
-      case 'BranchNode':
-        if (deleteElem.trueChild.followElement.type !== 'Placeholder' || deleteElem.falseChild.followElement.type !== 'Placeholder') {
+      case "BranchNode":
+        if (deleteElem.trueChild.followElement.type !== "Placeholder" || deleteElem.falseChild.followElement.type !== "Placeholder") {
           this.prepareRemoveQuestion(uid);
         } else {
           this.removeNodeFromTree(uid);
         }
         break;
-      case 'TryCatchNode':
-        if (deleteElem.tryChild.followElement.type !== 'Placeholder' || deleteElem.catchChild.followElement.type !== 'Placeholder') {
+      case "TryCatchNode":
+        if (deleteElem.tryChild.followElement.type !== "Placeholder" || deleteElem.catchChild.followElement.type !== "Placeholder") {
           this.prepareRemoveQuestion(uid);
         } else {
           this.removeNodeFromTree(uid);
         }
         break;
-      case 'CaseNode':
+      case "CaseNode":
         {
           let check = false;
           for (const item of deleteElem.cases) {
-            if (item.followElement.followElement.type !== 'Placeholder') {
+            if (item.followElement.followElement.type !== "Placeholder") {
               check = true;
             }
           }
-          if (deleteElem.defaultNode.followElement.followElement.type !== 'Placeholder') {
+          if (deleteElem.defaultNode.followElement.followElement.type !== "Placeholder") {
             check = true;
           }
           if (check) {
@@ -1646,8 +2138,8 @@ class Presenter {
           }
           break;
         }
-      case 'InsertCase':
-        if (deleteElem.followElement.followElement.type !== 'Placeholder') {
+      case "InsertCase":
+        if (deleteElem.followElement.followElement.type !== "Placeholder") {
           this.prepareRemoveQuestion(uid);
         } else {
           this.removeNodeFromTree(uid);
@@ -1656,33 +2148,33 @@ class Presenter {
     }
   }
   prepareRemoveQuestion(uid) {
-    const content = document.getElementById('modal-content');
-    const footer = document.getElementById('modal-footer');
+    const content = document.getElementById("modal-content");
+    const footer = document.getElementById("modal-footer");
     while (content.hasChildNodes()) {
       content.removeChild(content.lastChild);
     }
     while (footer.hasChildNodes()) {
       footer.removeChild(footer.lastChild);
     }
-    content.appendChild(document.createTextNode('Dieses Element und alle darin erstellten Blöcke löschen?'));
-    const doButton = document.createElement('div');
-    doButton.classList.add('modal-buttons', 'acceptIcon', 'hand');
-    doButton.addEventListener('click', () => this.removeNodeFromTree(uid, true));
+    content.appendChild(document.createTextNode("Dieses Element und alle darin erstellten Blöcke löschen?"));
+    const doButton = document.createElement("div");
+    doButton.classList.add("modal-buttons", "acceptIcon", "hand");
+    doButton.addEventListener("click", () => this.removeNodeFromTree(uid, true));
     footer.appendChild(doButton);
-    const cancelButton = document.createElement('div');
-    cancelButton.classList.add('modal-buttons', 'deleteIcon', 'hand');
-    cancelButton.addEventListener('click', () => document.getElementById('IEModal').classList.remove('active'));
+    const cancelButton = document.createElement("div");
+    cancelButton.classList.add("modal-buttons", "deleteIcon", "hand");
+    cancelButton.addEventListener("click", () => document.getElementById("IEModal").classList.remove("active"));
     footer.appendChild(cancelButton);
-    document.getElementById('IEModal').classList.add('active');
+    document.getElementById("IEModal").classList.add("active");
   }
   removeNodeFromTree(uid, closeModal = false) {
     this.updateUndo();
-    this.model.setTree(this.model.findAndAlterElement(uid, this.model.getTree(), this.model.removeNode, false, ''));
+    this.model.setTree(this.model.findAndAlterElement(uid, this.model.getTree(), this.model.removeNode, false, ""));
     this.checkUndo();
     //this.updateBrowserStore()
     this.renderAllViews();
     if (closeModal) {
-      document.getElementById('IEModal').classList.remove('active');
+      document.getElementById("IEModal").classList.remove("active");
     }
   }
 
@@ -1695,7 +2187,7 @@ class Presenter {
     let editedTree = this.model.getTree();
     // search for the function box tree
     const followingElements = [];
-    while (editedTree.type !== 'FunctionNode') {
+    while (editedTree.type !== "FunctionNode") {
       followingElements.push(editedTree);
       editedTree = editedTree.followElement;
     }
@@ -1747,7 +2239,7 @@ class Presenter {
   }
 
   // textType: only used for the distinction of function name and function parameters
-  editElement(uid, textValue, textType = '') {
+  editElement(uid, textValue, textType = "") {
     this.updateUndo();
     this.model.setTree(this.model.findAndAlterElement(uid, this.model.getTree(), this.model.editElement, false, textType + textValue));
     this.checkUndo();
@@ -1765,11 +2257,11 @@ class Presenter {
     // remove old node, when moving is used
     const moveState = this.moveId;
     if (moveState) {
-      this.model.setTree(this.model.findAndAlterElement(this.moveId, this.model.getTree(), this.model.removeNode, false, ''));
+      this.model.setTree(this.model.findAndAlterElement(this.moveId, this.model.getTree(), this.model.removeNode, false, ""));
     }
     // insert the new node, on moving, its the removed
     const elemId = this.nextInsertElement.id;
-    this.model.setTree(this.model.findAndAlterElement(uid, this.model.getTree(), this.model.insertElement, false, ''));
+    this.model.setTree(this.model.findAndAlterElement(uid, this.model.getTree(), this.model.insertElement, false, ""));
     // reset the buttons if moving occured
     if (moveState) {
       // TODO
@@ -1782,7 +2274,7 @@ class Presenter {
     this.renderAllViews();
     // on new inserted elements start the editing mode of the element
     // start no editing mode for try catch blocks
-    if (!moveState && this.getElementByUid(elemId).type !== 'TryCatchNode') {
+    if (!moveState && this.getElementByUid(elemId).type !== "TryCatchNode") {
       this.switchEditState(elemId);
     }
   }
@@ -1797,7 +2289,7 @@ class Presenter {
     let elem = document.getElementById(uid);
 
     // element is a function node
-    if (elem.children[0].children[0].classList.contains('func-box-header')) {
+    if (elem.children[0].children[0].classList.contains("func-box-header")) {
       let funcTextNode = null;
       // click function name
       if (paramIndex === null) {
@@ -1812,24 +2304,24 @@ class Presenter {
     } else {
       // get the input field and display it
       // work around for FootLoopNodes, duo to HTML structure, the last element has to be found and edited
-      if (elem.getElementsByClassName('input-group editField ' + uid).length) {
-        if (elem.childNodes[0].classList.contains('tryCatchNode')) {
-          elem = elem.getElementsByClassName('input-group editField ' + uid)[1];
+      if (elem.getElementsByClassName("input-group editField " + uid).length) {
+        if (elem.childNodes[0].classList.contains("tryCatchNode")) {
+          elem = elem.getElementsByClassName("input-group editField " + uid)[1];
         } else {
-          elem = elem.getElementsByClassName('input-group editField ' + uid)[0];
+          elem = elem.getElementsByClassName("input-group editField " + uid)[0];
         }
       } else {
         // in try catch block the input field of the catch block has not to be the first input field (if the try block has child nodes)
-        if (elem.children[0].classList.contains('tryCatchNode')) {
-          elem = elem.getElementsByClassName('tryCatchNode')[1].children[1].children[1];
+        if (elem.children[0].classList.contains("tryCatchNode")) {
+          elem = elem.getElementsByClassName("tryCatchNode")[1].children[1].children[1];
         } else {
-          elem = elem.getElementsByClassName('input-group editField')[0];
+          elem = elem.getElementsByClassName("input-group editField")[0];
         }
       }
-      elem.previousSibling.style.display = 'none';
-      elem.style.display = 'inline-flex';
+      elem.previousSibling.style.display = "none";
+      elem.style.display = "inline-flex";
       // automatic set focus on the input
-      elem.getElementsByTagName('input')[0].select();
+      elem.getElementsByTagName("input")[0].select();
     }
   }
   getStringifiedTree() {
@@ -1837,7 +2329,7 @@ class Presenter {
   }
   getStringifiedTreeWithConfig() {
     const data = {
-      version: '1.4.0',
+      version: "1.4.0",
       config: this.getCurrentConfigName(),
       tree: this.model.getTree(),
       showCodeButton: this.config.get().showCodeButton
@@ -1845,19 +2337,18 @@ class Presenter {
     return JSON.stringify(data);
   }
   getCurrentConfigName() {
-    // Get current config from URL parameter or default
-    const url = new URL(window.location.href);
-    return url.searchParams.get('config') || 'default';
+    // Get current config name by comparing with known configurations
+    return this.config.getCurrentConfigName();
   }
   saveDialog() {
     // define the data url to start a download on click
-    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(this.getStringifiedTreeWithConfig());
+    const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(this.getStringifiedTreeWithConfig());
     // create filename with current date in the name
-    const exportFileDefaultName = 'struktog_' + new Date(Date.now()).toJSON().substring(0, 10) + '.json';
+    const exportFileDefaultName = "struktog_" + new Date(Date.now()).toJSON().substring(0, 10) + ".json";
     // generate the download button element and append it to the node
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
+    const linkElement = document.createElement("a");
+    linkElement.setAttribute("href", dataUri);
+    linkElement.setAttribute("download", exportFileDefaultName);
     linkElement.click();
   }
 
@@ -1880,7 +2371,7 @@ class Presenter {
 
         // Apply showCodeButton setting if present
         if (loadedData.showCodeButton !== undefined) {
-          this.config.get().showCodeButton = loadedData.showCodeButton !== 'false' && loadedData.showCodeButton !== false;
+          this.config.get().showCodeButton = loadedData.showCodeButton !== "false" && loadedData.showCodeButton !== false;
         }
       } else {
         // Old format - just the tree
@@ -1888,7 +2379,7 @@ class Presenter {
       }
       this.checkUndo();
       this.renderAllViews();
-      console.log('Loaded with configuration:', loadedData.config || 'none');
+      console.log("Loaded with configuration:", loadedData.config || "none");
     };
     // start the reading process
     reader.readAsText(event.target.files[0]);
@@ -1908,7 +2399,7 @@ class Presenter {
 
       // Apply showCodeButton setting if present
       if (file.showCodeButton !== undefined) {
-        this.config.get().showCodeButton = file.showCodeButton !== 'false' && file.showCodeButton !== false;
+        this.config.get().showCodeButton = file.showCodeButton !== "false" && file.showCodeButton !== false;
       }
     } else {
       // Old format - just the tree
@@ -1922,25 +2413,25 @@ class Presenter {
    * Apply a configuration directly without reloading the page
    */
   async applyConfiguration(configName) {
-    if (configName && configName !== 'default') {
+    if (configName && configName !== "default") {
       // Import config module and apply configuration directly
       const {
         config
       } = await Promise.resolve(/* import() */).then(__webpack_require__.bind(__webpack_require__, 27));
       config.loadConfig(configName);
-      console.log('Configuration applied:', configName);
+      console.log("Configuration applied:", configName);
       // Re-render views to apply new configuration
       this.renderAllViews();
     }
   }
   updateUndo() {
     this.undoList.push(this.getStringifiedTree());
-    for (const item of document.getElementsByClassName('UndoIconButtonOverlay')) {
-      item.classList.remove('disableIcon');
+    for (const item of document.getElementsByClassName("UndoIconButtonOverlay")) {
+      item.classList.remove("disableIcon");
     }
     this.redoList = [];
-    for (const item of document.getElementsByClassName('RedoIconButtonOverlay')) {
-      item.classList.add('disableIcon');
+    for (const item of document.getElementsByClassName("RedoIconButtonOverlay")) {
+      item.classList.add("disableIcon");
     }
   }
   undo() {
@@ -1949,12 +2440,12 @@ class Presenter {
       this.model.setTree(JSON.parse(this.undoList[this.undoList.length - 1]));
       this.undoList.pop();
       if (this.undoList === 0) {
-        for (const item of document.getElementsByClassName('UndoIconButtonOverlay')) {
-          item.classList.add('disableIcon');
+        for (const item of document.getElementsByClassName("UndoIconButtonOverlay")) {
+          item.classList.add("disableIcon");
         }
       }
-      for (const item of document.getElementsByClassName('RedoIconButtonOverlay')) {
-        item.classList.remove('disableIcon');
+      for (const item of document.getElementsByClassName("RedoIconButtonOverlay")) {
+        item.classList.remove("disableIcon");
       }
       this.renderAllViews();
     }
@@ -1963,8 +2454,8 @@ class Presenter {
     if (this.undoList[this.undoList.length - 1] === this.getStringifiedTree()) {
       this.undoList.pop();
       if (this.undoList === 0) {
-        for (const item of document.getElementsByClassName('UndoIconButtonOverlay')) {
-          item.classList.add('disableIcon');
+        for (const item of document.getElementsByClassName("UndoIconButtonOverlay")) {
+          item.classList.add("disableIcon");
         }
       }
     }
@@ -1975,12 +2466,12 @@ class Presenter {
       this.model.setTree(JSON.parse(this.redoList[0]));
       this.redoList.shift();
       if (this.redoList.length === 0) {
-        for (const item of document.getElementsByClassName('RedoIconButtonOverlay')) {
-          item.classList.add('disableIcon');
+        for (const item of document.getElementsByClassName("RedoIconButtonOverlay")) {
+          item.classList.add("disableIcon");
         }
       }
-      for (const item of document.getElementsByClassName('UndoIconButtonOverlay')) {
-        item.classList.remove('disableIcon');
+      for (const item of document.getElementsByClassName("UndoIconButtonOverlay")) {
+        item.classList.remove("disableIcon");
       }
       this.renderAllViews();
     }
@@ -5394,13 +5885,13 @@ class ImportExport {
     // Store original model on first render
     if (this.originalModel === null) {
       this.originalModel = JSON.stringify(model);
-      this.updateSaveStatus('ready');
+      this.updateSaveStatus("ready");
     } else {
       // Check if model has changed
       const currentModel = JSON.stringify(model);
       if (currentModel !== this.originalModel && !this.hasUnsavedChanges) {
         this.hasUnsavedChanges = true;
-        this.updateSaveStatus('changed');
+        this.updateSaveStatus("changed");
       }
     }
   }
@@ -5416,9 +5907,9 @@ class ImportExport {
     // Create status icon
     const statusIcon = document.createElement("span");
     statusIcon.id = "save-status-icon";
-    statusIcon.innerHTML = "●"; // Unicode circle
+    statusIcon.innerHTML = "<i class='fas fa-circle'></i>"; // Unicode circle
     statusIcon.style.color = "#6c757d"; // muted color
-    statusIcon.style.fontSize = "2.4rem";
+    statusIcon.style.fontSize = "0.875rem";
     statusIcon.style.cursor = "help";
     statusIcon.setAttribute("title", "Bereit zum Speichern");
     statusIcon.classList.add("tooltip", "tooltip-bottom");
@@ -5438,7 +5929,7 @@ class ImportExport {
     saveButton.style.alignItems = "center";
     saveButton.style.gap = "0.2rem";
     saveButton.id = "save-btn";
-    saveButton.innerHTML = "💾 Speichern";
+    saveButton.innerHTML = "<i class='fas fa-save'></i> Speichern";
     saveButton.addEventListener("click", () => {
       this.saveContent();
     });
@@ -5457,25 +5948,10 @@ class ImportExport {
     submitButton.style.alignItems = "center";
     submitButton.style.gap = "0.2rem";
     submitButton.id = "submit-btn";
-    submitButton.innerHTML = "✈️ Abgeben";
+    submitButton.innerHTML = "<i class='fas fa-paper-plane'></i> Abgeben";
     submitButton.addEventListener("click", () => {
       this.submitContent();
     });
-
-    // Add hover effects
-    const addHoverEffect = button => {
-      button.addEventListener("mouseenter", () => {
-        button.style.opacity = "0.8";
-        button.style.transform = "translateY(-1px)";
-        button.style.transition = "all 0.2s ease";
-      });
-      button.addEventListener("mouseleave", () => {
-        button.style.opacity = "1";
-        button.style.transform = "translateY(0)";
-      });
-    };
-    addHoverEffect(saveButton);
-    addHoverEffect(submitButton);
 
     // Create export button styled like save/submit buttons
     const exportButton = document.createElement("button");
@@ -5492,11 +5968,28 @@ class ImportExport {
     exportButton.style.gap = "0.2rem";
     exportButton.classList.add("tooltip", "tooltip-bottom");
     exportButton.setAttribute("data-tooltip", "Bildexport");
-    exportButton.innerHTML = "🖼️ PNG";
+    exportButton.innerHTML = "<i class='fas fa-file-image'></i>";
     exportButton.addEventListener("click", () => this.exportAsPngWithPackage());
 
-    // Add hover effect
-    addHoverEffect(exportButton);
+    // Create Dashboard button
+    const dashboardButton = document.createElement("button");
+    dashboardButton.type = "button";
+    dashboardButton.style.backgroundColor = "#ffffff";
+    dashboardButton.style.color = "#6c757d";
+    dashboardButton.style.border = "1px solid #6c757d";
+    dashboardButton.style.borderRadius = "0.25rem";
+    dashboardButton.style.padding = "0.25rem 0.5rem";
+    dashboardButton.style.fontSize = "0.875rem";
+    dashboardButton.style.cursor = "pointer";
+    dashboardButton.style.display = "flex";
+    dashboardButton.style.alignItems = "center";
+    dashboardButton.style.gap = "0.2rem";
+    dashboardButton.classList.add("tooltip", "tooltip-bottom");
+    dashboardButton.setAttribute("data-tooltip", "Dashboard");
+    dashboardButton.innerHTML = "<i class='fas fa-house'></i>";
+    dashboardButton.addEventListener("click", () => {
+      window.location.href = "/dashboard";
+    });
 
     // Create task description button
     const taskButton = document.createElement("button");
@@ -5513,11 +6006,8 @@ class ImportExport {
     taskButton.style.gap = "0.2rem";
     taskButton.classList.add("tooltip", "tooltip-bottom");
     taskButton.setAttribute("data-tooltip", "Aufgabenbeschreibung");
-    taskButton.innerHTML = "📋 Aufgabe";
+    taskButton.innerHTML = "<i class='fas fa-pen-to-square'></i>";
     taskButton.addEventListener("click", () => this.showTaskDescription());
-
-    // Add hover effect
-    addHoverEffect(taskButton);
 
     // Add all elements to the button group
     buttonGroup.appendChild(statusIcon);
@@ -5525,6 +6015,7 @@ class ImportExport {
     buttonGroup.appendChild(submitButton);
     buttonGroup.appendChild(taskButton);
     buttonGroup.appendChild(exportButton);
+    buttonGroup.appendChild(dashboardButton);
     document.getElementById("optionButtons").appendChild(buttonGroup);
 
     // Create task description modal
@@ -6230,121 +6721,117 @@ class ImportExport {
     modal.style.display = "none";
   }
   updateSaveStatus(status) {
-    const statusIcon = document.getElementById('save-status-icon');
+    const statusIcon = document.getElementById("save-status-icon");
     switch (status) {
-      case 'ready':
-        statusIcon.style.color = '#6c757d'; // grau
-        statusIcon.setAttribute('title', 'Bereit zum Speichern');
-        statusIcon.setAttribute('data-tooltip', 'Bereit zum Speichern');
+      case "ready":
+        statusIcon.style.color = "#6c757d"; // grau
+        statusIcon.setAttribute("title", "Bereit zum Speichern");
+        statusIcon.setAttribute("data-tooltip", "Bereit zum Speichern");
         break;
-      case 'changed':
-        statusIcon.style.color = '#ffc107'; // gelb
-        statusIcon.setAttribute('title', 'Ungespeicherte Änderungen');
-        statusIcon.setAttribute('data-tooltip', 'Ungespeicherte Änderungen');
+      case "changed":
+        statusIcon.style.color = "#ffc107"; // gelb
+        statusIcon.setAttribute("title", "Ungespeicherte Änderungen");
+        statusIcon.setAttribute("data-tooltip", "Ungespeicherte Änderungen");
         break;
-      case 'saving':
-        statusIcon.style.color = '#007bff'; // blau
-        statusIcon.setAttribute('title', 'Speichere...');
-        statusIcon.setAttribute('data-tooltip', 'Speichere...');
+      case "saving":
+        statusIcon.style.color = "#007bff"; // blau
+        statusIcon.setAttribute("title", "Speichere...");
+        statusIcon.setAttribute("data-tooltip", "Speichere...");
         break;
-      case 'submitting':
-        statusIcon.style.color = '#007bff'; // blau
-        statusIcon.setAttribute('title', 'Gebe ab...');
-        statusIcon.setAttribute('data-tooltip', 'Gebe ab...');
+      case "submitting":
+        statusIcon.style.color = "#007bff"; // blau
+        statusIcon.setAttribute("title", "Gebe ab...");
+        statusIcon.setAttribute("data-tooltip", "Gebe ab...");
         break;
-      case 'saved':
-        statusIcon.style.color = '#28a745'; // grün
-        statusIcon.setAttribute('title', 'Änderungen gespeichert');
-        statusIcon.setAttribute('data-tooltip', 'Änderungen gespeichert');
+      case "saved":
+        statusIcon.style.color = "#28a745"; // grün
+        statusIcon.setAttribute("title", "Änderungen gespeichert");
+        statusIcon.setAttribute("data-tooltip", "Änderungen gespeichert");
         break;
-      case 'submitted':
-        statusIcon.style.color = '#28a745'; // grün
-        statusIcon.setAttribute('title', 'Aufgabe abgegeben');
-        statusIcon.setAttribute('data-tooltip', 'Aufgabe abgegeben');
+      case "submitted":
+        statusIcon.style.color = "#28a745"; // grün
+        statusIcon.setAttribute("title", "Aufgabe abgegeben");
+        statusIcon.setAttribute("data-tooltip", "Aufgabe abgegeben");
         break;
-      case 'error':
-        statusIcon.style.color = '#dc3545'; // rot
-        statusIcon.setAttribute('title', 'Fehler beim Speichern/Abgeben');
-        statusIcon.setAttribute('data-tooltip', 'Fehler beim Speichern/Abgeben');
+      case "error":
+        statusIcon.style.color = "#dc3545"; // rot
+        statusIcon.setAttribute("title", "Fehler beim Speichern/Abgeben");
+        statusIcon.setAttribute("data-tooltip", "Fehler beim Speichern/Abgeben");
         break;
     }
   }
   getSaveUrl() {
-    return document.getElementById('task-save-url').getAttribute('data-url');
+    return document.getElementById("task-save-url").getAttribute("data-url");
   }
   getSubmitUrl() {
-    return document.getElementById('task-submit-url').getAttribute('data-url');
+    return document.getElementById("task-submit-url").getAttribute("data-url");
   }
   getContentToSave() {
-    // Erstelle das gleiche JSON-Format wie beim Download
-    const tree = this.presenter.getModelTree();
-    const config = this.presenter.getConfig();
-    return JSON.stringify({
-      tree: tree,
-      config: config
-    });
+    // Erstelle das gleiche JSON-Format wie beim Download mit Konfigurationsname
+    const data = {
+      version: "1.4.0",
+      config: this.presenter.getCurrentConfigName(),
+      tree: this.presenter.getModelTree(),
+      showCodeButton: this.presenter.getConfig().showCodeButton
+    };
+    return JSON.stringify(data);
   }
   saveContent() {
-    this.updateSaveStatus('saving');
+    this.updateSaveStatus("saving");
     const content = this.getContentToSave();
     const saveUrl = this.getSaveUrl();
     fetch(saveUrl, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
         content: content
       })
     }).then(response => {
       if (response.ok) {
-        this.updateSaveStatus('saved');
+        this.updateSaveStatus("saved");
         this.hasUnsavedChanges = false;
         this.originalModel = JSON.stringify(this.presenter.getModelTree());
 
         // Notify parent window about save if in iframe
         if (window.parent && window.parent !== window) {
-          window.parent.postMessage('content-saved', '*');
+          window.parent.postMessage("content-saved", "*");
         }
       } else {
-        this.updateSaveStatus('error');
-        console.error('Save failed:', response.statusText);
+        this.updateSaveStatus("error");
+        console.error("Save failed:", response.statusText);
       }
     }).catch(error => {
-      this.updateSaveStatus('error');
-      console.error('Save error:', error);
+      this.updateSaveStatus("error");
+      console.error("Save error:", error);
     });
   }
   submitContent() {
-    if (confirm('Möchten Sie diese Aufgabe wirklich abgeben? Nach der Abgabe können Sie keine Änderungen mehr vornehmen.')) {
-      this.updateSaveStatus('submitting');
-      const content = this.getContentToSave();
-      const submitUrl = this.getSubmitUrl();
-      fetch(submitUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          content: content
-        })
-      }).then(response => {
-        if (response.ok) {
-          this.updateSaveStatus('submitted');
-          this.hasUnsavedChanges = false;
-          this.originalModel = JSON.stringify(this.presenter.getModelTree());
-          alert('Aufgabe erfolgreich abgegeben!');
-        } else {
-          this.updateSaveStatus('error');
-          alert('Fehler beim Abgeben der Aufgabe.');
-          console.error('Submit failed:', response.statusText);
-        }
-      }).catch(error => {
-        this.updateSaveStatus('error');
-        alert('Fehler beim Abgeben der Aufgabe.');
-        console.error('Submit error:', error);
-      });
-    }
+    this.updateSaveStatus("submitting");
+    const content = this.getContentToSave();
+    const submitUrl = this.getSubmitUrl();
+    fetch(submitUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        content: content
+      })
+    }).then(response => {
+      if (response.ok) {
+        this.updateSaveStatus("submitted");
+        this.hasUnsavedChanges = false;
+        this.originalModel = JSON.stringify(this.presenter.getModelTree());
+      } else {
+        this.updateSaveStatus("error");
+        console.error("Submit failed:", response.statusText);
+      }
+    }).catch(error => {
+      this.updateSaveStatus("error");
+      console.error("Submit error:", error);
+    });
   }
   exportAsPngWithPackage() {
     toPng(document.getElementById("structogram")).then(function (dataUrl) {
