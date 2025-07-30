@@ -91,6 +91,39 @@ public class StudentTaskApiController {
         }
     }
 
+    @PostMapping("/usertasks/{userTaskId}/content")
+    public ResponseEntity<String> saveUserTaskContent(@PathVariable Long userTaskId,
+                                                     @RequestBody Map<String, String> request,
+                                                     Authentication authentication) {
+        try {
+            System.out.println("🔍 === DEBUG: Save UserTask Content API Called ===");
+            System.out.println("   - UserTask ID: " + userTaskId);
+            System.out.println("   - User: " + authentication.getName());
+            
+            String content = request.get("content");
+            System.out.println("   - Content length: " + (content != null ? content.length() : "null"));
+
+            // Find the UserTask directly
+            UserTask userTask = userTaskService.findById(userTaskId);
+            if (userTask == null) {
+                System.out.println("   - UserTask not found with ID: " + userTaskId);
+                return ResponseEntity.notFound().build();
+            }
+
+            System.out.println("   - Found UserTask: " + userTask.getId() + " (User: " + userTask.getUser().getId() + ", Task: " + userTask.getTask().getId() + ")");
+
+            // Save content
+            TaskContent savedContent = taskContentService.saveContent(userTask, content, false);
+            System.out.println("   - Content saved with ID: " + savedContent.getId() + ", Version: " + savedContent.getVersion());
+
+            return ResponseEntity.ok("Content saved successfully");
+        } catch (Exception e) {
+            System.out.println("   - Error saving content: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error saving content");
+        }
+    }
+
     @PostMapping("/{taskId}/content")
     public ResponseEntity<String> saveTaskContent(@PathVariable Long taskId, 
                                                  @RequestBody Map<String, String> request,

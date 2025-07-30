@@ -72,6 +72,10 @@ public class UserTaskService {
         return userTaskRepository.findByUser(user);
     }
 
+    public UserTask findById(Long userTaskId) {
+        return userTaskRepository.findById(userTaskId).orElse(null);
+    }
+
     /**
      * UserTasks nach Status filtern
      */
