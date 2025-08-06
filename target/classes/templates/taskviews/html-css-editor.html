@@ -1075,8 +1075,8 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
             if (isTeacherView && userTaskId) {
                 // Save to student's history when in teacher view
                 saveUrl = isSubmission ? 
-                    `/api/tasks/${window.taskId}/submit` : 
-                    `/api/usertasks/${userTaskId}/content`;
+                    `` : 
+                    `/api/tasks/usertasks/${userTaskId}/content`;
                 saveBody = JSON.stringify({ content: content });
             } else {
                 // Normal student save

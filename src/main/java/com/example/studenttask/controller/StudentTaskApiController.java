@@ -7,6 +7,7 @@ import com.example.studenttask.service.TaskContentService;
 import com.example.studenttask.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -76,7 +77,8 @@ public class StudentTaskApiController {
                 content = latestContent.get().getContent();
                 System.out.println("   - Found latest content: version " + latestContent.get().getVersion());
                 System.out.println("   - Content length: " + (content != null ? content.length() : "null"));
-                System.out.println("   - Content preview: " + (content != null && content.length() > 50 ? content.substring(0, 50) + "..." : content));
+                System.out.println("   - Content preview: "
+                        + (content != null && content.length() > 50 ? content.substring(0, 50) + "..." : content));
             } else {
                 System.out.println("   - No content found, returning empty string");
             }
@@ -91,15 +93,16 @@ public class StudentTaskApiController {
         }
     }
 
+    @PreAuthorize("hasAnyAuthority('ROLE_TEACHER', 'ROLE_ADMIN') or @userService.hasTeacherRole(authentication.name)")
     @PostMapping("/usertasks/{userTaskId}/content")
     public ResponseEntity<String> saveUserTaskContent(@PathVariable Long userTaskId,
-                                                     @RequestBody Map<String, String> request,
-                                                     Authentication authentication) {
+            @RequestBody Map<String, String> request,
+            Authentication authentication) {
         try {
             System.out.println("🔍 === DEBUG: Save UserTask Content API Called ===");
             System.out.println("   - UserTask ID: " + userTaskId);
             System.out.println("   - User: " + authentication.getName());
-            
+
             String content = request.get("content");
             System.out.println("   - Content length: " + (content != null ? content.length() : "null"));
 
@@ -109,14 +112,16 @@ public class StudentTaskApiController {
                 System.out.println("   - UserTask not found with ID: " + userTaskId);
                 return ResponseEntity.notFound().build();
             }
-            
+
             UserTask userTask = userTaskOpt.get();
 
-            System.out.println("   - Found UserTask: " + userTask.getId() + " (User: " + userTask.getUser().getId() + ", Task: " + userTask.getTask().getId() + ")");
+            System.out.println("   - Found UserTask: " + userTask.getId() + " (User: " + userTask.getUser().getId()
+                    + ", Task: " + userTask.getTask().getId() + ")");
 
             // Save content
             TaskContent savedContent = taskContentService.saveContent(userTask, content, false);
-            System.out.println("   - Content saved with ID: " + savedContent.getId() + ", Version: " + savedContent.getVersion());
+            System.out.println(
+                    "   - Content saved with ID: " + savedContent.getId() + ", Version: " + savedContent.getVersion());
 
             return ResponseEntity.ok("Content saved successfully");
         } catch (Exception e) {
@@ -127,9 +132,9 @@ public class StudentTaskApiController {
     }
 
     @PostMapping("/{taskId}/content")
-    public ResponseEntity<String> saveTaskContent(@PathVariable Long taskId, 
-                                                 @RequestBody Map<String, String> request,
-                                                 Authentication authentication) {
+    public ResponseEntity<String> saveTaskContent(@PathVariable Long taskId,
+            @RequestBody Map<String, String> request,
+            Authentication authentication) {
         try {
             System.out.println("🔍 === DEBUG: Save Content API Called ===");
             System.out.println("   - Task ID: " + taskId);
@@ -142,7 +147,8 @@ public class StudentTaskApiController {
             System.out.println("   - Content is null: " + (content == null));
             System.out.println("   - Content length: " + (content != null ? content.length() : "null"));
             if (content != null && content.length() > 0) {
-                System.out.println("   - Content preview: " + content.substring(0, Math.min(100, content.length())) + (content.length() > 100 ? "..." : ""));
+                System.out.println("   - Content preview: " + content.substring(0, Math.min(100, content.length()))
+                        + (content.length() > 100 ? "..." : ""));
             }
 
             // Find user
@@ -155,7 +161,8 @@ public class StudentTaskApiController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found: " + openIdSubject);
             }
             User user = userOpt.get();
-            System.out.println("   - User found: " + user.getName() + " (ID: " + user.getId() + ", Username: " + user.getName() + ")");
+            System.out.println("   - User found: " + user.getName() + " (ID: " + user.getId() + ", Username: "
+                    + user.getName() + ")");
 
             // Find task
             System.out.println("   - Looking for task with ID: " + taskId);
@@ -167,20 +174,25 @@ public class StudentTaskApiController {
             System.out.println("   - Task found: " + task.getTitle() + " (ID: " + task.getId() + ")");
 
             // Find or create UserTask
-            System.out.println("   - Finding or creating UserTask for user " + user.getId() + " and task " + task.getId());
+            System.out.println(
+                    "   - Finding or creating UserTask for user " + user.getId() + " and task " + task.getId());
             UserTask userTask = userTaskService.findOrCreateUserTask(user, task);
-            System.out.println("   - UserTask: " + userTask.getId() + " (User: " + userTask.getUser().getId() + ", Task: " + userTask.getTask().getId() + ")");
+            System.out.println("   - UserTask: " + userTask.getId() + " (User: " + userTask.getUser().getId()
+                    + ", Task: " + userTask.getTask().getId() + ")");
 
             // Save content
             System.out.println("   - Saving content with TaskContentService...");
             TaskContent savedContent = taskContentService.saveContent(userTask, content, false);
-            System.out.println("   - Content saved with ID: " + savedContent.getId() + ", Version: " + savedContent.getVersion());
-            System.out.println("   - Saved content length: " + (savedContent.getContent() != null ? savedContent.getContent().length() : "null"));
+            System.out.println(
+                    "   - Content saved with ID: " + savedContent.getId() + ", Version: " + savedContent.getVersion());
+            System.out.println("   - Saved content length: "
+                    + (savedContent.getContent() != null ? savedContent.getContent().length() : "null"));
             System.out.println("   - Saved at: " + savedContent.getSavedAt());
             System.out.println("   - Is submitted: " + savedContent.isSubmitted());
             System.out.println("🔍 === DEBUG: Save Content API End ===");
 
-            return ResponseEntity.ok("Content saved successfully (ID: " + savedContent.getId() + ", Version: " + savedContent.getVersion() + ")");
+            return ResponseEntity.ok("Content saved successfully (ID: " + savedContent.getId() + ", Version: "
+                    + savedContent.getVersion() + ")");
         } catch (Exception e) {
             System.out.println("   - ERROR in save: " + e.getClass().getSimpleName() + ": " + e.getMessage());
             System.out.println("   - Stack trace:");
