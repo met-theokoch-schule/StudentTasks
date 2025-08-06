@@ -115,7 +115,7 @@
             let saveUrl, saveBody;
             if (isTeacherView && userTaskId) {
                 // Save to student's history when in teacher view
-                saveUrl = `/api/usertasks/${userTaskId}/content`;
+                saveUrl = `/api/tasks/usertasks/${userTaskId}/content`;
                 saveBody = JSON.stringify({ content: content });
             } else {
                 // Normal student save

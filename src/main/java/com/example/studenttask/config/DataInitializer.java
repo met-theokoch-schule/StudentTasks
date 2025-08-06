@@ -86,6 +86,15 @@ public class DataInitializer implements ApplicationRunner {
             System.out.println("TaskView with templatePath '" + struktogEditor + "' initialized");
         }
 
+        String pythonEditor = "taskviews/python-editor";
+
+        if (taskViewRepository.findByTemplatePath(pythonEditor) == null) {
+            TaskView python = new TaskView("Python Editor", pythonEditor);
+            python.setDescription("Erstellen von Python Konsolenprogrammen!");
+            taskViewRepository.save(python);
+            System.out.println("TaskView with templatePath '" + pythonEditor + "' initialized");
+        }
+
         // Hier können weitere TaskViews hinzugefügt werden
         // Beispiel für weitere TaskViews:
         /*
