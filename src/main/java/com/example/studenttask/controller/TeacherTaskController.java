@@ -347,6 +347,7 @@ public class TeacherTaskController {
             @RequestParam(required = false) List<Long> selectedGroups,
             @RequestParam String taskViewId,
             @RequestParam String unitTitleId,
+            @RequestParam(required = false) String tutorial,
             RedirectAttributes redirectAttributes,
             Principal principal) {
         Task existingTask = taskService.findById(id)
@@ -356,6 +357,7 @@ public class TeacherTaskController {
         existingTask.setTitle(task.getTitle());
         existingTask.setDescription(task.getDescription());
         existingTask.setDefaultSubmission(task.getDefaultSubmission());
+        existingTask.setTutorial(tutorial);
         existingTask.setIsActive(task.getIsActive());
 
         // Update assigned groups
