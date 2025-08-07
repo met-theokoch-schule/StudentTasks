@@ -942,229 +942,37 @@ function renderMarkdown(markdownText) {
     }
 }
 
-// Tutorial-Inhalte Array
-const tutorialContents = [
-    {
-        title: "Grundlagen der p-q-Formel",
-        content: `# Tutorial 1: Grundlagen der p-q-Formel
+// Tutorial-Inhalte aus DOM laden
+const tutorialText = document.getElementById('tutorial').textContent.trim();
 
-## Was ist die p-q-Formel?
+let tutorialContents;
+if (tutorialText) {
+  // Inhalt vorhanden → als JS-Literal ausführen
+  tutorialContents = new Function(`return (${tutorialText});`)();
+} 
 
-Die p-q-Formel ist eine Methode zur Lösung quadratischer Gleichungen der Form:
-**x² + px + q = 0**
-
-## Die Formel
-\`\`\`
-x = -p/2 ± √((p/2)² - q)
-\`\`\`
-
-## Diskriminante
-Die **Diskriminante** (p/2)² - q bestimmt die Anzahl der Lösungen:
-- **> 0**: Zwei verschiedene reelle Lösungen
-- **= 0**: Eine doppelte Lösung
-- **< 0**: Keine reellen Lösungen
-
-## Beispiel
-Für x² + 5x + 6 = 0 (p=5, q=6):
-- Diskriminante = (5/2)² - 6 = 6.25 - 6 = 0.25
-- x₁ = -5/2 + √0.25 = -2
-- x₂ = -5/2 - √0.25 = -3
-
-**Weiter zum nächsten Tutorial →**`
-    },
-    {
-        title: "Python-Implementierung",
-        content: `# Tutorial 2: Python-Implementierung
-
-## Schritt 1: Grundfunktion erstellen
-
-\`\`\`python
-from math import sqrt
-
-def calculate_pq(p, q):
-    diskriminante = (p / 2)**2 - q
-    
-    if diskriminante < 0:
-        return "Keine reellen Lösungen"
-    elif diskriminante == 0:
-        x = -p / 2
-        return f"x = {x:.4f}"
-    else:
-        x1 = -p / 2 + sqrt(diskriminante)
-        x2 = -p / 2 - sqrt(diskriminante)
-        return f"x₁ = {x1:.4f}, x₂ = {x2:.4f}"
-\`\`\`
-
-## Schritt 2: Fehlerbehandlung
-
-\`\`\`python
-def safe_calculate(p_str, q_str):
-    try:
-        p = float(p_str)
-        q = float(q_str)
-        return calculate_pq(p, q)
-    except ValueError:
-        return "Fehler: Bitte gültige Zahlen eingeben"
-\`\`\`
-
-## Test der Funktion
-- **p=5, q=6**: Zwei Lösungen
-- **p=4, q=4**: Eine Lösung  
-- **p=2, q=5**: Keine reellen Lösungen
-
-**← Zurück | Weiter →**`
-    },
-    {
-        title: "HTML-Interface erstellen",
-        content: `# Tutorial 3: HTML-Interface
-
-## Grundstruktur
-
-\`\`\`html
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>p-q-Formel Rechner</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        input { padding: 10px; margin: 5px; font-size: 16px; }
-        button { padding: 10px 20px; font-size: 16px; }
-        .result { margin-top: 20px; font-weight: bold; }
-    </style>
-</head>
-<body>
-    <h2>p-q-Formel Rechner</h2>
-    
-    <label for="p">p-Wert:</label>
-    <input type="number" id="p" step="any" placeholder="z.B. 5">
-    
-    <label for="q">q-Wert:</label>
-    <input type="number" id="q" step="any" placeholder="z.B. 6">
-    
-    <button id="calc_button">Berechnen</button>
-    
-    <div id="result" class="result"></div>
-</body>
-</html>
-\`\`\`
-
-## Wichtige HTML-Elemente
-- **type="number"**: Zahleneingabe
-- **step="any"**: Dezimalzahlen erlauben
-- **placeholder**: Beispielwerte anzeigen
-
-**← Zurück | Weiter →**`
-    },
-    {
-        title: "Brython-Integration",
-        content: `# Tutorial 4: Brython-Integration
-
-## Was ist Brython?
-Brython ermöglicht es, Python-Code direkt im Browser auszuführen, ohne Server.
-
-## Integration in HTML
-
-\`\`\`html
-<head>
-    <script src="https://cdn.jsdelivr.net/npm/brython@3/brython.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/brython@3/brython_stdlib.js"></script>
-</head>
-\`\`\`
-
-## Python-Code für den Browser
-
-\`\`\`python
-from browser import document, html
-from math import sqrt
-
-def calculate(event=None):
-    try:
-        p = float(document["p"].value)
-        q = float(document["q"].value)
-        
-        diskriminante = (p / 2)**2 - q
-        
-        if diskriminante < 0:
-            result = "Keine reellen Lösungen"
-        elif diskriminante == 0:
-            x = -p / 2
-            result = f"x = {x:.4f}"
-        else:
-            x1 = -p / 2 + sqrt(diskriminante)
-            x2 = -p / 2 - sqrt(diskriminante)
-            result = f"x₁ = {x1:.4f}, x₂ = {x2:.4f}"
-            
-        document["result"].text = result
-        
-    except ValueError:
-        document["result"].text = "Bitte gültige Zahlen eingeben"
-
-# Event-Handler registrieren
-document["calc_button"].bind("click", calculate)
-\`\`\`
-
-**← Zurück | Weiter →**`
-    },
-    {
-        title: "Fertige Anwendung",
-        content: `# Tutorial 5: Fertige Anwendung
-
-## Vollständiger Code
-Jetzt haben Sie alle Teile zusammen:
-
-### 1. HTML-Struktur ✓
-- Eingabefelder für p und q
-- Button zum Berechnen  
-- Ausgabebereich für Ergebnis
-
-### 2. Python-Logik ✓
-- p-q-Formel-Implementierung
-- Fehlerbehandlung
-- Brython-Integration
-
-### 3. Interaktivität ✓
-- Event-Handler für Button
-- DOM-Manipulation
-- Echtzeitanzeige der Ergebnisse
-
-## Erweiterungsideen
-
-### 🎯 **Zusätzliche Features**
-- [ ] Automatische Berechnung bei Eingabe
-- [ ] Grafische Darstellung der Parabel
-- [ ] Schritt-für-Schritt Lösung
-- [ ] Verlauf der Berechnungen
-- [ ] Export der Ergebnisse
-
-### 🎨 **Design-Verbesserungen**
-- [ ] CSS-Styling und Animationen
-- [ ] Responsive Design
-- [ ] Dark/Light Mode
-- [ ] Eingabe-Validierung mit visuellen Hinweisen
-
-### 🔧 **Technische Erweiterungen**
-- [ ] Mehrere Gleichungstypen
-- [ ] Komplexe Zahlen unterstützen
-- [ ] Speichern und Laden von Projekten
-
-## Herzlichen Glückwunsch! 🎉
-Sie haben erfolgreich einen funktionsfähigen p-q-Formel-Rechner erstellt!
-
-**← Zurück zum Anfang**`
-    }
-];
+console.log(tutorialContents);
 
 let currentTutorialIndex = 0;
 
 // Task-Content initialisieren
 function initializeTaskContent() {
-    updateTaskTab(tutorialContents[currentTutorialIndex].content);
+    updateTaskTab(document.getElementById("description").textContent);
 }
 
 // Tutorial Navigation initialisieren
 function initializeTutorialNavigation() {
     const tutorialOutput = document.getElementById('tutorialOutput');
+    const tutorialTab = document.querySelector('.output-tab[data-output-tab="tutorial"]'); // Referenz auf das Tutorial-Tab
+
+    // Überprüfen, ob tutorialContents leer ist
+    if (!tutorialContents || tutorialContents.length === 0) {
+        // Tab ausblenden, wenn kein Inhalt vorhanden ist
+        if (tutorialTab) {
+            tutorialTab.style.display = 'none'; // Tab ausblenden
+        }
+        return; // Funktion beenden
+    }
     
     // Navigation HTML erstellen
     const navigationHTML = `
@@ -1178,7 +986,7 @@ function initializeTutorialNavigation() {
             <button id="tutorialNext" class="nav-arrow">→</button>
         </div>
         <div class="tutorial-content">
-            <iframe id="tutorialFrame" src="https://python-kurs.eu/python3_variablen.php" class="tutorial-iframe"></iframe>
+            <iframe id="tutorialFrame" src="" class="tutorial-iframe"></iframe>
         </div>
     `;
     
@@ -1280,8 +1088,17 @@ function updateTutorialDisplay() {
 // Task-Tab aktualisieren
 function updateTaskTab(markdownText) {
     const taskOutput = document.getElementById('taskOutput');
+    const taskTab = document.querySelector('.output-tab[data-output-tab="task"]');
+    
     if (taskOutput) {
-        taskOutput.innerHTML = renderMarkdown(markdownText);
+        // Überprüfen, ob markdownText nicht leer ist
+        if (markdownText && markdownText.trim() !== '') {
+            taskOutput.innerHTML = renderMarkdown(markdownText);
+            taskTab.style.display = 'block'; // Tab anzeigen
+        } else {
+            taskOutput.innerHTML = ''; // Inhalte löschen
+            taskTab.style.display = 'none'; // Tab ausblenden
+        }
     }
 }
 
