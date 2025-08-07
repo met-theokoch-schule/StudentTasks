@@ -1,11 +1,13 @@
 // Globale Variablen
-let pythonEditor;
+let pythonEditor, htmlEditor, cssEditor;
+let currentTab = 'python';
 let pyodide = null;
 let pyodideReady = false;
 let isResizing = false;
 let typeCheckInterval = null;
 let lastPythonCode = '';
 let mypyReady = false;
+let enableHTMLMode = true; // Dauerhaft aktiviert
 
 // Initialisierung beim Laden der Seite
 document.addEventListener('DOMContentLoaded', function() {
@@ -19,19 +21,142 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeTutorialNavigation();
 
     // Standardcode für Demo-Zwecke
-    pythonEditor.setValue(`print("Hallo Welt!")`);
+    pythonEditor.setValue(`# Willkommen im Python-Editor
+from browser import document, html
+from math import sqrt
 
-    // Content laden und Cursor an den Anfang setzen
-    loadSavedContent();
+def calculate(event=None):
+    try:
+        p = float(document["p"].value)
+        q = float(document["q"].value)
+        diskriminante = (p / 2)**2 - q
+
+        if diskriminante < 0:
+            document["result"].text = "Keine reellen Lösungen."
+        else:
+            x1 = -p / 2 + sqrt(diskriminante)
+            x2 = -p / 2 - sqrt(diskriminante)
+            if x1 == x2:
+                document["result"].text = f"x = {x1:.4f}"
+            else:
+                document["result"].text = f"x₁ = {x1:.4f}, x₂ = {x2:.4f}"
+    except ValueError:
+        document["result"].text = "Bitte gültige Zahlen eingeben."
+
+document["calc_button"].bind("click", calculate)
+`);
+
+    htmlEditor.setValue(`<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>p-q-Formel Rechner</title>
+</head>
+<body>
+    <h2>p-q-Formel Rechner</h2>
+
+    <label for="p">p:</label>
+    <input type="number" id="p" step="any"><br><br>
+
+    <label for="q">q:</label>
+    <input type="number" id="q" step="any"><br><br>
+
+    <button id="calc_button">Berechnen</button>
+
+    <h3>Ergebnis:</h3>
+    <div id="result"></div>
+
+</body>
+</html>`);
+
+    cssEditor.setValue(`/* CSS für den p-q-Formel Rechner */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    color: white;
+}
+
+h2 {
+    text-align: center;
+    color: #ffffff;
+    margin-bottom: 30px;
+    font-size: 28px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+h3 {
+    color: #ffffff;
+    margin-top: 25px;
+    font-size: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+input[type="number"] {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+    transition: box-shadow 0.3s ease;
+}
+
+input[type="number"]:focus {
+    outline: none;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.2), 0 0 0 3px rgba(255,255,255,0.3);
+}
+
+button {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(45deg, #4CAF50, #45a049);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+#result {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 20px;
+    border-radius: 8px;
+    min-height: 50px;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+}`);
+
+    // Cursor an den Anfang setzen
     pythonEditor.gotoLine(1);
-
-    // Initialer Status
-    updateSaveStatus('saved');
-
-    // Änderungen verfolgen für Status-Updates
-    pythonEditor.on('change', function() {
-        updateSaveStatus('ready');
-    });
+    htmlEditor.gotoLine(1);
+    cssEditor.gotoLine(1);
 });
 
 // ACE Editor initialisieren
@@ -57,25 +182,92 @@ function initializeEditors() {
             wrapBehavioursEnabled: true
         });
 
-        console.log("Editor erfolgreich initialisiert");
+        // HTML Editor
+        htmlEditor = ace.edit("htmlEditor");
+        htmlEditor.setTheme("ace/theme/monokai");
+        htmlEditor.session.setMode("ace/mode/html");
+        htmlEditor.setOptions({
+            fontSize: 14,
+            showPrintMargin: false,
+            wrap: true,
+            enableBasicAutocompletion: true,
+            enableLiveAutocompletion: true,
+            enableSnippets: true,
+            showLineNumbers: true,
+            highlightActiveLine: true,
+            highlightSelectedWord: true,
+            cursorStyle: "ace",
+            mergeUndoDeltas: false,
+            behavioursEnabled: true,
+            wrapBehavioursEnabled: true
+        });
+
+        // CSS Editor
+        cssEditor = ace.edit("cssEditor");
+        cssEditor.setTheme("ace/theme/monokai");
+        cssEditor.session.setMode("ace/mode/css");
+        cssEditor.setOptions({
+            fontSize: 14,
+            showPrintMargin: false,
+            wrap: true,
+            enableBasicAutocompletion: true,
+            enableLiveAutocompletion: true,
+            enableSnippets: true,
+            showLineNumbers: true,
+            highlightActiveLine: true,
+            highlightSelectedWord: true,
+            cursorStyle: "ace",
+            mergeUndoDeltas: false,
+            behavioursEnabled: true,
+            wrapBehavioursEnabled: true
+        });
+
+        console.log("Editoren erfolgreich initialisiert");
     } catch (error) {
         console.error("Fehler bei der Editor-Initialisierung:", error);
     }
 }
 
-// Tab-Navigation initialisieren (vereinfacht für nur Python)
+// Tab-Navigation initialisieren
 function initializeTabs() {
-    // Keine Tab-Navigation mehr nötig, da nur ein Tab vorhanden
-    setTimeout(() => {
-        pythonEditor.resize();
-    }, 100);
+    const editorTabs = document.querySelectorAll('.editor-tab');
+    const editorContents = document.querySelectorAll('.editor-content');
+
+    editorTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabName = this.getAttribute('data-tab');
+
+            // Aktive Tab-Klasse entfernen
+            editorTabs.forEach(t => t.classList.remove('active'));
+            editorContents.forEach(ec => ec.classList.remove('active'));
+
+            // Neue aktive Tab setzen
+            this.classList.add('active');
+            document.getElementById(tabName + 'Editor').classList.add('active');
+
+            currentTab = tabName;
+
+            // Editor-Größe anpassen (wichtig für ACE)
+            setTimeout(() => {
+                if (tabName === 'python') {
+                    pythonEditor.resize();
+                } else if (tabName === 'html') {
+                    htmlEditor.resize();
+                } else if (tabName === 'css') {
+                    cssEditor.resize();
+                }
+            }, 100);
+
+            // Type-Checking für aktuellen Tab aktualisieren
+            updateTypeCheckingForTab();
+        });
+    });
 }
 
 // Output-Tab-Navigation initialisieren
 function initializeOutputTabs() {
     const outputTabs = document.querySelectorAll('.output-tab[data-output-tab]');
     const outputContents = document.querySelectorAll('.output-content');
-    const clearOutputBtn = document.getElementById('clearOutputBtn');
 
     outputTabs.forEach(tab => {
         tab.addEventListener('click', function() {
@@ -88,18 +280,8 @@ function initializeOutputTabs() {
             // Neue aktive Tab setzen
             this.classList.add('active');
             document.getElementById(tabName + 'Output').classList.add('active');
-
-            // Löschen-Button nur bei "result" (Ausgabe) Tab anzeigen
-            if (tabName === 'result') {
-                clearOutputBtn.classList.add('show');
-            } else {
-                clearOutputBtn.classList.remove('show');
-            }
         });
     });
-
-    // Initial das Löschen-Symbol anzeigen (da "result" standardmäßig aktiv ist)
-    clearOutputBtn.classList.add('show');
 }
 
 // Resizable Splitter initialisieren
@@ -178,6 +360,8 @@ function initializeResizer() {
         // Editor-Größe anpassen
         setTimeout(() => {
             pythonEditor.resize();
+            htmlEditor.resize();
+            cssEditor.resize();
         }, 10);
     }
 
@@ -196,6 +380,8 @@ function initializeResizer() {
     window.addEventListener('resize', function() {
         setTimeout(() => {
             pythonEditor.resize();
+            htmlEditor.resize();
+            cssEditor.resize();
         }, 100);
     });
 }
@@ -209,17 +395,8 @@ function initializeControls() {
 
         // Editor Schriftgröße anpassen
         pythonEditor.setFontSize(fontSize);
-
-        // Ausgabe-Bereich Schriftgröße programmatisch setzen
-        const consoleOutput = document.getElementById('consoleOutput');
-        const htmlOutput = document.getElementById('htmlOutput');
-
-        if (consoleOutput) {
-            consoleOutput.style.fontSize = fontSize + 'px';
-        }
-        if (htmlOutput) {
-            htmlOutput.style.fontSize = fontSize + 'px';
-        }
+        htmlEditor.setFontSize(fontSize);
+        cssEditor.setFontSize(fontSize);
 
         // Speichere Einstellung in localStorage
         localStorage.setItem('editorFontSize', fontSize);
@@ -231,61 +408,46 @@ function initializeControls() {
         fontSizeSelect.value = savedFontSize;
         const fontSize = parseInt(savedFontSize);
         pythonEditor.setFontSize(fontSize);
+        htmlEditor.setFontSize(fontSize);
+        cssEditor.setFontSize(fontSize);
 
-        const consoleOutput = document.getElementById('consoleOutput');
-        const htmlOutput = document.getElementById('htmlOutput');
-
-        // Schriftgröße programmatisch setzen
-        if (consoleOutput) {
-            consoleOutput.style.fontSize = fontSize + 'px';
-        }
-        if (htmlOutput) {
-            htmlOutput.style.fontSize = fontSize + 'px';
-        }
+        // Gespeicherte Schriftgröße auf Editoren anwenden
     }
 
-    // Ausgabe löschen Button
-    const clearOutputBtn = document.getElementById('clearOutputBtn');
-    clearOutputBtn.addEventListener('click', function() {
-        document.getElementById('consoleOutput').textContent = '';
-    });
+    
 
     // Ausführen-Button
     document.getElementById('runBtn').addEventListener('click', function() {
-        if (pyodideReady) {
-            runPythonCode();
-        } else {
-            console.log('Pyodide noch nicht bereit');
-        }
+        // Immer HTML-Modus: Kombinierter HTML + Python Code
+        runHTMLWithBrython();
     });
 
     document.getElementById('saveButton').addEventListener('click', function() {
-        saveContent();
+        console.log('Speichern-Button geklickt');
+        // Wird in Phase 5 implementiert
     });
 
     document.getElementById('submitButton').addEventListener('click', function() {
-        submitTask();
+        console.log('Abgeben-Button geklickt');
+        // Wird in Phase 5 implementiert
     });
 }
 
+
+
 // Utility-Funktionen
 function getCurrentEditor() {
-    return pythonEditor;
+    return currentTab === 'python' ? pythonEditor : htmlEditor;
 }
 
 function addToConsole(text, type = 'info') {
-    const consoleOutput = document.getElementById('consoleOutput');
-    const timestamp = new Date().toLocaleTimeString();
-    const prefix = type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
-
-    consoleOutput.textContent += `[${timestamp}] ${prefix} ${text}\n`;
-    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    // Logging für Pyodide-Initialisierung, aber nicht in UI angezeigt
+    console.log(`[${type.toUpperCase()}] ${text}`);
 }
 
 function addToConsoleWithoutTimestamp(text) {
-    const consoleOutput = document.getElementById('consoleOutput');
-    consoleOutput.textContent += `${text}\n`;
-    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    // Logging für Pyodide-Ausgabe, aber nicht in UI angezeigt
+    console.log(text);
 }
 
 // Pyodide initialisieren
@@ -399,6 +561,91 @@ stdout, stderr = output_capture.get_output()
 }
 
 
+
+// HTML mit Brython ausführen
+function runHTMLWithBrython() {
+    const htmlCode = htmlEditor.getValue();
+    const pythonCode = pythonEditor.getValue();
+    const cssCode = cssEditor.getValue();
+
+    if (!htmlCode.trim()) {
+        addToConsole('Kein HTML-Code vorhanden', 'error');
+        return;
+    }
+
+    // Brython-Skripte automatisch in head einfügen
+    let modifiedHTML = htmlCode;
+
+    // CSS-Code in head einfügen (falls vorhanden)
+    const cssToInsert = cssCode.trim() ? 
+        `    <style>
+${cssCode}
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/brython@3/brython.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/brython@3/brython_stdlib.js"></script>` :
+        `    <script src="https://cdn.jsdelivr.net/npm/brython@3/brython.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/brython@3/brython_stdlib.js"></script>`;
+
+    // Prüfen ob head-Tag existiert
+    if (modifiedHTML.includes('<head>')) {
+        // CSS und Brython-Skripte nach dem öffnenden head-Tag einfügen
+        modifiedHTML = modifiedHTML.replace('<head>', `<head>
+${cssToInsert}`);
+    } else {
+        // Falls kein head-Tag vorhanden, am Anfang einfügen
+        modifiedHTML = `<head>
+${cssToInsert}
+</head>
+` + modifiedHTML;
+    }
+
+    // Python-Code vor </body> einfügen (falls vorhanden)
+    if (pythonCode.trim()) {
+        if (modifiedHTML.includes('</body>')) {
+            modifiedHTML = modifiedHTML.replace(
+                '</body>',
+                `    <script type="text/python">
+${pythonCode}
+    </script>
+    <script>brython()</script>
+</body>`
+            );
+        } else {
+            // Falls kein body-Tag vorhanden, am Ende anhängen
+            modifiedHTML += `
+<script type="text/python">
+${pythonCode}
+</script>
+<script>brython()</script>`;
+        }
+    } else {
+        // Auch ohne Python-Code brython() initialisieren
+        if (modifiedHTML.includes('</body>')) {
+            modifiedHTML = modifiedHTML.replace(
+                '</body>',
+                `    <script>brython()</script>
+</body>`
+            );
+        } else {
+            modifiedHTML += `
+<script>brython()</script>`;
+        }
+    }
+
+    // HTML in iframe laden
+    const htmlOutput = document.getElementById('htmlOutput');
+    const blob = new Blob([modifiedHTML], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+
+    htmlOutput.src = url;
+
+    // URL nach dem Laden wieder freigeben
+    htmlOutput.onload = function() {
+        URL.revokeObjectURL(url);
+    };
+
+    console.log('HTML mit Brython ausgeführt');
+}
 
 // MyPy initialisieren
 async function initializeMyPy() {
@@ -586,7 +833,7 @@ function startTypeChecking() {
     }
 
     typeCheckInterval = setInterval(() => {
-        if (mypyReady) {
+        if (currentTab === 'python' && mypyReady) {
             checkPythonTypes();
         }
     }, 800); // Alle 800ms
@@ -665,20 +912,14 @@ function clearTypeErrors() {
     }
 }
 
-// Type-Checking aktualisieren
+// Type-Checking beim Tab-Wechsel aktualisieren
 function updateTypeCheckingForTab() {
-    if (mypyReady) {
-        // Sofortiges Type-Checking für Python
+    if (currentTab === 'python' && mypyReady) {
+        // Sofortiges Type-Checking beim Wechsel zum Python-Tab
         setTimeout(checkPythonTypes, 100);
-    }
-}
-
-// Lade gespeicherte Inhalte beim Start
-function loadSavedContent() {
-    const contentElement = document.getElementById('currentContent');
-    if (contentElement) {
-        const savedContent = contentElement.textContent.trim();
-        loadContentToView(savedContent);
+    } else {
+        // Type-Errors löschen wenn nicht im Python-Tab
+        clearTypeErrors();
     }
 }
 
@@ -702,55 +943,247 @@ function renderMarkdown(markdownText) {
 }
 
 // Tutorial-Inhalte Array
-const tutorialText = document.getElementById('tutorial').textContent.trim();
+const tutorialContents = [
+    {
+        title: "Grundlagen der p-q-Formel",
+        content: `# Tutorial 1: Grundlagen der p-q-Formel
 
-let tutorialContents;
-if (tutorialText) {
-  // Inhalt vorhanden → als JS-Literal ausführen
-  tutorialContents = new Function(`return (${tutorialText});`)();
-} 
+## Was ist die p-q-Formel?
 
-console.log(tutorialContents);
+Die p-q-Formel ist eine Methode zur Lösung quadratischer Gleichungen der Form:
+**x² + px + q = 0**
+
+## Die Formel
+\`\`\`
+x = -p/2 ± √((p/2)² - q)
+\`\`\`
+
+## Diskriminante
+Die **Diskriminante** (p/2)² - q bestimmt die Anzahl der Lösungen:
+- **> 0**: Zwei verschiedene reelle Lösungen
+- **= 0**: Eine doppelte Lösung
+- **< 0**: Keine reellen Lösungen
+
+## Beispiel
+Für x² + 5x + 6 = 0 (p=5, q=6):
+- Diskriminante = (5/2)² - 6 = 6.25 - 6 = 0.25
+- x₁ = -5/2 + √0.25 = -2
+- x₂ = -5/2 - √0.25 = -3
+
+**Weiter zum nächsten Tutorial →**`
+    },
+    {
+        title: "Python-Implementierung",
+        content: `# Tutorial 2: Python-Implementierung
+
+## Schritt 1: Grundfunktion erstellen
+
+\`\`\`python
+from math import sqrt
+
+def calculate_pq(p, q):
+    diskriminante = (p / 2)**2 - q
+    
+    if diskriminante < 0:
+        return "Keine reellen Lösungen"
+    elif diskriminante == 0:
+        x = -p / 2
+        return f"x = {x:.4f}"
+    else:
+        x1 = -p / 2 + sqrt(diskriminante)
+        x2 = -p / 2 - sqrt(diskriminante)
+        return f"x₁ = {x1:.4f}, x₂ = {x2:.4f}"
+\`\`\`
+
+## Schritt 2: Fehlerbehandlung
+
+\`\`\`python
+def safe_calculate(p_str, q_str):
+    try:
+        p = float(p_str)
+        q = float(q_str)
+        return calculate_pq(p, q)
+    except ValueError:
+        return "Fehler: Bitte gültige Zahlen eingeben"
+\`\`\`
+
+## Test der Funktion
+- **p=5, q=6**: Zwei Lösungen
+- **p=4, q=4**: Eine Lösung  
+- **p=2, q=5**: Keine reellen Lösungen
+
+**← Zurück | Weiter →**`
+    },
+    {
+        title: "HTML-Interface erstellen",
+        content: `# Tutorial 3: HTML-Interface
+
+## Grundstruktur
+
+\`\`\`html
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>p-q-Formel Rechner</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        input { padding: 10px; margin: 5px; font-size: 16px; }
+        button { padding: 10px 20px; font-size: 16px; }
+        .result { margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h2>p-q-Formel Rechner</h2>
+    
+    <label for="p">p-Wert:</label>
+    <input type="number" id="p" step="any" placeholder="z.B. 5">
+    
+    <label for="q">q-Wert:</label>
+    <input type="number" id="q" step="any" placeholder="z.B. 6">
+    
+    <button id="calc_button">Berechnen</button>
+    
+    <div id="result" class="result"></div>
+</body>
+</html>
+\`\`\`
+
+## Wichtige HTML-Elemente
+- **type="number"**: Zahleneingabe
+- **step="any"**: Dezimalzahlen erlauben
+- **placeholder**: Beispielwerte anzeigen
+
+**← Zurück | Weiter →**`
+    },
+    {
+        title: "Brython-Integration",
+        content: `# Tutorial 4: Brython-Integration
+
+## Was ist Brython?
+Brython ermöglicht es, Python-Code direkt im Browser auszuführen, ohne Server.
+
+## Integration in HTML
+
+\`\`\`html
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/brython@3/brython.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/brython@3/brython_stdlib.js"></script>
+</head>
+\`\`\`
+
+## Python-Code für den Browser
+
+\`\`\`python
+from browser import document, html
+from math import sqrt
+
+def calculate(event=None):
+    try:
+        p = float(document["p"].value)
+        q = float(document["q"].value)
+        
+        diskriminante = (p / 2)**2 - q
+        
+        if diskriminante < 0:
+            result = "Keine reellen Lösungen"
+        elif diskriminante == 0:
+            x = -p / 2
+            result = f"x = {x:.4f}"
+        else:
+            x1 = -p / 2 + sqrt(diskriminante)
+            x2 = -p / 2 - sqrt(diskriminante)
+            result = f"x₁ = {x1:.4f}, x₂ = {x2:.4f}"
+            
+        document["result"].text = result
+        
+    except ValueError:
+        document["result"].text = "Bitte gültige Zahlen eingeben"
+
+# Event-Handler registrieren
+document["calc_button"].bind("click", calculate)
+\`\`\`
+
+**← Zurück | Weiter →**`
+    },
+    {
+        title: "Fertige Anwendung",
+        content: `# Tutorial 5: Fertige Anwendung
+
+## Vollständiger Code
+Jetzt haben Sie alle Teile zusammen:
+
+### 1. HTML-Struktur ✓
+- Eingabefelder für p und q
+- Button zum Berechnen  
+- Ausgabebereich für Ergebnis
+
+### 2. Python-Logik ✓
+- p-q-Formel-Implementierung
+- Fehlerbehandlung
+- Brython-Integration
+
+### 3. Interaktivität ✓
+- Event-Handler für Button
+- DOM-Manipulation
+- Echtzeitanzeige der Ergebnisse
+
+## Erweiterungsideen
+
+### 🎯 **Zusätzliche Features**
+- [ ] Automatische Berechnung bei Eingabe
+- [ ] Grafische Darstellung der Parabel
+- [ ] Schritt-für-Schritt Lösung
+- [ ] Verlauf der Berechnungen
+- [ ] Export der Ergebnisse
+
+### 🎨 **Design-Verbesserungen**
+- [ ] CSS-Styling und Animationen
+- [ ] Responsive Design
+- [ ] Dark/Light Mode
+- [ ] Eingabe-Validierung mit visuellen Hinweisen
+
+### 🔧 **Technische Erweiterungen**
+- [ ] Mehrere Gleichungstypen
+- [ ] Komplexe Zahlen unterstützen
+- [ ] Speichern und Laden von Projekten
+
+## Herzlichen Glückwunsch! 🎉
+Sie haben erfolgreich einen funktionsfähigen p-q-Formel-Rechner erstellt!
+
+**← Zurück zum Anfang**`
+    }
+];
 
 let currentTutorialIndex = 0;
 
 // Task-Content initialisieren
 function initializeTaskContent() {
-    updateTaskTab(document.getElementById("description").textContent);
+    updateTaskTab(tutorialContents[currentTutorialIndex].content);
 }
 
 // Tutorial Navigation initialisieren
 function initializeTutorialNavigation() {
     const tutorialOutput = document.getElementById('tutorialOutput');
-
-    const tutorialTab = document.querySelector('.output-tab[data-output-tab="tutorial"]'); // Referenz auf das Tutorial-Tab
-    // Überprüfen, ob tutorialContents leer ist
-    if (!tutorialContents || tutorialContents.length === 0) {
-        // Tab ausblenden, wenn kein Inhalt vorhanden ist
-        if (tutorialTab) {
-            tutorialTab.style.display = 'none'; // Tab ausblenden
-        }
-        return; // Funktion beenden
-    }
     
     // Navigation HTML erstellen
     const navigationHTML = `
         <div class="tutorial-navigation">
             <button id="tutorialPrev" class="nav-arrow">←</button>
             <div class="tutorial-dots">
-                ${tutorialContents.map((_, index) =>
-        `<span class="tutorial-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>`
-    ).join('')}
+                ${tutorialContents.map((_, index) => 
+                    `<span class="tutorial-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>`
+                ).join('')}
             </div>
             <button id="tutorialNext" class="nav-arrow">→</button>
         </div>
         <div class="tutorial-content">
-            <iframe id="tutorialFrame" src="" class="tutorial-iframe"></iframe>
+            <iframe id="tutorialFrame" src="https://python-kurs.eu/python3_variablen.php" class="tutorial-iframe"></iframe>
         </div>
     `;
-
+    
     tutorialOutput.innerHTML = navigationHTML;
-
+    
     // Event Listeners hinzufügen
     document.getElementById('tutorialPrev').addEventListener('click', () => {
         if (currentTutorialIndex > 0) {
@@ -758,14 +1191,14 @@ function initializeTutorialNavigation() {
             updateTutorialDisplay();
         }
     });
-
+    
     document.getElementById('tutorialNext').addEventListener('click', () => {
         if (currentTutorialIndex < tutorialContents.length - 1) {
             currentTutorialIndex++;
             updateTutorialDisplay();
         }
     });
-
+    
     // Dot Navigation
     document.querySelectorAll('.tutorial-dot').forEach(dot => {
         dot.addEventListener('click', (e) => {
@@ -773,7 +1206,7 @@ function initializeTutorialNavigation() {
             updateTutorialDisplay();
         });
     });
-
+    
     updateTutorialDisplay();
 }
 
@@ -783,15 +1216,15 @@ function updateTutorialDisplay() {
     document.querySelectorAll('.tutorial-dot').forEach((dot, index) => {
         dot.classList.toggle('active', index === currentTutorialIndex);
     });
-
+    
     // Button States
     document.getElementById('tutorialPrev').disabled = currentTutorialIndex === 0;
     document.getElementById('tutorialNext').disabled = currentTutorialIndex === tutorialContents.length - 1;
-
+    
     // Content aktualisieren - zeige Markdown statt iframe
     const tutorialFrame = document.getElementById('tutorialFrame');
     const currentContent = tutorialContents[currentTutorialIndex].content;
-
+    
     // Erstelle HTML für Markdown-Content
     const htmlContent = `
         <!DOCTYPE html>
@@ -824,6 +1257,7 @@ function updateTutorialDisplay() {
                 pre code { background: transparent; padding: 0; }
                 ul { margin-left: 20px; }
                 li { margin-bottom: 5px; }
+                strong { color: #ffffff; }
                 .example { background: #2a4a2a; padding: 10px; border-radius: 5px; margin: 10px 0; }
             </style>
         </head>
@@ -832,11 +1266,11 @@ function updateTutorialDisplay() {
         </body>
         </html>
     `;
-
+    
     const blob = new Blob([htmlContent], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     tutorialFrame.src = url;
-
+    
     // URL nach dem Laden wieder freigeben
     tutorialFrame.onload = () => {
         URL.revokeObjectURL(url);
@@ -846,166 +1280,21 @@ function updateTutorialDisplay() {
 // Task-Tab aktualisieren
 function updateTaskTab(markdownText) {
     const taskOutput = document.getElementById('taskOutput');
-    const taskTab = document.querySelector('.output-tab[data-output-tab="task"]');
-    
     if (taskOutput) {
-        // Überprüfen, ob markdownText nicht leer ist
-        if (markdownText && markdownText.trim() !== '') {
-            taskOutput.innerHTML = renderMarkdown(markdownText);
-            taskTab.style.display = 'block'; // Tab anzeigen
-        } else {
-            taskOutput.innerHTML = ''; // Inhalte löschen
-            taskTab.style.display = 'none'; // Tab ausblenden
-        }
-    }
-}
-
-// TaskView-konforme Funktionen
-function getContentFromView() {
-    // Sammle alle relevanten Daten (ohne Schriftgröße)
-    const content = {
-        version: "1.0",
-        type: "python-code-editor",
-        pythonCode: pythonEditor.getValue(),
-        currentTutorialIndex: currentTutorialIndex,
-        metadata: {
-            lastModified: new Date().toISOString(),
-            codeLength: pythonEditor.getValue().length
-        }
-    };
-
-    return JSON.stringify(content);
-}
-
-function loadContentToView(content) {
-    try {
-        if (!content || content.trim() === '' || content === '{}') {
-            console.log('Kein Inhalt zum Laden vorhanden, verwende Standardcode');
-            return;
-        }
-
-        const data = JSON.parse(content);
-
-        if (data.pythonCode) {
-            pythonEditor.setValue(data.pythonCode);
-            console.log('Python-Code erfolgreich geladen');
-        }
-
-        if (data.currentTutorialIndex !== undefined && data.currentTutorialIndex >= 0 && data.currentTutorialIndex < tutorialContents.length) {
-            currentTutorialIndex = data.currentTutorialIndex;
-            updateTutorialDisplay();
-        }
-
-        updateSaveStatus('saved');
-
-    } catch (error) {
-        console.error('Fehler beim Laden des Inhalts:', error);
-        updateSaveStatus('error');
-    }
-}
-
-function saveContent(isSubmission = false) {
-    console.log('Speichere Inhalt...', isSubmission ? '(Abgabe)' : '(Normal)');
-    updateSaveStatus('saving');
-
-    const content = getContentFromView();
-    const urlElement = document.getElementById(isSubmission ? 'task-submit-url' : 'task-save-url');
-    const url = urlElement ? urlElement.getAttribute('data-url') : '';
-
-    if (!url) {
-        console.error('Keine URL für Speicherung gefunden');
-        updateSaveStatus('error');
-        return;
-    }
-
-    fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: content })
-    })
-        .then(response => {
-            if (response.ok) {
-                updateSaveStatus(isSubmission ? 'submitted' : 'saved');
-                console.log('Inhalt erfolgreich gespeichert');
-
-                // Benachrichtigung an Parent-Window für iFrame-Integration
-                if (window.parent && window.parent !== window) {
-                    window.parent.postMessage('content-saved', '*');
-                }
-            } else {
-                updateSaveStatus('error');
-                console.error('Speicherfehler:', response.status);
-            }
-        })
-        .catch(error => {
-            console.error('Speicherfehler:', error);
-            updateSaveStatus('error');
-        });
-}
-
-function submitTask() {
-    if (confirm('Möchten Sie diese Aufgabe wirklich abgeben? Nach der Abgabe können Sie keine Änderungen mehr vornehmen.')) {
-        saveContent(true);
-    }
-}
-
-function updateSaveStatus(status) {
-    const statusElement = document.getElementById('save-status');
-    if (!statusElement) {
-        console.error('Status-Element nicht gefunden');
-        return;
-    }
-
-    console.log('Status wird aktualisiert auf:', status);
-
-    // Entferne alle Status-Klassen
-    statusElement.className = '';
-
-    switch (status) {
-        case 'saved':
-            statusElement.className = 'fas fa-circle text-success';
-            statusElement.setAttribute('title', 'Änderungen gespeichert');
-            statusElement.style.color = '#28a745';
-            break;
-        case 'saving':
-            statusElement.className = 'fas fa-spinner fa-spin text-primary';
-            statusElement.setAttribute('title', 'Speichere...');
-            statusElement.style.color = '#007bff';
-            break;
-        case 'error':
-            statusElement.className = 'fas fa-circle text-danger';
-            statusElement.setAttribute('title', 'Fehler beim Speichern');
-            statusElement.style.color = '#dc3545';
-            break;
-        case 'ready':
-            statusElement.className = 'fas fa-circle text-warning';
-            statusElement.setAttribute('title', 'Ungespeicherte Änderungen');
-            statusElement.style.color = '#ffc107';
-            break;
-        case 'submitted':
-            statusElement.className = 'fas fa-circle text-success';
-            statusElement.setAttribute('title', 'Aufgabe abgegeben');
-            statusElement.style.color = '#28a745';
-            break;
-        default:
-            statusElement.className = 'fas fa-circle text-muted';
-            statusElement.setAttribute('title', 'Bereit zum Speichern');
-            statusElement.style.color = '#6c757d';
-            break;
+        taskOutput.innerHTML = renderMarkdown(markdownText);
     }
 }
 
 // Globale Funktionen für spätere Phasen
 window.editorAPI = {
     getPythonCode: () => pythonEditor.getValue(),
+    getHTMLCode: () => htmlEditor.getValue(),
+    getCSSCode: () => cssEditor.getValue(),
     setPythonCode: (code) => pythonEditor.setValue(code),
+    setHTMLCode: (code) => htmlEditor.setValue(code),
+    setCSSCode: (code) => cssEditor.setValue(code),
     getCurrentEditor: getCurrentEditor,
-    addToConsole: addToConsole,
     runPythonCode: runPythonCode,
     updateTaskTab: updateTaskTab,
-    renderMarkdown: renderMarkdown,
-    saveContent: saveContent,
-    submitTask: submitTask,
-    getContentFromView: getContentFromView,
-    loadContentToView: loadContentToView
+    renderMarkdown: renderMarkdown
 };
