@@ -153,10 +153,25 @@ button:active {
     backdrop-filter: blur(10px);
 }`);
 
-    // Cursor an den Anfang setzen
+    // Content laden und Cursor an den Anfang setzen
+    loadSavedContent();
     pythonEditor.gotoLine(1);
     htmlEditor.gotoLine(1);
     cssEditor.gotoLine(1);
+
+    // Initialer Status
+    updateSaveStatus('saved');
+
+    // Änderungen verfolgen für Status-Updates
+    pythonEditor.on('change', function() {
+        updateSaveStatus('ready');
+    });
+    htmlEditor.on('change', function() {
+        updateSaveStatus('ready');
+    });
+    cssEditor.on('change', function() {
+        updateSaveStatus('ready');
+    });
 });
 
 // ACE Editor initialisieren
@@ -423,13 +438,11 @@ function initializeControls() {
     });
 
     document.getElementById('saveButton').addEventListener('click', function() {
-        console.log('Speichern-Button geklickt');
-        // Wird in Phase 5 implementiert
+        saveContent();
     });
 
     document.getElementById('submitButton').addEventListener('click', function() {
-        console.log('Abgeben-Button geklickt');
-        // Wird in Phase 5 implementiert
+        submitTask();
     });
 }
 
@@ -1102,6 +1115,164 @@ function updateTaskTab(markdownText) {
     }
 }
 
+// Lade gespeicherte Inhalte beim Start
+function loadSavedContent() {
+    const contentElement = document.getElementById('currentContent');
+    if (contentElement) {
+        const savedContent = contentElement.textContent.trim();
+        loadContentToView(savedContent);
+    }
+}
+
+// TaskView-konforme Funktionen
+function getContentFromView() {
+    // Sammle alle relevanten Daten
+    const content = {
+        version: "1.0",
+        type: "python-html-code-editor",
+        pythonCode: pythonEditor.getValue(),
+        htmlCode: htmlEditor.getValue(),
+        cssCode: cssEditor.getValue(),
+        currentTutorialIndex: currentTutorialIndex,
+        metadata: {
+            lastModified: new Date().toISOString(),
+            pythonCodeLength: pythonEditor.getValue().length,
+            htmlCodeLength: htmlEditor.getValue().length,
+            cssCodeLength: cssEditor.getValue().length
+        }
+    };
+
+    return JSON.stringify(content);
+}
+
+function loadContentToView(content) {
+    try {
+        if (!content || content.trim() === '' || content === '{}') {
+            console.log('Kein Inhalt zum Laden vorhanden, verwende Standardcode');
+            return;
+        }
+
+        const data = JSON.parse(content);
+
+        if (data.pythonCode) {
+            pythonEditor.setValue(data.pythonCode);
+            console.log('Python-Code erfolgreich geladen');
+        }
+
+        if (data.htmlCode) {
+            htmlEditor.setValue(data.htmlCode);
+            console.log('HTML-Code erfolgreich geladen');
+        }
+
+        if (data.cssCode) {
+            cssEditor.setValue(data.cssCode);
+            console.log('CSS-Code erfolgreich geladen');
+        }
+
+        if (data.currentTutorialIndex !== undefined && data.currentTutorialIndex >= 0 && tutorialContents && data.currentTutorialIndex < tutorialContents.length) {
+            currentTutorialIndex = data.currentTutorialIndex;
+            updateTutorialDisplay();
+        }
+
+        updateSaveStatus('saved');
+
+    } catch (error) {
+        console.error('Fehler beim Laden des Inhalts:', error);
+        updateSaveStatus('error');
+    }
+}
+
+function saveContent(isSubmission = false) {
+    console.log('Speichere Inhalt...', isSubmission ? '(Abgabe)' : '(Normal)');
+    updateSaveStatus('saving');
+
+    const content = getContentFromView();
+    const urlElement = document.getElementById(isSubmission ? 'task-submit-url' : 'task-save-url');
+    const url = urlElement ? urlElement.getAttribute('data-url') : '';
+
+    if (!url) {
+        console.error('Keine URL für Speicherung gefunden');
+        updateSaveStatus('error');
+        return;
+    }
+
+    fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: content })
+    })
+        .then(response => {
+            if (response.ok) {
+                updateSaveStatus(isSubmission ? 'submitted' : 'saved');
+                console.log('Inhalt erfolgreich gespeichert');
+
+                // Benachrichtigung an Parent-Window für iFrame-Integration
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage('content-saved', '*');
+                }
+            } else {
+                updateSaveStatus('error');
+                console.error('Speicherfehler:', response.status);
+            }
+        })
+        .catch(error => {
+            console.error('Speicherfehler:', error);
+            updateSaveStatus('error');
+        });
+}
+
+function submitTask() {
+    if (confirm('Möchten Sie diese Aufgabe wirklich abgeben? Nach der Abgabe können Sie keine Änderungen mehr vornehmen.')) {
+        saveContent(true);
+    }
+}
+
+function updateSaveStatus(status) {
+    const statusElement = document.getElementById('save-status');
+    if (!statusElement) {
+        console.error('Status-Element nicht gefunden');
+        return;
+    }
+
+    console.log('Status wird aktualisiert auf:', status);
+
+    // Entferne alle Status-Klassen
+    statusElement.className = '';
+
+    switch (status) {
+        case 'saved':
+            statusElement.className = 'fas fa-circle text-success';
+            statusElement.setAttribute('title', 'Änderungen gespeichert');
+            statusElement.style.color = '#28a745';
+            break;
+        case 'saving':
+            statusElement.className = 'fas fa-spinner fa-spin text-primary';
+            statusElement.setAttribute('title', 'Speichere...');
+            statusElement.style.color = '#007bff';
+            break;
+        case 'error':
+            statusElement.className = 'fas fa-circle text-danger';
+            statusElement.setAttribute('title', 'Fehler beim Speichern');
+            statusElement.style.color = '#dc3545';
+            break;
+        case 'ready':
+            statusElement.className = 'fas fa-circle text-warning';
+            statusElement.setAttribute('title', 'Ungespeicherte Änderungen');
+            statusElement.style.color = '#ffc107';
+            break;
+        case 'submitted':
+            statusElement.className = 'fas fa-circle text-success';
+            statusElement.setAttribute('title', 'Aufgabe abgegeben');
+            statusElement.style.color = '#28a745';
+            break;
+        default:
+            statusElement.className = 'fas fa-circle text-muted';
+            statusElement.setAttribute('title', 'Bereit zum Speichern');
+            statusElement.style.color = '#6c757d';
+            break;
+    }
+}
+
 // Globale Funktionen für spätere Phasen
 window.editorAPI = {
     getPythonCode: () => pythonEditor.getValue(),
@@ -1113,5 +1284,9 @@ window.editorAPI = {
     getCurrentEditor: getCurrentEditor,
     runPythonCode: runPythonCode,
     updateTaskTab: updateTaskTab,
-    renderMarkdown: renderMarkdown
+    renderMarkdown: renderMarkdown,
+    saveContent: saveContent,
+    submitTask: submitTask,
+    getContentFromView: getContentFromView,
+    loadContentToView: loadContentToView
 };
