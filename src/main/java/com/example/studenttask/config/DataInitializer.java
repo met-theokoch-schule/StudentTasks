@@ -95,6 +95,15 @@ public class DataInitializer implements ApplicationRunner {
             System.out.println("TaskView with templatePath '" + pythonEditor + "' initialized");
         }
 
+        String pythonHtmlEditor = "taskviews/python-html-editor";
+
+        if (taskViewRepository.findByTemplatePath(pythonHtmlEditor) == null) {
+            TaskView pythonHtml = new TaskView("Python HTML Editor", pythonHtmlEditor);
+            pythonHtml.setDescription("Erstellen von Pythonprogrammen mit HTML als GUI!");
+            taskViewRepository.save(pythonHtml);
+            System.out.println("TaskView with templatePath '" + pythonHtmlEditor + "' initialized");
+        }
+
         // Hier können weitere TaskViews hinzugefügt werden
         // Beispiel für weitere TaskViews:
         /*
