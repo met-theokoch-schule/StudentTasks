@@ -704,9 +704,13 @@ function renderMarkdown(markdownText) {
 // Tutorial-Inhalte Array
 const tutorialText = document.getElementById('tutorial').textContent.trim();
 
-const tutorialContents = new Function(`return (${tutorialText});`)();
+let tutorialContents;
+if (tutorialText) {
+  // Inhalt vorhanden → als JS-Literal ausführen
+  tutorialContents = new Function(`return (${tutorialText});`)();
+} 
 
-console.log(tutorials);
+console.log(tutorialContents);
 
 let currentTutorialIndex = 0;
 
@@ -719,6 +723,16 @@ function initializeTaskContent() {
 function initializeTutorialNavigation() {
     const tutorialOutput = document.getElementById('tutorialOutput');
 
+    const tutorialTab = document.querySelector('.output-tab[data-output-tab="tutorial"]'); // Referenz auf das Tutorial-Tab
+    // Überprüfen, ob tutorialContents leer ist
+    if (!tutorialContents || tutorialContents.length === 0) {
+        // Tab ausblenden, wenn kein Inhalt vorhanden ist
+        if (tutorialTab) {
+            tutorialTab.style.display = 'none'; // Tab ausblenden
+        }
+        return; // Funktion beenden
+    }
+    
     // Navigation HTML erstellen
     const navigationHTML = `
         <div class="tutorial-navigation">
@@ -731,7 +745,7 @@ function initializeTutorialNavigation() {
             <button id="tutorialNext" class="nav-arrow">→</button>
         </div>
         <div class="tutorial-content">
-            <iframe id="tutorialFrame" src="https://python-kurs.eu/python3_variablen.php" class="tutorial-iframe"></iframe>
+            <iframe id="tutorialFrame" src="" class="tutorial-iframe"></iframe>
         </div>
     `;
 
@@ -832,8 +846,17 @@ function updateTutorialDisplay() {
 // Task-Tab aktualisieren
 function updateTaskTab(markdownText) {
     const taskOutput = document.getElementById('taskOutput');
+    const taskTab = document.querySelector('.output-tab[data-output-tab="task"]');
+    
     if (taskOutput) {
-        taskOutput.innerHTML = renderMarkdown(markdownText);
+        // Überprüfen, ob markdownText nicht leer ist
+        if (markdownText && markdownText.trim() !== '') {
+            taskOutput.innerHTML = renderMarkdown(markdownText);
+            taskTab.style.display = 'block'; // Tab anzeigen
+        } else {
+            taskOutput.innerHTML = ''; // Inhalte löschen
+            taskTab.style.display = 'none'; // Tab ausblenden
+        }
     }
 }
 
