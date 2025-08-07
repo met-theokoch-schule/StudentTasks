@@ -99,16 +99,7 @@
         data-url="/dev/submit"></div>
     <div id="currentContent" style="display: none" th:text="${currentContent}"></div>
     <div id="description" style="display: none" th:text="${task.description}">*Test*</div>
-    <div id="tutorial" style="display: none" th:utext="${task.tutorial}">[
-        {
-        title: "Grundlagen der p-q-Formel",
-        content: `# Tutorial 1: Grundlagen der p-q-Formel`
-        },
-        {
-        title: "Grundlagen der p-q-Formel",
-        content: `# Tutorial 1: Grundlagen der p-q-Formel`
-        }]
-    </div>
+    <div id="tutorial" style="display: none" th:utext="${task.tutorial}"></div>
 
     <script th:src="@{/js/python-html-editor.js}" src="../../static/js/python-html-editor.js"></script>
 </body>
