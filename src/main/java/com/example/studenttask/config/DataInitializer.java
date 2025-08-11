@@ -59,14 +59,18 @@ public class DataInitializer implements ApplicationRunner {
 
     private void initializeTaskViews() {
         // Initialize Task Views if they don't exist based on unique templatePath
-        String simpleTextTemplatePath = "taskviews/simple-text";
-
-        if (taskViewRepository.findByTemplatePath(simpleTextTemplatePath) == null) {
-            TaskView simpleText = new TaskView("Einfacher Texteditor", simpleTextTemplatePath);
-            simpleText.setDescription("Einfaches Textfeld für Text-Abgaben");
-            taskViewRepository.save(simpleText);
-            System.out.println("TaskView with templatePath '" + simpleTextTemplatePath + "' initialized");
-        }
+        /*
+         * String simpleTextTemplatePath = "taskviews/simple-text";
+         * 
+         * if (taskViewRepository.findByTemplatePath(simpleTextTemplatePath) == null) {
+         * TaskView simpleText = new TaskView("Einfacher Texteditor",
+         * simpleTextTemplatePath);
+         * simpleText.setDescription("Einfaches Textfeld für Text-Abgaben");
+         * taskViewRepository.save(simpleText);
+         * System.out.println("TaskView with templatePath '" + simpleTextTemplatePath +
+         * "' initialized");
+         * }
+         */
 
         String htmlCssEditor = "taskviews/html-css-editor";
 
@@ -102,6 +106,15 @@ public class DataInitializer implements ApplicationRunner {
             pythonHtml.setDescription("Erstellen von Pythonprogrammen mit HTML als GUI!");
             taskViewRepository.save(pythonHtml);
             System.out.println("TaskView with templatePath '" + pythonHtmlEditor + "' initialized");
+        }
+
+        String pythonHamsterEditor = "taskviews/python-hamster-editor";
+
+        if (taskViewRepository.findByTemplatePath(pythonHamsterEditor) == null) {
+            TaskView pythonHamster = new TaskView("Python Hamster Editor", pythonHamsterEditor);
+            pythonHamster.setDescription("Erstellen von Python-Hamster-Programmen!");
+            taskViewRepository.save(pythonHamster);
+            System.out.println("TaskView with templatePath '" + pythonHamsterEditor + "' initialized");
         }
 
         // Hier können weitere TaskViews hinzugefügt werden
