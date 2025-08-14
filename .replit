@@ -1,5 +1,5 @@
 compile = "javac -classpath .:target/dependency/* -d . $(find . -type f -name '*.java')"
-run = "java -classpath .:target/dependency/* Main"
+run = "mvn clean spring-boot:run -Dspring-boot.run.arguments='--spring.config.additional-location=classpath:application-replit.properties'"
 entrypoint = "src/main/java/Main.java"
 hidden = ["**/*.class"]
 
@@ -64,7 +64,6 @@ run = ["java", "-classpath", ".:target/dependency/*", "Main"]
 deploymentTarget = "cloudrun"
 
 [workflows]
-runButton = "Run Spring Boot App"
 
 [[workflows.workflow]]
 name = "Run Spring Boot App"
@@ -73,7 +72,7 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "mvn spring-boot:run -Dspring.profiles.active=dev"
+args = "mvn spring-boot:run -Dspring-boot.run.arguments='--spring.config.additional-location=classpath:application-replit.properties'"
 
 [[workflows.workflow]]
 name = "Build WAR (External Tomcat)"
@@ -82,17 +81,16 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "mvn clean package -Pwar -Dspring.profiles.active=war"
-
-[[workflows.workflow]]
-name = "Build Clean WAR"
-author = 12297667
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "mvn clean package -Pwar -Dspring.profiles.active=war"
+args = "mvn clean package -Pwar"
 
 [[ports]]
 localPort = 5000
 externalPort = 5000
+
+[[ports]]
+localPort = 8080
+externalPort = 8080
+
+[[ports]]
+localPort = 35729
+externalPort = 80
