@@ -64,34 +64,12 @@ run = ["java", "-classpath", ".:target/dependency/*", "Main"]
 deploymentTarget = "cloudrun"
 
 [workflows]
-runButton = "Run Development (JAR)"
+runButton = "Run Spring Boot App"
 
 [[workflows.workflow]]
 name = "Run Spring Boot App"
 author = 12297667
 mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "mvn spring-boot:run"
-
-[[workflows.workflow]]
-name = "Build WAR"
-author = 12297667
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "mvn clean package -Dpackaging=war -Dspring.profiles.active=war"
-
-[[workflows.workflow]]
-name = "Build JAR (Development)"
-author = 12297667
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "mvn clean package -Dpackaging=jar -Dspring.profiles.active=dev"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
@@ -106,19 +84,10 @@ mode = "sequential"
 task = "shell.exec"
 args = "mvn clean package -Pwar -Dspring.profiles.active=war"
 
-[[workflows.workflow]]
-name = "Run Development (JAR)"
-author = 12297667
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "mvn clean package -Pjar -Dspring.profiles.active=dev"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "mvn spring-boot:run -Dspring.profiles.active=dev"
-
 [[ports]]
 localPort = 5000
 externalPort = 5000
+
+[[ports]]
+localPort = 35729
+externalPort = 80
