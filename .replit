@@ -64,7 +64,7 @@ run = ["java", "-classpath", ".:target/dependency/*", "Main"]
 deploymentTarget = "cloudrun"
 
 [workflows]
-runButton = "Run Spring Boot App"
+runButton = "Run Development (JAR)"
 
 [[workflows.workflow]]
 name = "Run Spring Boot App"
@@ -82,7 +82,7 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "mvn clean package -Dpackaging=war"
+args = "mvn clean package -Dpackaging=war -Dspring.profiles.active=war"
 
 [[workflows.workflow]]
 name = "Build JAR (Development)"
@@ -91,11 +91,11 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "mvn clean package -Dpackaging=jar"
+args = "mvn clean package -Dpackaging=jar -Dspring.profiles.active=dev"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "mvn spring-boot:run"
+args = "mvn spring-boot:run -Dspring.profiles.active=dev"
 
 [[workflows.workflow]]
 name = "Build WAR (External Tomcat)"
@@ -104,7 +104,7 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "mvn clean package -Pwar"
+args = "mvn clean package -Pwar -Dspring.profiles.active=war"
 
 [[workflows.workflow]]
 name = "Run Development (JAR)"
@@ -113,11 +113,11 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "mvn clean package -Pjar"
+args = "mvn clean package -Pjar -Dspring.profiles.active=dev"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "mvn spring-boot:run"
+args = "mvn spring-boot:run -Dspring.profiles.active=dev"
 
 [[ports]]
 localPort = 5000
