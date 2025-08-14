@@ -106,6 +106,19 @@ mode = "sequential"
 task = "shell.exec"
 args = "mvn clean package -Pwar"
 
+[[workflows.workflow]]
+name = "Run Development (JAR)"
+author = 12297667
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mvn clean package -Pjar"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mvn spring-boot:run"
+
 [[ports]]
 localPort = 5000
 externalPort = 5000
