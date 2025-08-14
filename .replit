@@ -84,10 +84,15 @@ mode = "sequential"
 task = "shell.exec"
 args = "mvn clean package -Pwar -Dspring.profiles.active=war"
 
+[[workflows.workflow]]
+name = "Build Clean WAR"
+author = 12297667
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mvn clean package -Pwar -Dspring.profiles.active=war"
+
 [[ports]]
 localPort = 5000
 externalPort = 5000
-
-[[ports]]
-localPort = 35729
-externalPort = 80
