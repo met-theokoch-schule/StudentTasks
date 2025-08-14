@@ -1,0 +1,207 @@
+
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meine Aufgaben</title>
+    <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/custom.css}" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .unit-header {
+            cursor: pointer;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 12px 15px;
+            margin-bottom: 0;
+            border-radius: 8px 8px 0 0;
+            transition: background-color 0.2s;
+        }
+        .unit-header:hover {
+            background-color: #e9ecef;
+        }
+        .unit-header.collapsed {
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .unit-content {
+            border: 1px solid #dee2e6;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            margin-bottom: 15px;
+        }
+        .collapse-icon {
+            transition: transform 0.2s;
+        }
+        .collapsed .collapse-icon {
+            transform: rotate(-90deg);
+        }
+        .task-row {
+            border-bottom: 1px solid #f1f3f4;
+        }
+        .task-row:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" th:href="@{/dashboard}">
+                <i class="fas fa-user-graduate"></i> Schüler-Bereich
+            </a>
+            <div class="navbar-nav me-auto">
+                <a class="nav-link" th:href="@{/student/dashboard}">Dashboard</a>
+                <a class="nav-link active" th:href="@{/student/tasks}">Aufgaben</a>
+            </div>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3" sec:authentication="principal.attributes['name']"></span>
+                <a class="btn btn-outline-light" th:href="@{/logout}">Abmelden</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h5 class="mb-4"><i class="fas fa-tasks"></i> Meine Aufgaben</h5>
+        
+        <div th:if="${tasksByUnitTitle != null and !tasksByUnitTitle.isEmpty()}">
+            <!-- Gruppierte Aufgaben nach UnitTitle -->
+            <div th:each="entry : ${tasksByUnitTitle}" class="mb-3">
+                <div class="unit-header" 
+                     th:data-unit-id="${entry.key?.id ?: 'no-unit'}"
+                     onclick="toggleUnit(this)">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-chevron-down collapse-icon me-2"></i>
+                            <strong th:text="${entry.key?.name ?: 'Ohne Thema'}">Thema</strong>
+                            <span class="badge bg-secondary ms-2" th:text="${entry.value.size()}">0</span>
+                        </div>
+                        <small class="text-muted" th:if="${entry.key?.description}" 
+                               th:text="${entry.key.description}">Beschreibung</small>
+                    </div>
+                </div>
+                
+                <div class="unit-content collapse show" th:id="'unit-' + ${entry.key?.id ?: 'no-unit'}">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Aufgabe</th>
+                                    <th>Status</th>
+                                    <th>Fälligkeitsdatum</th>
+                                    <th>Letzte Bearbeitung</th>
+                                    <th>Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="userTask : ${entry.value}" class="task-row">
+                                    <td>
+                                        <strong th:text="${userTask.task.title}">Aufgabentitel</strong>
+                                    </td>
+                                    <td>
+                                        <span th:if="${userTask.status}" 
+                                              th:class="'badge ' + (${userTask.status.name == 'VOLLSTÄNDIG'} ? 'bg-success' : 
+                                                                   (${userTask.status.name == 'IN_BEARBEITUNG'} ? 'bg-primary' : 
+                                                                   (${userTask.status.name == 'ABGEGEBEN'} ? 'bg-warning' :
+                                                                   (${userTask.status.name == 'ÜBERARBEITUNG_NÖTIG'} ? 'bg-danger' : 'bg-secondary'))))"
+                                              th:text="${userTask.status.name}">Status</span>
+                                        <span th:unless="${userTask.status}" class="badge bg-secondary">Nicht begonnen</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${userTask.task.dueDate}" 
+                                              th:text="${#temporals.format(userTask.task.dueDate, 'dd.MM.yyyy HH:mm')}">
+                                            Fälligkeitsdatum
+                                        </span>
+                                        <span th:unless="${userTask.task.dueDate}" class="text-muted">Kein Datum</span>
+                                    </td>
+                                    <td>
+                                        <span th:if="${userTask.lastModified}" 
+                                              th:text="${#temporals.format(userTask.lastModified, 'dd.MM.yyyy HH:mm')}">
+                                            Letzte Bearbeitung
+                                        </span>
+                                        <span th:unless="${userTask.lastModified}" class="text-muted">Noch nicht bearbeitet</span>
+                                    </td>
+                                    <td>
+                                        <a th:href="@{'/student/tasks/' + ${userTask.task.id}}" 
+                                           class="btn btn-primary btn-sm me-1">
+                                            <i class="fas fa-edit"></i> Bearbeiten
+                                        </a>
+                                        <a th:href="@{'/student/tasks/' + ${userTask.task.id} + '/history'}" 
+                                           class="btn btn-outline-info btn-sm">
+                                            <i class="fas fa-history"></i> Historie
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Fallback für keine Aufgaben -->
+        <div th:if="${tasksByUnitTitle == null or tasksByUnitTitle.isEmpty()}" class="text-center py-4">
+            <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+            <p class="text-muted">Keine Aufgaben verfügbar.</p>
+            <a th:href="@{/student/dashboard}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left"></i> Zurück zum Dashboard
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // LocalStorage-Schlüssel für die Unit-Zustände
+        const STORAGE_KEY = 'student-tasks-unit-states';
+        
+        // Initialisierung beim Laden der Seite
+        document.addEventListener('DOMContentLoaded', function() {
+            // Gespeicherte Zustände aus localStorage laden
+            const savedStates = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+            
+            // Alle Unit-Header finden und Zustände anwenden
+            document.querySelectorAll('.unit-header').forEach(header => {
+                const unitId = header.getAttribute('data-unit-id');
+                const content = document.getElementById('unit-' + unitId);
+                
+                if (content) {
+                    // Standardmäßig aufgeklappt, außer gespeicherter Zustand sagt etwas anderes
+                    const isCollapsed = savedStates[unitId] === 'collapsed';
+                    
+                    if (isCollapsed) {
+                        header.classList.add('collapsed');
+                        content.classList.remove('show');
+                    }
+                }
+            });
+        });
+        
+        // Funktion zum Ein-/Ausklappen einer Unit
+        function toggleUnit(header) {
+            const unitId = header.getAttribute('data-unit-id');
+            const content = document.getElementById('unit-' + unitId);
+            
+            if (content) {
+                const isCurrentlyCollapsed = header.classList.contains('collapsed');
+                
+                if (isCurrentlyCollapsed) {
+                    // Aufklappen
+                    header.classList.remove('collapsed');
+                    content.classList.add('show');
+                } else {
+                    // Einklappen
+                    header.classList.add('collapsed');
+                    content.classList.remove('show');
+                }
+                
+                // Zustand in localStorage speichern
+                const savedStates = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+                savedStates[unitId] = isCurrentlyCollapsed ? 'expanded' : 'collapsed';
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(savedStates));
+            }
+        }
+    </script>
+
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>

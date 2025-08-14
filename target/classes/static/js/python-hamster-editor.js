@@ -346,7 +346,7 @@ function clearConsoleOutput() {
 // Pyodide initialisieren
 async function initializePyodide() {
     addToConsole('Hamster icon made by Freepik from www.flaticon.com', 'info');
-    
+
     addToConsole('Pyodide wird geladen...', 'info');
     try {
         console.log('Lade Pyodide...');
@@ -624,7 +624,7 @@ print("Hamster-Befehle erfolgreich registriert: vor, linksUm, nimm, gib, vornFre
     window.getInputFromUser = function(prompt) {
         // Verwende Browser-Prompt für Benutzereingabe
         const userInput = window.prompt(prompt || "Eingabe:");
-        
+
         if (userInput !== null) {
             addToConsole(`💬 input("${prompt}"): "${userInput}"`, 'info');
             console.log(`input() ausgeführt: Prompt="${prompt}", Eingabe="${userInput}"`);
@@ -1401,6 +1401,10 @@ function loadConfiguration(index) {
 
     // Erstelle neue Territorium-Struktur nur bei Konfigurationswechsel
     createTerritoryStructure();
+
+    // Hamster-Display ohne Animation aktualisieren (Konfigurationswechsel)
+    updateHamsterDisplay(false);
+
     console.log(`Weltkonfiguration ${index + 1} geladen.`);
 
     // Button auf "Ausführen" zurücksetzen
@@ -1436,8 +1440,8 @@ function resetConfigurationData(index) {
     // Aktualisiere den aktuellen Index
     currentConfigIndex = index;
 
-    // Nur Display aktualisieren, keine DOM-Neuerstellung
-    updateHamsterDisplay();
+    // Hamster-Display ohne Animation aktualisieren (Reset)
+    updateHamsterDisplay(false);
     console.log(`Weltkonfiguration ${index + 1} Daten zurückgesetzt.`);
 }
 
@@ -1560,18 +1564,18 @@ function createTerritoryStructure() {
 
     territoryDiv.appendChild(territoryContainer);
 
-    // Initial Körner und Hamster positionieren
-    updateHamsterDisplay();
-    
+    // Initial Körner und Hamster positionieren (ohne Animation)
+    updateHamsterDisplay(false);
+
     // Zoom-Berechnung auch bei Fenstergröße-Änderungen
     const resizeObserver = new ResizeObserver(() => {
-        updateHamsterDisplay();
+        updateHamsterDisplay(false); // Keine Animation bei Resize
     });
     resizeObserver.observe(territoryDiv);
 }
 
 // Hamster-Display aktualisieren (nur Position, Rotation und Körner)
-function updateHamsterDisplay() {
+function updateHamsterDisplay(enableAnimation = true) {
     const territoryDiv = document.getElementById('hamsterTerritory');
     if (!territoryDiv || !hamsterState.world) return;
 
@@ -1584,28 +1588,28 @@ function updateHamsterDisplay() {
         const borderWidth = 17; // Seitliche Randbreite
         const borderHeight = 14; // Obere/untere Randbreite
         const cellSize = 40; // Größe einer Spielfeld-Zelle
-        
+
         const naturalWidth = (borderWidth * 2) + (size.x * cellSize);
         const naturalHeight = (borderHeight * 2) + (size.y * cellSize);
-        
+
         // Berechne verfügbaren Platz im hamsterTerritory Div
         const availableWidth = territoryDiv.clientWidth - 20; // 10px Padding links und rechts
         const availableHeight = territoryDiv.clientHeight - 20; // 10px Padding oben und unten
-        
+
         // Berechne Zoom-Faktoren für beide Richtungen
         const zoomFactorX = availableWidth / naturalWidth;
         const zoomFactorY = availableHeight / naturalHeight;
-        
+
         // Verwende das Minimum der beiden Faktoren, aber maximal 1.0 (nicht größer als natürliche Größe)
         const optimalZoom = Math.min(zoomFactorX, zoomFactorY, 1.0);
-        
+
         // Nur zoomen wenn nötig (wenn Container zu groß ist)
         if (optimalZoom < 1.0) {
             territoryContainer.style.zoom = optimalZoom.toString();
         } else {
             territoryContainer.style.zoom = '1';
         }
-        
+
         console.log(`Territory-Zoom berechnet: verfügbar=${availableWidth}x${availableHeight}, natürlich=${naturalWidth}x${naturalHeight}, zoom=${optimalZoom.toFixed(3)}`);
     }
 
@@ -1630,7 +1634,7 @@ function updateHamsterDisplay() {
     const hamsterSprite = document.getElementById('hamster-sprite');
     if (hamsterSprite) {
         // Stelle sicher, dass Transition korrekt gesetzt ist
-        if (animationSpeed > 0) {
+        if (enableAnimation && animationSpeed > 0) {
             hamsterSprite.style.transition = `left ${animationSpeed}ms ease, top ${animationSpeed}ms ease, transform ${animationSpeed}ms ease`;
         } else {
             hamsterSprite.style.transition = 'none';
@@ -1647,27 +1651,38 @@ function updateHamsterDisplay() {
         hamsterSprite.style.left = leftPos + 'px';
         hamsterSprite.style.top = topPos + 'px';
 
-        // Spezielle Rotationslogik für south->east Übergang
-        if (hamsterState.direction === 'east' && hamsterSprite.style.transform === 'rotate(0deg)') {
-            // Erste Rotation auf -90° mit Animation (von south nach east)
-            hamsterSprite.style.transform = 'rotate(-90deg)';
+        if (enableAnimation) {
+            // Spezielle Rotationslogik für south->east Übergang
+            if (hamsterState.direction === 'east' && hamsterSprite.style.transform === 'rotate(0deg)') {
+                // Erste Rotation auf -90° mit Animation (von south nach east)
+                hamsterSprite.style.transform = 'rotate(-90deg)';
 
-            // Nach Animation auf 270° ohne Animation wechseln
-            setTimeout(() => {
-                // Animation temporär deaktivieren
-                const originalTransition = hamsterSprite.style.transition;
-                hamsterSprite.style.transition = 'none';
-
-                // Auf 270° setzen (visuell identisch mit -90°)
-                hamsterSprite.style.transform = 'rotate(270deg)';
-
-                // Animation nach kurzer Pause wieder aktivieren
+                // Nach Animation auf 270° ohne Animation wechseln
                 setTimeout(() => {
-                    hamsterSprite.style.transition = originalTransition;
-                }, 10);
-            }, animationSpeed > 0 ? animationSpeed : 50);
+                    // Animation temporär deaktivieren
+                    const originalTransition = hamsterSprite.style.transition;
+                    hamsterSprite.style.transition = 'none';
+
+                    // Auf 270° setzen (visuell identisch mit -90°)
+                    hamsterSprite.style.transform = 'rotate(270deg)';
+
+                    // Animation nach kurzer Pause wieder aktivieren
+                    setTimeout(() => {
+                        hamsterSprite.style.transition = originalTransition;
+                    }, 10);
+                }, animationSpeed > 0 ? animationSpeed : 50);
+            } else {
+                // Normale Rotation für andere Richtungen
+                const rotations = {
+                    south: 0,
+                    west: 90,
+                    north: 180,
+                    east: 270
+                };
+                hamsterSprite.style.transform = `rotate(${rotations[hamsterState.direction] || 0}deg)`;
+            }
         } else {
-            // Normale Rotation für andere Richtungen
+            // Ohne Animation: Direkte Rotation ohne spezielle Übergangslogik
             const rotations = {
                 south: 0,
                 west: 90,
@@ -1727,16 +1742,18 @@ function loadContentToView(content) {
                 console.warn(`Gespeicherter Index ${data.currentConfigIndex} ist ungültig. Verwende Index 0.`);
                 currentConfigIndex = 0;
             }
-            
+
             const configSelect = document.getElementById('worldConfigSelect');
             if (configSelect) {
                 configSelect.value = currentConfigIndex;
             }
             loadConfiguration(currentConfigIndex);
+            updateConfigSelector(); // Anzeige aktualisieren
         } else {
             // Wenn keine Konfiguration gespeichert ist, lade die erste als Standard
             currentConfigIndex = 0;
             loadConfiguration(currentConfigIndex);
+            updateConfigSelector(); // Anzeige aktualisieren
         }
 
         // Lade die gespeicherte Geschwindigkeit
@@ -1744,7 +1761,7 @@ function loadContentToView(content) {
             animationSpeed = data.animationSpeed;
             const speedSelector = document.getElementById('speedSelector');
             if (speedSelector) {
-                speedSelector.textContent = `${animationSpeed}ms`;
+                speedSelector.innerHTML = `<i class="fas fa-tachometer-alt"></i> ${animationSpeed}ms`;
             }
             updateHamsterTransition(); // Transition aktualisieren
         }
