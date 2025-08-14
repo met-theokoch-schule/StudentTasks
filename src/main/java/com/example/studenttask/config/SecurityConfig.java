@@ -34,7 +34,8 @@ public class SecurityConfig {
                                 .userService(oauth2UserService()))
                         .successHandler((request, response, authentication) -> {
                             System.out.println("🔄 OAuth2 Success Handler called");
-                            response.sendRedirect("/dashboard");
+                            String contextPath = request.getContextPath();
+                            response.sendRedirect(contextPath + "/dashboard");
                         })
                         .failureUrl("/login?error=true"))
                 .exceptionHandling(exceptions -> exceptions
