@@ -14,14 +14,30 @@
     <groupId>com.example</groupId>
     <artifactId>student-task-management</artifactId>
     <version>1.0.0</version>
-    <packaging>war</packaging>
+    <packaging>${packaging.type}</packaging>
 
     <name>Student Task Management System</name>
     <description>A web-based system for managing student tasks with OpenID Connect authentication</description>
 
     <properties>
         <java.version>17</java.version>
+        <packaging.type>jar</packaging.type>
     </properties>
+
+    <profiles>
+        <profile>
+            <id>war</id>
+            <properties>
+                <packaging.type>war</packaging.type>
+            </properties>
+        </profile>
+        <profile>
+            <id>jar</id>
+            <properties>
+                <packaging.type>jar</packaging.type>
+            </properties>
+        </profile>
+    </profiles>
 
     <dependencies>
         <!-- Spring Boot Starters -->
