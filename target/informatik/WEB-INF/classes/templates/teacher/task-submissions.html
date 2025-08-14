@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Aufgaben-Submissions</title>
+    <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/custom.css}" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" th:href="@{/student/dashboard}">
+                <i class="fas fa-chalkboard-teacher"></i> Lehrer-Bereich
+            </a>
+            <div class="navbar-nav me-auto">
+                <a class="nav-link" th:href="@{/teacher/dashboard}">Dashboard</a>
+                <a class="nav-link" th:href="@{/teacher/tasks}">Aufgaben</a>
+                <a class="nav-link" th:href="@{/teacher/groups}">Gruppen</a>
+            </div>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3" sec:authentication="principal.attributes['name']"></span>
+                <a class="btn btn-outline-light" th:href="@{/logout}">Abmelden</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a th:href="@{/teacher/dashboard}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a th:href="@{/teacher/tasks}">Aufgaben</a></li>
+                <li class="breadcrumb-item active">Submissions</li>
+            </ol>
+        </nav>
+
+        <div class="card">
+            <div class="card-header">
+                <h5>Submissions für: <span th:text="${task.title}">Aufgabentitel</span></h5>
+                <small class="text-muted">Erstellt am: <span th:text="${#temporals.format(task.createdAt, 'dd.MM.yyyy HH:mm')}">Datum</span></small>
+            </div>
+            <div class="card-body">
+                <div th:if="${userTasks != null and !userTasks.isEmpty()}">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Schüler</th>
+                                    <th>Status</th>
+                                    <th>Gestartet am</th>
+                                    <th>Letzte Änderung</th>
+                                    <th>Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="userTask : ${userTasks}">
+                                    <td th:text="${userTask.user.name}">Schülername</td>
+                                    <td>
+                                        <span th:if="${userTask.status != null}" 
+                                              th:text="${userTask.status.name}" 
+                                              th:class="'badge ' + (${userTask.status.name == 'VOLLSTÄNDIG'} ? 'bg-success' : (${userTask.status.name == 'ABGEGEBEN'} ? 'bg-warning' : (${userTask.status.name == 'IN_BEARBEITUNG'} ? 'bg-primary' : (${userTask.status.name == 'ÜBERARBEITUNG_NÖTIG'} ? 'bg-danger' : 'bg-secondary'))))">
+                                            Status
+                                        </span>
+                                        <span th:unless="${userTask.status != null}" class="badge bg-secondary">Kein Status</span>
+                                    </td>
+                                    <td th:text="${userTask.startedAt != null ? #temporals.format(userTask.startedAt, 'dd.MM.yyyy HH:mm') : 'Nicht gestartet'}">Startdatum</td>
+                                    <td th:text="${userTask.lastModified != null ? #temporals.format(userTask.lastModified, 'dd.MM.yyyy HH:mm') : 'Nie'}">Änderungsdatum</td>
+                                    <td>
+                                        <a th:href="@{'/teacher/submissions/' + ${userTask.id}(returnUrl=${currentUrl})}" class="btn btn-warning btn-sm">
+                                            <i class="fas fa-star"></i> Review
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div th:if="${userTasks == null or userTasks.isEmpty()}" class="alert alert-info">
+                    Noch keine Submissions für diese Aufgabe vorhanden.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>

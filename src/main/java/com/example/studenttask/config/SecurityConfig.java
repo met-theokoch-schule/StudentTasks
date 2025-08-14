@@ -13,7 +13,6 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -26,40 +25,33 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/", "/login", "/error", "/webjars/**", "/css/**", "/js/**").permitAll()
-                .requestMatchers("/api/**").authenticated()
-                .anyRequest().authenticated()
-            )
-            .oauth2Login(oauth2 -> oauth2
-                .userInfoEndpoint(userInfo -> userInfo
-                    .userService(oauth2UserService())
-                )
-                .successHandler((request, response, authentication) -> {
-                    System.out.println("🔄 OAuth2 Success Handler called");
-                    response.sendRedirect("/dashboard");
-                })
-                .failureUrl("/login?error=true")
-            )
-            .exceptionHandling(exceptions -> exceptions
-                    .accessDeniedPage("/access-denied")
-                )
-            .logout(logout -> logout
-                .logoutSuccessUrl("/")
-                .invalidateHttpSession(true)
-                .clearAuthentication(true)
-            )
-            .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/**")
-            )
-            .headers(headers -> headers
-                .frameOptions().sameOrigin()
-            )
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED)
-                .maximumSessions(1)
-                .expiredUrl("/login?expired=true")
-            );
+                .authorizeHttpRequests(authz -> authz
+                        .requestMatchers("/", "/login", "/error", "/webjars/**", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/api/**").authenticated()
+                        .anyRequest().authenticated())
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(oauth2UserService()))
+                        .successHandler((request, response, authentication) -> {
+                            System.out.println("🔄 OAuth2 Success Handler called");
+                            response.sendRedirect("/dashboard");
+                        })
+                        .failureUrl("/login?error=true"))
+                .exceptionHandling(exceptions -> exceptions
+                        .accessDeniedPage("/access-denied"))
+                .logout(logout -> logout
+                        .logoutSuccessUrl("/")
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true))
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/api/**"))
+                .headers(headers -> headers
+                        .frameOptions().sameOrigin())
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(
+                                org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED)
+                        .maximumSessions(1)
+                        .expiredUrl("/login?expired=true"));
 
         return http.build();
     }

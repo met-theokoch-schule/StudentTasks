@@ -1,0 +1,1414 @@
+
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML/CSS Editor - [[${task.title ?: 'HTML/CSS Editor'}]]</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- CodeMirror CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/theme/material.min.css">
+    
+    <!-- Font Awesome für Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Marked.js für Markdown-Verarbeitung -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@5.1.1/marked.min.js"></script>
+    
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .main-container {
+            height: 100vh;
+            min-height: 600px;
+            overflow: hidden;
+        }
+        
+        .left-panel {
+            height: 100%;
+            border-right: 1px solid #dee2e6;
+            display: flex;
+            flex-direction: column;
+            min-height: 600px;
+        }
+        
+        .right-panel {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            min-height: 600px;
+        }
+        
+        .editor-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            min-height: 400px;
+        }
+        
+        .preview-container {
+            flex: 1;
+            position: relative;
+            min-height: 400px;
+        }
+        
+        /* Responsive Anpassungen */
+        @media (max-width: 768px) {
+            .left-panel, .right-panel {
+                height: 600px;
+                min-height: 600px;
+            }
+            
+            .editor-container, .preview-container {
+                min-height: 450px;
+            }
+        }
+        
+        .preview-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+        
+        .file-tabs {
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            padding: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+            min-height: 60px;
+        }
+        
+        .file-tab {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        
+        .file-tab:hover {
+            background: #e9ecef;
+        }
+        
+        .file-tab.active {
+            background: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+        }
+        
+        .file-tab .close-btn {
+            margin-left: 0.25rem;
+            cursor: pointer;
+            opacity: 0.7;
+            font-weight: bold;
+        }
+        
+        .file-tab .close-btn:hover {
+            opacity: 1;
+            color: #dc3545;
+        }
+        
+        .file-tab.active .close-btn:hover {
+            color: #ffcccc;
+        }
+        
+        .CodeMirror {
+            height: 100% !important;
+            font-size: 14px;
+        }
+        
+        .toolbar {
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            padding: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .main-tabs {
+            background: #e9ecef;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .main-tabs .nav-link {
+            border-radius: 0;
+            border: none;
+            background: transparent;
+        }
+        
+        .main-tabs .nav-link.active {
+            background: white;
+            border-bottom: 2px solid #0d6efd;
+        }
+        
+        .task-content {
+            padding: 0.5rem 1rem;
+            height: 100%;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+        
+        
+        
+        .file-explorer {
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            padding: 0.5rem;
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem;
+            cursor: pointer;
+            border-radius: 0.25rem;
+        }
+        
+        .file-item:hover {
+            background: #e9ecef;
+        }
+        
+        .file-item.active {
+            background: #0d6efd;
+            color: white;
+        }
+        
+        .image-preview {
+            max-width: 100px;
+            max-height: 100px;
+            margin: 0.5rem 0;
+        }
+        
+        /* Markdown Content Styling */
+        .markdown-content {
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .markdown-content h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 0.5rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .markdown-content h2 {
+            color: #34495e;
+            border-bottom: 2px solid #95a5a6;
+            padding-bottom: 0.3rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.8rem;
+        }
+        
+        .markdown-content h3 {
+            color: #2c3e50;
+            margin-top: 1.2rem;
+            margin-bottom: 0.6rem;
+        }
+        
+        .markdown-content h4 {
+            color: #34495e;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .markdown-content p {
+            margin-bottom: 1rem;
+        }
+        
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #e74c3c;
+        }
+        
+        .markdown-content pre {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        
+        .markdown-content pre code {
+            background: none;
+            color: #ecf0f1;
+            padding: 0;
+        }
+        
+        .markdown-content ul, .markdown-content ol {
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+        }
+        
+        .markdown-content li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .markdown-content blockquote {
+            border-left: 4px solid #3498db;
+            padding-left: 1rem;
+            margin: 1rem 0;
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+        
+        .markdown-content strong {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .markdown-content em {
+            font-style: italic;
+            color: #34495e;
+        }
+        
+        .markdown-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+        
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        /* Tutorial Navigation */
+        .tutorial-navigation {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0;
+            padding: 0.25rem;
+            background-color: #f8f9fa;
+            border-radius: 0;
+            border-bottom: 1px solid #dee2e6;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .tutorial-dots {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        .tutorial-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #dee2e6;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .tutorial-dot.active {
+            background-color: #0d6efd;
+        }
+        
+        .tutorial-dot:hover {
+            background-color: #6c757d;
+        }
+        
+        .tutorial-arrow {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: #6c757d;
+            cursor: pointer;
+            padding: 0.3rem;
+            border-radius: 0.25rem;
+            transition: all 0.3s;
+        }
+        
+        .tutorial-arrow:hover:not(:disabled) {
+            background-color: #e9ecef;
+            color: #0d6efd;
+        }
+        
+        .tutorial-arrow:disabled {
+            color: #dee2e6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <!-- Versteckte Content-Divs für JavaScript -->
+    <div id="default-task-description" style="display: none;" th:text="${task?.description ?: ''}">
+# HTML/CSS Grundlagen
+
+## Lernziele
+In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
+
+### Was Sie erstellen werden:
+- Eine einfache HTML-Seite mit Struktur
+- CSS-Styling für ansprechende Gestaltung
+- Verknüpfung mehrerer Seiten
+
+## Anforderungen
+1. Erstellen Sie eine **index.html** Datei als Startseite
+2. Fügen Sie mindestens die folgenden HTML-Elemente hinzu:
+   - `<h1>` für die Hauptüberschrift
+   - `<p>` für Textabsätze
+   - `<a>` für Links
+   - `<img>` für Bilder (optional)
+
+3. Erstellen Sie eine **style.css** Datei für das Styling
+4. Verknüpfen Sie die CSS-Datei mit Ihrer HTML-Seite
+
+## Bewertungskriterien
+- ✅ Korrekte HTML-Struktur
+- ✅ Funktionierendes CSS-Styling
+- ✅ Sauberer und lesbarer Code
+- ✅ Responsive Design (optional)
+
+**Viel Erfolg!** 🚀
+    </div>
+
+    <div id="default-tutorial-content" style="display: none;" th:text="${task?.tutorial ?: ''}">
+[
+    {
+        "title": "HTML Grundlagen",
+        "content": "# Tutorial 1: HTML Grundlagen\n\n## Was ist HTML?\n**HTML** (HyperText Markup Language) ist die Grundlage jeder Webseite. Es definiert die Struktur und den Inhalt.\n\n### Grundstruktur einer HTML-Datei\n\n```html\n<!DOCTYPE html>\n<html lang=\"de\">\n<head>\n    <meta charset=\"UTF-8\">\n    <title>Meine erste Webseite</title>\n</head>\n<body>\n    <h1>Willkommen!</h1>\n    <p>Das ist mein erster Paragraph.</p>\n</body>\n</html>\n```\n\n## Wichtige HTML-Elemente\n\n### Überschriften\n```html\n<h1>Hauptüberschrift</h1>\n<h2>Unterüberschrift</h2>\n<h3>Weitere Ebene</h3>\n```\n\n### Textformatierung\n```html\n<p>Ein normaler Paragraph</p>\n<strong>Fettgedruckter Text</strong>\n<em>Kursiver Text</em>\n```\n\n### Links und Bilder\n```html\n<a href=\"seite2.html\">Link zu einer anderen Seite</a>\n<img src=\"bild.jpg\" alt=\"Beschreibung des Bildes\">\n```\n\n## Aufgaben\n- [ ] Erstellen Sie eine HTML-Datei mit der Grundstruktur\n- [ ] Fügen Sie verschiedene Überschriften hinzu\n- [ ] Schreiben Sie mehrere Paragraphen\n- [ ] Erstellen Sie Links zwischen Seiten\n\n**Weiter zum nächsten Tutorial: CSS Grundlagen →**"
+    },
+    {
+        "title": "CSS Grundlagen",
+        "content": "# Tutorial 2: CSS Grundlagen\n\n## Was ist CSS?\n**CSS** (Cascading Style Sheets) bestimmt das **Aussehen** Ihrer Webseite - Farben, Schriftarten, Layout und mehr!\n\n### CSS mit HTML verknüpfen\n\n```html\n<head>\n    <link rel=\"stylesheet\" href=\"style.css\">\n</head>\n```\n\n### Grundlegende CSS-Syntax\n\n```css\nselektor {\n    eigenschaft: wert;\n    weitere-eigenschaft: wert;\n}\n```\n\n## Wichtige CSS-Eigenschaften\n\n### Farben und Text\n```css\nh1 {\n    color: #3498db;        /* Textfarbe */\n    background-color: #f8f9fa;  /* Hintergrundfarbe */\n    font-size: 2em;        /* Schriftgröße */\n    font-family: Arial, sans-serif;  /* Schriftart */\n}\n```\n\n### Layout und Spacing\n```css\n.container {\n    width: 80%;           /* Breite */\n    margin: 0 auto;       /* Zentrierung */\n    padding: 20px;        /* Innenabstand */\n    border: 1px solid #ddd;  /* Rahmen */\n}\n```\n\n### Hover-Effekte\n```css\nbutton:hover {\n    background-color: #2980b9;\n    cursor: pointer;\n}\n```\n\n## Praktische Übung\nProbieren Sie folgende Styles in Ihrer CSS-Datei:\n\n```css\nbody {\n    font-family: Arial, sans-serif;\n    line-height: 1.6;\n    margin: 0;\n    padding: 20px;\n}\n\nh1 {\n    color: #2c3e50;\n    text-align: center;\n}\n\np {\n    color: #34495e;\n    margin-bottom: 15px;\n}\n```\n\n## Aufgaben\n- [ ] Erstellen Sie eine CSS-Datei\n- [ ] Verknüpfen Sie CSS mit HTML\n- [ ] Experimentieren Sie mit Farben\n- [ ] Probieren Sie verschiedene Schriftarten aus\n\n**← Zurück | Weiter →**"
+    },
+    {
+        "title": "Layout mit CSS",
+        "content": "# Tutorial 3: Layout mit CSS\n\n## Flexbox - Modernes Layout\n**Flexbox** macht es einfach, Elemente zu positionieren und auszurichten.\n\n### Flex Container erstellen\n```css\n.container {\n    display: flex;\n    justify-content: center;  /* horizontal zentrieren */\n    align-items: center;      /* vertikal zentrieren */\n    gap: 20px;               /* Abstand zwischen Elementen */\n}\n```\n\n### Flex Richtung\n```css\n.row {\n    display: flex;\n    flex-direction: row;     /* nebeneinander */\n}\n\n.column {\n    display: flex;\n    flex-direction: column;  /* untereinander */\n}\n```\n\n## Grid - Raster-Layout\n**CSS Grid** ist perfekt für komplexere Layouts.\n\n```css\n.grid-container {\n    display: grid;\n    grid-template-columns: 1fr 2fr 1fr;  /* 3 Spalten */\n    grid-gap: 20px;\n}\n```\n\n## Responsive Design\nIhre Webseite soll auf allen Geräten gut aussehen!\n\n### Media Queries\n```css\n/* Desktop */\n.container {\n    max-width: 1200px;\n}\n\n/* Tablet */\n@media (max-width: 768px) {\n    .container {\n        max-width: 100%;\n        padding: 10px;\n    }\n}\n\n/* Handy */\n@media (max-width: 480px) {\n    .grid-container {\n        grid-template-columns: 1fr;  /* nur 1 Spalte */\n    }\n}\n```\n\n## Praktisches Beispiel\nErstellen Sie ein Header-Navigation-Content Layout:\n\n```css\n.page-layout {\n    display: grid;\n    grid-template-rows: auto 1fr auto;\n    min-height: 100vh;\n}\n\n.header {\n    background: #3498db;\n    color: white;\n    padding: 1rem;\n}\n\n.content {\n    padding: 2rem;\n}\n\n.footer {\n    background: #2c3e50;\n    color: white;\n    padding: 1rem;\n    text-align: center;\n}\n```\n\n## Aufgaben\n- [ ] Experimentieren Sie mit Flexbox\n- [ ] Probieren Sie Grid-Layout aus\n- [ ] Machen Sie Ihr Design responsive\n- [ ] Testen Sie verschiedene Bildschirmgrößen\n\n**← Zurück zum Anfang**"
+    }
+]
+    </div>
+
+    <!-- Versteckte Variablen für JavaScript -->
+    <script>
+        // Default values for standalone testing
+        window.taskId = 1;
+        window.isTeacherView = false;
+        window.userTaskId = null;
+        window.currentContent = '{}';
+        window.canEdit = true;
+        window.isSubmitted = false;
+        
+        // Content aus versteckten DIVs lesen
+        const taskDescriptionDiv = document.getElementById('default-task-description');
+        window.taskDescription = taskDescriptionDiv ? taskDescriptionDiv.textContent.trim() : '';
+        
+        // Tutorial Content aus verstecktem DIV lesen und parsen
+        const tutorialDiv = document.getElementById('default-tutorial-content');
+        const tutorialText = tutorialDiv ? tutorialDiv.textContent.trim() : '';
+        try {
+            if (tutorialText.startsWith('[')) {
+                window.tutorialContent = JSON.parse(tutorialText);
+            } else {
+                // Falls es kein JSON Array ist, als einzelnes Tutorial behandeln
+                window.tutorialContent = [
+                    {
+                        title: "HTML/CSS Tutorial",
+                        content: tutorialText
+                    }
+                ];
+            }
+        } catch (error) {
+            console.warn('Fehler beim Parsen der Tutorial-Daten, verwende Fallback:', error);
+            window.tutorialContent = [];
+        }
+    </script>
+    
+    <!-- JavaScript-Konfiguration -->
+    <script th:inline="javascript">
+        // Get values from Thymeleaf
+        window.taskId = [[${task.id}]];
+        window.isTeacherView = [[${isTeacherView ?: false}]];
+        window.userTaskId = [[${userTask?.id}]];
+        window.currentContent = [[${currentContent ?: '{}'}]];
+        window.canEdit = [[${canEdit ?: true}]];
+        window.isSubmitted = [[${userTask?.status?.name == 'VOLLSTÄNDIG'}]];
+        
+        console.log('✅ Konfiguration geladen:', {
+            taskId: window.taskId,
+            canEdit: window.canEdit,
+            isSubmitted: window.isSubmitted,
+            isTeacherView: window.isTeacherView,
+            userTaskId: window.userTaskId
+        });
+    </script>
+
+    <div class="main-container">
+        <div class="row h-100 g-0">
+            <!-- Linke Seite: Editor (immer sichtbar) -->
+            <div class="col-md-6 left-panel">
+                <!-- Toolbar -->
+                <div class="toolbar">
+                    <button class="btn btn-sm btn-outline-primary" onclick="createNewFile('html')">
+                        <i class="fas fa-plus"></i> HTML
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="createNewFile('css')">
+                        <i class="fas fa-plus"></i> CSS
+                    </button>
+                    <input type="file" id="imageUpload" accept="image/*" style="display: none;" onchange="handleImageUpload(event)">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('imageUpload').click()">
+                        <i class="fas fa-image"></i> Bild
+                    </button>
+                    <div class="ms-auto d-flex gap-2 align-items-center">
+                        <span id="save-status-icon" 
+                              class="fas fa-circle text-muted" 
+                              style="font-size: 0.8rem; cursor: help;"
+                              data-bs-toggle="tooltip" 
+                              data-bs-placement="top" 
+                              title="Bereit zum Speichern"></span>
+                        <button class="btn btn-sm btn-success" onclick="saveContent()" id="saveButton">
+                            <i class="fas fa-save"></i> Speichern
+                        </button>
+                        <button class="btn btn-sm btn-primary" onclick="submitTask()" id="submitButton">
+                            <i class="fas fa-paper-plane"></i> Abgeben
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Datei-Tabs -->
+                <div class="file-tabs" id="fileTabs">
+                    <div class="text-muted small">Erstellen Sie eine neue Datei um zu beginnen...</div>
+                </div>
+
+                <!-- Editor -->
+                <div class="editor-container">
+                    <textarea id="editor"></textarea>
+                </div>
+            </div>
+
+            <!-- Rechte Seite: Tabs für Vorschau/Aufgabe/Tutorial -->
+            <div class="col-md-6 right-panel">
+                <!-- Tabs für rechte Seite -->
+                <div class="d-flex align-items-center main-tabs" style="background: #e9ecef; border-bottom: 1px solid #dee2e6;">
+                    <ul class="nav nav-tabs flex-grow-1" id="rightTabs" role="tablist" style="border-bottom: none; background: transparent;">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="preview-tab" data-bs-toggle="tab" data-bs-target="#preview-pane" type="button" role="tab">
+                                <i class="fas fa-eye"></i> Vorschau
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation" id="task-tab-container" style="display: none;">
+                            <button class="nav-link" id="task-tab" data-bs-toggle="tab" data-bs-target="#task-pane" type="button" role="tab">
+                                <i class="fas fa-tasks"></i> Aufgabe
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation" id="tutorial-tab-container" style="display: none;">
+                            <button class="nav-link" id="tutorial-tab" data-bs-toggle="tab" data-bs-target="#tutorial-pane" type="button" role="tab">
+                                <i class="fas fa-graduation-cap"></i> Tutorial
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <!-- Preview controls - only visible when preview tab is active -->
+                    <div class="d-flex align-items-center gap-2 me-3" id="previewControls">
+                        <select class="form-select form-select-sm" style="width: auto;" id="previewFile" onchange="switchPreviewFile()">
+                            <option value="">Datei auswählen...</option>
+                        </select>
+                        <a href="/student/dashboard" class="btn btn-sm btn-outline-secondary" title="Zum Dashboard">
+                            <i class="fas fa-home"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="tab-content h-100">
+                    <!-- Vorschau-Tab -->
+                    <div class="tab-pane fade show active h-100" id="preview-pane" role="tabpanel">
+                        <div class="preview-container h-100">
+                            <iframe id="preview" class="preview-iframe" srcdoc="<p style='padding: 20px; text-align: center; color: #666;'>Wählen Sie eine HTML-Datei für die Vorschau aus.</p>"></iframe>
+                        </div>
+                    </div>
+
+                    <!-- Aufgaben-Tab -->
+                    <div class="tab-pane fade h-100" id="task-pane" role="tabpanel">
+                        <div class="task-content h-100">
+                            <div id="task-description" class="markdown-content">
+                                <!-- Wird durch JavaScript mit Markdown-Inhalt gefüllt -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tutorial-Tab -->
+                    <div class="tab-pane fade h-100" id="tutorial-pane" role="tabpanel">
+                        <div class="task-content h-100">
+                            <!-- Tutorial Navigation -->
+                            <div class="tutorial-navigation" id="tutorial-navigation">
+                                <button class="tutorial-arrow" id="tutorial-prev" onclick="previousTutorial()" disabled>
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                
+                                <div class="tutorial-dots" id="tutorial-dots">
+                                    <!-- Wird durch JavaScript generiert -->
+                                </div>
+                                
+                                <button class="tutorial-arrow" id="tutorial-next" onclick="nextTutorial()">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Tutorial Content -->
+                            <div id="tutorial-content" class="markdown-content">
+                                <!-- Wird durch JavaScript mit Tutorial-Inhalt gefüllt -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- CodeMirror JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/addon/edit/closetag.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/addon/edit/closebrackets.min.js"></script>
+
+    <script>
+        let editor;
+        let projectData = {
+            files: {},
+            images: {},
+            currentFile: null
+        };
+        let hasUnsavedChanges = false;
+        
+        // Tutorial System
+        let tutorialContents = [];
+        let currentTutorialIndex = 0;
+
+        // Initialisierung
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Initialisiere HTML/CSS Editor...');
+            initializeEditor();
+            loadContent();
+            
+            // Sofortige Initialisierung der Inhalte
+            console.log('📝 Starte Content-Initialisierung...');
+            setTimeout(() => {
+                initializeMarkdownContent();
+                initializeTutorial();
+            }, 50);
+            
+            // Auto-save entfernt - nur manuelle Speicherung
+
+            // Warnung vor dem Verlassen der Seite
+            window.addEventListener('beforeunload', function(e) {
+                if (hasUnsavedChanges) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
+        });
+
+        function initializeEditor() {
+            console.log('📝 Initialisiere CodeMirror Editor...');
+            editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+                lineNumbers: true,
+                mode: 'htmlmixed',
+                theme: 'material',
+                autoCloseTags: true,
+                autoCloseBrackets: true,
+                indentUnit: 2,
+                tabSize: 2,
+                readOnly: !window.canEdit || window.isSubmitted
+            });
+
+            editor.on('change', function() {
+                if (projectData.currentFile && projectData.files[projectData.currentFile]) {
+                    projectData.files[projectData.currentFile].content = editor.getValue();
+                    markAsChanged();
+                    // Automatische Vorschau-Aktualisierung bei HTML- und CSS-Dateien
+                    if (projectData.files[projectData.currentFile].type === 'html' || 
+                        projectData.files[projectData.currentFile].type === 'css') {
+                        updatePreview();
+                    }
+                }
+            });
+
+            // Standardnachricht wenn kein File ausgewählt
+            editor.setValue('// Wählen Sie eine Datei aus oder erstellen Sie eine neue');
+            editor.setOption('readOnly', true);
+            
+            // Initial Status setzen
+            updateSaveStatus('saved');
+        }
+
+        function createNewFile(type) {
+            const fileName = prompt(`Name der neuen ${type.toUpperCase()}-Datei (ohne Erweiterung):`);
+            if (!fileName || fileName.trim() === '') return;
+
+            let cleanName = fileName.trim().replace(/[^a-zA-Z0-9_.-]/g, '');
+            if (cleanName === '') {
+                alert('Bitte geben Sie einen gültigen Dateinamen ein.');
+                return;
+            }
+
+            // Prüfen ob bereits die richtige Erweiterung vorhanden ist
+            const expectedExtension = `.${type}`;
+            let fullName;
+            
+            if (cleanName.toLowerCase().endsWith(expectedExtension.toLowerCase())) {
+                // Bereits korrekte Erweiterung vorhanden
+                fullName = cleanName;
+            } else {
+                // Andere Erweiterung entfernen falls vorhanden
+                const dotIndex = cleanName.lastIndexOf('.');
+                if (dotIndex > 0) {
+                    const currentExtension = cleanName.substring(dotIndex);
+                    // Nur entfernen wenn es eine bekannte Web-Erweiterung ist
+                    const webExtensions = ['.html', '.htm', '.css', '.js', '.txt'];
+                    if (webExtensions.includes(currentExtension.toLowerCase())) {
+                        cleanName = cleanName.substring(0, dotIndex);
+                    }
+                }
+                fullName = `${cleanName}${expectedExtension}`;
+            }
+
+            if (projectData.files[fullName]) {
+                alert('Eine Datei mit diesem Namen existiert bereits!');
+                return;
+            }
+
+            const template = type === 'html' ? 
+`<!DOCTYPE html>
+<html>
+
+<head>
+</head>
+
+<body>
+  Hallo Welt!
+</body>
+
+</html>` :
+`/* 🎨 Deine Bühne für Farben, Formen und Layout – CSS geht hier los! */`;
+
+            projectData.files[fullName] = {
+                type: type,
+                content: template
+            };
+
+            console.log(`✅ Neue ${type.toUpperCase()}-Datei erstellt: ${fullName}`);
+            updateFileTabs();
+            switchToFile(fullName);
+            updatePreviewOptions();
+            markAsChanged();
+        }
+
+        function updateFileTabs() {
+            const tabsContainer = document.getElementById('fileTabs');
+            tabsContainer.innerHTML = '';
+
+            const fileCount = Object.keys(projectData.files).length;
+            if (fileCount === 0) {
+                tabsContainer.innerHTML = '<div class="text-muted small">Erstellen Sie eine neue Datei um zu beginnen...</div>';
+                return;
+            }
+
+            // Dateien sortieren: HTML zuerst, dann CSS
+            const sortedFiles = Object.keys(projectData.files).sort((a, b) => {
+                const aType = projectData.files[a].type;
+                const bType = projectData.files[b].type;
+                if (aType === bType) return a.localeCompare(b);
+                return aType === 'html' ? -1 : 1;
+            });
+
+            sortedFiles.forEach(fileName => {
+                const file = projectData.files[fileName];
+                const tab = document.createElement('div');
+                tab.className = `file-tab ${fileName === projectData.currentFile ? 'active' : ''}`;
+                tab.innerHTML = `
+                    <i class="fas fa-${file.type === 'html' ? 'file-code' : 'palette'}"></i>
+                    <span>${fileName}</span>
+                    <span class="close-btn" onclick="event.stopPropagation(); removeFile('${fileName}')">&times;</span>
+                `;
+                tab.onclick = () => switchToFile(fileName);
+                tabsContainer.appendChild(tab);
+            });
+
+            // Bilder anzeigen
+            Object.keys(projectData.images).forEach(imageName => {
+                const tab = document.createElement('div');
+                tab.className = 'file-tab';
+                tab.innerHTML = `
+                    <i class="fas fa-image"></i>
+                    <span>${imageName}</span>
+                    <span class="close-btn" onclick="event.stopPropagation(); removeImage('${imageName}')">&times;</span>
+                `;
+                tabsContainer.appendChild(tab);
+            });
+        }
+
+        function switchToFile(fileName) {
+            if (!projectData.files[fileName]) {
+                console.error('❌ Datei nicht gefunden:', fileName);
+                return;
+            }
+
+            console.log('🔄 Wechsle zu Datei:', fileName);
+            projectData.currentFile = fileName;
+            const file = projectData.files[fileName];
+            
+            editor.setValue(file.content);
+            editor.setOption('mode', file.type === 'html' ? 'htmlmixed' : 'css');
+            editor.setOption('readOnly', !window.canEdit || window.isSubmitted);
+            
+            updateFileTabs();
+            
+            // Auto-preview für HTML Dateien
+            if (file.type === 'html') {
+                document.getElementById('previewFile').value = fileName;
+                updatePreview();
+            }
+        }
+
+        function removeFile(fileName) {
+            if (!confirm(`Möchten Sie die Datei "${fileName}" wirklich löschen?`)) {
+                return;
+            }
+
+            console.log('🗑️ Lösche Datei:', fileName);
+            delete projectData.files[fileName];
+            
+            if (projectData.currentFile === fileName) {
+                const remainingFiles = Object.keys(projectData.files);
+                if (remainingFiles.length > 0) {
+                    switchToFile(remainingFiles[0]);
+                } else {
+                    projectData.currentFile = null;
+                    editor.setValue('// Erstellen Sie eine neue Datei um zu beginnen');
+                    editor.setOption('readOnly', true);
+                }
+            }
+            
+            updateFileTabs();
+            updatePreviewOptions();
+            markAsChanged();
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Dateigröße prüfen (150KB = 153600 Bytes)
+            const maxSize = 150 * 1024; // 150 KB in Bytes
+            if (file.size > maxSize) {
+                alert(`Das Bild "${file.name}" ist zu groß (${(file.size / 1024).toFixed(1)} KB). Maximale Dateigröße: 150 KB.`);
+                // Input zurücksetzen
+                event.target.value = '';
+                return;
+            }
+
+            console.log('📷 Lade Bild hoch:', file.name, `(${(file.size / 1024).toFixed(1)} KB)`);
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                projectData.images[file.name] = e.target.result;
+                updateFileTabs();
+                markAsChanged();
+                alert(`Bild "${file.name}" wurde hinzugefügt (${(file.size / 1024).toFixed(1)} KB). Sie können es in HTML mit <img src="${file.name}" alt=""> verwenden.`);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeImage(imageName) {
+            if (confirm(`Möchten Sie das Bild "${imageName}" wirklich löschen?`)) {
+                console.log('🗑️ Lösche Bild:', imageName);
+                delete projectData.images[imageName];
+                updateFileTabs();
+                markAsChanged();
+            }
+        }
+
+        function updatePreviewOptions() {
+            const select = document.getElementById('previewFile');
+            select.innerHTML = '<option value="">Datei auswählen...</option>';
+            
+            Object.keys(projectData.files).forEach(fileName => {
+                if (projectData.files[fileName].type === 'html') {
+                    const option = document.createElement('option');
+                    option.value = fileName;
+                    option.textContent = fileName;
+                    select.appendChild(option);
+                }
+            });
+        }
+
+        function switchPreviewFile() {
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const selectedFile = document.getElementById('previewFile').value;
+            if (!selectedFile || !projectData.files[selectedFile]) {
+                document.getElementById('preview').srcdoc = '<p style="padding: 20px; text-align: center; color: #666;">Wählen Sie eine HTML-Datei für die Vorschau aus.</p>';
+                return;
+            }
+
+            let htmlContent = projectData.files[selectedFile].content;
+            
+            // Nur verlinkte CSS-Dateien einbinden
+            const cssFiles = Object.keys(projectData.files).filter(name => 
+                projectData.files[name].type === 'css'
+            );
+            
+            cssFiles.forEach(cssFile => {
+                // Prüfen ob diese CSS-Datei im HTML verlinkt ist
+                const linkRegex = new RegExp(`<link[^>]*href=["']${cssFile}["'][^>]*>`, 'gi');
+                if (htmlContent.match(linkRegex)) {
+                    const cssContent = projectData.files[cssFile].content;
+                    // CSS inline einbinden nur wenn verlinkt
+                    htmlContent = htmlContent.replace(
+                        linkRegex,
+                        `<style>\n/* Inline CSS from ${cssFile} */\n${cssContent}\n</style>`
+                    );
+                }
+            });
+
+            // Bilder als Data-URLs einbetten
+            Object.keys(projectData.images).forEach(imageName => {
+                const regex = new RegExp(`src=["']${imageName}["']`, 'gi');
+                htmlContent = htmlContent.replace(regex, `src="${projectData.images[imageName]}"`);
+            });
+
+            // Relative Links zu anderen HTML-Dateien handhaben
+            Object.keys(projectData.files).forEach(fileName => {
+                if (projectData.files[fileName].type === 'html' && fileName !== selectedFile) {
+                    const regex = new RegExp(`href=["']${fileName}["']`, 'gi');
+                    htmlContent = htmlContent.replace(regex, `href="javascript:window.parent.switchToFileInPreview('${fileName}')"`);
+                }
+            });
+
+            document.getElementById('preview').srcdoc = htmlContent;
+        }
+
+        function switchToFileInPreview(fileName) {
+            console.log('🔗 Link geklickt zu:', fileName);
+            document.getElementById('previewFile').value = fileName;
+            updatePreview();
+        }
+
+        function refreshPreview() {
+            console.log('🔄 Aktualisiere Vorschau...');
+            updatePreview();
+        }
+
+        function markAsChanged() {
+            // Nur als geändert markieren wenn tatsächlich Projektinhalt geändert wurde
+            if (projectData.currentFile && Object.keys(projectData.files).length > 0) {
+                hasUnsavedChanges = true;
+                updateSaveStatus('ready');
+            }
+        }
+
+        function updateSaveStatus(status) {
+            const statusIcon = document.getElementById('save-status-icon');
+            const tooltip = bootstrap.Tooltip.getInstance(statusIcon) || new bootstrap.Tooltip(statusIcon);
+            
+            switch (status) {
+                case 'saved':
+                    statusIcon.className = 'fas fa-circle text-success';
+                    statusIcon.setAttribute('title', 'Änderungen gespeichert');
+                    hasUnsavedChanges = false;
+                    break;
+                case 'saving':
+                    statusIcon.className = 'fas fa-spinner fa-spin text-primary';
+                    statusIcon.setAttribute('title', 'Speichere...');
+                    break;
+                case 'error':
+                    statusIcon.className = 'fas fa-circle text-danger';
+                    statusIcon.setAttribute('title', 'Fehler beim Speichern');
+                    break;
+                case 'ready':
+                    statusIcon.className = 'fas fa-circle text-warning';
+                    statusIcon.setAttribute('title', 'Ungespeicherte Änderungen');
+                    break;
+                case 'submitted':
+                    statusIcon.className = 'fas fa-circle text-success';
+                    statusIcon.setAttribute('title', 'Aufgabe abgegeben');
+                    hasUnsavedChanges = false;
+                    break;
+                default:
+                    statusIcon.className = 'fas fa-circle text-muted';
+                    statusIcon.setAttribute('title', 'Bereit zum Speichern');
+                    break;
+            }
+            
+            // Update tooltip
+            tooltip.dispose();
+            new bootstrap.Tooltip(statusIcon);
+        }
+
+        function getContentFromView() {
+            return JSON.stringify({
+                version: "1.0",
+                type: "html-css-project",
+                files: projectData.files,
+                images: projectData.images,
+                currentFile: projectData.currentFile,
+                metadata: {
+                    lastModified: new Date().toISOString(),
+                    fileCount: Object.keys(projectData.files).length,
+                    imageCount: Object.keys(projectData.images).length
+                }
+            });
+        }
+
+        function loadContentToView(content) {
+            try {
+                console.log('📂 Lade Inhalt...');
+                if (!content || content.trim() === '' || content === '{}') {
+                    console.log('📝 Erstelle Standard-Datei...');
+                    // Nur index.html erstellen wenn keine defaultSubmission vorhanden
+                    projectData.files = {
+                        'index.html': {
+                            type: 'html',
+                            content: `<!DOCTYPE html>
+<html>
+
+<head>
+</head>
+
+<body>
+  Hallo Welt!
+</body>
+
+</html>`
+                        }
+                    };
+                    projectData.images = {};
+                    projectData.currentFile = 'index.html';
+                } else {
+                    const data = JSON.parse(content);
+                    projectData.files = data.files || {};
+                    projectData.images = data.images || {};
+                    projectData.currentFile = data.currentFile || Object.keys(projectData.files)[0] || null;
+                }
+
+                updateFileTabs();
+                updatePreviewOptions();
+                
+                if (projectData.currentFile) {
+                    switchToFile(projectData.currentFile);
+                    const htmlFiles = Object.keys(projectData.files).filter(name => projectData.files[name].type === 'html');
+                    if (htmlFiles.length > 0) {
+                        document.getElementById('previewFile').value = htmlFiles[0];
+                    }
+                }
+                
+                updatePreview();
+                updateSaveStatus('saved');
+                console.log('✅ Inhalt erfolgreich geladen');
+            } catch (error) {
+                console.error('❌ Fehler beim Laden des Inhalts:', error);
+                updateSaveStatus('error');
+                // Fallback zu Standard-Dateien
+                loadContentToView('');
+            }
+        }
+
+        function loadContent() {
+            try {
+                loadContentToView(window.currentContent);
+            } catch (error) {
+                console.error('❌ Fehler beim Laden des Inhalts:', error);
+                loadContentToView(''); // Fallback zu Standard-Dateien
+            }
+        }
+
+        function saveContent(isSubmission = false) {
+            if (!window.canEdit && !window.isTeacherView) {
+                console.log('⚠️ Speichern nicht erlaubt');
+                return;
+            }
+
+            console.log('💾 Speichere Inhalt...');
+            updateSaveStatus('saving');
+
+            const content = getContentFromView();
+            
+            // Check if we're in teacher view mode (iframe)
+            const isTeacherView = window.isTeacherView || false;
+            const userTaskId = window.userTaskId;
+            
+            let saveUrl, saveBody;
+            if (isTeacherView && userTaskId) {
+                // Save to student's history when in teacher view
+                saveUrl = isSubmission ? 
+                    `` : 
+                    `/api/tasks/usertasks/${userTaskId}/content`;
+                saveBody = JSON.stringify({ content: content });
+            } else {
+                // Normal student save
+                saveUrl = isSubmission ? 
+                    `/api/tasks/${window.taskId}/submit` : 
+                    `/api/tasks/${window.taskId}/content`;
+                saveBody = JSON.stringify({ content: content });
+            }
+
+            fetch(saveUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: saveBody
+            })
+            .then(response => {
+                if (response.ok) {
+                    updateSaveStatus(isSubmission ? 'submitted' : 'saved');
+                    
+                    if (isTeacherView) {
+                        // Notify parent window about save
+                        if (window.parent && window.parent !== window) {
+                            window.parent.postMessage('content-saved', '*');
+                        }
+                    }
+                    console.log('✅ Inhalt erfolgreich gespeichert');
+                } else {
+                    updateSaveStatus('error');
+                    console.error('❌ Speicherfehler:', response.status);
+                }
+            })
+            .catch(error => {
+                console.error('❌ Speicherfehler:', error);
+                updateSaveStatus('error');
+            });
+        }
+
+        function submitTask() {
+            if (confirm('Möchten Sie diese Aufgabe wirklich abgeben? Nach der Abgabe können Sie keine Änderungen mehr vornehmen.')) {
+                saveContent(true);
+            }
+        }
+
+        // Globale Funktionen für iframe-Kommunikation
+        window.switchToFileInPreview = switchToFileInPreview;
+
+        // Tab-Wechsel Event Listener für Preview-Controls
+        document.addEventListener('DOMContentLoaded', function() {
+            const previewControls = document.getElementById('previewControls');
+            const tabButtons = document.querySelectorAll('#rightTabs button[data-bs-toggle="tab"]');
+            
+            // Funktion zum Ein-/Ausblenden der Preview-Controls
+            function togglePreviewControls() {
+                const previewTab = document.getElementById('preview-tab');
+                const isPreviewActive = previewTab.classList.contains('active');
+                previewControls.style.display = isPreviewActive ? 'flex' : 'none';
+            }
+            
+            // Event Listener für alle Tabs
+            tabButtons.forEach(button => {
+                button.addEventListener('shown.bs.tab', togglePreviewControls);
+            });
+            
+            // Initial state setzen
+            togglePreviewControls();
+            
+            // Initialize tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+
+        // Prüft ob Thymeleaf tatsächlich einen leeren Wert eingefügt hat
+        function hasValidContent(content) {
+            // Null, undefined oder komplett leer = kein Inhalt vom Server
+            if (!content || content === null || content === undefined) {
+                return false;
+            }
+            
+            const trimmedContent = content.toString().trim();
+            
+            // Nur wenn komplett leer (Thymeleaf hat "" eingefügt)
+            if (trimmedContent === '') {
+                return false;
+            }
+            
+            // Alles andere (einschließlich Beispieltext) = gültiger Inhalt
+            return true;
+        }
+
+        // Zeigt/versteckt Tabs basierend auf verfügbarem Inhalt
+        function updateTabVisibility() {
+            const taskTabContainer = document.getElementById('task-tab-container');
+            const tutorialTabContainer = document.getElementById('tutorial-tab-container');
+            
+            // Task Tab anzeigen nur wenn Inhalt vorhanden
+            if (hasValidContent(window.taskDescription)) {
+                console.log('✅ Task-Inhalt vorhanden - zeige Tab an');
+                taskTabContainer.style.display = 'block';
+            } else {
+                console.log('❌ Kein Task-Inhalt - verstecke Tab');
+                taskTabContainer.style.display = 'none';
+            }
+            
+            // Tutorial Tab anzeigen nur wenn echter Server-Inhalt vorhanden
+            if (window.tutorialContent && 
+                typeof window.tutorialContent === 'string' && 
+                window.tutorialContent.trim() !== '') {
+                console.log('✅ Tutorial-Inhalt vom Server vorhanden - zeige Tab an');
+                tutorialTabContainer.style.display = 'block';
+            } else {
+                console.log('❌ Kein Tutorial-Inhalt vom Server - verstecke Tab');
+                tutorialTabContainer.style.display = 'none';
+            }
+        }
+
+        // Markdown Content Initialisierung
+        function initializeMarkdownContent() {
+            console.log('📝 Initialisiere Markdown-Inhalt...');
+            
+            // Tab-Sichtbarkeit prüfen
+            updateTabVisibility();
+            
+            // Nur rendern wenn Task-Inhalt vorhanden
+            if (!hasValidContent(window.taskDescription)) {
+                console.log('❌ Kein Task-Inhalt zum Rendern vorhanden');
+                return;
+            }
+            
+            // Task Description rendern
+            const taskDescriptionElement = document.getElementById('task-description');
+            if (!taskDescriptionElement) {
+                console.error('❌ Element task-description nicht gefunden');
+                return;
+            }
+            
+            console.log('📄 Task Description Element gefunden');
+            console.log('🔍 taskDescription Type:', typeof window.taskDescription);
+            console.log('🔍 taskDescription Content:', window.taskDescription ? window.taskDescription.substring(0, 100) + '...' : 'undefined');
+            
+            try {
+                let content = window.taskDescription;
+
+                const renderedContent = typeof marked !== 'undefined' && marked.parse
+                    ? marked.parse(content)
+                    : parseMarkdownFallback(content);
+                
+                taskDescriptionElement.innerHTML = renderedContent;
+                console.log('✅ Aufgabenbeschreibung erfolgreich geladen');
+                console.log('📝 Gerenderte Länge:', renderedContent.length, 'Zeichen');
+            } catch (error) {
+                console.error('❌ Fehler beim Rendern der Aufgabenbeschreibung:', error);
+                taskDescriptionElement.innerHTML = '<div class="alert alert-warning">Fehler beim Laden der Aufgabenbeschreibung. Bitte laden Sie die Seite neu.</div>';
+            }
+        }
+
+        // Tutorial System Initialisierung
+        function initializeTutorial() {
+            console.log('📚 Initialisiere Tutorial-System...');
+            console.log('Tutorial Content Type:', typeof window.tutorialContent);
+            console.log('Tutorial Content:', window.tutorialContent);
+            
+            // Tab-Sichtbarkeit prüfen
+            updateTabVisibility();
+            
+            // Prüfen ob Tutorial-Inhalt vom Server kam oder nur Beispieltext
+            if (!window.tutorialContent || 
+                (typeof window.tutorialContent === 'string' && window.tutorialContent.trim() === '')) {
+                console.log('❌ Kein Tutorial-Inhalt vom Server - Tab verstecken');
+                return;
+            }
+            
+            // Tutorial Contents aus String parsen (für Thymeleaf-Kompatibilität)
+            if (window.tutorialContent && Array.isArray(window.tutorialContent)) {
+                tutorialContents = window.tutorialContent;
+                console.log('✅ Tutorial-Array direkt übernommen:', tutorialContents.length, 'Tutorials');
+            } else if (window.tutorialContent) {
+                try {
+                    // Falls es ein Array-String ist, parsen
+                    if (typeof window.tutorialContent === 'string' && window.tutorialContent.startsWith('[')) {
+                        tutorialContents = JSON.parse(window.tutorialContent);
+                    } 
+                    // Falls es ein einzelner Tutorial-String ist, als ersten Eintrag verwenden
+                    else if (typeof window.tutorialContent === 'string') {
+                        tutorialContents = [
+                            {
+                                title: "HTML/CSS Tutorial",
+                                content: window.tutorialContent
+                            }
+                        ];
+                    }
+                    console.log('✅ Tutorial-Inhalt verarbeitet:', tutorialContents.length, 'Tutorials');
+                } catch (error) {
+                    console.error('❌ Fehler beim Parsen des Tutorial-Inhalts:', error);
+                    tutorialContents = [];
+                    return;
+                }
+            }
+            
+            // Nur fortfahren wenn tatsächlich Tutorials vorhanden sind
+            if (!tutorialContents || tutorialContents.length === 0) {
+                console.log('❌ Keine gültigen Tutorial-Inhalte gefunden');
+                return;
+            }
+            
+            currentTutorialIndex = 0;
+            updateTutorialNavigation();
+            renderTutorial();
+        }
+
+        // Tutorial Navigation aktualisieren
+        function updateTutorialNavigation() {
+            const dotsContainer = document.getElementById('tutorial-dots');
+            const prevButton = document.getElementById('tutorial-prev');
+            const nextButton = document.getElementById('tutorial-next');
+            
+            if (!dotsContainer) {
+                console.error('❌ Tutorial-dots Container nicht gefunden');
+                return;
+            }
+            
+            // Dots generieren
+            dotsContainer.innerHTML = '';
+            if (tutorialContents && tutorialContents.length > 0) {
+                tutorialContents.forEach((_, index) => {
+                    const dot = document.createElement('div');
+                    dot.className = `tutorial-dot ${index === currentTutorialIndex ? 'active' : ''}`;
+                    dot.onclick = () => goToTutorial(index);
+                    dotsContainer.appendChild(dot);
+                });
+            }
+            
+            // Navigation Buttons
+            if (prevButton) {
+                prevButton.disabled = currentTutorialIndex === 0;
+            }
+            if (nextButton) {
+                nextButton.disabled = currentTutorialIndex >= (tutorialContents?.length || 0) - 1;
+            }
+            
+            console.log('🎯 Tutorial Navigation aktualisiert:', tutorialContents?.length || 0, 'Tutorials');
+        }
+
+        // Tutorial rendern
+        function renderTutorial() {
+            const tutorialContentElement = document.getElementById('tutorial-content');
+            if (!tutorialContentElement) {
+                console.error('❌ Tutorial-content Element nicht gefunden');
+                return;
+            }
+            
+            console.log('📚 Tutorial Content Element gefunden');
+            console.log('🔍 tutorialContents:', tutorialContents);
+            console.log('🔍 currentTutorialIndex:', currentTutorialIndex);
+            
+            if (!tutorialContents || tutorialContents.length === 0) {
+                console.log('❌ Keine Tutorial-Inhalte verfügbar - Tab sollte versteckt sein');
+                return;
+            }
+            
+            const tutorial = tutorialContents[currentTutorialIndex];
+            if (!tutorial) {
+                console.error('❌ Tutorial bei Index nicht gefunden:', currentTutorialIndex);
+                tutorialContentElement.innerHTML = '<div class="alert alert-warning">Tutorial nicht gefunden. Bitte laden Sie die Seite neu.</div>';
+                return;
+            }
+            
+            try {
+                const renderedContent = typeof marked !== 'undefined' && marked.parse
+                    ? marked.parse(tutorial.content)
+                    : parseMarkdownFallback(tutorial.content);
+                
+                tutorialContentElement.innerHTML = renderedContent;
+                console.log('✅ Tutorial erfolgreich gerendert:', tutorial.title);
+                console.log('📝 Gerenderte Tutorial-Länge:', renderedContent.length, 'Zeichen');
+            } catch (error) {
+                console.error('❌ Fehler beim Rendern des Tutorials:', error);
+                tutorialContentElement.innerHTML = '<div class="alert alert-danger">Fehler beim Laden des Tutorial-Inhalts. Bitte versuchen Sie es erneut.</div>';
+            }
+        }
+
+        // Tutorial Navigation Funktionen
+        function previousTutorial() {
+            if (currentTutorialIndex > 0) {
+                currentTutorialIndex--;
+                updateTutorialNavigation();
+                renderTutorial();
+            }
+        }
+
+        function nextTutorial() {
+            if (currentTutorialIndex < tutorialContents.length - 1) {
+                currentTutorialIndex++;
+                updateTutorialNavigation();
+                renderTutorial();
+            }
+        }
+
+        function goToTutorial(index) {
+            if (index >= 0 && index < tutorialContents.length) {
+                currentTutorialIndex = index;
+                updateTutorialNavigation();
+                renderTutorial();
+            }
+        }
+
+        // Fallback Markdown Parser (falls marked.js nicht verfügbar)
+        function parseMarkdownFallback(markdown) {
+            return markdown
+                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                .replace(/^\* (.*$)/gim, '<li>$1</li>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/`(.*?)`/g, '<code>$1</code>')
+                .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/^(.*)$/gm, '<p>$1</p>')
+                .replace(/<p><\/p>/g, '')
+                .replace(/<p>(<h[1-6]>.*<\/h[1-6]>)<\/p>/g, '$1')
+                .replace(/<p>(<li>.*<\/li>)<\/p>/g, '<ul>$1</ul>');
+        }
+
+        // iFrame-Kommunikation für Lehrer-Integration
+        if (window.parent && window.parent !== window) {
+            window.addEventListener('message', function(event) {
+                if (event.data === 'save-content') {
+                    saveContent();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
