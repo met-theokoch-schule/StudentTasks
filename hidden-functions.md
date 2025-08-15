@@ -1,45 +1,33 @@
-
-# Hidden Debug Functions
-
-## Content Viewer
-
-Ein Debug-Tool zum Anzeigen gespeicherter TaskContent-Daten.
-
-### Verwendung
-
-#### Web-Interface
-- **URL:** `/debug/content/{userId}/{taskId}`
-- **URL mit Version:** `/debug/content/{userId}/{taskId}?version={versionNumber}`
-
-**Beispiele:**
-- `/debug/content/1/3` - Zeigt den neuesten Content von User 1 für Task 3
-- `/debug/content/1/3?version=2` - Zeigt Version 2 des Contents von User 1 für Task 3
-
-#### API-Endpoints (Raw Content)
-- **URL:** `/debug/api/content/{userId}/{taskId}`
-- **URL mit Version:** `/debug/api/content/{userId}/{taskId}?version={versionNumber}`
-- **Response:** Plain Text (Content-String)
-
-**Beispiele:**
-- `/debug/api/content/1/3` - Gibt den rohen Content-String zurück
-- `/debug/api/content/1/3?version=2` - Gibt Version 2 des rohen Content-Strings zurück
-
-### Features
-
-1. **Versions-Übersicht:** Zeigt alle verfügbaren Versionen mit Zeitstempel und Abgabe-Status
-2. **Content-Anzeige:** Formatierte Darstellung des gespeicherten Contents
-3. **Raw-Download:** Direkter Zugriff auf den rohen Content-String
-4. **Copy-to-Clipboard:** Schnelles Kopieren des Contents
-5. **Metadaten:** Anzeige von User-, Task- und UserTask-Informationen
+## Debug Content Viewer
 
 ### Zweck
+Ermöglicht das Anzeigen des gespeicherten Inhalts von Submissions für den aktuell eingeloggten Benutzer zu Debug-Zwecken.
 
-Dieses Tool ist besonders nützlich für:
-- **Erstellen von Default Submissions:** Einfaches Kopieren gespeicherter Schüler-Lösungen
-- **Debugging:** Überprüfung was tatsächlich gespeichert wurde
-- **Content-Analyse:** Untersuchung der Content-Struktur verschiedener Task Views
-- **Versionsverfolgung:** Nachvollziehen von Änderungen an Submissions
+### URL-Format
+```
+/debug/content/{taskId}?version={versionNumber}
+```
 
-### Sicherheitshinweis
+### Parameter
+- `taskId` (Pfad): ID der Aufgabe  
+- `version` (Query, optional): Spezifische Versionsnummer. Wenn nicht angegeben, wird die neueste Version angezeigt
 
-⚠️ **WICHTIG:** Dieser Controller ist nur für Debug-Zwecke gedacht und sollte in Produktionsumgebungen nicht zugänglich sein. Er bypassed alle Sicherheitsprüfungen und gibt sensible Daten preis.
+### Beispiele
+```
+# Neueste Version für Task 10 (aktueller Benutzer)
+/debug/content/10
+
+# Spezifische Version 3 für Task 10 (aktueller Benutzer)
+/debug/content/10?version=3
+```
+
+### Funktionalität
+- Zeigt den rohen Inhalt einer Submission des aktuell eingeloggten Benutzers an
+- Verwendet automatisch den aktuell authentifizierten Benutzer
+- Validiert Task-Existenz und Benutzer-Anmeldung
+- Unterstützt sowohl neueste als auch spezifische Versionen
+- Zeigt Metadaten wie Submission-Zeit und Version an
+
+### Sicherheit
+- Nur eingeloggte Benutzer können ihre eigenen Submissions einsehen
+- ⚠️ **Nur für Entwicklung** - Diese Funktion ist nirgends verlinkt und sollte nur in der Entwicklungsumgebung verwendet werden.
