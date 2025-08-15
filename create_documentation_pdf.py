@@ -136,6 +136,14 @@ def markdown_to_html(markdown_content, title=""):
     """
     return html_template
 
+def replace_unicode_symbols(text):
+    """Ersetzt Unicode-Symbole durch HTML-kompatible Alternativen"""
+    # Ersetze Unicode-Checkmarks und X-Marks
+    text = text.replace('✅', '<span style="color: green; font-weight: bold;">[✓]</span>')
+    text = text.replace('❌', '<span style="color: red; font-weight: bold;">[✗]</span>')
+    text = text.replace('⚠️', '<span style="color: orange; font-weight: bold;">[!]</span>')
+    return text
+
 def create_combined_pdf():
     """Erstellt ein kombiniertes PDF aus allen drei Anleitungen"""
     
@@ -269,6 +277,9 @@ def create_combined_pdf():
         
         content = read_markdown_file(filepath)
         if content:
+            # Unicode-Symbole ersetzen
+            content = replace_unicode_symbols(content)
+            
             # Seitenumbruch vor jeder neuen Sektion (außer der ersten)
             if i > 0:
                 combined_html += '<div class="page-break"></div>'
@@ -290,7 +301,10 @@ def create_combined_pdf():
         'margin-left': '0.75in',
         'encoding': "UTF-8",
         'no-outline': None,
-        'enable-local-file-access': None
+        'enable-local-file-access': None,
+        'disable-smart-shrinking': '',
+        'print-media-type': '',
+        'dpi': 300
     }
     
     output_filename = "Programmier_Anleitungen.pdf"
