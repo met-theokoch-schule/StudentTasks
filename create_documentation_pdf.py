@@ -86,11 +86,12 @@ def markdown_to_html(markdown_content, title=""):
                 border-collapse: collapse;
                 width: 100%;
                 margin: 15px 0;
+                font-size: 0.85em;
             }}
             th, td {{
                 border: 1px solid #ddd;
-                padding: 8px;
-                text-align: left;
+                padding: 6px;
+                text-align: center;
             }}
             th {{
                 background-color: #f2f2f2;
@@ -98,6 +99,32 @@ def markdown_to_html(markdown_content, title=""):
             }}
             tr:nth-child(even) {{
                 background-color: #f9f9f9;
+            }}
+            /* Spezielle Regeln für die Funktionsvergleichsmatrix */
+            table th:not(:first-child) {{
+                writing-mode: vertical-rl;
+                text-orientation: mixed;
+                transform: rotate(180deg);
+                height: 120px;
+                width: 25px;
+                min-width: 25px;
+                max-width: 30px;
+                padding: 4px 2px;
+                font-size: 0.75em;
+                vertical-align: bottom;
+            }}
+            table td:first-child {{
+                text-align: left;
+                font-weight: 500;
+                max-width: 150px;
+                word-wrap: break-word;
+            }}
+            table td:not(:first-child) {{
+                width: 25px;
+                min-width: 25px;
+                max-width: 30px;
+                padding: 4px;
+                font-size: 1.1em;
             }}
             ul, ol {{
                 margin-bottom: 15px;
