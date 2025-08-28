@@ -115,6 +115,15 @@ public class DataInitializer implements ApplicationRunner {
             System.out.println("TaskView with templatePath '" + pythonHamsterEditor + "' initialized");
         }
 
+        String pythonSortingEditor = "taskviews/python-sorting-editor";
+
+        if (taskViewRepository.findByTemplatePath(pythonSortingEditor) == null) {
+            TaskView pythonSorting = new TaskView("Python Sortier-Editor", pythonSortingEditor);
+            pythonSorting.setDescription("Visualisierung von Sortieralgorithmen");
+            taskViewRepository.save(pythonSorting);
+            System.out.println("TaskView with templatePath '" + pythonSortingEditor + "' initialized");
+        }
+
         // Hier können weitere TaskViews hinzugefügt werden
         // Beispiel für weitere TaskViews:
         /*
@@ -132,30 +141,35 @@ public class DataInitializer implements ApplicationRunner {
     private void initializeUnitTitles() {
         // Unit Titles mit Gewichtung für die Anzeige-Reihenfolge
         // Niedrigere weight-Werte werden zuerst angezeigt
+        unitTitleService.createOrUpdate("html-css",
+            "HTML & CSS",
+            "Webentwicklung mit HTML und CSS",
+            10);
+        
         unitTitleService.createOrUpdate("einfuehrung-programmierung",
                 "Einführung in die Programmierung",
                 "Grundlagen der Programmierung und erste Schritte",
-                10);
-
-        unitTitleService.createOrUpdate("html-css",
-                "HTML & CSS",
-                "Webentwicklung mit HTML und CSS",
                 20);
 
-        unitTitleService.createOrUpdate("javascript-basics",
-                "JavaScript Grundlagen",
-                "Einführung in JavaScript und DOM-Manipulation",
-                30);
-
-        unitTitleService.createOrUpdate("datenbanken",
-                "Datenbanken",
-                "Grundlagen von Datenbanken und SQL",
-                40);
-
+        unitTitleService.createOrUpdate("algorithmen",
+            "Algorithmik",
+            "Such- und Sortieralgorithmen",
+            30);
+        
         unitTitleService.createOrUpdate("objektorientierung",
-                "Objektorientierte Programmierung",
-                "Klassen, Objekte und Vererbung",
-                50);
+            "Objektorientierte Programmierung",
+            "Klassen und Objekte",
+            40);
+
+        //unitTitleService.createOrUpdate("datenbanken",
+        //        "Datenbanken",
+        //        "Grundlagen von Datenbanken und SQL",
+        //        50);
+
+        //unitTitleService.createOrUpdate("automatentheorie",
+        //    "Automatentheorie",
+        //    "DFA, NFA",
+        //    60);
 
         // Weitere Unit Titles können hier hinzugefügt werden
         // Die Gewichtung bestimmt die Reihenfolge auf der Schüler-Seite
