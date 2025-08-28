@@ -2,6 +2,7 @@ compile = "javac -classpath .:target/dependency/* -d . $(find . -type f -name '*
 run = "mvn clean spring-boot:run -Dspring-boot.run.arguments='--spring.config.additional-location=classpath:application-replit.properties'"
 entrypoint = "src/main/java/Main.java"
 hidden = ["**/*.class"]
+modules = ["python-3.11"]
 
 [packager]
 language = "java"
