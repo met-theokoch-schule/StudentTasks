@@ -45,18 +45,66 @@ function clearOperationTracking() {
 
 // Initialisierung beim Laden der Seite
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔍 DEBUG: ===== DOMContentLoaded Event Start =====');
+
+    console.log('🔍 DEBUG: Initialisiere Editoren...');
     initializeEditors();
+
+    console.log('🔍 DEBUG: Initialisiere Tabs...');
     initializeTabs();
     initializeOutputTabs();
+
+    console.log('🔍 DEBUG: Initialisiere Resizer...');
     initializeResizer();
+
+    console.log('🔍 DEBUG: Initialisiere Controls...');
     initializeControls();
-    initializeArrayConfig(); // Angepasst von initializeHamsterConfig
+
+    console.log('🔍 DEBUG: Bestimme Content-Quelle...');
+    const contentElement = document.getElementById('currentContent');
+    const defaultSubmissionElement = document.getElementById('defaultSubmission');
+
+    let contentSource = 'none';
+    let contentLoaded = false;
+
+    if (contentElement && contentElement.textContent.trim()) {
+        contentSource = 'currentContent';
+    } else if (defaultSubmissionElement && defaultSubmissionElement.textContent.trim()) {
+        contentSource = 'defaultSubmission';
+    }
+
+    console.log('🔍 DEBUG: Content-Quelle bestimmt:', contentSource);
+
+    // Einmalige Initialisierung basierend auf Content-Quelle
+    if (contentSource === 'currentContent') {
+        console.log('🔍 DEBUG: Lade currentContent...');
+        loadContentToView(contentElement.textContent.trim());
+        contentLoaded = true;
+    } else if (contentSource === 'defaultSubmission') {
+        console.log('🔍 DEBUG: Lade defaultSubmission...');
+        pythonEditor.setValue(defaultSubmissionElement.textContent.trim());
+        updateSaveStatus('saved');
+        // Standard Array-Config laden da kein JSON-Content
+        initializeArrayConfig();
+        contentLoaded = true;
+    } else {
+        console.log('🔍 DEBUG: Kein Content, lade Standard-Config...');
+        initializeArrayConfig();
+        contentLoaded = true;
+    }
+
+    console.log('🔍 DEBUG: Content geladen:', contentLoaded);
+
+    console.log('🔍 DEBUG: Initialisiere Pyodide...');
     initializePyodide();
+
+    console.log('🔍 DEBUG: Initialisiere Task Content...');
     initializeTaskContent();
+
+    console.log('🔍 DEBUG: Initialisiere Tutorial Navigation...');
     initializeTutorialNavigation();
 
-    // Content laden und Cursor an den Anfang setzen
-    loadSavedContent();
+    // Cursor an den Anfang setzen (Content wurde bereits früher geladen)
     pythonEditor.gotoLine(1);
 
     // Initialer Status
@@ -66,6 +114,9 @@ document.addEventListener('DOMContentLoaded', function() {
     pythonEditor.on('change', function() {
         updateSaveStatus('ready');
     });
+
+    console.log('🔍 DEBUG: ===== DOMContentLoaded Event Ende =====');
+    console.log('🔍 DEBUG: Finaler sortarray Status:', sortarray ? `existiert (Größe: ${sortarray.size})` : 'nicht vorhanden');
 });
 
 // ACE Editor initialisieren
@@ -338,7 +389,7 @@ function initializeControls() {
     if (configSelector) {
         // Initial den Button mit der aktuellen Array-Größe aktualisieren
         updateConfigSelector();
-        
+
         configSelector.addEventListener('click', function() {
             // Zyklisch durch Array-Größen wechseln: 10 → 20 → 100 → 200 → 10
             if (sortarray) {
@@ -405,8 +456,12 @@ async function initializePyodide() {
         pyodideReady = true;
         addToConsole('Pyodide erfolgreich geladen ✓', 'info');
 
-        // Array-spezifische Funktionen registrieren
+        console.log('🔍 DEBUG: Pyodide geladen, sortarray Status vor setupArrayCommands:', sortarray ? `existiert (Größe: ${sortarray.size}, Daten: [${sortarray.data.slice(0, 5).join(', ')}...])` : 'nicht vorhanden');
+
+        // Array-spezifische Funktionen registrieren (ohne Array-Neuerstellung)
         await setupArrayCommands();
+
+        console.log('🔍 DEBUG: Nach setupArrayCommands, sortarray Status:', sortarray ? `existiert (Größe: ${sortarray.size}, Daten: [${sortarray.data.slice(0, 5).join(', ')}...])` : 'nicht vorhanden');
 
         document.getElementById('runBtn').disabled = false;
         document.getElementById('runBtn').style.opacity = '1';
@@ -447,6 +502,8 @@ async function initializeArrayForPython() {
 
 // Array-spezifische Funktionen für Pyodide registrieren
 async function setupArrayCommands() {
+    console.log("🔍 DEBUG: setupArrayCommands() gestartet");
+    console.log('🔍 DEBUG: sortarray Status bei setupArrayCommands Beginn:', sortarray ? `existiert (Größe: ${sortarray.size}, Daten: [${sortarray.data.slice(0, 5).join(', ')}...])` : 'nicht vorhanden');
     console.log("Richte Array-spezifische Funktionen ein...");
 
     // JavaScript-Funktionen für Array-Zugriff am window-Objekt verfügbar machen
@@ -687,8 +744,21 @@ interrupt_requested
         });
     };
 
-    // Array-Visualisierung initialisieren
-    initializeArrayVisualization();
+    console.log('🔍 DEBUG: Vor initializeArrayVisualization(), sortarray Status:', sortarray ? `existiert (Größe: ${sortarray.size}, Daten: [${sortarray.data.slice(0, 5).join(', ')}...])` : 'nicht vorhanden');
+
+    // Array-Visualisierung initialisieren NUR wenn sortarray noch nicht existiert
+    if (!sortarray) {
+        console.log('🔍 DEBUG: sortarray existiert nicht, erstelle Standard-Array');
+        initializeArrayVisualization();
+    } else {
+        console.log('🔍 DEBUG: sortarray bereits vorhanden, überspringe Neuinitialisierung');
+        // Nur UI aktualisieren ohne Array-Daten zu überschreiben
+        updateArrayDisplay();
+        updateArrayStats();
+        updateConfigSelector();
+    }
+
+    console.log('🔍 DEBUG: Nach Visualisierung-Check, sortarray Status:', sortarray ? `existiert (Größe: ${sortarray.size}, Daten: [${sortarray.data.slice(0, 5).join(', ')}...])` : 'nicht vorhanden');
 
     // Python-Code mit integrierten JavaScript-Aufrufen für Array-Zugriff
     const pythonCode = `
@@ -879,7 +949,7 @@ function transformArrayCode(code) {
             console.log(`Array-Lesezugriff erkannt: ${variable} = sortarray[${index.trim()}]`);
         }
 
-        // 5. Array-Lesezugriffe in Ausdrücken (komplexer): sortarray[i] in anderen Kontexten
+        // 5. Array-Lesezugriffe in Ausdrücken (komplexer): sortarray[index] in anderen Kontexten
         // Ersetze sortarray[index] durch get_array_item(index) in Ausdrücken
         const expressionArrayGetRegex = /sortarray\s*\[\s*([^\]]+)\s*\]/g;
         if (!setMatch && !getMatch && !arraySwapMatch && !tupleMatch) {
@@ -1514,19 +1584,31 @@ function updateTypeCheckingForTab() {
 
 // Lade gespeicherte Inhalte beim Start
 function loadSavedContent() {
+    console.log('🔍 DEBUG: loadSavedContent() gestartet');
+
     const contentElement = document.getElementById('currentContent');
     const defaultSubmissionElement = document.getElementById('defaultSubmission');
-    
+
+    // 1. Prüfe currentContent
     if (contentElement && contentElement.textContent.trim()) {
-        // Lade gespeicherten Inhalt wenn vorhanden
+        console.log('🔍 DEBUG: currentContent gefunden, lade...');
         const savedContent = contentElement.textContent.trim();
         loadContentToView(savedContent);
-    } else if (defaultSubmissionElement && defaultSubmissionElement.textContent.trim()) {
-        // Fallback: Lade defaultSubmission wenn kein gespeicherter Inhalt vorhanden
+        return true;
+    }
+
+    // 2. Prüfe defaultSubmission
+    if (defaultSubmissionElement && defaultSubmissionElement.textContent.trim()) {
+        console.log('🔍 DEBUG: defaultSubmission gefunden, lade...');
         const defaultContent = defaultSubmissionElement.textContent.trim();
         pythonEditor.setValue(defaultContent);
         updateSaveStatus('saved');
+        return true;
     }
+
+    // 3. Nichts gefunden
+    console.log('🔍 DEBUG: Kein Content gefunden');
+    return false;
 }
 
 // Markdown-zu-HTML Parser
@@ -1554,30 +1636,50 @@ const tutorialText = document.getElementById('tutorial').textContent.trim();
 let tutorialContents;
 if (tutorialText) {
     // Inhalt vorhanden → als JS-Literal ausführen
-    tutorialContents = new Function(`return (${tutorialText});`)();
+    try {
+        tutorialContents = new Function(`return (${tutorialText});`)();
+        console.log('Tutorial-Inhalte erfolgreich geladen:', tutorialContents);
+    } catch (e) {
+        console.error('Fehler beim Parsen der Tutorial-Inhalte:', e);
+        tutorialContents = []; // Leeres Array im Fehlerfall
+    }
+} else {
+    console.log('Keine Tutorial-Inhalte gefunden.');
+    tutorialContents = []; // Sicherstellen, dass es ein Array ist
 }
 
-console.log(tutorialContents);
 
 let currentTutorialIndex = 0;
 
 // Task-Content initialisieren
 function initializeTaskContent() {
-    updateTaskTab(document.getElementById("description").textContent);
+    const descriptionElement = document.getElementById("description");
+    if (descriptionElement) {
+        updateTaskTab(descriptionElement.textContent);
+    } else {
+        console.warn("Beschreibungselement nicht gefunden.");
+    }
 }
 
 // Tutorial Navigation initialisieren
 function initializeTutorialNavigation() {
     const tutorialOutput = document.getElementById('tutorialOutput');
 
-    const tutorialTab = document.querySelector('.output-tab[data-output-tab="tutorial"]'); // Referenz auf das Tutorial-Tab
-    // Überprüfen, ob tutorialContents leer ist
+    // Überprüfen, ob tutorialContents leer ist oder nicht existiert
     if (!tutorialContents || tutorialContents.length === 0) {
-        // Tab ausblenden, wenn kein Inhalt vorhanden ist
+        console.log('Kein oder leeres Tutorial-Inhalt, überspringe Initialisierung.');
+        // Stelle sicher, dass das Tutorial-Tab ausgeblendet wird, falls es existiert
+        const tutorialTab = document.querySelector('.output-tab[data-output-tab="tutorial"]');
         if (tutorialTab) {
-            tutorialTab.style.display = 'none'; // Tab ausblenden
+            tutorialTab.style.display = 'none';
         }
         return; // Funktion beenden
+    }
+
+    // Stelle sicher, dass das Tutorial-Tab sichtbar ist, wenn Inhalt vorhanden ist
+    const tutorialTab = document.querySelector('.output-tab[data-output-tab="tutorial"]');
+    if (tutorialTab) {
+        tutorialTab.style.display = 'block';
     }
 
     // Navigation HTML erstellen
@@ -1599,25 +1701,35 @@ function initializeTutorialNavigation() {
     tutorialOutput.innerHTML = navigationHTML;
 
     // Event Listeners hinzufügen
-    document.getElementById('tutorialPrev').addEventListener('click', () => {
-        if (currentTutorialIndex > 0) {
-            currentTutorialIndex--;
-            updateTutorialDisplay();
-        }
-    });
+    const prevButton = document.getElementById('tutorialPrev');
+    const nextButton = document.getElementById('tutorialNext');
 
-    document.getElementById('tutorialNext').addEventListener('click', () => {
-        if (currentTutorialIndex < tutorialContents.length - 1) {
-            currentTutorialIndex++;
-            updateTutorialDisplay();
-        }
-    });
+    if (prevButton) {
+        prevButton.addEventListener('click', () => {
+            if (currentTutorialIndex > 0) {
+                currentTutorialIndex--;
+                updateTutorialDisplay();
+            }
+        });
+    }
+
+    if (nextButton) {
+        nextButton.addEventListener('click', () => {
+            if (currentTutorialIndex < tutorialContents.length - 1) {
+                currentTutorialIndex++;
+                updateTutorialDisplay();
+            }
+        });
+    }
 
     // Dot Navigation
     document.querySelectorAll('.tutorial-dot').forEach(dot => {
         dot.addEventListener('click', (e) => {
-            currentTutorialIndex = parseInt(e.target.dataset.index);
-            updateTutorialDisplay();
+            const index = parseInt(e.target.dataset.index);
+            if (!isNaN(index) && index >= 0 && index < tutorialContents.length) {
+                currentTutorialIndex = index;
+                updateTutorialDisplay();
+            }
         });
     });
 
@@ -1632,12 +1744,34 @@ function updateTutorialDisplay() {
     });
 
     // Button States
-    document.getElementById('tutorialPrev').disabled = currentTutorialIndex === 0;
-    document.getElementById('tutorialNext').disabled = currentTutorialIndex === tutorialContents.length - 1;
+    const prevButton = document.getElementById('tutorialPrev');
+    const nextButton = document.getElementById('tutorialNext');
+
+    if (prevButton) {
+        prevButton.disabled = currentTutorialIndex === 0;
+    }
+    if (nextButton) {
+        nextButton.disabled = currentTutorialIndex === tutorialContents.length - 1;
+    }
 
     // Content aktualisieren - zeige Markdown statt iframe
     const tutorialFrame = document.getElementById('tutorialFrame');
-    const currentContent = tutorialContents[currentTutorialIndex].content;
+    if (!tutorialFrame) {
+        console.error("Tutorial Frame nicht gefunden.");
+        return;
+    }
+
+    // Sicherstellen, dass tutorialContents und currentTutorialIndex gültig sind
+    if (!tutorialContents || tutorialContents.length === 0 ||
+        currentTutorialIndex < 0 || currentTutorialIndex >= tutorialContents.length) {
+        console.warn("Ungültiger Zustand für Tutorial-Display.");
+        tutorialFrame.src = ""; // Leere Quelle setzen
+        return;
+    }
+
+    const currentContentItem = tutorialContents[currentTutorialIndex];
+    const currentContent = currentContentItem.content;
+    const contentTitle = currentContentItem.title || `Schritt ${currentTutorialIndex + 1}`;
 
     // Erstelle HTML für Markdown-Content
     const htmlContent = `
@@ -1645,6 +1779,7 @@ function updateTutorialDisplay() {
         <html>
         <head>
             <meta charset="UTF-8">
+            <title>${contentTitle}</title>
             <style>
                 body {
                     font-family: 'Segoe UI', sans-serif;
@@ -1675,6 +1810,7 @@ function updateTutorialDisplay() {
             </style>
         </head>
         <body>
+            <h1>${contentTitle}</h1>
             ${renderMarkdown(currentContent)}
         </body>
         </html>
@@ -1682,12 +1818,12 @@ function updateTutorialDisplay() {
 
     const blob = new Blob([htmlContent], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
-    tutorialFrame.src = url;
 
-    // URL nach dem Laden wieder freigeben
+    // Setze die src des iframes und bereinige die URL nach dem Laden
     tutorialFrame.onload = () => {
         URL.revokeObjectURL(url);
     };
+    tutorialFrame.src = url;
 }
 
 // Task-Tab aktualisieren
@@ -1699,53 +1835,30 @@ function updateTaskTab(markdownText) {
         // Überprüfen, ob markdownText nicht leer ist
         if (markdownText && markdownText.trim() !== '') {
             taskOutput.innerHTML = renderMarkdown(markdownText);
-            taskTab.style.display = 'block'; // Tab anzeigen
+            if (taskTab) taskTab.style.display = 'block'; // Tab anzeigen
         } else {
             taskOutput.innerHTML = ''; // Inhalte löschen
-            taskTab.style.display = 'none'; // Tab ausblenden
+            if (taskTab) taskTab.style.display = 'none'; // Tab ausblenden
         }
+    } else {
+        console.warn("taskOutput Element nicht gefunden.");
     }
 }
 
 // Array-Konfiguration initialisieren (ersetzt Hamster-Konfiguration)
 function initializeArrayConfig() {
-    try {
-        const configElement = document.getElementById('arrayConfig'); // Annahme: Es gibt ein Element mit ID 'arrayConfig'
-        if (configElement && configElement.textContent.trim()) {
-            const configData = JSON.parse(configElement.textContent);
+    console.log('🔍 DEBUG: initializeArrayConfig() aufgerufen - lade Standard 20er Array');
 
-            if (configData.configurations && configData.configurations.length > 0) {
-                // Konvertiere Konfigurationen
-                worldConfigurations.length = 0; // Array leeren
-                configData.configurations.forEach((config, index) => {
-                    // Hier wird angenommen, dass die Konfiguration für Arrays passt
-                    // Falls nicht, muss parseArrayConfig angepasst werden
-                    const arrayConfig = parseArrayConfig(config);
-                    worldConfigurations.push(arrayConfig);
-                });
-
-                // Erste Konfiguration laden
-                loadConfiguration(0);
-                updateConfigSelector();
-
-                // Standard-Code setzen wenn vorhanden
-                if (configData.defaultContent && !pythonEditor.getValue().trim()) {
-                    pythonEditor.setValue(configData.defaultContent);
-                }
-            }
-        } else {
-            // Fallback: Lade Standardkonfiguration wenn keine vorhanden
-            console.log('Keine Array-Konfiguration gefunden, lade Standardkonfiguration');
-            loadConfiguration(0);
-        }
-
-        // Array-Visualisierung initialisieren
+    // Erstelle Standard-Array (20 Elemente) nur wenn sortarray noch nicht existiert
+    if (!sortarray) {
+        console.log('🔍 DEBUG: Erstelle Standard-Array (20 Elemente)');
+        loadConfiguration(0); // Lädt automatisch 20er Array
         initializeArrayVisualization();
-
-    } catch (error) {
-        console.error('Fehler beim Laden der Array-Konfiguration:', error);
-        // Fallback: Lade Standardkonfiguration
-        loadConfiguration(0);
+    } else {
+        console.log('🔍 DEBUG: sortarray bereits vorhanden, aktualisiere nur UI');
+        updateArrayDisplay();
+        updateArrayStats();
+        updateConfigSelector();
     }
 }
 
@@ -1763,17 +1876,10 @@ function parseArrayConfig(config) {
 
 // Konfiguration laden (mit DOM-Neuerstellung oder Aktualisierung)
 function loadConfiguration(index) {
-    // Index-Validierung: Falls ungültig, verwende Index 0 (erste Welt)
-    if (index < 0 || index >= worldConfigurations.length || worldConfigurations.length === 0) {
-        console.warn(`Ungültiger Array-Konfiguration-Index: ${index}. Verwende Index 0 als Fallback.`);
-        index = 0;
-        currentConfigIndex = 0;
-    }
+    console.log('🔍 DEBUG: loadConfiguration() aufgerufen mit Index:', index);
 
-    // Stelle sicher, dass mindestens eine Konfiguration existiert
+    // Stelle sicher, dass mindestens eine Standard-Konfiguration existiert
     if (worldConfigurations.length === 0) {
-        console.error('Keine Array-Konfigurationen verfügbar. Erstelle Standard-Fallback-Array.');
-        // Erstelle eine Minimal-Fallback-Konfiguration
         worldConfigurations.push({
             name: 'Standard-Array',
             size: 20,
@@ -1782,30 +1888,30 @@ function loadConfiguration(index) {
         });
     }
 
-    const config = worldConfigurations[index];
+    // Index-Validierung
+    if (index < 0 || index >= worldConfigurations.length) {
+        index = 0;
+    }
 
-    // Array-Objekt initialisieren
+    const config = worldConfigurations[index];
+    console.log('🔍 DEBUG: Erstelle Array mit Konfiguration:', config);
+
+    // Array-Objekt erstellen
     sortarray = {
-        data: config.initialData ? config.initialData : generateRandomArray(config.size), // Standard: 20 Elemente
+        data: generateRandomArray(config.size),
         size: config.size,
         maxValue: config.maxValue,
-        writeCount: 0,     // Zähler für Schreiboperationen
-        readCount: 0,      // Zähler für Leseoperationen
+        writeCount: 0,
+        readCount: 0,
         callbacks: []
     };
 
-    // Aktualisiere den aktuellen Index
     currentConfigIndex = index;
+    console.log('🔍 DEBUG: Array erstellt, Größe:', sortarray.size);
 
-    // Array-Visualisierung aktualisieren
+    // UI aktualisieren
     updateArrayVisualization();
-    
-    // Config-Selector aktualisieren
     updateConfigSelector();
-
-    console.log(`Array-Konfiguration ${index + 1} geladen.`);
-
-    // Button auf "Ausführen" zurücksetzen
     updateRunButton('execute');
 }
 
@@ -1898,6 +2004,9 @@ function changeArraySize(newSize) {
 
 // Array-Visualisierung initialisieren und aktualisieren
 function initializeArrayVisualization(config = null) {
+    console.log('🔍 DEBUG: initializeArrayVisualization() aufgerufen mit config:', config);
+    console.log('🔍 DEBUG: sortarray Status bei initializeArrayVisualization Beginn:', sortarray ? `existiert (Größe: ${sortarray.size}, Daten: [${sortarray.data.slice(0, 5).join(', ')}...])` : 'nicht vorhanden');
+    
     // Erstelle Array-Container wenn nicht vorhanden
     let arrayContainer = document.getElementById('arrayVisualization');
     if (!arrayContainer) {
@@ -1969,15 +2078,23 @@ function initializeArrayVisualization(config = null) {
 
     // Array-Objekt erstellen, falls noch nicht geschehen
     if (!sortarray) {
+        console.log('🔍 DEBUG: Erstelle NEUES sortarray in initializeArrayVisualization mit Größe:', config.size);
+        const newData = config.initialData ? config.initialData : generateRandomArray(config.size);
+        console.log('🔍 DEBUG: Neue Array-Daten generiert:', newData.slice(0, 10));
+        
         sortarray = {
-            data: config.initialData ? config.initialData : generateRandomArray(config.size),
+            data: newData,
             size: config.size,
             maxValue: config.maxValue,
             writeCount: 0,
             readCount: 0,
             callbacks: []
         };
+        console.log('🔍 DEBUG: Neues sortarray erstellt mit Größe:', sortarray.size);
     } else {
+        console.log('🔍 DEBUG: AKTUALISIERE bestehendes sortarray von Größe', sortarray.size, 'auf', config.size);
+        const oldData = sortarray.data.slice(0, 5);
+        
         // Wenn sortarray bereits existiert, Daten und Größe aktualisieren
         sortarray.data = config.initialData ? config.initialData : generateRandomArray(config.size);
         sortarray.size = config.size;
@@ -1985,6 +2102,9 @@ function initializeArrayVisualization(config = null) {
         // Zähler zurücksetzen bei Neukonfiguration
         sortarray.writeCount = 0;
         sortarray.readCount = 0;
+        
+        console.log('🔍 DEBUG: Array aktualisiert - Alte Daten:', oldData, '- Neue Daten:', sortarray.data.slice(0, 5));
+        console.log('🔍 DEBUG: Neue Array-Größe:', sortarray.size);
     }
 
     // Aktualisiere die Array-Darstellung
@@ -2138,8 +2258,8 @@ function getContentFromView() {
         currentTutorialIndex: currentTutorialIndex,
         arrayConfiguration: {
             size: sortarray ? sortarray.size : 20,
-            maxValue: sortarray ? sortarray.maxValue : 100,
-            currentData: sortarray ? [...sortarray.data] : null // Aktuelle Array-Daten als Snapshot
+            maxValue: sortarray ? sortarray.maxValue : 100
+            // currentData entfernt - wird zufällig neu generiert
         },
         animationSpeed: animationSpeed,
         statistics: {
@@ -2169,7 +2289,7 @@ function loadContentToView(content) {
         if (data.pythonCode) {
             pythonEditor.setValue(data.pythonCode);
             console.log('Python-Code erfolgreich geladen');
-            
+
             // Cursor-Position wiederherstellen wenn gespeichert
             if (data.metadata && data.metadata.editorCursorPosition) {
                 pythonEditor.moveCursorToPosition(data.metadata.editorCursorPosition);
@@ -2177,7 +2297,7 @@ function loadContentToView(content) {
         }
 
         // Tutorial-Index laden
-        if (data.currentTutorialIndex !== undefined && tutorialContents && 
+        if (data.currentTutorialIndex !== undefined && tutorialContents &&
             data.currentTutorialIndex >= 0 && data.currentTutorialIndex < tutorialContents.length) {
             currentTutorialIndex = data.currentTutorialIndex;
             updateTutorialDisplay();
@@ -2186,28 +2306,61 @@ function loadContentToView(content) {
         // Array-Konfiguration laden
         if (data.arrayConfiguration) {
             const config = data.arrayConfiguration;
-            
-            // Array-Größe wiederherstellen wenn gültig
-            if (config.size && config.size > 0) {
-                changeArraySize(config.size);
-            }
-            
-            // Gespeicherte Array-Daten wiederherstellen wenn vorhanden
-            if (config.currentData && Array.isArray(config.currentData) && sortarray) {
-                sortarray.data = [...config.currentData];
+            console.log('🔍 DEBUG: Array-Konfiguration wiederhergestellt:', config);
+            console.log('🔍 DEBUG: sortarray Status vor Wiederherstellung:', sortarray ? `existiert (Größe: ${sortarray.size})` : 'nicht vorhanden');
+
+            // Array direkt mit der korrekten Größe initialisieren
+            if (!sortarray) {
+                console.log('🔍 DEBUG: Erstelle neues sortarray mit Größe:', config.size || 20);
+                const newData = generateRandomArray(config.size || 20);
+                console.log('🔍 DEBUG: Neue Daten generiert:', newData.slice(0, 10));
+
+                sortarray = {
+                    data: newData,
+                    size: config.size || 20,
+                    maxValue: config.maxValue || 100,
+                    writeCount: 0,
+                    readCount: 0,
+                    callbacks: []
+                };
+            } else {
+                console.log('🔍 DEBUG: Aktualisiere bestehendes sortarray von Größe', sortarray.size, 'auf', config.size || 20);
+                // Bestehende Array-Größe und Daten aktualisieren
+                sortarray.size = config.size || 20;
                 sortarray.maxValue = config.maxValue || 100;
-                updateArrayDisplay();
-                console.log('Array-Daten erfolgreich wiederhergestellt');
+                const newData = generateRandomArray(sortarray.size);
+                console.log('🔍 DEBUG: Neue Daten für Update generiert:', newData.slice(0, 10));
+                sortarray.data = newData;
+                sortarray.writeCount = 0;
+                sortarray.readCount = 0;
             }
+
+            console.log('🔍 DEBUG: sortarray nach Wiederherstellung:', {
+                size: sortarray.size,
+                maxValue: sortarray.maxValue,
+                dataPreview: sortarray.data.slice(0, 10)
+            });
+
+            // Sicherstellen dass Array-Visualisierung existiert
+            console.log('🔍 DEBUG: Initialisiere Array-Visualisierung');
+            initializeArrayVisualization({
+                size: sortarray.size,
+                maxValue: sortarray.maxValue,
+                initialData: null
+            });
+
+            // Config-Index für UI-Update setzen
+            const sizeToIndex = { 10: 0, 20: 1, 100: 2, 200: 3 };
+            currentConfigIndex = sizeToIndex[config.size] || 1;
+            console.log('🔍 DEBUG: Config-Index gesetzt auf:', currentConfigIndex);
+            updateConfigSelector();
+        } else {
+            console.log('🔍 DEBUG: Keine Array-Konfiguration in Data gefunden, lade Standard-Konfiguration');
+            // Fallback: Standard-Konfiguration laden
+            loadConfiguration(currentConfigIndex);
         }
 
-        // Legacy-Support für alte Speicherformate
-        if (data.currentConfigIndex !== undefined && !data.arrayConfiguration) {
-            console.log('Legacy-Format erkannt, verwende currentConfigIndex');
-            currentConfigIndex = Math.max(0, data.currentConfigIndex);
-        }
-
-        // Animationsgeschwindigkeit laden
+        // Animation Speed wiederherstellen
         if (data.animationSpeed !== undefined) {
             animationSpeed = data.animationSpeed;
             const speedSelector = document.getElementById('speedSelector');
@@ -2217,21 +2370,19 @@ function loadContentToView(content) {
             updateHamsterTransition();
         }
 
-        // Statistiken wiederherstellen (falls vorhanden)
-        if (data.statistics && sortarray) {
-            sortarray.readCount = data.statistics.readCount || 0;
-            sortarray.writeCount = data.statistics.writeCount || 0;
-            updateArrayStats();
+        // Tutorial Index wiederherstellen
+        if (data.currentTutorialIndex !== undefined) {
+            currentTutorialIndex = data.currentTutorialIndex;
         }
 
         updateSaveStatus('saved');
-        console.log(`Content-Version ${data.version || '1.0'} erfolgreich geladen`);
+        console.log('Content-Version 1.1 erfolgreich geladen');
 
     } catch (error) {
         console.error('Fehler beim Laden des Inhalts:', error);
         updateSaveStatus('error');
-        
-        // Fallback: Versuche als reinen Text zu laden
+
+        // Fallback: Versuche als reiner Text zu laden
         if (typeof content === 'string' && content.trim()) {
             pythonEditor.setValue(content);
             console.log('Inhalt als reiner Text geladen (Fallback)');
@@ -2263,7 +2414,7 @@ function saveContent(isSubmission = false) {
 
         return fetch(url, {
             method: 'POST',
-            headers: { 
+            headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
@@ -2278,7 +2429,7 @@ function saveContent(isSubmission = false) {
                 if (window.parent && window.parent !== window) {
                     window.parent.postMessage(isSubmission ? 'content-submitted' : 'content-saved', '*');
                 }
-                
+
                 return response;
             } else {
                 updateSaveStatus('error');
@@ -2716,4 +2867,3 @@ function addBarEventListeners(barElement, index, value, finalBarWidth) {
         if (tooltip) tooltip.remove();
     });
 }
-
