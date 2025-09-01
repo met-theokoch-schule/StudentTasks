@@ -81,7 +81,7 @@ public class TeacherTaskController {
      * Zeigt alle Aufgaben des eingeloggten Lehrers oder alle Aufgaben im System
      */
     @GetMapping("/tasks")
-    public String listTasks(@RequestParam(value = "filter", defaultValue = "own") String filter, 
+    public String listTasks(@RequestParam(value = "filter", defaultValue = "own") String filter,
                            Model model, Principal principal) {
         User teacher = userService.findByOpenIdSubject(principal.getName())
                 .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
@@ -95,12 +95,23 @@ public class TeacherTaskController {
             allTasks = taskService.findByCreatedByOrderByCreatedAtDesc(teacher);
         }
 
-        Map<UnitTitle, List<Task>> tasksByUnitTitle = allTasks.stream()
-                .collect(Collectors.groupingBy(
-                        task -> task.getUnitTitle(),
-                        LinkedHashMap::new,
-                        Collectors.toList()
-                ));
+        Map<UnitTitle, List<Task>> tasksByUnitTitle = new LinkedHashMap<>();
+
+        // Erstelle einen Dummy-UnitTitle für Aufgaben ohne UnitTitle
+        UnitTitle noUnitTitle = null;
+
+        for (Task task : allTasks) {
+            UnitTitle key = task.getUnitTitle();
+            if (key == null) {
+                if (noUnitTitle == null) {
+                    noUnitTitle = new UnitTitle();
+                    noUnitTitle.setName("Aufgaben ohne Thema");
+                    noUnitTitle.setDescription("Aufgaben die keinem Thema zugeordnet sind");
+                }
+                key = noUnitTitle;
+            }
+            tasksByUnitTitle.computeIfAbsent(key, k -> new ArrayList<>()).add(task);
+        }
 
         model.addAttribute("teacher", teacher);
         model.addAttribute("tasksByUnitTitle", tasksByUnitTitle);
@@ -380,7 +391,7 @@ public class TeacherTaskController {
 
 
 @GetMapping("/submissions/{userTaskId}")
-    public String reviewSubmission(@PathVariable Long userTaskId, 
+    public String reviewSubmission(@PathVariable Long userTaskId,
                                  @RequestParam(required = false) String returnUrl,
                                  Model model, Authentication authentication,
                                  HttpServletRequest request) {
