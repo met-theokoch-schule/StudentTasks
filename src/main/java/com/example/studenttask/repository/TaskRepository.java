@@ -21,6 +21,8 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     List<Task> findByAssignedGroupsIn(@Param("groups") Set<Group> groups);
 
     List<Task> findByCreatedByOrderByCreatedAtDesc(User createdBy);
+    
+    List<Task> findAllByOrderByCreatedAtDesc();
 
     List<Task> findByCreatedByAndIsActiveOrderByCreatedAtDesc(User createdBy, Boolean isActive);
 

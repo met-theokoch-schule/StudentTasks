@@ -31,9 +31,21 @@
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h1><i class="fas fa-tasks"></i> Aufgaben verwalten</h1>
-                    <a th:href="@{/teacher/tasks/create}" class="btn btn-success">
-                        <i class="fas fa-plus"></i> Neue Aufgabe erstellen
-                    </a>
+                    <div class="d-flex gap-2">
+                        <div class="btn-group" role="group">
+                            <a th:href="@{/teacher/tasks(filter='own')}" 
+                               th:class="'btn ' + (${currentFilter == 'own'} ? 'btn-primary' : 'btn-outline-primary')">
+                                <i class="fas fa-user"></i> Nur eigene Aufgaben
+                            </a>
+                            <a th:href="@{/teacher/tasks(filter='all')}" 
+                               th:class="'btn ' + (${currentFilter == 'all'} ? 'btn-primary' : 'btn-outline-primary')">
+                                <i class="fas fa-globe"></i> Alle Aufgaben
+                            </a>
+                        </div>
+                        <a th:href="@{/teacher/tasks/create}" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Neue Aufgabe erstellen
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -62,6 +74,7 @@
                                                 <th>Task View</th>
                                                 <th>Fälligkeitsdatum</th>
                                                 <th>Status</th>
+                                                <th th:if="${currentFilter == 'all'}">Ersteller</th>
                                                 <th>Aktionen</th>
                                             </tr>
                                         </thead>
@@ -76,9 +89,14 @@
                                                     <span class="badge bg-success" th:if="${task.isActive}">Aktiv</span>
                                                     <span class="badge bg-secondary" th:unless="${task.isActive}">Inaktiv</span>
                                                 </td>
+                                                <td th:if="${currentFilter == 'all'}">
+                                                    <span th:text="${task.createdBy?.name ?: 'Unbekannt'}" class="text-muted">Ersteller</span>
+                                                </td>
                                                 <td>
                                                     <div class="btn-group" role="group">
-                                                        <a th:href="@{'/teacher/tasks/' + ${task.id} + '/edit'}" class="btn btn-sm btn-outline-secondary">
+                                                        <a th:if="${task.createdBy?.openIdSubject == #authentication.name}" 
+                                                           th:href="@{'/teacher/tasks/' + ${task.id} + '/edit'}" 
+                                                           class="btn btn-sm btn-outline-secondary">
                                                             <i class="fas fa-edit"></i> Bearbeiten
                                                         </a>
                                                         <a th:href="@{'/teacher/tasks/' + ${task.id} + '/submissions'}" class="btn btn-sm btn-primary">
