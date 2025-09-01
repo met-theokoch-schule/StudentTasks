@@ -78,57 +78,34 @@ public class TeacherTaskController {
     private UnitTitleService unitTitleService;
 
     /**
-     * Zeigt die Übersicht aller Aufgaben des Lehrers
+     * Zeigt alle Aufgaben des eingeloggten Lehrers oder alle Aufgaben im System
      */
     @GetMapping("/tasks")
-    public String listTasks(Model model, Authentication authentication) {
-        User teacher = userService.findByOpenIdSubject(authentication.getName())
+    public String listTasks(@RequestParam(value = "filter", defaultValue = "own") String filter, 
+                           Model model, Principal principal) {
+        User teacher = userService.findByOpenIdSubject(principal.getName())
                 .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
-        System.out.println("🔍 === DEBUG: Task List Loading ===");
-        System.out.println("   - Loading tasks for teacher: " + teacher.getName() + " (ID: " + teacher.getId() + ")");
-
-        List<Task> allTasks = taskService.findByCreatedBy(teacher);
-
-        System.out.println("   - Found " + allTasks.size() + " tasks in task list");
-
-        // Gruppiere Aufgaben nach UnitTitle, ähnlich wie in der Schüler-Ansicht
-        Map<UnitTitle, List<Task>> tasksByUnitTitle = new LinkedHashMap<>();
-
-        // Sammle alle UnitTitles und sortiere sie alphabetisch
-        Set<UnitTitle> unitTitles = allTasks.stream()
-            .map(Task::getUnitTitle)
-            .collect(Collectors.toSet());
-
-        List<UnitTitle> sortedUnitTitles = unitTitles.stream()
-            .sorted((ut1, ut2) -> {
-                // null-Werte (Aufgaben ohne Thema) kommen zuletzt
-                if (ut1 == null && ut2 == null) return 0;
-                if (ut1 == null) return 1;
-                if (ut2 == null) return -1;
-                // Sortierung nach weight (aufsteigend), dann nach Name
-                int weightComparison = Integer.compare(ut1.getWeight(), ut2.getWeight());
-                if (weightComparison != 0) {
-                    return weightComparison;
-                }
-                return ut1.getName().compareTo(ut2.getName());
-            })
-            .collect(Collectors.toList());
-
-        // Gruppiere Aufgaben nach UnitTitle
-        for (UnitTitle unitTitle : sortedUnitTitles) {
-            List<Task> tasksForUnit = allTasks.stream()
-                .filter(task -> Objects.equals(task.getUnitTitle(), unitTitle))
-                .sorted((t1, t2) -> t1.getTitle().compareTo(t2.getTitle()))
-                .collect(Collectors.toList());
-
-            if (!tasksForUnit.isEmpty()) {
-                tasksByUnitTitle.put(unitTitle, tasksForUnit);
-            }
+        List<Task> allTasks;
+        if ("all".equals(filter)) {
+            // Alle Aufgaben im System anzeigen
+            allTasks = taskService.findAllOrderByCreatedAtDesc();
+        } else {
+            // Nur eigene Aufgaben anzeigen (Standard)
+            allTasks = taskService.findByCreatedByOrderByCreatedAtDesc(teacher);
         }
 
+        Map<UnitTitle, List<Task>> tasksByUnitTitle = allTasks.stream()
+                .collect(Collectors.groupingBy(
+                        task -> task.getUnitTitle(),
+                        LinkedHashMap::new,
+                        Collectors.toList()
+                ));
+
+        model.addAttribute("teacher", teacher);
         model.addAttribute("tasksByUnitTitle", tasksByUnitTitle);
         model.addAttribute("tasks", allTasks); // Für Rückwärtskompatibilität
+        model.addAttribute("currentFilter", filter);
         return "teacher/tasks-list";
     }
 

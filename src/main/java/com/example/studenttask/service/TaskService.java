@@ -279,4 +279,8 @@ public class TaskService {
     public List<Task> findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(User creator) {
         return taskRepository.findByCreatedByAndIsActiveOrderByCreatedAtDesc(creator, true);
     }
+
+    public List<Task> findAllOrderByCreatedAtDesc() {
+        return taskRepository.findAllByOrderByCreatedAtDesc();
+    }
 }
