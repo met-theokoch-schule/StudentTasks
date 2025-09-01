@@ -305,6 +305,12 @@
             background-color: #f8f9fa;
             font-weight: 600;
         }
+
+        .markdown-content img {
+          max-width: 100%;
+          height: auto;
+          display: block;
+        }
         
         /* Tutorial Navigation */
         .tutorial-navigation {
@@ -365,10 +371,16 @@
             color: #dee2e6;
             cursor: not-allowed;
         }
+
+        .h-90 {
+            height: calc(100% - 42px);
+            overflow: auto;
+        }
     </style>
 </head>
 <body>
     <!-- Versteckte Content-Divs für JavaScript -->
+    <a id="default-link" style="display: none;" href="/" th:href="@{/}"></a>
     <div id="default-task-description" style="display: none;" th:text="${task?.description ?: ''}">
 # HTML/CSS Grundlagen
 
@@ -436,15 +448,12 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
         const tutorialText = tutorialDiv ? tutorialDiv.textContent.trim() : '';
         try {
             if (tutorialText.startsWith('[')) {
-                window.tutorialContent = JSON.parse(tutorialText);
+                // window.tutorialContent = JSON.parse(tutorialText);
+                window.tutorialContent = new Function("return " + tutorialText)()
             } else {
-                // Falls es kein JSON Array ist, als einzelnes Tutorial behandeln
-                window.tutorialContent = [
-                    {
-                        title: "HTML/CSS Tutorial",
-                        content: tutorialText
-                    }
-                ];
+                // Falls es kein JSON Array ist, nichts tun
+                window.tutorialContent = "";
+                console.warn("Kein Tutorial Array gefunden.")
             }
         } catch (error) {
             console.warn('Fehler beim Parsen der Tutorial-Daten, verwende Fallback:', error);
@@ -541,13 +550,13 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
                         <select class="form-select form-select-sm" style="width: auto;" id="previewFile" onchange="switchPreviewFile()">
                             <option value="">Datei auswählen...</option>
                         </select>
-                        <a href="/student/dashboard" class="btn btn-sm btn-outline-secondary" title="Zum Dashboard">
+                        <a th:href="@{/student/dashboard}" href="/student/dashboard" class="btn btn-sm btn-outline-secondary" title="Zum Dashboard">
                             <i class="fas fa-home"></i>
                         </a>
                     </div>
                 </div>
 
-                <div class="tab-content h-100">
+                <div class="tab-content h-90">
                     <!-- Vorschau-Tab -->
                     <div class="tab-pane fade show active h-100" id="preview-pane" role="tabpanel">
                         <div class="preview-container h-100">
@@ -1066,13 +1075,13 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
                 // Save to student's history when in teacher view
                 saveUrl = isSubmission ? 
                     `` : 
-                    `/api/tasks/usertasks/${userTaskId}/content`;
+                    document.getElementById("default-link").getAttribute("href") + `api/tasks/usertasks/${userTaskId}/content`;
                 saveBody = JSON.stringify({ content: content });
             } else {
                 // Normal student save
                 saveUrl = isSubmission ? 
-                    `/api/tasks/${window.taskId}/submit` : 
-                    `/api/tasks/${window.taskId}/content`;
+                    document.getElementById("default-link").getAttribute("href") + `api/tasks/${window.taskId}/submit` : 
+                    document.getElementById("default-link").getAttribute("href") + `api/tasks/${window.taskId}/content`;
                 saveBody = JSON.stringify({ content: content });
             }
 
@@ -1171,14 +1180,17 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
                 taskTabContainer.style.display = 'none';
             }
             
-            // Tutorial Tab anzeigen nur wenn echter Server-Inhalt vorhanden
-            if (window.tutorialContent && 
-                typeof window.tutorialContent === 'string' && 
-                window.tutorialContent.trim() !== '') {
-                console.log('✅ Tutorial-Inhalt vom Server vorhanden - zeige Tab an');
+            // Tutorial Tab anzeigen wenn Tutorial-Inhalt vorhanden (Array oder String)
+            const hasTutorialContent = window.tutorialContent && (
+                (Array.isArray(window.tutorialContent) && window.tutorialContent.length > 0) ||
+                (typeof window.tutorialContent === 'string' && window.tutorialContent.trim() !== '')
+            );
+            
+            if (hasTutorialContent) {
+                console.log('✅ Tutorial-Inhalt vorhanden - zeige Tab an');
                 tutorialTabContainer.style.display = 'block';
             } else {
-                console.log('❌ Kein Tutorial-Inhalt vom Server - verstecke Tab');
+                console.log('❌ Kein Tutorial-Inhalt - verstecke Tab');
                 tutorialTabContainer.style.display = 'none';
             }
         }
@@ -1229,15 +1241,19 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
             console.log('Tutorial Content Type:', typeof window.tutorialContent);
             console.log('Tutorial Content:', window.tutorialContent);
             
-            // Tab-Sichtbarkeit prüfen
-            updateTabVisibility();
+            // Prüfen ob Tutorial-Inhalt vorhanden (Array oder String)
+            const hasTutorialContent = window.tutorialContent && (
+                (Array.isArray(window.tutorialContent) && window.tutorialContent.length > 0) ||
+                (typeof window.tutorialContent === 'string' && window.tutorialContent.trim() !== '')
+            );
             
-            // Prüfen ob Tutorial-Inhalt vom Server kam oder nur Beispieltext
-            if (!window.tutorialContent || 
-                (typeof window.tutorialContent === 'string' && window.tutorialContent.trim() === '')) {
-                console.log('❌ Kein Tutorial-Inhalt vom Server - Tab verstecken');
+            if (!hasTutorialContent) {
+                console.log('❌ Kein Tutorial-Inhalt vorhanden');
                 return;
             }
+            
+            // Tab-Sichtbarkeit prüfen
+            updateTabVisibility();
             
             // Tutorial Contents aus String parsen (für Thymeleaf-Kompatibilität)
             if (window.tutorialContent && Array.isArray(window.tutorialContent)) {

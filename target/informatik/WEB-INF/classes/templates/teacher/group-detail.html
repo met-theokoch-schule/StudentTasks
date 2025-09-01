@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="'Gruppe: ' + ${group.name}">Gruppe Details</title>
+    <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/custom.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" th:href="@{/student/dashboard}">
+                <i class="fas fa-chalkboard-teacher"></i> Lehrer-Bereich
+            </a>
+            <div class="navbar-nav me-auto">
+                <a class="nav-link" th:href="@{/teacher/dashboard}">Dashboard</a>
+                <a class="nav-link" th:href="@{/teacher/tasks}">Aufgaben</a>
+                <a class="nav-link" th:href="@{/teacher/groups}">Gruppen</a>
+            </div>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3" sec:authentication="principal.attributes['name']"></span>
+                <a class="btn btn-outline-light" th:href="@{/logout}">Abmelden</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1><i class="fas fa-users"></i> <span th:text="${group.name}">Gruppenname</span></h1>
+                        <p class="text-muted mb-0" th:text="${group.description}">Gruppenbeschreibung</p>
+                    </div>
+                    <div>
+                        <a th:href="@{/teacher/groups}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Alle Gruppen
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Statistik-Übersicht -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body text-center">
+                                <div class="fs-2 fw-bold" th:text="${statistics.totalStudents}">12</div>
+                                <div>Anzahl SuS</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body text-center">
+                                <div class="fs-2 fw-bold" th:text="${statistics.submittedTasks}">5</div>
+                                <div>Offene Abgaben</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body text-center">
+                                <div class="fs-2 fw-bold" th:text="${statistics.needsRevisionTasks}">23</div>
+                                <div>Überarbeitung nötig</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body text-center">
+                                <div class="fs-2 fw-bold" th:text="${statistics.completedTasks}">17</div>
+                                <div>Vollständig</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Schüler-Aufgaben-Matrix -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-table"></i> Schüler-Aufgaben-Matrix</h5>
+                        <small class="text-muted">Übersicht über den Status aller Aufgaben für alle Schüler</small>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${matrix != null and matrix.students != null and !matrix.students.isEmpty() and matrix.tasks != null and !matrix.tasks.isEmpty()}">
+                            <div class="task-matrix-container">
+                                <table class="task-matrix">
+                                    <thead>
+                                        <tr class="matrix-header">
+                                            <th class="matrix-corner">Schüler / Aufgaben</th>
+                                            <th th:each="task : ${matrix.tasks}" class="matrix-header">
+                                                <div class="rotated-text" 
+                                                     th:text="${task.title}" 
+                                                     th:title="${task.title + ' (Fällig: ' + #temporals.format(task.dueDate, 'dd.MM.yyyy') + ')'}">
+                                                    Aufgabe
+                                                </div>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="student : ${matrix.students}">
+                                            <td class="matrix-student-col" 
+                                                th:text="${student.name}" 
+                                                th:title="${student.name + ' (' + student.email + ')'}">
+                                                Schüler
+                                            </td>
+                                            <td th:each="task : ${matrix.tasks}" 
+                                                class="status-cell"
+                                                th:data-student-id="${student.id}"
+                                                th:data-task-id="${task.id}"
+                                                th:data-user-task-id="${matrix.statusMap.get(student.id + '_' + task.id)?.userTaskId}"
+                                                th:onclick="'handleStatusClick(' + ${student.id} + ', ' + ${task.id} + ', ' + ${matrix.statusMap.get(student.id + '_' + task.id)?.userTaskId} + ')'"
+                                                th:title="${student.name + ' - ' + task.title + ': ' + (matrix.statusMap.get(student.id + '_' + task.id)?.status?.name ?: 'Nicht begonnen')}">
+                                                <i th:class="${matrix.statusMap.get(student.id + '_' + task.id)?.status != null ? 
+                                                             (matrix.statusMap.get(student.id + '_' + task.id).status.name == 'NICHT_BEGONNEN' ? 'fas fa-circle text-secondary' :
+                                                             (matrix.statusMap.get(student.id + '_' + task.id).status.name == 'IN_BEARBEITUNG' ? 'fas fa-edit text-primary' :
+                                                             (matrix.statusMap.get(student.id + '_' + task.id).status.name == 'ABGEGEBEN' ? 'fas fa-hourglass-half text-warning' :
+                                                             (matrix.statusMap.get(student.id + '_' + task.id).status.name == 'ÜBERARBEITUNG_NÖTIG' ? 'fas fa-redo text-danger' :
+                                                             (matrix.statusMap.get(student.id + '_' + task.id).status.name == 'VOLLSTÄNDIG' ? 'fas fa-check-circle text-success' : 'fas fa-question text-muted'))))) :
+                                                             'fas fa-circle text-secondary'}"
+                                                   class="status-icon">
+                                                </i>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Legende -->
+                            <div class="mt-3">
+                                <h6>Legende:</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center mb-1">
+                                            <i class="fas fa-circle text-secondary me-2"></i>
+                                            <small>Nicht begonnen</small>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-1">
+                                            <i class="fas fa-edit text-primary me-2"></i>
+                                            <small>In Bearbeitung</small>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-1">
+                                            <i class="fas fa-hourglass-half text-warning me-2"></i>
+                                            <small>Abgegeben</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center mb-1">
+                                            <i class="fas fa-redo text-danger me-2"></i>
+                                            <small>Überarbeitung nötig</small>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-1">
+                                            <i class="fas fa-check-circle text-success me-2"></i>
+                                            <small>Vollständig</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Keine Daten vorhanden -->
+                        <div th:if="${matrix == null or matrix.students == null or matrix.students.isEmpty() or matrix.tasks == null or matrix.tasks.isEmpty()}" class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Keine aktiven Aufgaben für diese Gruppe</h5>
+                            <p class="text-muted">Erstellen Sie Aufgaben und weisen Sie diese der Gruppe zu.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+
+    <script>
+        // Matrix-Interaktivität
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tooltip für gekürzte Aufgabennamen
+            document.querySelectorAll('.rotated-text').forEach(el => {
+                if (el.scrollHeight > el.clientHeight) {
+                    el.title = el.textContent.trim();
+                }
+            });
+
+            // Smooth Scrolling für große Tabellen
+            const container = document.querySelector('.task-matrix-container');
+            if (container) {
+                container.style.scrollBehavior = 'smooth';
+            }
+        });
+
+        // Click-Handler für Status-Zellen
+        function handleStatusClick(studentId, taskId, userTaskId) {
+            if (userTaskId && userTaskId !== 'null') {
+                window.location.href = `/teacher/submissions/${userTaskId}`;
+            } else {
+                // Falls noch keine UserTask existiert, zur Aufgaben-Übersicht
+                window.location.href = `/teacher/tasks/${taskId}/submissions`;
+            }
+        }
+    </script>
+</body>
+</html>

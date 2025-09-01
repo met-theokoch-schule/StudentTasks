@@ -1,0 +1,33 @@
+
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zugriff verweigert - Schüler-Aufgaben-Verwaltung</title>
+    <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/custom.css}" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8 text-center">
+                <div class="alert alert-danger">
+                    <h1 class="display-4"><i class="fas fa-exclamation-triangle"></i></h1>
+                    <h2>Zugriff verweigert</h2>
+                    <p class="lead">Sie haben keine Berechtigung, diese Seite aufzurufen.</p>
+                    <p>Diese Seite ist nur für Lehrer zugänglich. Bitte wenden Sie sich an Ihren Administrator, falls Sie der Meinung sind, dass Sie Zugriff haben sollten.</p>
+                </div>
+                
+                <div class="mt-4">
+                    <a th:href="@{/dashboard}" class="btn btn-primary">
+                        <i class="fas fa-home"></i> Zurück zum Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>
