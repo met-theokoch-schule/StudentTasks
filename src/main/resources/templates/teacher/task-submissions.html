@@ -35,16 +35,9 @@
         </nav>
 
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <div>
-                    <h5>Submissions für: <span th:text="${task.title}">Aufgabentitel</span></h5>
-                    <small class="text-muted">Erstellt am: <span th:text="${#temporals.format(task.createdAt, 'dd.MM.yyyy HH:mm')}">Datum</span></small>
-                </div>
-                <div>
-                    <a th:href="@{'/task/' + ${task.id}}" target="_blank" class="btn btn-outline-primary btn-sm">
-                        <i class="fas fa-external-link-alt"></i> In neuem Tab öffnen
-                    </a>
-                </div>
+            <div class="card-header">
+                <h5>Submissions für: <span th:text="${task.title}">Aufgabentitel</span></h5>
+                <small class="text-muted">Erstellt am: <span th:text="${#temporals.format(task.createdAt, 'dd.MM.yyyy HH:mm')}">Datum</span></small>
             </div>
             <div class="card-body">
                 <div th:if="${userTasks != null and !userTasks.isEmpty()}">
