@@ -40,9 +40,16 @@
         <div class="row">
             <div class="col-md-8">
                 <div class="card">
-                    <div class="card-header">
-                        <h5>Submission Review - <span th:text="${userTask.user.name}">Schüler</span></h5>
-                        <small class="text-muted">Aufgabe: <span th:text="${userTask.task.title}">Aufgabentitel</span></small>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5>Submission Review - <span th:text="${userTask.user.name}">Schüler</span></h5>
+                            <small class="text-muted">Aufgabe: <span th:text="${userTask.task.title}">Aufgabentitel</span></small>
+                        </div>
+                        <div>
+                            <button id="openInNewTabBtn" class="btn btn-outline-primary btn-sm" onclick="openCurrentVersionInNewTab()">
+                                <i class="fas fa-external-link-alt"></i> In neuem Tab öffnen
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body p-0">
                         <!-- Current Status -->
@@ -212,6 +219,19 @@
 
             // Form normal absenden lassen
             return true;
+        }
+
+        // Function to open current iframe content in new tab
+        function openCurrentVersionInNewTab() {
+            const iframe = document.getElementById('taskViewFrame');
+            const currentSrc = iframe.src;
+            
+            if (currentSrc && currentSrc !== 'about:blank') {
+                window.open(currentSrc, '_blank');
+                console.log('🔗 Opened in new tab:', currentSrc);
+            } else {
+                console.warn('⚠️ No content loaded in iframe to open');
+            }
         }
 
         // Initial state beim Laden der Seite
