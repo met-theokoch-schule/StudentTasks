@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+    <!-- Versteckte Content-Divs für JavaScript -->
+    <a id="default-link" style="display: none;" href="/" th:href="@{/}"></a>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" th:href="@{/student/dashboard}">
@@ -194,10 +196,10 @@
         // Click-Handler für Status-Zellen
         function handleStatusClick(studentId, taskId, userTaskId) {
             if (userTaskId && userTaskId !== 'null') {
-                window.location.href = `/teacher/submissions/${userTaskId}`;
+                window.location.href = document.getElementById("default-link").getAttribute("href") + `teacher/submissions/${userTaskId}`;
             } else {
                 // Falls noch keine UserTask existiert, zur Aufgaben-Übersicht
-                window.location.href = `/teacher/tasks/${taskId}/submissions`;
+                window.location.href = document.getElementById("default-link").getAttribute("href") + `teacher/tasks/${taskId}/submissions`;
             }
         }
     </script>

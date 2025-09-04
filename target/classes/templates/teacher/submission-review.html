@@ -8,6 +8,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
+    <!-- Versteckte Content-Divs für JavaScript -->
+    <a id="default-link" style="display: none;" href="/" th:href="@{/}"></a>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" th:href="@{/teacher/dashboard}">
@@ -40,9 +42,16 @@
         <div class="row">
             <div class="col-md-8">
                 <div class="card">
-                    <div class="card-header">
-                        <h5>Submission Review - <span th:text="${userTask.user.name}">Schüler</span></h5>
-                        <small class="text-muted">Aufgabe: <span th:text="${userTask.task.title}">Aufgabentitel</span></small>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5>Submission Review - <span th:text="${userTask.user.name}">Schüler</span></h5>
+                            <small class="text-muted">Aufgabe: <span th:text="${userTask.task.title}">Aufgabentitel</span></small>
+                        </div>
+                        <div>
+                            <button id="openInNewTabBtn" class="btn btn-outline-primary btn-sm" onclick="openCurrentVersionInNewTab()">
+                                <i class="fas fa-external-link-alt"></i> In neuem Tab öffnen
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body p-0">
                         <!-- Current Status -->
@@ -155,7 +164,7 @@
             const iframe = document.getElementById('taskViewFrame');
             const currentVersionField = document.getElementById('currentVersion');
 
-            let newSrc = `/teacher/submissions/${userTaskId}/view`;
+            let newSrc = document.getElementById("default-link").getAttribute("href") + `teacher/submissions/${userTaskId}/view`;
             if (selectedVersion) {
                 newSrc += `?version=${selectedVersion}`;
                 currentDisplayedVersion = selectedVersion;
@@ -212,6 +221,19 @@
 
             // Form normal absenden lassen
             return true;
+        }
+
+        // Function to open current iframe content in new tab
+        function openCurrentVersionInNewTab() {
+            const iframe = document.getElementById('taskViewFrame');
+            const currentSrc = iframe.src;
+            
+            if (currentSrc && currentSrc !== 'about:blank') {
+                window.open(currentSrc, '_blank');
+                console.log('🔗 Opened in new tab:', currentSrc);
+            } else {
+                console.warn('⚠️ No content loaded in iframe to open');
+            }
         }
 
         // Initial state beim Laden der Seite

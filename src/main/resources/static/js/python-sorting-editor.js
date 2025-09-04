@@ -848,7 +848,7 @@ function resetArraySimulation() {
         sortarray.writeCount = 0;
         sortarray.readCount = 0;
 
-        addToConsole(`🎲 Neues Array mit ${currentSize} Elementen generiert`, 'info');
+        addToConsole(`🎲 Neues Array 'sortarray' mit ${currentSize} Elementen generiert`, 'info');
 
         // Visualisierung aktualisieren
         updateArrayDisplay();
@@ -1491,19 +1491,6 @@ async def array_length() -> int:
 async def swap_elements(index1: int, index2: int) -> None:
     """Tauscht zwei Array-Elemente"""
     pass
-
-# Hilfsfunktionen für Sortieralgorithmen
-def bubble_sort() -> None:
-    """Beispiel Bubble Sort Algorithmus"""
-    pass
-
-def selection_sort() -> None:
-    """Beispiel Selection Sort Algorithmus"""
-    pass
-
-def insertion_sort() -> None:
-    """Beispiel Insertion Sort Algorithmus"""
-    pass
 `;
 
         // Code mit Dummy-Funktionen für Type-Checking kombinieren
@@ -2111,6 +2098,9 @@ function initializeArrayVisualization(config = null) {
     updateArrayDisplay();
     updateArrayStats();
 
+    const currentSize = sortarray.size;
+    addToConsole(`🎲 Neues Array 'sortarray' mit ${currentSize} Elementen generiert`, 'info');
+    
     // Transistionen aktualisieren
     updateHamsterTransition(); // Benutzt nun die Geschwindigkeit für Array-Elemente
 }
@@ -2398,7 +2388,7 @@ function saveContent(isSubmission = false) {
     try {
         const content = getContentFromView();
         const urlElement = document.getElementById(isSubmission ? 'task-submit-url' : 'task-save-url');
-        const url = urlElement ? urlElement.getAttribute('data-url') : '';
+        const url = urlElement ? document.getElementById('default-link') + urlElement.getAttribute('data-url') : '';
 
         if (!url) {
             console.error('Keine URL für Speicherung gefunden');
