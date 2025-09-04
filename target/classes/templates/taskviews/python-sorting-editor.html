@@ -19,6 +19,8 @@
 </head>
 
 <body>
+    <!-- Versteckte Content-Divs für JavaScript -->
+    <a id="default-link" style="display: none;" href="/" th:href="@{/}"></a>
     <div class="mycontainer">
         <!-- Header mit Buttons und Dropdown -->
         <header class="header">
@@ -93,10 +95,10 @@
     </div>
 
     <div id="task-save-url" style="display: none"
-        th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? '/api/tasks/usertasks/' + userTaskId + '/content' : '/api/tasks/' + task.id + '/content'}"
+        th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? 'api/tasks/usertasks/' + userTaskId + '/content' : 'api/tasks/' + task.id + '/content'}"
         data-url="/dev/save"></div>
     <div id="task-submit-url" style="display: none"
-        th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? '' : '/api/tasks/' + task.id + '/submit'}"
+        th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? '' : 'api/tasks/' + task.id + '/submit'}"
         data-url="/dev/submit"></div>
     <div id="currentContent" style="display: none" th:text="${currentContent}"></div>
     <div id="description" style="display: none" th:text="${task.description}">*Test*</div>

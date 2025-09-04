@@ -8,6 +8,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
+    <!-- Versteckte Content-Divs für JavaScript -->
+    <a id="default-link" style="display: none;" href="/" th:href="@{/}"></a>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" th:href="@{/teacher/dashboard}">
@@ -162,7 +164,7 @@
             const iframe = document.getElementById('taskViewFrame');
             const currentVersionField = document.getElementById('currentVersion');
 
-            let newSrc = `/teacher/submissions/${userTaskId}/view`;
+            let newSrc = document.getElementById("default-link").getAttribute("href") + `teacher/submissions/${userTaskId}/view`;
             if (selectedVersion) {
                 newSrc += `?version=${selectedVersion}`;
                 currentDisplayedVersion = selectedVersion;

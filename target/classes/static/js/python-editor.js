@@ -910,7 +910,7 @@ function saveContent(isSubmission = false) {
 
     const content = getContentFromView();
     const urlElement = document.getElementById(isSubmission ? 'task-submit-url' : 'task-save-url');
-    const url = urlElement ? urlElement.getAttribute('data-url') : '';
+    const url = urlElement ? document.getElementById('default-link') + urlElement.getAttribute('data-url') : '';
 
     if (!url) {
         console.error('Keine URL für Speicherung gefunden');
