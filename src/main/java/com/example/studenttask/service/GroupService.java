@@ -237,11 +237,11 @@ public class GroupService {
     }
 
     public Map<String, Object> getStudentTaskMatrix(Group group, User teacher) {
-        // Alle Benutzer der Gruppe (ohne Rolle-Filterung)
+        // Alle Schüler der Gruppe laden
         List<User> students = userRepository.findByGroupsContaining(group);
 
-        // Alle aktiven Aufgaben des Lehrers für diese Gruppe
-        List<Task> tasks = taskRepository.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher)
+        // Alle aktiven Aufgaben finden, die dieser Gruppe zugewiesen sind (unabhängig vom Ersteller)
+        List<Task> activeTasks = taskRepository.findByIsActiveOrderByCreatedAtDesc(true)
             .stream()
             .filter(task -> task.getAssignedGroups().contains(group))
             .collect(Collectors.toList());
@@ -250,7 +250,7 @@ public class GroupService {
         Map<String, Map<String, Object>> statusMap = new HashMap<>();
 
         for (User student : students) {
-            for (Task task : tasks) {
+            for (Task task : activeTasks) {
                 Optional<UserTask> userTaskOpt = userTaskRepository.findByUserAndTask(student, task);
 
                 Map<String, Object> statusInfo = new HashMap<>();
@@ -273,13 +273,13 @@ public class GroupService {
 
         Map<String, Object> matrix = new HashMap<>();
         matrix.put("students", students);
-        matrix.put("tasks", tasks);
+        matrix.put("tasks", activeTasks);
         matrix.put("statusMap", statusMap);
 
         // Debug-Ausgabe
         System.out.println("Matrix Debug - Group: " + group.getName() + " (ID: " + group.getId() + ")");
         System.out.println("All users in group: " + students.size());
-        System.out.println("Tasks found: " + tasks.size());
+        System.out.println("Tasks found: " + activeTasks.size());
         System.out.println("StatusMap size: " + statusMap.size());
 
         // Debug: Liste der Benutzer
