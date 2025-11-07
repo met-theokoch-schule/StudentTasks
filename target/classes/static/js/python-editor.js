@@ -1,11 +1,14 @@
 // Globale Variablen
 let pythonEditor;
-let pyodide = null;
+let pythonWorker = null;
 let pyodideReady = false;
+let isExecuting = false;
 let isResizing = false;
 let typeCheckInterval = null;
 let lastPythonCode = '';
 let mypyReady = false;
+let currentExecutionId = null;
+let mainThreadPyodide = null; // Separate Pyodide-Instanz für MyPy
 
 // Initialisierung beim Laden der Seite
 document.addEventListener('DOMContentLoaded', function() {
@@ -14,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeOutputTabs();
     initializeResizer();
     initializeControls();
-    initializePyodide();
+    initializePythonWorker();
     initializeTaskContent();
     initializeTutorialNavigation();
 
@@ -247,12 +250,14 @@ function initializeControls() {
     // Ausgabe löschen Button
     const clearOutputBtn = document.getElementById('clearOutputBtn');
     clearOutputBtn.addEventListener('click', function() {
-        document.getElementById('consoleOutput').textContent = '';
+        document.getElementById('consoleOutput').innerHTML = '';
     });
 
-    // Ausführen-Button
+    // Ausführen/Stoppen-Button
     document.getElementById('runBtn').addEventListener('click', function() {
-        if (pyodideReady) {
+        if (isExecuting) {
+            stopPythonExecution();
+        } else if (pyodideReady) {
             runPythonCode();
         } else {
             console.log('Pyodide noch nicht bereit');
@@ -273,79 +278,92 @@ function getCurrentEditor() {
     return pythonEditor;
 }
 
+// Maximale Konsolengröße in Zeichen (kann hier angepasst werden)
+const MAX_CONSOLE_SIZE = 50000; // 50.000 Zeichen - großzügig aber verhindert Performance-Probleme
+
 function addToConsole(text, type = 'info') {
     const consoleOutput = document.getElementById('consoleOutput');
     const timestamp = new Date().toLocaleTimeString();
     const prefix = type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
 
-    consoleOutput.textContent += `[${timestamp}] ${prefix} ${text}\n`;
+    // HTML-sicher escapen und dann mit <br> hinzufügen
+    const escapedText = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    
+    const newContent = `[${timestamp}] ${prefix} ${escapedText}<br>`;
+
+    // Neuen Inhalt hinzufügen - verwende innerHTML für Konsistenz
+    consoleOutput.innerHTML += newContent;
+
+    // Bei Überschreitung der maximalen Größe von oben kürzen
+    if (consoleOutput.innerHTML.length > MAX_CONSOLE_SIZE) {
+        const excessChars = consoleOutput.innerHTML.length - MAX_CONSOLE_SIZE + 2000; // 2000 Zeichen extra entfernen
+        consoleOutput.innerHTML = '...[frühere Ausgaben entfernt]...<br>' + consoleOutput.innerHTML.substring(excessChars);
+    }
+
     consoleOutput.scrollTop = consoleOutput.scrollHeight;
 }
 
 function addToConsoleWithoutTimestamp(text) {
     const consoleOutput = document.getElementById('consoleOutput');
-    consoleOutput.textContent += `${text}\n`;
+
+    // Zeilenumbrüche in <br> Tags umwandeln und HTML sicher escapen
+    const escapedText = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br>');
+
+    // Neuen Inhalt hinzufügen - immer mit <br> am Ende für Zeilenumbruch
+    consoleOutput.innerHTML += escapedText + '<br>';
+
+    // Bei Überschreitung der maximalen Größe von oben kürzen
+    if (consoleOutput.innerHTML.length > MAX_CONSOLE_SIZE) {
+        const excessChars = consoleOutput.innerHTML.length - MAX_CONSOLE_SIZE + 2000; // 2000 Zeichen extra entfernen
+        consoleOutput.innerHTML = '...[frühere Ausgaben entfernt]...<br>' + consoleOutput.innerHTML.substring(excessChars);
+    }
+
     consoleOutput.scrollTop = consoleOutput.scrollHeight;
 }
 
-// Pyodide initialisieren
-async function initializePyodide() {
-    addToConsole('Pyodide wird geladen...', 'info');
+// Python Worker initialisieren
+function initializePythonWorker() {
     try {
-        pyodide = await loadPyodide({
-            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/"
-        });
+        // Web Worker erstellen
+        pythonWorker = new Worker(document.getElementById('default-link') + 'js/python-worker.js');
 
-        // Stdout umleiten
-        pyodide.runPython(`
-import sys
-from io import StringIO
-import contextlib
+        // Worker Message Handler
+        pythonWorker.onmessage = function(e) {
+            handleWorkerMessage(e.data);
+        };
 
-class OutputCapture:
-    def __init__(self):
-        self.reset()
+        // Worker Error Handler
+        pythonWorker.onerror = function(error) {
+            addToConsole('Worker Fehler: ' + error.message, 'error');
+            pyodideReady = false;
+            updateRunButton('error');
+        };
 
-    def reset(self):
-        self.stdout = StringIO()
-        self.stderr = StringIO()
-
-    def get_output(self):
-        return self.stdout.getvalue(), self.stderr.getvalue()
-
-output_capture = OutputCapture()
-
-@contextlib.contextmanager
-def capture_output():
-    old_stdout, old_stderr = sys.stdout, sys.stderr
-    try:
-        sys.stdout, sys.stderr = output_capture.stdout, output_capture.stderr
-        yield
-    finally:
-        sys.stdout, sys.stderr = old_stdout, old_stderr
-        `);
-
-        pyodideReady = true;
-        addToConsole('Pyodide erfolgreich geladen ✓', 'info');
-
-        // MyPy installieren und initialisieren
-        await initializeMyPy();
-
-        // Ausführen-Button aktivieren
-        const runBtn = document.getElementById('runBtn');
-        runBtn.disabled = false;
-        runBtn.style.opacity = '1';
+        // Worker initialisieren
+        pythonWorker.postMessage({ type: 'init' });
 
     } catch (error) {
-        addToConsole('Fehler beim Laden von Pyodide: ' + error.message, 'error');
+        addToConsole('Fehler beim Erstellen des Workers: ' + error.message, 'error');
         pyodideReady = false;
     }
 }
 
-// Python-Code ausführen (Standard-Modus)
-async function runPythonCode() {
+// Python-Code ausführen (Web Worker)
+function runPythonCode() {
     if (!pyodideReady) {
         addToConsole('Pyodide ist noch nicht bereit. Bitte warten...', 'warning');
+        return;
+    }
+
+    if (isExecuting) {
+        addToConsole('Code wird bereits ausgeführt...', 'warning');
         return;
     }
 
@@ -355,74 +373,220 @@ async function runPythonCode() {
         return;
     }
 
-    addToConsole('Python-Code wird ausgeführt...', 'info');
+    // Execution State setzen
+    isExecuting = true;
+    currentExecutionId = Date.now();
+    updateRunButton('executing');
 
+    // Code an Worker senden
+    pythonWorker.postMessage({
+        type: 'execute',
+        data: {
+            code: code,
+            id: currentExecutionId
+        }
+    });
+}
+
+// Python-Ausführung stoppen (mit Worker-Terminierung für Infinite Loops)
+function stopPythonExecution() {
+    if (!isExecuting) {
+        return;
+    }
+
+    // UI auf "Stopping" setzen (aber isExecuting NICHT zurücksetzen)
+    updateRunButton('stopping');
+    addToConsole('Stoppe Ausführung...', 'info');
+
+    // Versuche zunächst normales Stoppen
+    pythonWorker.postMessage({ type: 'stop' });
+
+    // Nach kurzer Zeit Worker IMMER hart terminieren bei Infinite Loops
+    setTimeout(() => {
+        // Hart-Terminierung für Infinite Loops - unabhängig vom aktuellen State
+        if (isExecuting) {
+            addToConsole('Stopp-Button gedrückt, Programm wird angehalten...', 'warning');
+            terminateAndRecreateWorker();
+        }
+    }, 300); // Nur 300ms warten, dann sofort hart stoppen
+}
+
+// Worker hart terminieren und neu erstellen (für Infinite Loops)
+function terminateAndRecreateWorker() {
     try {
-        // Output-Capture zurücksetzen
-        pyodide.runPython('output_capture.reset()');
-
-        // input()-Funktion für Browser-Eingaben definieren
-        pyodide.runPython(`
-def input(prompt=""):
-    import js
-    return js.prompt(prompt) or ""
-        `);
-
-        // Code mit Output-Capture ausführen
-        const result = pyodide.runPython(`
-with capture_output():
-    exec('''${code.replace(/'/g, "\\'")}''')
-
-stdout, stderr = output_capture.get_output()
-{'stdout': stdout, 'stderr': stderr}
-        `);
-
-        const output = result.toJs();
-
-        // Stdout ausgeben (ohne Timestamp bei erster Zeile)
-        if (output.get('stdout')) {
-            addToConsoleWithoutTimestamp(output.get('stdout'));
+        // Worker hart terminieren
+        if (pythonWorker) {
+            pythonWorker.terminate();
         }
 
-        // Stderr ausgeben
-        if (output.get('stderr')) {
-            addToConsole(output.get('stderr'), 'error');
-        }
+        // State zurücksetzen
+        pyodideReady = false;
+        isExecuting = false;
+        currentExecutionId = null;
 
-        if (!output.get('stdout') && !output.get('stderr')) {
-            addToConsoleWithoutTimestamp('Code ausgeführt (keine Ausgabe)');
-        }
+        // UI auf Loading setzen
+        updateRunButton('loading');
+        addToConsole('Worker wird neu initialisiert...', 'info');
+
+        // Neuen Worker erstellen
+        initializePythonWorker();
 
     } catch (error) {
-        addToConsole('Python-Fehler: ' + error.message, 'error');
+        addToConsole('Fehler beim Neustart des Workers: ' + error.message, 'error');
+        updateRunButton('error');
+    }
+}
+
+// Worker Message Handler
+function handleWorkerMessage(message) {
+    const { type, data, message: msg } = message;
+
+    switch (type) {
+        case 'worker_ready':
+            console.log('Worker bereit');
+            break;
+
+        case 'status':
+            if (data === 'loading') {
+                addToConsole(msg, 'info');
+            } else if (data === 'ready') {
+                pyodideReady = true;
+                addToConsole(msg, 'info');
+                updateRunButton('ready');
+                // MyPy parallel im Hauptthread für Type-Checking laden (nur einmal)
+                if (!mypyReady && !mainThreadPyodide) {
+                    initializeMyPy().catch(error => {
+                        console.error('MyPy Initialisierung fehlgeschlagen:', error);
+                        addToConsole('Type-Checking deaktiviert (MyPy-Fehler)', 'warning');
+                    });
+                }
+            } else if (data === 'executing') {
+                addToConsole(msg, 'info');
+            } else if (data === 'stopped' || data === 'interrupted') {
+                isExecuting = false;
+                currentExecutionId = null;
+                updateRunButton('ready');
+                addToConsole(msg, 'info');
+            }
+            break;
+
+        case 'output':
+            // Real-time output ohne Timestamp
+            addToConsoleWithoutTimestamp(data);
+            break;
+
+        case 'completed':
+            isExecuting = false;
+            currentExecutionId = null;
+            updateRunButton('ready');
+            if (!data || data === 'success') {
+                // Keine zusätzliche Nachricht bei erfolgreichem Abschluss
+            }
+            break;
+
+        case 'error':
+            isExecuting = false;
+            currentExecutionId = null;
+            updateRunButton('ready');
+
+            if (data === 'not_ready') {
+                addToConsole('Pyodide ist noch nicht bereit. Bitte warten...', 'warning');
+            } else if (data === 'already_executing') {
+                addToConsole('Code wird bereits ausgeführt...', 'warning');
+            } else if (data === 'execution_error') {
+                addToConsole(msg, 'error');
+            } else if (data === 'initialization_failed') {
+                pyodideReady = false;
+                updateRunButton('error');
+                addToConsole(msg, 'error');
+            } else {
+                addToConsole('Unbekannter Fehler: ' + msg, 'error');
+            }
+            break;
+
+        default:
+            console.log('Unbekannte Worker-Nachricht:', type, data);
+    }
+}
+
+// Run Button Status aktualisieren
+function updateRunButton(state) {
+    const runBtn = document.getElementById('runBtn');
+
+    switch (state) {
+        case 'ready':
+            runBtn.disabled = false;
+            runBtn.style.opacity = '1';
+            runBtn.innerHTML = '<i class="fas fa-play"></i> Ausführen';
+            runBtn.className = 'btn btn-primary';
+            break;
+
+        case 'executing':
+            runBtn.disabled = false;
+            runBtn.style.opacity = '1';
+            runBtn.innerHTML = '<i class="fas fa-stop"></i> Stoppen';
+            runBtn.className = 'btn btn-danger';
+            break;
+
+        case 'stopping':
+            runBtn.disabled = true;
+            runBtn.style.opacity = '0.8';
+            runBtn.innerHTML = '<i class="fas fa-pause"></i> Stoppt...';
+            runBtn.className = 'btn btn-warning';
+            break;
+
+        case 'loading':
+            runBtn.disabled = true;
+            runBtn.style.opacity = '0.6';
+            runBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Lädt...';
+            runBtn.className = 'btn btn-secondary';
+            break;
+
+        case 'error':
+            runBtn.disabled = true;
+            runBtn.style.opacity = '0.6';
+            runBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Fehler';
+            runBtn.className = 'btn btn-secondary';
+            break;
+
+        default:
+            runBtn.disabled = true;
+            runBtn.style.opacity = '0.6';
+            runBtn.innerHTML = '<i class="fas fa-play"></i> Ausführen';
+            runBtn.className = 'btn btn-secondary';
     }
 }
 
 
 
-// MyPy initialisieren
+// MyPy initialisieren (läuft parallel im Hauptthread für Type-Checking)
 async function initializeMyPy() {
     try {
         addToConsole('MyPy wird installiert...', 'info');
 
-        // Schritt 1: Micropip laden für zusätzliche Pakete
-        await pyodide.loadPackage(['micropip']);
+        // Schritt 1: Eigene Pyodide-Instanz für MyPy laden
+        mainThreadPyodide = await loadPyodide({
+            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/"
+        });
+
+        // Schritt 2: Micropip laden für zusätzliche Pakete
+        await mainThreadPyodide.loadPackage(['micropip']);
         addToConsole('micropip geladen ✓', 'info');
 
-        // Schritt 2: Erforderliche Pakete installieren
-        await pyodide.runPythonAsync(`
+        // Schritt 3: Erforderliche Pakete installieren
+        await mainThreadPyodide.runPythonAsync(`
 import micropip
 # typing-extensions und mypy_extensions über micropip installieren
 await micropip.install(['typing-extensions', 'mypy-extensions'])
         `);
         addToConsole('typing-extensions und mypy-extensions installiert ✓', 'info');
 
-        // Schritt 3: MyPy installieren
-        await pyodide.loadPackage(['mypy']);
+        // Schritt 4: MyPy installieren
+        await mainThreadPyodide.loadPackage(['mypy']);
         addToConsole('MyPy-Paket geladen ✓', 'info');
 
-        // Schritt 3: MyPy-Umgebung konfigurieren
-        pyodide.runPython(`
+        // Schritt 5: MyPy-Umgebung konfigurieren
+        mainThreadPyodide.runPython(`
 import sys
 import os
 import tempfile
@@ -549,7 +713,7 @@ except Exception as e:
 
 // Fallback-Checker ohne MyPy
 function initializeFallbackChecker() {
-    pyodide.runPython(`
+    mainThreadPyodide.runPython(`
 import ast
 import sys
 
@@ -592,7 +756,7 @@ function startTypeChecking() {
     }, 800); // Alle 800ms
 }
 
-// Python-Code Type-Checking
+// Python-Code Type-Checking (async für UI-Performance)
 async function checkPythonTypes() {
     const currentCode = pythonEditor.getValue();
 
@@ -607,11 +771,13 @@ async function checkPythonTypes() {
         // Alte Marker entfernen
         clearTypeErrors();
 
-        // MyPy ausführen
-        const errors = pyodide.runPython(`
+        // MyPy ausführen (async für UI-Responsiveness)
+        const result = await mainThreadPyodide.runPythonAsync(`
 errors = type_checker.check_code('''${currentCode.replace(/'/g, "\\'")}''')
 errors
-        `).toJs();
+        `);
+        const errors = result.toJs();
+        result.destroy(); // PyProxy cleanup
 
         // Fehler im Editor markieren
         if (errors && errors.length > 0) {
@@ -732,7 +898,7 @@ function initializeTutorialNavigation() {
         }
         return; // Funktion beenden
     }
-    
+
     // Navigation HTML erstellen
     const navigationHTML = `
         <div class="tutorial-navigation">
@@ -847,7 +1013,7 @@ function updateTutorialDisplay() {
 function updateTaskTab(markdownText) {
     const taskOutput = document.getElementById('taskOutput');
     const taskTab = document.querySelector('.output-tab[data-output-tab="task"]');
-    
+
     if (taskOutput) {
         // Überprüfen, ob markdownText nicht leer ist
         if (markdownText && markdownText.trim() !== '') {
