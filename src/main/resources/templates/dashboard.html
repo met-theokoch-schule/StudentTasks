@@ -61,13 +61,13 @@
                         </ul>
                         <div class="mt-3">
                             <!-- Für Lehrer: Link zum Teacher Dashboard -->
-                            <a th:if="${isTeacher != null and isTeacher}" 
-                               th:href="@{/teacher/dashboard}" 
+                            <a th:if="${isTeacher != null and isTeacher}"
+                               th:href="@{/teacher/dashboard}"
                                class="btn btn-info">
                                 <i class="fas fa-chalkboard-teacher"></i> Zum Lehrer-Bereich
                             </a>
                             <!-- Für Schüler: Kein aktiver Link -->
-                            <span th:if="${isTeacher == null or !isTeacher}" 
+                            <span th:if="${isTeacher == null or !isTeacher}"
                                   class="btn btn-info disabled">
                                 <i class="fas fa-user-graduate"></i> Meine Aufgaben (in Entwicklung)
                             </span>
@@ -89,7 +89,7 @@
             </div>
         </div>
 
-        
+
 
         <div class="row mt-4">
             <div class="col-12">
