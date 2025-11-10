@@ -129,8 +129,8 @@ public class TeacherTaskController {
                 .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
         Optional<Task> taskOpt = taskService.findById(taskId);
 
-        // Sicherheit: Prüfen ob Aufgabe existiert und dem Lehrer gehört
-        if (taskOpt.isEmpty() || !taskOpt.get().getCreatedBy().equals(teacher)) {
+        // Sicherheit: Prüfen ob Aufgabe existiert
+        if (taskOpt.isEmpty()) {
             return "redirect:/teacher/tasks";
         }
 
@@ -148,6 +148,7 @@ public class TeacherTaskController {
         model.addAttribute("task", task);
         model.addAttribute("userTasks", userTasks);
         model.addAttribute("currentUrl", currentUrl);
+        model.addAttribute("isOwnTask", task.getCreatedBy().equals(teacher));
 
         return "teacher/task-submissions";
     }
