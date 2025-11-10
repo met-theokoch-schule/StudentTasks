@@ -49,28 +49,33 @@ public class GroupService {
     public List<TeacherGroupController.GroupInfo> getGroupsWithActiveTasksByTeacher(User teacher) {
         List<TeacherGroupController.GroupInfo> result = new ArrayList<>();
 
-        // Alle aktiven Aufgaben des Lehrers
-        List<Task> activeTasks = taskRepository.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher);
+        // Alle aktiven Aufgaben (unabhängig vom Ersteller)
+        List<Task> allActiveTasks = taskRepository.findByIsActiveTrueOrderByCreatedAtDesc();
 
-        // Gruppiere nach Gruppen
-        activeTasks.stream()
-            .flatMap(task -> task.getAssignedGroups().stream())
-            .distinct()
-            .forEach(group -> {
+        // Filtere nach Gruppen, bei denen der Lehrer Mitglied ist
+        List<Group> teacherGroups = new ArrayList<>(teacher.getGroups());
+
+        // Für jede Gruppe, bei der der Lehrer Mitglied ist
+        for (Group group : teacherGroups) {
+            // Finde aktive Aufgaben, die dieser Gruppe zugewiesen sind
+            List<Task> groupActiveTasks = allActiveTasks.stream()
+                .filter(task -> task.getAssignedGroups().contains(group))
+                .collect(Collectors.toList());
+
+            if (!groupActiveTasks.isEmpty()) {
                 // Zähle Statistiken für diese Gruppe
                 int studentCount = userRepository.countByGroupsContaining(group);
-                int activeTaskCount = (int) activeTasks.stream()
-                    .filter(task -> task.getAssignedGroups().contains(group))
-                    .count();
+                int activeTaskCount = groupActiveTasks.size();
 
                 // Zähle ausstehende Abgaben
-                int pendingSubmissions = countPendingSubmissionsForGroup(group, teacher);
+                int pendingSubmissions = countPendingSubmissionsForGroup(group, groupActiveTasks);
 
                 // Letzte Aktivität
-                LocalDateTime lastActivity = getLastActivityForGroup(group, teacher);
+                LocalDateTime lastActivity = getLastActivityForGroup(group, groupActiveTasks);
 
                 result.add(new TeacherGroupController.GroupInfo(group, studentCount, activeTaskCount, pendingSubmissions, lastActivity));
-            });
+            }
+        }
 
         return result;
     }
@@ -86,8 +91,8 @@ public class GroupService {
         // Alle Schüler der Gruppe
         List<User> students = userRepository.findByGroupsContaining(group);
 
-        // Alle aktiven Aufgaben des Lehrers für diese Gruppe
-        List<Task> groupTasks = taskRepository.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher)
+        // Alle aktiven Aufgaben für diese Gruppe (unabhängig vom Ersteller)
+        List<Task> groupTasks = taskRepository.findByIsActiveTrueOrderByCreatedAtDesc()
             .stream()
             .filter(task -> task.getAssignedGroups().contains(group))
             .collect(Collectors.toList());
@@ -122,84 +127,68 @@ public class GroupService {
     }
 
     /**
-     * Zählt ausstehende Abgaben für eine Gruppe
+     * Zählt ausstehende Abgaben für eine Gruppe mit einer gegebenen Liste von Aufgaben
      */
-    private int countPendingSubmissionsForGroup(Group group, User teacher) {
+    private int countPendingSubmissionsForGroup(Group group, List<Task> tasks) {
         List<User> students = userRepository.findByGroupsContaining(group);
-        List<Task> activeTasks = taskRepository.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher)
-            .stream()
-            .filter(task -> task.getAssignedGroups().contains(group))
-            .collect(Collectors.toList());
 
-        int count = 0;
+        int pendingCount = 0;
         for (User student : students) {
-            for (Task task : activeTasks) {
+            for (Task task : tasks) {
+                // Hier muss Optional<UserTask> verwendet werden, da nicht jeder Schüler jede Aufgabe hat
+                Optional<UserTask> userTaskOpt = userTaskRepository.findByUserAndTask(student, task);
+                // Wenn keine UserTask existiert oder sie nicht gestartet wurde, zählt sie als ausstehend
+                if (!userTaskOpt.isPresent() || userTaskOpt.get().getStatus() == UserTaskStatus.NOT_STARTED) {
+                    pendingCount++;
+                }
+            }
+        }
+        return pendingCount;
+    }
+
+    /**
+     * Zählt abgeschlossene Abgaben für eine Gruppe mit einer gegebenen Liste von Aufgaben
+     */
+    private int countCompletedSubmissionsForGroup(Group group, List<Task> tasks) {
+        List<User> students = userRepository.findByGroupsContaining(group);
+
+        int completedCount = 0;
+        for (User student : students) {
+            for (Task task : tasks) {
                 Optional<UserTask> userTaskOpt = userTaskRepository.findByUserAndTask(student, task);
                 if (userTaskOpt.isPresent()) {
                     UserTask userTask = userTaskOpt.get();
-                    if (userTask != null && !isTaskCompleted(userTask)) {
-                        count++;
+                    // Überprüfen, ob der Status abgeschlossen ist
+                    if (userTask.getStatus() != null && "VOLLSTÄNDIG".equals(userTask.getStatus().getName())) {
+                        completedCount++;
                     }
                 }
             }
         }
-
-        return count;
+        return completedCount;
     }
 
     /**
-     * Zählt abgeschlossene Abgaben für eine Gruppe
+     * Findet letzte Aktivität für eine Gruppe mit einer gegebenen Liste von Aufgaben
      */
-    private int countCompletedSubmissionsForGroup(Group group, User teacher) {
+    private LocalDateTime getLastActivityForGroup(Group group, List<Task> tasks) {
         List<User> students = userRepository.findByGroupsContaining(group);
-        List<Task> activeTasks = taskRepository.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher)
-            .stream()
-            .filter(task -> task.getAssignedGroups().contains(group))
-            .collect(Collectors.toList());
 
-        int count = 0;
+        LocalDateTime lastActivity = null;
         for (User student : students) {
-            for (Task task : activeTasks) {
+            for (Task task : tasks) {
                 Optional<UserTask> userTaskOpt = userTaskRepository.findByUserAndTask(student, task);
                 if (userTaskOpt.isPresent()) {
                     UserTask userTask = userTaskOpt.get();
-                    if (userTask != null && isTaskCompleted(userTask)) {
-                        count++;
-                    }
-                }
-            }
-        }
-
-        return count;
-    }
-
-    /**
-     * Findet letzte Aktivität für eine Gruppe
-     */
-    private LocalDateTime getLastActivityForGroup(Group group, User teacher) {
-        List<User> students = userRepository.findByGroupsContaining(group);
-        List<Task> activeTasks = taskRepository.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher)
-            .stream()
-            .filter(task -> task.getAssignedGroups().contains(group))
-            .collect(Collectors.toList());
-
-        LocalDateTime latest = null;
-
-        for (User student : students) {
-            for (Task task : activeTasks) {
-                Optional<UserTask> userTaskOpt = userTaskRepository.findByUserAndTask(student, task);
-                 if (userTaskOpt.isPresent()) {
-                     UserTask userTask = userTaskOpt.get();
                     if (userTask != null && userTask.getLastModified() != null) {
-                        if (latest == null || userTask.getLastModified().isAfter(latest)) {
-                            latest = userTask.getLastModified();
+                        if (lastActivity == null || userTask.getLastModified().isAfter(lastActivity)) {
+                            lastActivity = userTask.getLastModified();
                         }
                     }
                 }
             }
         }
-
-        return latest;
+        return lastActivity;
     }
 
     /**
