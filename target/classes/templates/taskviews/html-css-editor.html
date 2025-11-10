@@ -920,13 +920,17 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
                 htmlContent = htmlContent.replace(regex, `src="${projectData.images[imageName]}"`);
             });
 
-            // Relative Links zu anderen HTML-Dateien handhaben
+            // Relative Links zu anderen HTML-Dateien handhaben (aber keine Anker-Links)
             Object.keys(projectData.files).forEach(fileName => {
                 if (projectData.files[fileName].type === 'html' && fileName !== selectedFile) {
-                    const regex = new RegExp(`href=["']${fileName}["']`, 'gi');
+                    // Nur Links zu anderen Dateien ersetzen, keine Anker (#)
+                    const regex = new RegExp(`href=["']${fileName}["'](?!#)`, 'gi');
                     htmlContent = htmlContent.replace(regex, `href="javascript:window.parent.switchToFileInPreview('${fileName}')"`);
                 }
             });
+            
+            // Anker-Links innerhalb der aktuellen Datei sollten normal funktionieren
+            // (keine Änderung nötig, da sie bereits relativ sind)
 
             document.getElementById('preview').srcdoc = htmlContent;
         }
