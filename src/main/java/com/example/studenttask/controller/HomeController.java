@@ -63,9 +63,25 @@ public class HomeController {
             // Rollen und Gruppen laden
             Set<Role> roles = user.getRoles();
             
-            System.out.println("🔍 DEBUG: About to fetch groups for user ID: " + user.getId());
-            List<Group> groups = groupService.getGroupsForUser(user);
-            System.out.println("🔍 DEBUG: Groups fetched. Result: " + (groups == null ? "null" : groups.size() + " groups"));
+            System.out.println("==========================================");
+            System.out.println("🔍 DEBUG: About to fetch groups for user ID: " + user.getId() + ", Name: " + user.getName());
+            System.out.println("🔍 DEBUG: GroupService instance: " + (groupService != null ? "NOT NULL" : "NULL"));
+            System.out.println("==========================================");
+            
+            List<Group> groups = null;
+            try {
+                groups = groupService.getGroupsForUser(user);
+                System.out.println("==========================================");
+                System.out.println("🔍 DEBUG: Groups fetched successfully!");
+                System.out.println("🔍 DEBUG: Groups result: " + (groups == null ? "NULL" : groups.size() + " groups"));
+                System.out.println("==========================================");
+            } catch (Exception e) {
+                System.out.println("==========================================");
+                System.out.println("❌ ERROR: Exception while fetching groups!");
+                System.out.println("❌ Exception message: " + e.getMessage());
+                e.printStackTrace();
+                System.out.println("==========================================");
+            }
             
             // Detaillierte Gruppen-Ausgabe
             System.out.println("👥 Groups assigned to user:");
@@ -74,8 +90,9 @@ public class HomeController {
                     System.out.println("   - Group ID: " + group.getId() + ", Name: '" + group.getName() + "'");
                 }
             } else {
-                System.out.println("   - No groups assigned");
+                System.out.println("   - No groups assigned (or NULL)");
             }
+            System.out.println("==========================================");
 
             // Role-basierte Flags setzen
             boolean isTeacher = roles.stream().anyMatch(role -> role.getName().equals("ROLE_TEACHER"));
