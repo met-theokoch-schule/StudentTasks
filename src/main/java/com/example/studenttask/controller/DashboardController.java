@@ -54,7 +54,7 @@ public class DashboardController {
 
         System.out.println("🌐 === DEBUG: Dashboard Controller START ===");
 
-        // Benutzer aus der Datenbank laden
+        // Benutzer aus der Datenbank laden oder aktualisieren
         String openIdSubject = authentication.getName();
         System.out.println("🔍 Looking for user with OpenID Subject: " + openIdSubject);
 

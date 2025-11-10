@@ -68,7 +68,7 @@ public class UserService {
             }
         }
         System.out.println("==========================================");
-        
+
         // Standard Claims mapping
         user.setOpenIdSubject(oauth2User.getAttribute("sub"));
         user.setEmail(oauth2User.getAttribute("email"));
@@ -109,21 +109,21 @@ public class UserService {
     @SuppressWarnings("unchecked")
     private void mapGroupsFromOAuth2(User user, OAuth2User oauth2User) {
         System.out.println("👥 === Synchronizing Groups from OAuth2 ===");
-        
+
         // Get current groups before clearing
         Set<Group> oldGroups = new HashSet<>(user.getGroups());
         System.out.println("   - Old groups count: " + oldGroups.size());
         oldGroups.forEach(g -> System.out.println("     - Old: " + g.getName()));
-        
+
         // Clear existing groups
         user.getGroups().clear();
 
         Map<String, Map<String, Object>> groups = oauth2User.getAttribute("groups");
         System.out.println("   - Groups from OAuth2: " + groups);
-        
+
         if (groups != null) {
             System.out.println("   - Processing " + groups.size() + " group(s) from OAuth2");
-            
+
             for (Map.Entry<String, Map<String, Object>> groupEntry : groups.entrySet()) {
                 Map<String, Object> groupData = groupEntry.getValue();
                 String groupName = (String) groupData.get("act");
@@ -138,18 +138,18 @@ public class UserService {
                             Group newGroup = new Group(groupName, groupDescription);
                             return groupRepository.save(newGroup);
                         });
-                    
+
                     System.out.println("     - Adding group to user: " + group.getName() + " (ID: " + group.getId() + ")");
                     user.addGroup(group);
                 }
             }
-            
+
             System.out.println("   - New groups count: " + user.getGroups().size());
             user.getGroups().forEach(g -> System.out.println("     - New: " + g.getName()));
         } else {
             System.out.println("   - No groups data received from OAuth2");
         }
-        
+
         System.out.println("👥 === Groups Synchronization Complete ===");
     }
 
@@ -185,7 +185,7 @@ public class UserService {
         System.out.println("   - Given Name: " + givenName);
         System.out.println("   - Family Name: " + familyName);
         System.out.println("   - Preferred Username: " + preferredUsername);
-        
+
         System.out.println("==========================================");
         System.out.println("🔍 COMPLETE OAUTH2 TOKEN DUMP:");
         System.out.println("==========================================");
@@ -269,8 +269,15 @@ public class UserService {
             System.out.println("   - No roles data received from OAuth2");
         }
 
-        // Handle groups from OAuth2 attributes
+        // Handle groups from OAuth2 attributes - CLEAR OLD GROUPS FIRST
         System.out.println("👥 Processing groups...");
+        System.out.println("   - Current groups BEFORE sync: " + user.getGroups().size());
+        user.getGroups().forEach(g -> System.out.println("     - Before: " + g.getName()));
+
+        // Clear existing groups to ensure fresh sync
+        user.getGroups().clear();
+        System.out.println("   - Groups cleared, count: " + user.getGroups().size());
+
         @SuppressWarnings("unchecked")
         Map<String, Object> groupsData = oauth2User.getAttribute("groups");
         System.out.println("   - Groups raw data: " + groupsData);
@@ -308,32 +315,20 @@ public class UserService {
             }
             user.setGroups(groups);
             System.out.println("   - Total groups assigned: " + groups.size());
+            groups.forEach(g -> System.out.println("     - Assigned: " + g.getName()));
         } else {
             System.out.println("   - No groups data received from OAuth2");
         }
 
-        // Save user to database
+        // Save user with all updated information
         System.out.println("💾 Saving user to database...");
-        try {
-            User savedUser = userRepository.save(user);
-            System.out.println("✅ User successfully saved!");
-            System.out.println("   - User ID: " + savedUser.getId());
-            System.out.println("   - OpenID Subject: " + savedUser.getOpenIdSubject());
-            System.out.println("   - Name: " + savedUser.getName());
-            System.out.println("   - Email: " + savedUser.getEmail());
-            System.out.println("   - Roles count: " + (savedUser.getRoles() != null ? savedUser.getRoles().size() : 0));
-            System.out.println("   - Groups count: " + (savedUser.getGroups() != null ? savedUser.getGroups().size() : 0));
+        user = userRepository.save(user);
+        System.out.println("✅ User saved successfully with ID: " + user.getId());
+        System.out.println("   - Final groups count: " + user.getGroups().size());
+        user.getGroups().forEach(g -> System.out.println("     - Final: " + g.getName()));
 
-            System.out.println("🔍 === DEBUG: OAuth2 User Creation/Update Process END ===");
-            return savedUser;
-
-        } catch (Exception e) {
-            System.err.println("❌ ERROR saving user to database!");
-            System.err.println("   - Error message: " + e.getMessage());
-            System.err.println("   - Error class: " + e.getClass().getSimpleName());
-            e.printStackTrace();
-            throw e;
-        }
+        System.out.println("🔍 === DEBUG: OAuth2 User Creation/Update Process COMPLETE ===");
+        return user;
     }
 
     /**
@@ -398,12 +393,12 @@ public class UserService {
         if (userOpt.isEmpty()) {
             return false;
         }
-        
+
         User user = userOpt.get();
         if (user.getRoles() == null) {
             return false;
         }
-        
+
         return user.getRoles().stream()
             .anyMatch(role -> {
                 String roleName = role.getName();
