@@ -350,5 +350,15 @@ public class GroupService {
         );
     }
 
-
+    public List<Group> getGroupsForUser(User user) {
+        System.out.println("📊 GroupService.getGroupsForUser called for user: " + user.getName() + " (ID: " + user.getId() + ")");
+        List<Group> groups = groupRepository.findByMembersContaining(user);
+        System.out.println("📊 GroupRepository returned " + (groups != null ? groups.size() : "null") + " groups");
+        if (groups != null && !groups.isEmpty()) {
+            for (Group group : groups) {
+                System.out.println("   📊 Found group: ID=" + group.getId() + ", Name='" + group.getName() + "'");
+            }
+        }
+        return groups;
+    }
 }

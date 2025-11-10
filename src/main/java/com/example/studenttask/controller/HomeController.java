@@ -13,12 +13,18 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import com.example.studenttask.model.Role;
 import java.util.Set;
 import com.example.studenttask.model.Group;
+import java.util.List;
+import com.example.studenttask.service.GroupService;
+
 
 @Controller
 public class HomeController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private GroupService groupService;
 
     @GetMapping("/")
     public String home() {
@@ -56,7 +62,11 @@ public class HomeController {
 
             // Rollen und Gruppen laden
             Set<Role> roles = user.getRoles();
-            Set<Group> groups = user.getGroups();
+            // Get groups from GroupService
+            System.out.println("🔍 Fetching groups for user...");
+            List<Group> groups = groupService.getGroupsForUser(user);
+            System.out.println("🔍 Groups fetched. Count: " + (groups != null ? groups.size() : "null"));
+
 
             // Role-basierte Flags setzen
             boolean isTeacher = roles.stream().anyMatch(role -> role.getName().equals("ROLE_TEACHER"));
@@ -72,10 +82,10 @@ public class HomeController {
             System.out.println("👥 Groups assigned to user:");
             if (groups != null && !groups.isEmpty()) {
                 for (Group group : groups) {
-                    System.out.println("   - Group ID: " + group.getId() + ", Name: '" + group.getName() + "'");
+                    System.out.println(" - Group ID: " + group.getId() + ", Name: '" + group.getName() + "'");
                 }
             } else {
-                System.out.println("   - No groups assigned");
+                System.out.println(" - No groups assigned");
             }
         } else {
             System.out.println("❌ User not found in database");
