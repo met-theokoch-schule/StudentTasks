@@ -924,13 +924,36 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
             Object.keys(projectData.files).forEach(fileName => {
                 if (projectData.files[fileName].type === 'html' && fileName !== selectedFile) {
                     // Nur Links zu anderen Dateien ersetzen, keine Anker (#)
-                    const regex = new RegExp(`href=["']${fileName}["'](?!#)`, 'gi');
+                    const regex = new RegExp(`href=["']${fileName}["']`, 'gi');
                     htmlContent = htmlContent.replace(regex, `href="javascript:window.parent.switchToFileInPreview('${fileName}')"`);
                 }
             });
             
-            // Anker-Links innerhalb der aktuellen Datei sollten normal funktionieren
-            // (keine Änderung nötig, da sie bereits relativ sind)
+            // Script einfügen, um Anker-Links im iframe abzufangen
+            const anchorScript = `
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        // Alle Links mit # am Anfang abfangen
+                        document.querySelectorAll('a[href^="#"]').forEach(function(link) {
+                            link.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                const targetId = this.getAttribute('href').substring(1);
+                                const targetElement = document.getElementById(targetId);
+                                if (targetElement) {
+                                    targetElement.scrollIntoView({ behavior: 'smooth' });
+                                }
+                            });
+                        });
+                    });
+                <\/script>
+            `;
+            
+            // Script vor </body> einfügen, oder am Ende wenn kein </body> vorhanden
+            if (htmlContent.toLowerCase().includes('</body>')) {
+                htmlContent = htmlContent.replace(/<\/body>/i, anchorScript + '</body>');
+            } else {
+                htmlContent += anchorScript;
+            }
 
             document.getElementById('preview').srcdoc = htmlContent;
         }
