@@ -138,7 +138,8 @@ public class GroupService {
                 // Hier muss Optional<UserTask> verwendet werden, da nicht jeder Schüler jede Aufgabe hat
                 Optional<UserTask> userTaskOpt = userTaskRepository.findByUserAndTask(student, task);
                 // Wenn keine UserTask existiert oder sie nicht gestartet wurde, zählt sie als ausstehend
-                if (!userTaskOpt.isPresent() || userTaskOpt.get().getStatus() == UserTaskStatus.NOT_STARTED) {
+                if (!userTaskOpt.isPresent() || 
+                    (userTaskOpt.get().getStatus() != null && "NICHT_BEGONNEN".equals(userTaskOpt.get().getStatus().getName()))) {
                     pendingCount++;
                 }
             }

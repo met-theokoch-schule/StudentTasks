@@ -47,7 +47,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf
                         .ignoringRequestMatchers("/api/**"))
                 .headers(headers -> headers
-                        .frameOptions().sameOrigin())
+                        .frameOptions(frameOptions -> frameOptions.sameOrigin()))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(
                                 org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED)
