@@ -13,6 +13,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import java.util.Map;
+
 import java.util.List;
 import java.util.Set;
 
@@ -41,6 +43,26 @@ public class DashboardController {
             if (authentication instanceof OAuth2AuthenticationToken) {
                 OAuth2AuthenticationToken oauth2Token = (OAuth2AuthenticationToken) authentication;
                 OAuth2User oauth2User = oauth2Token.getPrincipal();
+                
+                System.out.println("==========================================");
+                System.out.println("🔍 COMPLETE OAUTH2 TOKEN DUMP (DashboardController):");
+                System.out.println("==========================================");
+                Map<String, Object> allAttributes = oauth2User.getAttributes();
+                for (Map.Entry<String, Object> entry : allAttributes.entrySet()) {
+                    String key = entry.getKey();
+                    Object value = entry.getValue();
+                    System.out.println("   [" + key + "] = " + value);
+                    System.out.println("      Type: " + (value != null ? value.getClass().getName() : "null"));
+                    if (value != null && value.getClass().isArray()) {
+                        System.out.println("      Array content: " + java.util.Arrays.toString((Object[]) value));
+                    } else if (value instanceof java.util.List) {
+                        System.out.println("      List content: " + value);
+                    } else if (value instanceof java.util.Map) {
+                        System.out.println("      Map content: " + value);
+                    }
+                }
+                System.out.println("==========================================");
+                
                 user = userService.createOrUpdateUserFromOAuth2(oauth2User);
                 System.out.println("✅ User created with ID: " + (user != null ? user.getId() : "NULL"));
             }
