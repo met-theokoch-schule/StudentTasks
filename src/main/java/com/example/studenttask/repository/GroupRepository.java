@@ -1,6 +1,7 @@
 package com.example.studenttask.repository;
 
 import com.example.studenttask.model.Group;
+import com.example.studenttask.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -31,4 +32,9 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
      * Check if group exists by name
      */
     boolean existsByName(String name);
+
+    /**
+     * Find all groups containing a specific user
+     */
+    List<Group> findByUsersContaining(User user);
 }
