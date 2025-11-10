@@ -59,24 +59,32 @@ public class DashboardController {
         System.out.println("🔍 Looking for user with OpenID Subject: " + openIdSubject);
 
         User user = userService.findUserByOpenIdSubject(openIdSubject);
-        if (user == null) {
-            System.out.println("❌ User not found, attempting to create from OAuth2 data");
 
-            // Versuche Benutzer aus OAuth2-Daten zu erstellen
-            if (authentication instanceof OAuth2AuthenticationToken) {
-                OAuth2AuthenticationToken oauth2Token = (OAuth2AuthenticationToken) authentication;
-                OAuth2User oauth2User = oauth2Token.getPrincipal();
-                user = userService.createOrUpdateUserFromOAuth2(oauth2User);
-                System.out.println("✅ User created with ID: " + (user != null ? user.getId() : "NULL"));
-            }
+        // Immer createOrUpdateUserFromOAuth2 aufrufen, um Gruppen zu synchronisieren
+        if (authentication instanceof OAuth2AuthenticationToken) {
+            OAuth2AuthenticationToken oauth2Token = (OAuth2AuthenticationToken) authentication;
+            OAuth2User oauth2User = oauth2Token.getPrincipal();
 
             if (user == null) {
-                System.out.println("❌ User creation failed, redirecting to login");
-                return "redirect:/login";
+                System.out.println("❌ User not found, creating new user from OAuth2 data");
+                user = userService.createOrUpdateUserFromOAuth2(oauth2User);
+                System.out.println("✅ User created with ID: " + (user != null ? user.getId() : "NULL"));
+            } else {
+                System.out.println("✅ User found: " + user.getName() + " (ID: " + user.getId() + ")");
+                System.out.println("🔄 Updating user data and syncing groups from OAuth2");
+                user = userService.createOrUpdateUserFromOAuth2(oauth2User);
+                System.out.println("✅ User updated with ID: " + user.getId());
             }
+        } else {
+            System.out.println("❌ Authentication is not OAuth2AuthenticationToken");
         }
 
-        System.out.println("✅ User found: " + user.getName() + " (ID: " + user.getId() + ")");
+        if (user == null) {
+            System.out.println("❌ User creation/update failed, redirecting to login");
+            return "redirect:/login";
+        }
+
+        System.out.println("✅ User processed: " + user.getName() + " (ID: " + user.getId() + ")");
 
         // Role-based flags
         System.out.println("🎭 Role evaluation started...");
