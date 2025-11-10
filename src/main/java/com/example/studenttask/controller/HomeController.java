@@ -58,7 +58,7 @@ public class HomeController {
         User user = userService.findUserByOpenIdSubject(openIdSubject);
 
         if (user != null) {
-            System.out.println("✅ User found in database: " + user.getName());
+            System.out.println("✅ UUser found in database: " + user.getName());
 
             // Rollen und Gruppen laden
             Set<Role> roles = user.getRoles();
