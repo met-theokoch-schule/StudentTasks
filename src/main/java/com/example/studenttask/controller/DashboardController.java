@@ -43,26 +43,6 @@ public class DashboardController {
             if (authentication instanceof OAuth2AuthenticationToken) {
                 OAuth2AuthenticationToken oauth2Token = (OAuth2AuthenticationToken) authentication;
                 OAuth2User oauth2User = oauth2Token.getPrincipal();
-                
-                System.out.println("==========================================");
-                System.out.println("🔍 COMPLETE OAUTH2 TOKEN DUMP (DashboardController):");
-                System.out.println("==========================================");
-                Map<String, Object> allAttributes = oauth2User.getAttributes();
-                for (Map.Entry<String, Object> entry : allAttributes.entrySet()) {
-                    String key = entry.getKey();
-                    Object value = entry.getValue();
-                    System.out.println("   [" + key + "] = " + value);
-                    System.out.println("      Type: " + (value != null ? value.getClass().getName() : "null"));
-                    if (value != null && value.getClass().isArray()) {
-                        System.out.println("      Array content: " + java.util.Arrays.toString((Object[]) value));
-                    } else if (value instanceof java.util.List) {
-                        System.out.println("      List content: " + value);
-                    } else if (value instanceof java.util.Map) {
-                        System.out.println("      Map content: " + value);
-                    }
-                }
-                System.out.println("==========================================");
-                
                 user = userService.createOrUpdateUserFromOAuth2(oauth2User);
                 System.out.println("✅ User created with ID: " + (user != null ? user.getId() : "NULL"));
             }
@@ -86,30 +66,30 @@ public class DashboardController {
         }
 
         boolean isTeacher = user.getRoles() != null && user.getRoles().stream()
-            .anyMatch(role -> {
-                String roleName = role.getName();
-                System.out.println("   - Checking role: '" + roleName + "' for teacher match");
-                // Check various teacher role patterns
-                return "ROLE_TEACHER".equals(roleName) ||
-                       "teacher".equals(roleName) ||
-                       "lehrer".equals(roleName) ||
-                       roleName.toLowerCase().contains("teacher") ||
-                       roleName.toLowerCase().contains("lehrer");
-            });
+                .anyMatch(role -> {
+                    String roleName = role.getName();
+                    System.out.println("   - Checking role: '" + roleName + "' for teacher match");
+                    // Check various teacher role patterns
+                    return "ROLE_TEACHER".equals(roleName) ||
+                            "teacher".equals(roleName) ||
+                            "lehrer".equals(roleName) ||
+                            roleName.toLowerCase().contains("teacher") ||
+                            roleName.toLowerCase().contains("lehrer");
+                });
 
         boolean isStudent = user.getRoles() != null && user.getRoles().stream()
-            .anyMatch(role -> {
-                String roleName = role.getName();
-                System.out.println("   - Checking role: '" + roleName + "' for student match");
-                // Check various student role patterns
-                return "ROLE_STUDENT".equals(roleName) ||
-                       "student".equals(roleName) ||
-                       "schueler".equals(roleName) ||
-                       "schüler".equals(roleName) ||
-                       roleName.toLowerCase().contains("student") ||
-                       roleName.toLowerCase().contains("schueler") ||
-                       roleName.toLowerCase().contains("schüler");
-            });
+                .anyMatch(role -> {
+                    String roleName = role.getName();
+                    System.out.println("   - Checking role: '" + roleName + "' for student match");
+                    // Check various student role patterns
+                    return "ROLE_STUDENT".equals(roleName) ||
+                            "student".equals(roleName) ||
+                            "schueler".equals(roleName) ||
+                            "schüler".equals(roleName) ||
+                            roleName.toLowerCase().contains("student") ||
+                            roleName.toLowerCase().contains("schueler") ||
+                            roleName.toLowerCase().contains("schüler");
+                });
 
         System.out.println("🎭 Role evaluation results:");
         System.out.println("   - Is Teacher: " + isTeacher);
@@ -117,7 +97,8 @@ public class DashboardController {
 
         // Gruppen laden und ausgeben
         System.out.println("==========================================");
-        System.out.println("🔍 DEBUG: About to fetch groups for user ID: " + user.getId() + ", Name: " + user.getName());
+        System.out
+                .println("🔍 DEBUG: About to fetch groups for user ID: " + user.getId() + ", Name: " + user.getName());
 
         List<Group> groups = null;
         try {
