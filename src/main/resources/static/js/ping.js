@@ -7,7 +7,7 @@
     const PING_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
     
     function ping() {
-        fetch('/ping')
+        fetch('/informatik/ping')
             .then(response => response.text())
             .then(data => {
                 console.log('Session ping:', data);
