@@ -2,7 +2,9 @@ package com.example.studenttask.controller;
 
 import com.example.studenttask.model.User;
 import com.example.studenttask.model.Role;
+import com.example.studenttask.model.Group;
 import com.example.studenttask.service.UserService;
+import com.example.studenttask.service.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -11,11 +13,17 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import java.util.List;
+import java.util.Set;
+
 @Controller
 public class DashboardController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private GroupService groupService; // Add this line for GroupService injection
 
     @GetMapping("/dashboard")
     public String dashboard(Authentication authentication, Model model) {
@@ -60,8 +68,8 @@ public class DashboardController {
                 String roleName = role.getName();
                 System.out.println("   - Checking role: '" + roleName + "' for teacher match");
                 // Check various teacher role patterns
-                return "ROLE_TEACHER".equals(roleName) || 
-                       "teacher".equals(roleName) || 
+                return "ROLE_TEACHER".equals(roleName) ||
+                       "teacher".equals(roleName) ||
                        "lehrer".equals(roleName) ||
                        roleName.toLowerCase().contains("teacher") ||
                        roleName.toLowerCase().contains("lehrer");
@@ -72,8 +80,8 @@ public class DashboardController {
                 String roleName = role.getName();
                 System.out.println("   - Checking role: '" + roleName + "' for student match");
                 // Check various student role patterns
-                return "ROLE_STUDENT".equals(roleName) || 
-                       "student".equals(roleName) || 
+                return "ROLE_STUDENT".equals(roleName) ||
+                       "student".equals(roleName) ||
                        "schueler".equals(roleName) ||
                        "schüler".equals(roleName) ||
                        roleName.toLowerCase().contains("student") ||
@@ -88,13 +96,13 @@ public class DashboardController {
         // Gruppen laden und ausgeben
         System.out.println("==========================================");
         System.out.println("🔍 DEBUG: About to fetch groups for user ID: " + user.getId() + ", Name: " + user.getName());
-        
+
         List<Group> groups = null;
         try {
             groups = groupService.getGroupsForUser(user);
             System.out.println("🔍 DEBUG: Groups fetched successfully!");
             System.out.println("🔍 DEBUG: Groups result: " + (groups == null ? "NULL" : groups.size() + " groups"));
-            
+
             System.out.println("👥 Groups assigned to user:");
             if (groups != null && !groups.isEmpty()) {
                 for (Group group : groups) {
@@ -112,7 +120,7 @@ public class DashboardController {
 
         model.addAttribute("isTeacher", isTeacher);
         model.addAttribute("isStudent", isStudent);
-        
+
         if (isTeacher) {
             return "redirect:/teacher/dashboard";
         } else if (isStudent) {
