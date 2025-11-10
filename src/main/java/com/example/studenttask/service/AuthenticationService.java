@@ -1,4 +1,3 @@
-
 package com.example.studenttask.service;
 
 import com.example.studenttask.model.User;
@@ -51,8 +50,8 @@ public class AuthenticationService {
      */
     public boolean isAuthenticated() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication != null && 
-               authentication.isAuthenticated() && 
+        return authentication != null &&
+               authentication.isAuthenticated() &&
                authentication.getPrincipal() instanceof OAuth2User;
     }
 
