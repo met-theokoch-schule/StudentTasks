@@ -85,6 +85,31 @@ public class DashboardController {
         System.out.println("   - Is Teacher: " + isTeacher);
         System.out.println("   - Is Student: " + isStudent);
 
+        // Gruppen laden und ausgeben
+        System.out.println("==========================================");
+        System.out.println("🔍 DEBUG: About to fetch groups for user ID: " + user.getId() + ", Name: " + user.getName());
+        
+        List<Group> groups = null;
+        try {
+            groups = groupService.getGroupsForUser(user);
+            System.out.println("🔍 DEBUG: Groups fetched successfully!");
+            System.out.println("🔍 DEBUG: Groups result: " + (groups == null ? "NULL" : groups.size() + " groups"));
+            
+            System.out.println("👥 Groups assigned to user:");
+            if (groups != null && !groups.isEmpty()) {
+                for (Group group : groups) {
+                    System.out.println("   - Group ID: " + group.getId() + ", Name: '" + group.getName() + "'");
+                }
+            } else {
+                System.out.println("   - No groups assigned (or NULL)");
+            }
+        } catch (Exception e) {
+            System.out.println("❌ ERROR: Exception while fetching groups!");
+            System.out.println("❌ Exception message: " + e.getMessage());
+            e.printStackTrace();
+        }
+        System.out.println("==========================================");
+
         model.addAttribute("isTeacher", isTeacher);
         model.addAttribute("isStudent", isStudent);
         
