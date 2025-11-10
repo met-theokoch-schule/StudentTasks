@@ -50,6 +50,25 @@ public class UserService {
     }
 
     private void mapOAuth2AttributesToUser(User user, OAuth2User oauth2User) {
+        System.out.println("==========================================");
+        System.out.println("🔍 COMPLETE OAUTH2 TOKEN DUMP:");
+        System.out.println("==========================================");
+        Map<String, Object> allAttributes = oauth2User.getAttributes();
+        for (Map.Entry<String, Object> entry : allAttributes.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            System.out.println("   [" + key + "] = " + value);
+            System.out.println("      Type: " + (value != null ? value.getClass().getName() : "null"));
+            if (value != null && value.getClass().isArray()) {
+                System.out.println("      Array content: " + java.util.Arrays.toString((Object[]) value));
+            } else if (value instanceof java.util.List) {
+                System.out.println("      List content: " + value);
+            } else if (value instanceof java.util.Map) {
+                System.out.println("      Map content: " + value);
+            }
+        }
+        System.out.println("==========================================");
+        
         // Standard Claims mapping
         user.setOpenIdSubject(oauth2User.getAttribute("sub"));
         user.setEmail(oauth2User.getAttribute("email"));
