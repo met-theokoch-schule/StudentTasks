@@ -69,6 +69,14 @@ public class HomeController {
             model.addAttribute("isStudent", isStudent);
 
             System.out.println("🎭 Role evaluation: isTeacher=" + isTeacher + ", isStudent=" + isStudent);
+            System.out.println("👥 Groups assigned to user:");
+            if (groups != null && !groups.isEmpty()) {
+                for (Group group : groups) {
+                    System.out.println("   - Group ID: " + group.getId() + ", Name: '" + group.getName() + "'");
+                }
+            } else {
+                System.out.println("   - No groups assigned");
+            }
         } else {
             System.out.println("❌ User not found in database");
             model.addAttribute("user", null);
