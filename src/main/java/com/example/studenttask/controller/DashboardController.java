@@ -29,6 +29,29 @@ public class DashboardController {
 
     @GetMapping("/dashboard")
     public String dashboard(Authentication authentication, Model model) {
+        System.out.println("==========================================");
+        System.out.println("🔐 AUTHENTICATION OBJECT DUMP (Line 37):");
+        System.out.println("==========================================");
+        System.out.println("   Authentication object: " + authentication);
+        System.out.println("   Class: " + (authentication != null ? authentication.getClass().getName() : "NULL"));
+
+        if (authentication != null) {
+            System.out.println("   Name: " + authentication.getName());
+            System.out.println("   Principal: " + authentication.getPrincipal());
+            System.out.println("   Principal Class: " + (authentication.getPrincipal() != null ? authentication.getPrincipal().getClass().getName() : "NULL"));
+            System.out.println("   Credentials: " + authentication.getCredentials());
+            System.out.println("   Authorities: " + authentication.getAuthorities());
+            System.out.println("   Details: " + authentication.getDetails());
+            System.out.println("   Is Authenticated: " + authentication.isAuthenticated());
+
+            if (authentication.getPrincipal() instanceof OAuth2User) {
+                OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
+                System.out.println("   OAuth2User Attributes: " + oauth2User.getAttributes());
+                System.out.println("   OAuth2User Name: " + oauth2User.getName());
+            }
+        }
+        System.out.println("==========================================");
+
         System.out.println("🌐 === DEBUG: Dashboard Controller START ===");
 
         // Benutzer aus der Datenbank laden
