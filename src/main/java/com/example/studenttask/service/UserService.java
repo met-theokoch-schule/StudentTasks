@@ -108,25 +108,49 @@ public class UserService {
 
     @SuppressWarnings("unchecked")
     private void mapGroupsFromOAuth2(User user, OAuth2User oauth2User) {
+        System.out.println("👥 === Synchronizing Groups from OAuth2 ===");
+        
+        // Get current groups before clearing
+        Set<Group> oldGroups = new HashSet<>(user.getGroups());
+        System.out.println("   - Old groups count: " + oldGroups.size());
+        oldGroups.forEach(g -> System.out.println("     - Old: " + g.getName()));
+        
+        // Clear existing groups
         user.getGroups().clear();
 
         Map<String, Map<String, Object>> groups = oauth2User.getAttribute("groups");
+        System.out.println("   - Groups from OAuth2: " + groups);
+        
         if (groups != null) {
+            System.out.println("   - Processing " + groups.size() + " group(s) from OAuth2");
+            
             for (Map.Entry<String, Map<String, Object>> groupEntry : groups.entrySet()) {
                 Map<String, Object> groupData = groupEntry.getValue();
                 String groupName = (String) groupData.get("act");
                 String groupDescription = (String) groupData.get("desc");
 
+                System.out.println("   - Processing group: " + groupName + " (desc: " + groupDescription + ")");
+
                 if (groupName != null) {
                     Group group = groupRepository.findByName(groupName)
                         .orElseGet(() -> {
+                            System.out.println("     - Creating NEW group: " + groupName);
                             Group newGroup = new Group(groupName, groupDescription);
                             return groupRepository.save(newGroup);
                         });
+                    
+                    System.out.println("     - Adding group to user: " + group.getName() + " (ID: " + group.getId() + ")");
                     user.addGroup(group);
                 }
             }
+            
+            System.out.println("   - New groups count: " + user.getGroups().size());
+            user.getGroups().forEach(g -> System.out.println("     - New: " + g.getName()));
+        } else {
+            System.out.println("   - No groups data received from OAuth2");
         }
+        
+        System.out.println("👥 === Groups Synchronization Complete ===");
     }
 
     public User findUserByOpenIdSubject(String openIdSubject) {
