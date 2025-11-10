@@ -62,7 +62,20 @@ public class HomeController {
 
             // Rollen und Gruppen laden
             Set<Role> roles = user.getRoles();
+            
+            System.out.println("🔍 DEBUG: About to fetch groups for user ID: " + user.getId());
             List<Group> groups = groupService.getGroupsForUser(user);
+            System.out.println("🔍 DEBUG: Groups fetched. Result: " + (groups == null ? "null" : groups.size() + " groups"));
+            
+            // Detaillierte Gruppen-Ausgabe
+            System.out.println("👥 Groups assigned to user:");
+            if (groups != null && !groups.isEmpty()) {
+                for (Group group : groups) {
+                    System.out.println("   - Group ID: " + group.getId() + ", Name: '" + group.getName() + "'");
+                }
+            } else {
+                System.out.println("   - No groups assigned");
+            }
 
             // Role-basierte Flags setzen
             boolean isTeacher = roles.stream().anyMatch(role -> role.getName().equals("ROLE_TEACHER"));
