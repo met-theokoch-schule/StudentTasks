@@ -58,15 +58,11 @@ public class HomeController {
         User user = userService.findUserByOpenIdSubject(openIdSubject);
 
         if (user != null) {
-            System.out.println("✅ User found in database: " + user.getId());
+            System.out.println("✅ User found in database: " + user.getName());
 
             // Rollen und Gruppen laden
             Set<Role> roles = user.getRoles();
-            // Get groups from GroupService
-            System.out.println("🔍 Fetching groups for user...");
             List<Group> groups = groupService.getGroupsForUser(user);
-            System.out.println("🔍 Groups fetched. Count: " + (groups != null ? groups.size() : "null"));
-
 
             // Role-basierte Flags setzen
             boolean isTeacher = roles.stream().anyMatch(role -> role.getName().equals("ROLE_TEACHER"));
@@ -74,7 +70,6 @@ public class HomeController {
 
             model.addAttribute("user", user);
             model.addAttribute("roles", roles);
-            model.addAttribute("groups", groups);
             model.addAttribute("isTeacher", isTeacher);
             model.addAttribute("isStudent", isStudent);
 
