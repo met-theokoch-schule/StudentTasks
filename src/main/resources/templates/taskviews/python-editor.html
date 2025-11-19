@@ -43,6 +43,8 @@
                     <option value="24">24pt</option>
                     <option value="30">30pt</option>
                 </select>
+                <button id="fullscreenBtn" class="btn btn-outline-secondary btn-sm" title="Vollbild"><i
+                        class='fas fa-expand'></i></button>
                 <a th:href="@{/student/dashboard}" href="/student/dashboard" class="btn btn-outline-secondary btn-sm"><i
                         class='fas fa-house'></i></a>
             </div>
@@ -78,6 +80,9 @@
                 </div>
                 <div class="output-container">
                     <div id="resultOutput" class="output-content active">
+                        <div id="objectViewerContainer" class="object-viewer-container" style="display: none;">
+                            <div id="objectViewer" class="object-viewer"></div>
+                        </div>
                         <div id="consoleOutput" class="console-output"></div>
                     </div>
                     <div id="taskOutput" class="output-content">
@@ -109,6 +114,8 @@
         }]
     </div>
 
+    <script th:src="@{/js/code-analyzer.js}" src="js/code-analyzer.js"></script>
+    <script th:src="@{/js/object-viewer.js}" src="js/object-viewer.js"></script>
     <script th:src="@{/js/python-editor.js}" src="python-editor.js"></script>
     <script th:src="@{/js/ping.js}"></script>
 </body>
