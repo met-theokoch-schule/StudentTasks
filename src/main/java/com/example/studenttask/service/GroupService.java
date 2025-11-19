@@ -60,6 +60,26 @@ public class GroupService {
             // Finde aktive Aufgaben, die dieser Gruppe zugewiesen sind
             List<Task> groupActiveTasks = allActiveTasks.stream()
                 .filter(task -> task.getAssignedGroups().contains(group))
+                .sorted((t1, t2) -> {
+                    UnitTitle ut1 = t1.getUnitTitle();
+                    UnitTitle ut2 = t2.getUnitTitle();
+
+                    // null-Werte (Aufgaben ohne Thema) kommen zuletzt
+                    if (ut1 == null && ut2 == null) {
+                        return t1.getTitle().compareTo(t2.getTitle());
+                    }
+                    if (ut1 == null) return 1;
+                    if (ut2 == null) return -1;
+
+                    // Sortierung nach weight (aufsteigend: kleinere weights zuerst)
+                    int weightComparison = Integer.compare(ut1.getWeight(), ut2.getWeight());
+                    if (weightComparison != 0) {
+                        return weightComparison;
+                    }
+
+                    // Bei gleichem weight: alphabetisch nach Aufgabennamen (A-Z)
+                    return t1.getTitle().compareTo(t2.getTitle());
+                })
                 .collect(Collectors.toList());
 
             if (!groupActiveTasks.isEmpty()) {
