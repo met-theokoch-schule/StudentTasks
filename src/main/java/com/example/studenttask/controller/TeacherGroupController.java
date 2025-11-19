@@ -86,8 +86,8 @@ public class TeacherGroupController {
                     if (ut1 == null) return 1;
                     if (ut2 == null) return -1;
 
-                    // Sortierung nach weight (absteigend: höhere weights zuerst)
-                    int weightComparison = Integer.compare(ut2.getWeight(), ut1.getWeight());
+                    // Sortierung nach weight (aufsteigend: kleinere weights zuerst)
+                    int weightComparison = Integer.compare(ut1.getWeight(), ut2.getWeight());
                     if (weightComparison != 0) {
                         return weightComparison;
                     }
