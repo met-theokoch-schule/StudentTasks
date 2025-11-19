@@ -7,6 +7,7 @@ import com.example.studenttask.model.User;
 import com.example.studenttask.service.GroupService;
 import com.example.studenttask.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -52,6 +53,7 @@ public class TeacherGroupController {
      * Zeigt Details einer Gruppe mit allen Schülern und ihren Aufgaben
      */
     @GetMapping("/{groupId}")
+    @PreAuthorize("@userService.hasTeacherRole(authentication.name)")
     public String showGroupDetail(@PathVariable Long groupId, Model model, Principal principal) {
         User teacher = userService.findByOpenIdSubject(principal.getName())
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
