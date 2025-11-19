@@ -1,19 +1,23 @@
 package com.example.studenttask.controller;
 
-import com.example.studenttask.model.*;
-import com.example.studenttask.service.*;
+import com.example.studenttask.model.Group;
+import com.example.studenttask.model.Task;
+import com.example.studenttask.model.UnitTitle;
+import com.example.studenttask.model.User;
+import com.example.studenttask.service.GroupService;
+import com.example.studenttask.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
-import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
 
 @Controller
@@ -61,13 +65,40 @@ public class TeacherGroupController {
         // Lade Statistiken für die Gruppe
         GroupStatistics statistics = groupService.getGroupStatistics(group, teacher);
 
-        // Lade Matrix-Daten für die Gruppe
-        Map<String, Object> matrix = groupService.getStudentTaskMatrix(group, teacher);
+        // Matrix-Daten erstellen
+        StudentTaskMatrix matrix = groupService.getStudentTaskMatrix(group, teacher);
+
+        // Aufgaben nach UnitTitle-Gewicht und Aufgabennamen sortieren
+        if (matrix.getTasks() != null && !matrix.getTasks().isEmpty()) {
+            List<Task> sortedTasks = matrix.getTasks().stream()
+                .sorted((t1, t2) -> {
+                    UnitTitle ut1 = t1.getUnitTitle();
+                    UnitTitle ut2 = t2.getUnitTitle();
+
+                    // null-Werte (Aufgaben ohne Thema) kommen zuletzt
+                    if (ut1 == null && ut2 == null) {
+                        return t1.getTitle().compareTo(t2.getTitle());
+                    }
+                    if (ut1 == null) return 1;
+                    if (ut2 == null) return -1;
+
+                    // Sortierung nach weight (aufsteigend)
+                    int weightComparison = Integer.compare(ut1.getWeight(), ut2.getWeight());
+                    if (weightComparison != 0) {
+                        return weightComparison;
+                    }
+
+                    // Bei gleichem weight: alphabetisch nach Aufgabennamen
+                    return t1.getTitle().compareTo(t2.getTitle());
+                })
+                .collect(Collectors.toList());
+
+            matrix.setTasks(sortedTasks);
+        }
 
         model.addAttribute("group", group);
         model.addAttribute("statistics", statistics);
         model.addAttribute("matrix", matrix);
-        model.addAttribute("teacher", teacher);
 
         return "teacher/group-detail";
     }
