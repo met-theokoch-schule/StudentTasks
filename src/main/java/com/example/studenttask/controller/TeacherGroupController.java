@@ -79,15 +79,15 @@ public class TeacherGroupController {
                     UnitTitle ut1 = t1.getUnitTitle();
                     UnitTitle ut2 = t2.getUnitTitle();
 
-                    // null-Werte (Aufgaben ohne Thema) kommen zuerst
+                    // null-Werte (Aufgaben ohne Thema) kommen zuletzt
                     if (ut1 == null && ut2 == null) {
                         return t1.getTitle().compareTo(t2.getTitle());
                     }
-                    if (ut1 == null) return -1;
-                    if (ut2 == null) return 1;
+                    if (ut1 == null) return 1;
+                    if (ut2 == null) return -1;
 
-                    // Sortierung nach weight (aufsteigend: kleinere weights zuerst)
-                    int weightComparison = Integer.compare(ut1.getWeight(), ut2.getWeight());
+                    // Sortierung nach weight (absteigend: höhere weights zuerst)
+                    int weightComparison = Integer.compare(ut2.getWeight(), ut1.getWeight());
                     if (weightComparison != 0) {
                         return weightComparison;
                     }
