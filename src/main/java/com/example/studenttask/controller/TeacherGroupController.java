@@ -2,6 +2,7 @@ package com.example.studenttask.controller;
 
 import com.example.studenttask.model.Group;
 import com.example.studenttask.model.Task;
+import com.example.studenttask.model.TaskStatus;
 import com.example.studenttask.model.UnitTitle;
 import com.example.studenttask.model.User;
 import com.example.studenttask.service.GroupService;
@@ -68,10 +69,11 @@ public class TeacherGroupController {
         GroupStatistics statistics = groupService.getGroupStatistics(group, teacher);
 
         // Matrix-Daten erstellen
-        StudentTaskMatrix matrix = groupService.getStudentTaskMatrix(group, teacher);
+        Map<String, Object> matrixData = groupService.getStudentTaskMatrix(group, teacher);
+        StudentTaskMatrix matrix = (StudentTaskMatrix) matrixData.get("matrix");
 
         // Aufgaben nach UnitTitle-Gewicht und Aufgabennamen sortieren
-        if (matrix.getTasks() != null && !matrix.getTasks().isEmpty()) {
+        if (matrix != null && matrix.getTasks() != null && !matrix.getTasks().isEmpty()) {
             List<Task> sortedTasks = matrix.getTasks().stream()
                 .sorted((t1, t2) -> {
                     UnitTitle ut1 = t1.getUnitTitle();
@@ -100,7 +102,7 @@ public class TeacherGroupController {
 
         model.addAttribute("group", group);
         model.addAttribute("statistics", statistics);
-        model.addAttribute("matrix", matrix);
+        model.addAttribute("matrix", matrixData);
 
         return "teacher/group-detail";
     }
