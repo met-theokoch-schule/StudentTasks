@@ -20,9 +20,31 @@ document.addEventListener('DOMContentLoaded', function() {
     initializePythonWorker();
     initializeTaskContent();
     initializeTutorialNavigation();
+    ObjectViewer.init();
 
-    // Standardcode für Demo-Zwecke
-    pythonEditor.setValue(`print("Hallo Welt!")`);
+    // Standardcode für Demo-Zwecke mit Object Viewer Beispiel
+    const exampleCode = `#@displayable
+#@image: https://via.placeholder.com/80/4CAF50/FFFFFF?text=S
+class Student:
+    #@show(name="name", label="Name")
+    #@show(name="age", label="Alter")
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+        self.internal_id = 123
+
+# Objekte erstellen
+student1 = Student("Max Mustermann", 20)
+student2 = Student("Lisa Schmidt", 22)
+student3 = Student("Tom Weber", 19)
+
+print("Studenten erstellt!")
+
+# Attribut ändern
+student1.age = 21
+print("Max ist jetzt 21 Jahre alt")
+`;
+    pythonEditor.setValue(exampleCode);
 
     // Content laden und Cursor an den Anfang setzen
     loadSavedContent();
@@ -247,6 +269,36 @@ function initializeControls() {
         }
     }
 
+    // Vollbild-Button
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    fullscreenBtn.addEventListener('click', function() {
+        if (!document.fullscreenElement) {
+            // Vollbild aktivieren
+            document.documentElement.requestFullscreen().catch(err => {
+                console.error('Fehler beim Aktivieren des Vollbildmodus:', err);
+            });
+        } else {
+            // Vollbild verlassen
+            document.exitFullscreen();
+        }
+    });
+
+    // Fullscreen-Status überwachen und Icon aktualisieren
+    document.addEventListener('fullscreenchange', function() {
+        const icon = fullscreenBtn.querySelector('i');
+        if (document.fullscreenElement) {
+            // Im Vollbildmodus: Compress-Icon anzeigen
+            icon.classList.remove('fa-expand');
+            icon.classList.add('fa-compress');
+            fullscreenBtn.title = 'Vollbild verlassen';
+        } else {
+            // Normal-Modus: Expand-Icon anzeigen
+            icon.classList.remove('fa-compress');
+            icon.classList.add('fa-expand');
+            fullscreenBtn.title = 'Vollbild';
+        }
+    });
+
     // Ausgabe löschen Button
     const clearOutputBtn = document.getElementById('clearOutputBtn');
     clearOutputBtn.addEventListener('click', function() {
@@ -437,6 +489,28 @@ function terminateAndRecreateWorker() {
     }
 }
 
+// Input-Anfrage vom Worker behandeln
+function handleInputRequest(promptText) {
+    // Prompt-Text in Console anzeigen
+    if (promptText) {
+        addToConsoleWithoutTimestamp(promptText);
+    }
+    
+    // Browser-Popup für Eingabe
+    const userInput = window.prompt(promptText || 'Eingabe:');
+    
+    // Eingabe in Console anzeigen
+    if (userInput !== null) {
+        addToConsoleWithoutTimestamp(userInput);
+    }
+    
+    // Antwort an Worker senden
+    pythonWorker.postMessage({
+        type: 'input_response',
+        data: userInput || ''
+    });
+}
+
 // Worker Message Handler
 function handleWorkerMessage(message) {
     const { type, data, message: msg } = message;
@@ -473,6 +547,27 @@ function handleWorkerMessage(message) {
         case 'output':
             // Real-time output ohne Timestamp
             addToConsoleWithoutTimestamp(data);
+            break;
+
+        case 'objects_clear':
+            ObjectViewer.clear();
+            break;
+
+        case 'object_created':
+            ObjectViewer.createObject(data);
+            break;
+
+        case 'object_updated':
+            ObjectViewer.updateObject(data);
+            break;
+
+        case 'object_deleted':
+            ObjectViewer.deleteObject(data.id);
+            break;
+
+        case 'input_request':
+            // Python input() Anfrage
+            handleInputRequest(data);
             break;
 
         case 'completed':
@@ -771,10 +866,34 @@ async function checkPythonTypes() {
         // Alte Marker entfernen
         clearTypeErrors();
 
+        // Stub-Definitionen für Runtime-Funktionen hinzufügen (nur für MyPy)
+        const stubDefinitions = `# Type stubs für Runtime-Funktionen
+def sleep(duration: float) -> None:
+    """Wartet für die angegebene Anzahl von Sekunden."""
+    pass
+
+`;
+        const codeToCheck = stubDefinitions + currentCode;
+
+        // Anzahl der Stub-Zeilen berechnen (nur wenn Stubs vorhanden)
+        const trimmedStubs = stubDefinitions.trim();
+        const stubLineCount = trimmedStubs ? trimmedStubs.split('\n').length : 0;
+
         // MyPy ausführen (async für UI-Responsiveness)
         const result = await mainThreadPyodide.runPythonAsync(`
-errors = type_checker.check_code('''${currentCode.replace(/'/g, "\\'")}''')
-errors
+errors = type_checker.check_code('''${codeToCheck.replace(/'/g, "\\'")}''')
+# Zeilennummern korrigieren (Stub-Zeilen abziehen, wenn vorhanden)
+stub_lines = ${stubLineCount}
+corrected_errors = []
+for line, error_type, message in errors:
+    # Fehler in Stub-Zeilen ignorieren
+    if stub_lines > 0 and line <= stub_lines:
+        continue
+    # Offset anwenden: ursprüngliche Zeile minus Stub-Zeilen
+    # MyPy liefert 1-basierte Zeilennummern, die wir so beibehalten
+    adjusted_line = line - stub_lines
+    corrected_errors.append((adjusted_line, error_type, message))
+corrected_errors
         `);
         const errors = result.toJs();
         result.destroy(); // PyProxy cleanup
@@ -794,7 +913,10 @@ function markTypeErrors(errors) {
     const session = pythonEditor.getSession();
 
     errors.forEach(([lineNum, errorType, message]) => {
-        const line = lineNum - 1; // ACE Editor ist 0-basiert
+        // lineNum ist nach Stub-Korrektur noch 1-basiert (MyPy-Format)
+        // ACE Editor ist 0-basiert, daher -1
+        // Zusätzlich -1 für korrekte Zeilenanzeige
+        const line = lineNum - 2;
 
         // Annotation hinzufügen
         session.setAnnotations(session.getAnnotations().concat([{

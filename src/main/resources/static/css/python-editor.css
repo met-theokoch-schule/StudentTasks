@@ -355,7 +355,17 @@ input[type="checkbox"] {
 }
 
 .output-content.active {
-    display: block;
+    display: flex;
+    flex-direction: column;
+}
+
+#resultOutput.output-content {
+    display: none;
+}
+
+#resultOutput.output-content.active {
+    display: flex;
+    flex-direction: column;
 }
 
 /* Markdown-Styling für Task-Output */
@@ -445,10 +455,90 @@ input[type="checkbox"] {
     font-style: italic;
 }
 
-/* Console Output */
-.console-output {
-    width: 100%;
+/* Object Viewer Container */
+.object-viewer-container {
+    height: 40%;
+    min-height: 180px;
+    background-color: #2d2d2d;
+    border-bottom: 1px solid #404040;
+    overflow: hidden;
+}
+
+.object-viewer {
+    display: flex;
+    gap: 15px;
+    padding: 15px;
     height: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.object-viewer::-webkit-scrollbar {
+    height: 12px;
+}
+
+.object-viewer::-webkit-scrollbar-track {
+    background: #1e1e1e;
+}
+
+.object-viewer::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 6px;
+}
+
+.object-viewer::-webkit-scrollbar-thumb:hover {
+    background: #666;
+}
+
+/* Object Card */
+.object-card {
+    flex-shrink: 0;
+    min-width: 150px;
+    max-width: 300px;
+    background-color: #1e1e1e;
+    border: 1px solid #404040;
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.object-card-image {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    object-fit: cover;
+    align-self: center;
+    background-color: #2d2d2d;
+}
+
+.object-card-attributes {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 13px;
+    color: #cccccc;
+}
+
+.object-card-attribute {
+    display: flex;
+    gap: 5px;
+}
+
+.object-card-label {
+    color: #569cd6;
+    font-weight: 600;
+}
+
+.object-card-value {
+    color: #ce9178;
+}
+
+/* Console Output - adjusted for object viewer */
+.console-output {
+    flex: 1;
     background-color: #1e1e1e;
     color: #cccccc;
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
@@ -798,20 +888,6 @@ input[type="checkbox"] {
     }
 }
 
-.console-output {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    padding: 15px;
-    font-family: 'Consolas', 'Monaco', monospace;
-    background-color: #1e1e1e;
-    color: #ffffff;
-    overflow-y: auto;
-    white-space: pre-wrap;
-    border: none;
-}
 
 .html-output {
     position: absolute;
