@@ -270,6 +270,12 @@ function executeSQL(taskId) {
         showError(`SQL-Fehler: ${e.message}`);
         resultTables.innerHTML = "";
 
+        // Validierungs-Feedback ausblenden bei SQL-Fehler
+        const validationFeedback = resultTables.parentNode.querySelector('.validation-feedback');
+        if (validationFeedback) {
+            validationFeedback.innerHTML = "";
+        }
+
         // Status auf "incorrect" setzen bei SQL-Fehler
         updateTaskStatus(taskId, "incorrect");
         return;

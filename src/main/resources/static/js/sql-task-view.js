@@ -819,11 +819,11 @@ function updateSaveStatus(status) {
 
     switch (status) {
         case "saved":
-            statusElement.classList.add("fa-check-circle", "text-success");
+            statusElement.classList.add("fa-circle", "text-success");
             statusElement.title = "Gespeichert";
             break;
         case "saving":
-            statusElement.classList.add("fa-spinner", "fa-spin", "text-info");
+            statusElement.classList.add("fa-circle", "text-info");
             statusElement.title = "Speichert...";
             break;
         case "error":
@@ -831,7 +831,7 @@ function updateSaveStatus(status) {
             statusElement.title = "Fehler beim Speichern";
             break;
         case "submitted":
-            statusElement.classList.add("fa-check-circle", "text-success");
+            statusElement.classList.add("fa-circle", "text-success");
             statusElement.title = "Abgegeben";
             break;
         case "ready":
