@@ -343,7 +343,7 @@ function addToConsole(text, type = 'info') {
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
-    
+
     const newContent = `[${timestamp}] ${prefix} ${escapedText}<br>`;
 
     // Neuen Inhalt hinzufügen - verwende innerHTML für Konsistenz
@@ -495,15 +495,15 @@ function handleInputRequest(promptText) {
     if (promptText) {
         addToConsoleWithoutTimestamp(promptText);
     }
-    
+
     // Browser-Popup für Eingabe
     const userInput = window.prompt(promptText || 'Eingabe:');
-    
+
     // Eingabe in Console anzeigen
     if (userInput !== null) {
         addToConsoleWithoutTimestamp(userInput);
     }
-    
+
     // Antwort an Worker senden
     pythonWorker.postMessage({
         type: 'input_response',
@@ -973,9 +973,21 @@ function loadSavedContent() {
 // Markdown-zu-HTML Parser
 function renderMarkdown(markdownText) {
     if (typeof marked !== 'undefined') {
-        return marked.parse(markdownText);
+        // Konfiguriere marked für Links in neuem Tab
+        const renderer = new marked.Renderer();
+        const originalLinkRenderer = renderer.link;
+        renderer.link = function(href, title, text) {
+            // Standard-Link erstellen
+            const html = originalLinkRenderer.call(this, href, title, text);
+            // target="_blank" und rel="noopener noreferrer" hinzufügen
+            return html.replace(/^<a /, '<a target="_blank" rel="noopener noreferrer" ');
+        };
+
+        // Verwende den angepassten Renderer
+        return marked.parse(markdownText, { renderer: renderer });
     } else {
         // Fallback für einfaches Markdown-Rendering
+        // Links werden hier NICHT in einem neuen Tab geöffnet, da dieser Fallback nur eine Basis-Umwandlung macht
         return markdownText
             .replace(/^# (.*$)/gm, '<h1>$1</h1>')
             .replace(/^## (.*$)/gm, '<h2>$1</h2>')
@@ -1004,7 +1016,20 @@ let currentTutorialIndex = 0;
 
 // Task-Content initialisieren
 function initializeTaskContent() {
-    updateTaskTab(document.getElementById("description").textContent);
+    const description = document.getElementById('description')?.textContent;
+    if (description) {
+        const taskOutput = document.getElementById('taskOutput');
+        if (taskOutput) {
+            // Konfiguriere marked für Links in neuem Tab
+            const renderer = new marked.Renderer();
+            const originalLinkRenderer = renderer.link;
+            renderer.link = function(href, title, text) {
+                const html = originalLinkRenderer.call(this, href, title, text);
+                return html.replace(/^<a /, '<a target="_blank" rel="noopener noreferrer" ');
+            };
+            taskOutput.innerHTML = marked.parse(description, { renderer: renderer });
+        }
+    }
 }
 
 // Tutorial Navigation initialisieren
@@ -1113,7 +1138,25 @@ function updateTutorialDisplay() {
                 ul { margin-left: 20px; }
                 li { margin-bottom: 5px; }
                 .example { background: #2a4a2a; padding: 10px; border-radius: 5px; margin: 10px 0; }
+                /* Styling für Links - unabhängig vom Besuchsstatus */
+                a {
+                    color: #9cdcfe; /* Hellblau für gute Lesbarkeit im Dark Theme */
+                    text-decoration: none; /* Keine Unterstreichung */
+                }
+                a:hover {
+                    text-decoration: underline; /* Unterstreichung beim Hover */
+                    color: #80c8ff; /* Etwas helleres Blau beim Hover */
+                }
             </style>
+            <script>
+                // Alle Links in neuem Tab öffnen
+                document.addEventListener('DOMContentLoaded', function() {
+                    document.querySelectorAll('a').forEach(function(link) {
+                        link.setAttribute('target', '_blank');
+                        link.setAttribute('rel', 'noopener noreferrer');
+                    });
+                });
+            </script>
         </head>
         <body>
             ${renderMarkdown(currentContent)}

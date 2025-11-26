@@ -455,6 +455,19 @@ input[type="checkbox"] {
     font-style: italic;
 }
 
+#taskOutput a,
+#taskOutput a:visited,
+#taskOutput a:hover,
+#taskOutput a:active {
+    color: #4fc3f7;
+    text-decoration: underline;
+    transition: opacity 0.2s ease;
+}
+
+#taskOutput a:hover {
+    opacity: 0.8;
+}
+
 /* Object Viewer Container */
 .object-viewer-container {
     height: 40%;

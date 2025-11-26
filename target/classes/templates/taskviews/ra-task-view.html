@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RA Task View</title>
+
+    <!-- Treeflex für RA-Baum -->
+    <link rel="stylesheet" href="https://unpkg.com/treeflex/dist/css/treeflex.css">
+
+    <!-- CSS -->
+    <link th:href="@{/css/ra-task-view.css}" href="ra-task-view.css" rel="stylesheet" type="text/css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <!-- CodeMirror -->
+    <link rel="stylesheet" href="codemirror/codemirror.css" />
+    
+    
+    <!-- JavaScript Libraries -->
+    <script src="codemirror/codemirror.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+    <script src="relax-engine.bundle.js"></script>
+</head>
+
+<body>
+    <!-- Versteckte Content-Divs für Thymeleaf -->
+    <div id="task-save-url" style="display: none"
+        th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? 'api/tasks/usertasks/' + userTaskId + '/content' : 'api/tasks/' + task.id + '/content'}"
+        data-url="/dev/save"></div>
+    
+    <div id="task-submit-url" style="display: none"
+        th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? '' : 'api/tasks/' + task.id + '/submit'}"
+        data-url="/dev/submit"></div>
+    
+    <div id="currentContent" style="display: none" th:text="${currentContent}"></div>
+    <div id="defaultSubmission" style="display: none" th:text="${task.defaultSubmission}"></div>
+    <div id="description" style="display: none" th:text="${task.description}">
+        {
+            "version": "1.0",
+            "tables": {
+                "S": {
+                    "columns": [
+                        { "name": "MatrNr", "type": "number" },
+                        { "name": "Name", "type": "string" },
+                        { "name": "Semester", "type": "number" }
+                    ],
+                    "rows": [
+                        [12345, "Alice Mueller", 4],
+                        [23456, "Bob Schmidt", 2],
+                        [34567, "Charlie Weber", 6],
+                        [45678, "Diana Becker", 3],
+                        [56789, "Eva Schulz", 5]
+                    ]
+                },
+                "Noten": {
+                    "columns": [
+                        { "name": "MatrNr", "type": "number" },
+                        { "name": "Fach", "type": "string" },
+                        { "name": "Note", "type": "number" }
+                    ],
+                    "rows": [
+                        [12345, "Datenbanken", 1.7],
+                        [12345, "Algorithmen", 2.3],
+                        [23456, "Datenbanken", 1.0],
+                        [23456, "Algorithmen", 1.3],
+                        [34567, "Datenbanken", 2.7],
+                        [45678, "Algorithmen", 1.0],
+                        [56789, "Datenbanken", 3.0],
+                        [56789, "Algorithmen", 2.0]
+                    ]
+                },
+                "Vorlesungen": {
+                    "columns": [
+                        { "name": "FachID", "type": "number" },
+                        { "name": "Fach", "type": "string" },
+                        { "name": "Dozent", "type": "string" },
+                        { "name": "Semester", "type": "number" }
+                    ],
+                    "rows": [
+                        [101, "Datenbanken", "Prof. Dr. Mueller", 4],
+                        [102, "Algorithmen", "Prof. Dr. Schmidt", 2],
+                        [103, "Webentwicklung", "Dr. Weber", 3]
+                    ]
+                }
+            },
+            "tasks": [
+                {
+                    "id": "task-1",
+                    "title": "Aufgabe 1: Projektion",
+                    "description": "# Projektion - Spalten auswählen\n\nProjiziere nur die **Spalten MatrNr und Name** aus der Tabelle `S`.\n\n**Hinweis:** Verwende den Operator π (pi) um Spalten auszuwählen.",
+                    "defaultCode": "",
+                    "solutionCode": "pi MatrNr, Name (S)",
+                    "validation": {
+                        "orderMatters": false,
+                        "extraColumnsAllowed": false,
+                        "columnNamesMustMatch": true
+                    }
+                },
+                {
+                    "id": "task-2",
+                    "title": "Aufgabe 2: Selektion und Projektion",
+                    "description": "# Selektion - Zeilen filtern\n\nSelektiere alle **Noten mit einer Note besser oder gleich 2.0** und projiziere dann die Spalten `MatrNr` und `Note`.\n\n**Hinweis:** Verwende σ (sigma) für Selektion und kombiniere mit π (pi).",
+                    "defaultCode": "",
+                    "solutionCode": "pi MatrNr, Note (sigma Note &lt;= 2.0 (Noten))",
+                    "validation": {
+                        "orderMatters": false,
+                        "extraColumnsAllowed": false,
+                        "columnNamesMustMatch": false
+                    }
+                },
+                {
+                    "id": "task-3",
+                    "title": "Aufgabe 3: Join (Verbund)",
+                    "description": "# Natural Join - Tabellen verbinden\n\nVerbinde die Tabellen `S` und `Noten` über den **Natural Join**. Diese sollten automatisch über die gemeinsame Spalte `MatrNr` verbunden werden.\n\n**Hinweis:** Verwende die join Operator um zwei Tabellen zu verbinden.",
+                    "defaultCode": "",
+                    "solutionCode": "S join Noten",
+                    "validation": {
+                        "orderMatters": false,
+                        "extraColumnsAllowed": false,
+                        "columnNamesMustMatch": false
+                    }
+                }
+            ]
+        }
+    </div>
+    <div id="tutorial" style="display: none" th:utext="${task.tutorial}">
+        [
+          {
+            "content": "# Relationale Algebra - Grundlagen\n\n## Was ist Relationale Algebra?\n\nRelationale Algebra (RA) ist eine formale Sprache zur Manipulation von **relationalen Datenbanken**. Sie bietet eine Menge von Operationen, mit denen Sie Daten aus Tabellen (Relationen) abrufen, filtern und kombinieren können.\n\n## Wichtige Begriffe\n\n- **Relation**: Eine Tabelle mit Spalten (Attributen) und Zeilen (Tupel)\n- **Attribut**: Eine Spalte in einer Tabelle\n- **Tupel**: Eine Zeile in einer Tabelle\n- **Schema**: Die Struktur einer Relation (Spaltenname und Datentyp)\n\n## Operatoren der Relationalen Algebra\n\nWir werden die wichtigsten Operatoren kennenlernen:\n1. **Projektion (π)** - Spalten auswählen\n2. **Selektion (σ)** - Zeilen filtern\n3. **Join** - Tabellen verbinden\n\nKlicke auf den nächsten Pfeil →, um fortzufahren!"
+          },
+          {
+            "content": "# Operator 1: Projektion (π)\n\n## Was ist Projektion?\n\nDie **Projektion** wählt bestimmte **Spalten** aus einer Tabelle aus und verwirft die anderen. Sie reduziert die Anzahl der Spalten.\n\n## Syntax\n\n```\npi spalte1, spalte2, spalte3 (Tabelle)\n```\n\n## Beispiel\n\nWenn Sie aus der Tabelle `S` nur die Spalten `MatrNr` und `Name` möchten:\n\n```\npi MatrNr, Name (S)\n```\n\n## Ergebnis\n\n| MatrNr | Name |\n|--------|------|\n| 12345 | Alice Mueller |\n| 23456 | Bob Schmidt |\n| 34567 | Charlie Weber |\n\n**Tipp:** Die Reihenfolge der Spalten spielt für das Ergebnis keine Rolle - π ist kommutativ!"
+          },
+          {
+            "content": "# Operator 2: Selektion (σ)\n\n## Was ist Selektion?\n\nDie **Selektion** filtert **Zeilen** aus einer Tabelle basierend auf einer Bedingung. Sie behält alle Spalten, aber nur die Zeilen, die die Bedingung erfüllen.\n\n## Syntax\n\n```\nsigma Bedingung (Tabelle)\n```\n\n## Vergleichsoperatoren\n\n- `=` - Gleich\n- `!=` oder `&lt;&gt;` - Ungleich\n- `&lt;` - Kleiner als\n- `&gt;` - Größer als\n- `&lt;=` - Kleiner oder gleich\n- `&gt;=` - Größer oder gleich\n\n## Beispiele\n\nAlle Studenten im 4. Semester:\n```\nsigma Semester = 4 (S)\n```\n\nAlle Noten besser als 2.0:\n```\nsigma Note &lt; 2.0 (Noten)\n```\n\n**Tipp:** Sie können Bedingungen kombinieren mit `and` und `or`!"
+          },
+          {
+            "content": "# Operator 3: Join (Verbund)\n\n## Was ist Join?\n\nDer **Join** verbindet zwei Tabellen basierend auf **gemeinsamen Spalten**. Der Natural Join verbindet Tabellen über alle Spalten mit gleichem Namen.\n\n## Syntax\n\n```\nTabelle1 join Tabelle2\n```\n\n## Beispiel\n\nVerbinden Sie `S` und `Noten`:\n```\nS join Noten\n```\n\nDies verbindet die Tabellen über die gemeinsame Spalte `MatrNr`.\n\n## Ergebnis (Auszug)\n\n| MatrNr | Name | Semester | Fach | Note |\n|--------|------|----------|------|------|\n| 12345 | Alice Mueller | 4 | Datenbanken | 1.7 |\n| 12345 | Alice Mueller | 4 | Algorithmen | 2.3 |\n\n**Tipp:** Das Ergebnis eines Join hat mehr Zeilen als die Ausgangstabellen - jede Kombination wird erzeugt!"
+          },
+          {
+            "content": "# Kombination von Operatoren\n\n## Verschachtelte Operationen\n\nDie echte Kraft der Relationalen Algebra liegt darin, dass Sie **Operatoren kombinieren** können:\n\n```\npi MatrNr, Name (sigma Semester &gt; 2 (S))\n```\n\nDies bedeutet:\n1. Selektiere aus `S` alle Studenten mit Semester &gt; 2\n2. Projiziere dann nur MatrNr und Name\n\n## Ein komplexeres Beispiel\n\n```\npi MatrNr, Name, Fach (sigma Note &lt;= 2.0 (S join Noten))\n```\n\nDies bedeutet:\n1. Verbinde `S` und `Noten` (Join)\n2. Filtere alle Zeilen mit Note &lt;= 2.0 (Selektion)\n3. Wähle nur MatrNr, Name und Fach (Projektion)\n\n**Wichtig:** Arbeiten Sie von innen nach außen! Die innerste Operation wird zuerst ausgeführt."
+          },
+          {
+            "content": "# Tipps und Tricks\n\n## Häufige Fehler vermeiden\n\n### ❌ Falsches Spacing\n```\npi MatrNr,Name(S)  // Keine Leerzeichen!\n```\n\n### ✅ Korrektes Format\n```\npi MatrNr, Name (S)  // Leerzeichen vor der Klammer\n```\n\n## Best Practices\n\n1. **Klammern verwenden** - Seien Sie explizit mit der Verschachtelung\n2. **Spaltennamen korrekt schreiben** - Beachten Sie Groß-/Kleinschreibung\n3. **Testet mit einfachen Queries** - Beginnen Sie mit einfachen Operationen\n4. **Schema konsultieren** - Nutzen Sie das Schema-Tab, um verfügbare Tabellen und Spalten zu sehen\n\n## Debug-Tipps\n\n- Klicken Sie auf Tabellennamen im Schema-Tab, um sie ins Editor einzufügen\n- Klicken Sie auf Spaltennamen, um sie in die aktuelle Position einzufügen\n- Nutzen Sie die Error-Meldungen, um Probleme zu identifizieren\n\nViel Erfolg! 🚀"
+          }
+        ]
+    </div>
+
+    <div class="mycontainer">
+        <!-- Header mit Buttons -->
+        <header class="header">
+            <div class="header-left">
+                <h5 class="mb-0 title-acronym"><span class="word"><span class="letter-first">R</span><span class="letter-rest">elationen</span></span> <span class="word"><span class="letter-first">A</span><span class="letter-rest">lgebra</span></span></h5>
+                <div id="progress-info" class="ms-3 text-muted">
+                    <small><span id="completed-count">0</span> / <span id="total-count">0</span> Aufgaben gelöst</small>
+                </div>
+            </div>
+            <div class="controls">
+                <span id="save-status" class="fas fa-circle text-muted" style="font-size: 0.8rem; cursor: help;"
+                    title="Bereit zum Speichern"></span>
+                <button id="saveButton" class="btn btn-success btn-sm">
+                    <i class='fas fa-save'></i> Speichern
+                </button>
+                <button id="submitButton" class="btn btn-primary btn-sm">
+                    <i class='fas fa-paper-plane'></i> Abgeben
+                </button>
+                <a th:href="@{/student/dashboard}" href="/student/dashboard" class="btn btn-outline-secondary btn-sm">
+                    <i class='fas fa-house'></i>
+                </a>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Tasks Panel (Links) -->
+            <div class="tasks-panel">
+                <div class="tasks-header">
+                    <h6>Aufgaben</h6>
+                </div>
+                <div class="tasks-container" id="tasks-container">
+                    <!-- Tasks werden dynamisch hier eingefügt -->
+                    <div class="loading-spinner">
+                        <i class="fas fa-spinner fa-spin"></i> Lade Aufgaben...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resizable Splitter -->
+            <div class="splitter" id="splitter"></div>
+
+            <!-- Output Panel (Rechts) -->
+            <div class="output-panel">
+                <div class="tab-container">
+                    <div class="tabs">
+                        <button class="output-tab active" data-output-tab="result">
+                            <i class="fas fa-table"></i> Ausgabe
+                        </button>
+                        <button class="output-tab" data-output-tab="tutorial">
+                            <i class="fas fa-book"></i> Tutorial
+                        </button>
+                        <button class="output-tab" data-output-tab="schema">
+                            <i class="fas fa-database"></i> Schema
+                        </button>
+                    </div>
+                </div>
+                <div class="output-container">
+                    <!-- Ausgabe-Tab -->
+                    <div id="resultOutput" class="output-content active">
+                        <div id="output-info" class="output-placeholder">
+                            <i class="fas fa-play-circle"></i>
+                            <p>Klicken Sie auf "Ausführen" bei einer Aufgabe, um den RA-Ausdruck auszuführen.</p>
+                        </div>
+                        <div id="ra-output" style="display: none;">
+                            <div id="error-display" class="error-display" style="display: none;"></div>
+                            <div id="result-tables"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Schema-Tab -->
+                    <div id="schemaOutput" class="output-content">
+                        <div class="schema-panel" id="schema-panel">
+                            <div class="schema-container" id="schema-container">
+                                <div class="loading-spinner" style="padding: 20px; text-align: center;">
+                                    <i class="fas fa-spinner fa-spin"></i> Lade Schema...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tutorial-Tab -->
+                    <div id="tutorialOutput" class="output-content">
+                        <div class="tutorial-content" id="tutorial-content">
+                            <!-- Tutorial wird hier gerendert -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- JavaScript -->
+    <script th:src="@{/js/ra-task-renderer.js}" src="ra-task-renderer.js"></script>
+    <script th:src="@{/js/ra-task-view.js}" src="ra-task-view.js"></script>
+</body>
+
+</html>

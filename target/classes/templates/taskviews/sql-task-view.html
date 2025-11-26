@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Structured Query Language</title>
+    
+    <!-- CSS -->
+    <link href="sql-task-view.css" th:href="@{/css/sql-task-view.css}" rel="stylesheet" type="text/css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    
+    <!-- CodeMirror -->
+    <link rel="stylesheet" href="codemirror/codemirror.css" th:href="@{/css/codemirror/codemirror.css}"/>
+    
+    <!-- JavaScript Libraries -->
+    <script src="codemirror/codemirror.js" th:src="@{/js/codemirror/codemirror.js}"></script>
+    <script src="codemirror/sql.min.js" th:src="@{/js/codemirror/sql.min.js}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.min.js"></script>
+    
+    <!-- SQL Task View Scripts -->
+    <script src="sql-relmodell.js" th:src="@{/js/sql-relmodell.js}"></script>
+    <script src="sql-validator.js" th:src="@{/js/sql-validator.js}"></script>
+    <script src="sql-task-renderer.js" th:src="@{/js/sql-task-renderer.js}"></script>
+    <script src="sql-task-view.js" th:src="@{/js/sql-task-view.js}"></script>
+</head>
+
+<body>
+    <!-- Versteckte Content-Divs für Thymeleaf-Simulation -->
+    <a id="default-link" style="display: none;" href="/" th:href="@{/}"></a>
+    <div id="task-save-url" style="display: none"
+        th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? 'api/tasks/usertasks/' + userTaskId + '/content' : 'api/tasks/' + task.id + '/content'}"
+        data-url="/dev/save"></div>
+    <div id="task-submit-url" style="display: none"
+        th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? '' : 'api/tasks/' + task.id + '/submit'}"
+        data-url="/dev/submit"></div>
+    <div id="currentContent" style="display: none" th:text="${currentContent}"></div>
+    <div id="description" style="display: none" th:text="${task.description}">
+{
+  "version": "1.0",
+  "database": {
+    "type": "sql",
+    "content": "CREATE TABLE country (Code CHAR(3) PRIMARY KEY, Name VARCHAR(100), Continent VARCHAR(50), Population INT); INSERT INTO country VALUES ('DEU', 'Germany', 'Europe', 82164700); INSERT INTO country VALUES ('USA', 'United States', 'North America', 278357000); INSERT INTO country VALUES ('CHN', 'China', 'Asia', 1277558000); INSERT INTO country VALUES ('JPN', 'Japan', 'Asia', 126714000); INSERT INTO country VALUES ('FRA', 'France', 'Europe', 59225700); CREATE TABLE city (ID INT PRIMARY KEY, Name VARCHAR(100), CountryCode CHAR(3), Population INT); INSERT INTO city VALUES (1, 'Berlin', 'DEU', 3386667); INSERT INTO city VALUES (2, 'Hamburg', 'DEU', 1704735); INSERT INTO city VALUES (3, 'München', 'DEU', 1194560); INSERT INTO city VALUES (4, 'New York', 'USA', 8008278); INSERT INTO city VALUES (5, 'Los Angeles', 'USA', 3694820); INSERT INTO city VALUES (6, 'Chicago', 'USA', 2896016); INSERT INTO city VALUES (7, 'Shanghai', 'CHN', 9696300); INSERT INTO city VALUES (8, 'Tokyo', 'JPN', 7980230); INSERT INTO city VALUES (9, 'Paris', 'FRA', 2125246);"
+  },
+  "erd_image": "https://theokoch.schule/informatik/er_nordwind.png",
+  "relationshipModel": "TABLE country(_Code, Name, Continent, Population)\nTABLE city(_ID, Name, CountryCode^, Population)",
+  "tasks": [
+    {
+      "id": "task-1",
+      "title": "Aufgabe 1: Alle Länder anzeigen",
+      "description": "## Ziel\n\nWählen Sie **alle Spalten** aus der Tabelle `country` aus.\n\n## Hinweis\n\nVerwenden Sie `SELECT *` um alle Spalten auszuwählen.\n\n>! Benutz den Stern-Operator um alle Spalten zu wählen.\n\n>!{Lösung anzeigen} SELECT * FROM country;",
+      "defaultCode": "",
+      "solutionCode": "SELECT * FROM country;",
+      "validation": {
+        "orderMatters": false,
+        "extraColumnsAllowed": false,
+        "columnNamesMustMatch": true
+      }
+    },
+    {
+      "id": "task-2",
+      "title": "Aufgabe 2: Deutsche Städte",
+      "description": "## Ziel\n\nWählen Sie alle Städte aus **Deutschland** aus.\n\n## Hinweise\n\n- Die Tabelle heißt `city`\n- Das Länderkürzel für Deutschland ist `'DEU'`\n- Verwenden Sie die `WHERE`-Klausel",
+      "defaultCode": "SELECT * FROM city\nWHERE ",
+      "solutionCode": "SELECT Name FROM city WHERE CountryCode = 'DEU';",
+      "validation": {
+        "orderMatters": false,
+        "extraColumnsAllowed": true,
+        "columnNamesMustMatch": true
+      }
+    },
+    {
+      "id": "task-3",
+      "title": "Aufgabe 3: Die 3 größten Städte",
+      "description": "## Ziel\n\nFinden Sie die **3 größten Städte** nach Einwohnerzahl.\n\n## Hinweise\n\n- Verwenden Sie `ORDER BY Population DESC`\n- Verwenden Sie `LIMIT 3`",
+      "defaultCode": "SELECT Name, CountryCode, Population\nFROM city\n",
+      "solutionCode": "SELECT Name, CountryCode, Population FROM city ORDER BY Population DESC LIMIT 3;",
+      "validation": {
+        "orderMatters": true,
+        "extraColumnsAllowed": false,
+        "columnNamesMustMatch": true
+      }
+    },
+    {
+      "id": "task-4",
+      "title": "Aufgabe 4: Deutsche Städte",
+      "description": "## Ziel\n\nWählen Sie den Namen aller Städte aus **Deutschland** aus.\n\n## Hinweise\n\n- Die Tabelle heißt `city`\n- Das Länderkürzel für Deutschland ist `'DEU'`\n- Verwenden Sie die `WHERE`-Klausel",
+      "defaultCode": "SELECT * FROM city\nWHERE ",
+      "solutionCode": "SELECT Name FROM city WHERE CountryCode = 'DEU';",
+      "validation": {
+        "orderMatters": false,
+        "extraColumnsAllowed": false,
+        "columnNamesMustMatch": true
+      }
+    }
+  ]
+}
+    </div>
+         <div id="tutorial" style="display: none" th:utext="${task.tutorial}">[
+  {
+    "content": "# SQL-Grundlagen\n\n## Was ist SQL?\n\nSQL (Structured Query Language) ist eine Standardsprache für die Verwaltung und Abfrage von **relationalen Datenbanken**. Weitere Informationen finden Sie auf [Wikipedia](https://de.wikipedia.org/wiki/SQL).\n\n## Die Datenbank-Tabellen\n\nUnse Demo-Datenbank enthält zwei Haupttabellen:\n\n### Tabelle: country\n- **Code**: Länderkürzel (z.B. 'DEU')\n- **Name**: Ländername\n- **Continent**: Kontinent\n- **Population**: Bevölkerungszahl\n\n### Tabelle: city\n- **ID**: Eindeutige Kennung\n- **Name**: Stadtname\n- **CountryCode**: Referenz zur country-Tabelle\n- **Population**: Einwohnerzahl\n\n## Grundlegende SQL-Befehle\n\n- `SELECT`: Daten abrufen\n- `FROM`: Tabelle angeben\n- `WHERE`: Daten filtern\n- `ORDER BY`: Daten sortieren\n- `LIMIT`: Anzahl begrenzen\n- `JOIN`: Tabellen verknüpfen",
+    "image": "https://theokoch.schule/informatik/er_nordwind.png",
+    "relationshipModel": "TABLE country(_Code, Name, Continent, Population)\nTABLE city(_ID, Name, CountryCode^, Population)"
+  },
+  {
+    "content": "# SELECT-Statement\n\n## Syntax\n\nDas SELECT-Statement ist der wichtigste SQL-Befehl:\n\n```sql\nSELECT spalte1, spalte2\nFROM tabelle;\n```\n\n## Alle Spalten auswählen\n\nMit `*` können Sie alle Spalten auswählen:\n\n```sql\nSELECT * FROM country;\n```\n\n## Bestimmte Spalten auswählen\n\n```sql\nSELECT Name, Population FROM country;\n```\n\n## Best Practice\n\nVerwenden Sie `*` nur für Tests. In produktivem Code sollten Sie immer die gewünschten Spalten explizit angeben. Weitere Informationen zu Best Practices finden Sie auf [SQLStyle.guide](https://www.sqlstyle.guide/).\n\n## Performance-Tipp\n\nDas explizite Auswählen von Spalten ist schneller und verbraucht weniger Ressourcen als `SELECT *`."
+  },
+  {
+    "content": "# WHERE-Klausel: Daten filtern\n\n## Einfaches Filtern\n\nMit `WHERE` können Sie Zeilen nach bestimmten Kriterien filtern:\n\n```sql\nSELECT * FROM country\nWHERE Continent = 'Europe';\n```\n\n## Vergleichsoperatoren\n\n| Operator | Bedeutung |\n|----------|----------|\n| `=` | Gleich |\n| `!=` oder `&lt;&gt;` | Ungleich |\n| `&gt;` | Größer als |\n| `&lt;` | Kleiner als |\n| `&gt;=` | Größer oder gleich |\n| `&lt;=` | Kleiner oder gleich |\n\n## Beispiele\n\n```sql\nSELECT * FROM country\nWHERE Population &gt; 50000000;\n```\n\n```sql\nSELECT * FROM city\nWHERE CountryCode = 'DEU';\n```\n\n## Mehrere Bedingungen\n\nVerwenden Sie `AND` und `OR`:\n\n```sql\nSELECT * FROM country\nWHERE Continent = 'Europe' AND Population &gt; 40000000;\n```"
+  },
+  {
+    "content": "# ORDER BY: Daten sortieren\n\n## Sortieren nach einer Spalte\n\nMit `ORDER BY` können Sie Ergebnisse sortieren:\n\n```sql\nSELECT * FROM country\nORDER BY Population;\n```\n\n## Sortierreihenfolge\n\n- `ASC`: Aufsteigend (Standard)\n- `DESC`: Absteigend\n\n```sql\nSELECT * FROM country\nORDER BY Population DESC;\n```\n\n## Sortieren nach mehreren Spalten\n\nSie können nach mehreren Spalten sortieren:\n\n```sql\nSELECT * FROM city\nORDER BY CountryCode ASC, Population DESC;\n```\n\nDadurch werden die Städte zuerst nach Land sortiert, dann innerhalb jedes Landes nach Bevölkerung (absteigend)."
+  },
+  {
+    "content": "# LIMIT und OFFSET: Anzahl begrenzen\n\n## Nur die ersten N Zeilen abrufen\n\n`LIMIT` begrenzt die Anzahl der zurückgegebenen Zeilen:\n\n```sql\nSELECT * FROM city\nLIMIT 5;\n```\n\nDies gibt nur die ersten 5 Städte zurück.\n\n## Mit OFFSET\n\nMit `OFFSET` können Sie überspringen:\n\n```sql\nSELECT * FROM city\nORDER BY Population DESC\nLIMIT 10 OFFSET 5;\n```\n\nDies überspringt die ersten 5 Zeilen und gibt dann die nächsten 10 zurück.\n\n## Praktisches Beispiel\n\n```sql\nSELECT Name, Population FROM country\nORDER BY Population DESC\nLIMIT 3;\n```\n\nZeigt die 3 bevölkerungsreichsten Länder. Weitere Informationen zur Pagination finden Sie auf [Stackoverflow](https://stackoverflow.com/questions/tagged/sql)."
+  },
+  {
+    "content": "# JOIN: Tabellen verknüpfen\n\n## Inner Join\n\nEin `JOIN` verknüpft Zeilen aus mehreren Tabellen:\n\n```sql\nSELECT country.Name, city.Name\nFROM city\nJOIN country ON city.CountryCode = country.Code;\n```\n\nDies zeigt für jede Stadt das entsprechende Land.\n\n## Verschiedene Join-Typen\n\n- `INNER JOIN`: Nur Übereinstimmungen\n- `LEFT JOIN`: Alle Zeilen der linken Tabelle\n- `RIGHT JOIN`: Alle Zeilen der rechten Tabelle\n- `FULL OUTER JOIN`: Alle Zeilen aus beiden Tabellen\n\n## Praktisches Beispiel\n\nFinden Sie alle deutschen Städte mit ihrem Ländernamen:\n\n```sql\nSELECT country.Name, city.Name, city.Population\nFROM city\nJOIN country ON city.CountryCode = country.Code\nWHERE city.CountryCode = 'DEU';\n```\n\nWeitere Informationen: [SQL JOINs](https://www.w3schools.com/sql/sql_join.asp)"
+  },
+  {
+    "content": "# Tipps und Best Practices\n\n## SQL-Code richtig formatieren\n\n```sql\nSELECT Name, Population\nFROM country\nWHERE Population &gt; 50000000\nORDER BY Population DESC\nLIMIT 5;\n```\n\n## Häufige Fehler vermeiden\n\n1. **Vergessenes WHERE**: Könnte unbeabsichtigt große Datenmengen ändern\n2. **Falsche Joins**: Können zu Duplikaten führen\n3. **Case-Sensitivity**: Spaltennamen können case-sensitive sein\n\n## Performance-Optimierung\n\n- Verwenden Sie Indizes für häufig gefilterte Spalten\n- Begrenzen Sie Ergebnisse mit `LIMIT`\n- Vermeiden Sie `SELECT *`\n- Nutzen Sie aussagekräftige Spaltennamen\n\n## Nützliche Ressourcen\n\n- [W3Schools SQL Tutorial](https://www.w3schools.com/sql/)\n- [SQL Cheat Sheet](https://www.sql-tutorial.com/sql-cheat-sheet/)\n- [Mode Analytics SQL Tutorial](https://mode.com/sql-tutorial/)\n\n## In diesem Tutorial gelernt:\n✓ SELECT-Abfragen schreiben\n✓ Daten mit WHERE filtern\n✓ Ergebnisse sortieren und begrenzen\n✓ Tabellen mit JOIN verknüpfen\n✓ Best Practices anwenden"
+  }
+]</div>
+
+    <div class="mycontainer">
+        <!-- Header mit Buttons -->
+        <header class="header">
+            <div class="header-left">
+                <h5 class="mb-0 title-acronym"><span class="word"><span class="letter-first">S</span><span class="letter-rest">tructered</span></span> <span class="word"><span class="letter-first">Q</span><span class="letter-rest">uery</span></span> <span class="word"><span class="letter-first">L</span><span class="letter-rest">anguage</span></span></h5>
+                <div id="progress-info" class="ms-3 text-muted">
+                    <small><span id="completed-count">0</span> / <span id="total-count">0</span> Aufgaben gelöst</small>
+                </div>
+            </div>
+            <div class="controls">
+                <span id="save-status" class="fas fa-circle text-muted" style="font-size: 0.8rem; cursor: help;"
+                    title="Bereit zum Speichern"></span>
+                <button id="saveButton" class="btn btn-success btn-sm">
+                    <i class='fas fa-save'></i> Speichern
+                </button>
+                <button id="submitButton" class="btn btn-primary btn-sm">
+                    <i class='fas fa-paper-plane'></i> Abgeben
+                </button>
+                <a th:href="@{/student/dashboard}" href="/student/dashboard" class="btn btn-outline-secondary btn-sm">
+                    <i class='fas fa-house'></i>
+                </a>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Tasks Panel (Links) -->
+            <div class="tasks-panel">
+                <div class="tasks-header">
+                    <h6>Aufgaben</h6>
+                </div>
+                <div class="tasks-container" id="tasks-container">
+                    <div class="loading-spinner">
+                        <i class="fas fa-spinner fa-spin"></i> Lade Aufgaben...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resizable Splitter -->
+            <div class="splitter" id="splitter"></div>
+
+            <!-- Output Panel (Rechts) -->
+            <div class="output-panel">
+                <div class="tab-container">
+                    <div class="tabs">
+                        <button class="output-tab active" data-output-tab="result">
+                            <i class="fas fa-table"></i> Ausgabe
+                        </button>
+                        <button class="output-tab" data-output-tab="tutorial">
+                            <i class="fas fa-book"></i> Tutorial
+                        </button>
+                        <button class="output-tab" data-output-tab="erd" id="erdTabBtn" style="display: none;">
+                            <i class="fas fa-diagram-project"></i> ERD
+                        </button>
+                    </div>
+                </div>
+                <div class="output-container">
+                    <!-- Ausgabe-Tab -->
+                    <div id="resultOutput" class="output-content active">
+                        <div id="output-info" class="output-placeholder">
+                            <i class="fas fa-play-circle"></i>
+                            <p>Klicken Sie auf "Ausführen" bei einer Aufgabe, um die SQL-Abfrage auszuführen.</p>
+                        </div>
+                        <div id="sql-output" style="display: none;">
+                            <div id="error-display" class="error-display" style="display: none;"></div>
+                            <div id="result-tables"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tutorial-Tab -->
+                    <div id="tutorialOutput" class="output-content">
+                        <!-- Tutorial Navigation und Content wird hier eingefügt -->
+                    </div>
+                    
+                    <!-- ERD-Tab -->
+                    <div id="erdOutput" class="output-content">
+                        <!-- ERD wird hier gerendert -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- JavaScript -->
+    <script th:src="@{/js/ping.js}"></script>
+</body>
+
+</html>
