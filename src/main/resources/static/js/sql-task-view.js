@@ -83,11 +83,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 // Daten aus versteckten DIVs holen
 function initializeFromDOM() {
     try {
-        // API-URLs
+        // Basis-URL ermitteln (falls App nicht unter / läuft)
+        const defaultLink = document.getElementById("default-link");
+        const baseUrl = defaultLink?.getAttribute("href")?.replace(/\/$/, "") || "";
+        
+        // API-URLs mit Basis-URL zusammensetzen
         const saveUrlDiv = document.getElementById("task-save-url");
         const submitUrlDiv = document.getElementById("task-submit-url");
-        saveUrl = saveUrlDiv?.dataset.url || "/dev/save";
-        submitUrl = submitUrlDiv?.dataset.url || "/dev/submit";
+        const rawSaveUrl = saveUrlDiv?.dataset.url || "/dev/save";
+        const rawSubmitUrl = submitUrlDiv?.dataset.url || "/dev/submit";
+        
+        saveUrl = rawSaveUrl.startsWith("/") ? rawSaveUrl : baseUrl + "/" + rawSaveUrl;
+        submitUrl = rawSubmitUrl.startsWith("/") ? rawSubmitUrl : baseUrl + "/" + rawSubmitUrl;
 
         // Content-Daten
         currentContent =
