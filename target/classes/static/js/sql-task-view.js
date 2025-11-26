@@ -62,8 +62,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             renderTasks(taskData);
         }
 
-        // Gespeicherten Content laden
-        loadContentToView(currentContent);
+        // Gespeicherten Content laden (verzögert, damit Editoren fertig initialisiert sind)
+        setTimeout(() => {
+            loadContentToView(currentContent);
+        }, 50);
 
         // Event-Listener einrichten
         setupEventListeners();
