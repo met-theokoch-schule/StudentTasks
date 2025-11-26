@@ -224,18 +224,19 @@ function initializeTutorialNavigation() {
         console.warn("No tutorial data found");
     }
 
+    // Prüfe ob ERD-Content vorhanden ist (unabhängig vom Tutorial)
+    const hasERDInTutorial = tutorialContents && tutorialContents.some((t) => t.image);
+    const hasERDInTaskData = taskData && (taskData.erd_image || taskData.relationshipModel);
+    if (hasERDInTutorial || hasERDInTaskData) {
+        document.getElementById("erdTabBtn").style.display = "";
+    }
+
     // Tab ausblenden wenn kein Inhalt
     if (!tutorialContents || tutorialContents.length === 0) {
         if (tutorialTab) {
             tutorialTab.style.display = "none";
         }
         return;
-    }
-
-    // Prüfe ob ERD-Content vorhanden ist
-    const hasERDContent = tutorialContents.some((t) => t.image);
-    if (hasERDContent) {
-        document.getElementById("erdTabBtn").style.display = "";
     }
 
     // Navigation HTML erstellen (nur Pfeile und Dots, keine Sub-Tabs)
