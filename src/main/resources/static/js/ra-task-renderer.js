@@ -69,9 +69,13 @@ function createTaskCard(task, index) {
         card.appendChild(description);
     }
 
-    // Editor
+    // Editor mit Symbol-Buttons
     const editorContainer = document.createElement("div");
     editorContainer.className = "task-editor";
+
+    // Symbol-Buttons über dem Editor
+    const symbolButtonsContainer = createSymbolButtons(task);
+    editorContainer.appendChild(symbolButtonsContainer);
 
     const textarea = document.createElement("textarea");
     textarea.id = `editor-${task.id}`;
@@ -112,6 +116,177 @@ function createTaskCard(task, index) {
     }, 0);
 
     return card;
+}
+
+// Symbol-Buttons erstellen
+function createSymbolButtons(task) {
+    const container = document.createElement("div");
+    container.className = "symbol-buttons-container";
+
+    // Standard-Operatoren (immer sichtbar)
+    const standardOps = [
+        {
+            symbol: "π",
+            label: "Projektion",
+            text: "pi",
+            tooltip: "Projektion\nπ a, b ( A )\npi a, b A",
+        },
+        {
+            symbol: "σ",
+            label: "Selektion",
+            text: "sigma",
+            tooltip:
+                "Selektion\nσ a < b ∧ b ≠ c ( A )\nsigma a < b and b != c A",
+        },
+        {
+            symbol: "⨯",
+            label: "Kreuzprodukt",
+            text: "cross",
+            tooltip: "Cross Join (Kreuzprodukt)\n( A ) ⨯ ( B )",
+        },
+        {
+            symbol: "⋈",
+            label: "Join",
+            text: "join",
+            tooltip: "Natural Join / θ-Join\n( A ) ⋈ ( B )",
+        },
+        {
+            symbol: "∧",
+            label: "Und",
+            text: "and",
+            tooltip: "Und\nσ a < b ∧ b ≠ c ( A )",
+        },
+        {
+            symbol: "∨",
+            label: "Oder",
+            text: "or",
+            tooltip: "Oder\nσ a < b ∨ b ≠ c ( A )",
+        },
+        {
+            symbol: "¬",
+            label: "Verneinung",
+            text: "not",
+            tooltip: "Verneinung\n¬(a < b) ( A )",
+        },
+        {
+            symbol: "=",
+            label: "Gleich",
+            text: "=",
+            tooltip: "Gleich\na = b ( A )",
+        },
+        {
+            symbol: "≠",
+            label: "Ungleich",
+            text: "!=",
+            tooltip: "Ungleich\na ≠ 'text' ( A )",
+        },
+        {
+            symbol: "≥",
+            label: "Größer-Gleich",
+            text: ">=",
+            tooltip: "Größer-Gleich\na ≥ 42 ( A )",
+        },
+        {
+            symbol: "≤",
+            label: "Kleiner-Gleich",
+            text: "<=",
+            tooltip: "Kleiner-Gleich\na ≤ 42 ( A )",
+        },
+    ];
+
+    // Zusätz-Operatoren (nur wenn showLKOperations true)
+    const lkOps = [
+        {
+            symbol: "ρ",
+            label: "Umbenennen",
+            text: "rho",
+            tooltip: "Umbenennen (Relationen/Spalten)\nσ x.a > 1 ( ρ x ( A ) )",
+        },
+        {
+            symbol: "←",
+            label: "Spalte umbenennen (alt)",
+            text: "<-",
+            tooltip: "Umbenennung von Spalten\nσ A.y > 2 ( ρ y←a ( A ) )",
+        },
+        {
+            symbol: "→",
+            label: "Spalte umbenennen (neu)",
+            text: "->",
+            tooltip:
+                "Umbenennung von Spalten (neuer Name rechts)\nσ A.y > 2 ( ρ a→y ( A ) )",
+        },
+        {
+            symbol: "∩",
+            label: "Schnittmenge",
+            text: "intersect",
+            tooltip: "Schnittmenge\n( A ) ∩ ( B )",
+        },
+        {
+            symbol: "∪",
+            label: "Vereinigung",
+            text: "union",
+            tooltip: "Vereinigung\n( A ) ∪ ( B )",
+        },
+        {
+            symbol: "-",
+            label: "Differenz",
+            text: "minus",
+            tooltip: "Mengendifferenz\n( A ) - ( B )",
+        },
+    ];
+
+    const allOps = task.showLKOperations
+        ? [...standardOps, ...lkOps]
+        : standardOps;
+
+    allOps.forEach((op) => {
+        const btn = document.createElement("button");
+        btn.className = "symbol-button";
+        btn.textContent = op.symbol;
+        btn.title = op.tooltip;
+        btn.type = "button";
+        btn.onclick = (e) => {
+            e.preventDefault();
+            insertSymbolAtCursor(task.id, op.symbol);
+        };
+
+        // Tooltip hinzufügen
+        const tooltipSpan = document.createElement("span");
+        tooltipSpan.className = "symbol-tooltip";
+        const lines = op.tooltip.split("\n");
+        if (lines.length > 1) {
+            // Erste Zeile als Überschrift
+            const titleDiv = document.createElement("div");
+            titleDiv.className = "symbol-tooltip-title";
+            titleDiv.textContent = lines[0];
+            tooltipSpan.appendChild(titleDiv);
+
+            // Rest als Content
+            const contentDiv = document.createElement("div");
+            contentDiv.className = "symbol-tooltip-content";
+            contentDiv.innerHTML = lines.slice(1).join("<br>");
+            tooltipSpan.appendChild(contentDiv);
+        } else {
+            tooltipSpan.textContent = op.tooltip;
+        }
+        btn.appendChild(tooltipSpan);
+
+        container.appendChild(btn);
+    });
+
+    return container;
+}
+
+// Symbol an Cursor-Position einfügen
+function insertSymbolAtCursor(taskId, symbol) {
+    const editor = editors[taskId];
+    if (!editor) return;
+
+    const cursor = editor.getCursor();
+    editor.replaceRange(symbol, cursor);
+    editor.setCursor({ line: cursor.line, ch: cursor.ch + symbol.length });
+    editor.focus();
+    markDirty();
 }
 
 // CodeMirror-Editor initialisieren
@@ -211,7 +386,7 @@ function executeRA(taskId) {
         // Leeren für neue Ausführung
         resultContainer.innerHTML = "";
 
-        // RelaxEngine ausführen
+        // RelaxEngine ausführen (mit Paginierung für Anzeige)
         RelaxEngine.execute(raQuery, resultContainer, {
             showTree: true,
             showFormula: true,
@@ -233,26 +408,193 @@ function executeRA(taskId) {
     }
 }
 
+// Spaltennamen normalisieren (entfernt Tabellenpräfix wie "S.Note" → "Note")
+function normalizeColumnName(name) {
+    if (!name) return "";
+    return name.includes(".") ? name.split(".").pop() : name;
+}
+
+// Tabellen aus Container extrahieren
+function extractTableFromContainer(container) {
+    if (!container) return null;
+    
+    const table = container.querySelector("table");
+    if (!table) return null;
+
+    const headers = [];
+    table.querySelectorAll("thead th").forEach((th) => {
+        headers.push(normalizeColumnName(th.textContent.trim()));
+    });
+
+    const rows = [];
+    table.querySelectorAll("tbody tr").forEach((tr) => {
+        const row = [];
+        tr.querySelectorAll("td").forEach((td) => {
+            row.push(td.textContent.trim());
+        });
+        if (row.length > 0) {
+            rows.push(row);
+        }
+    });
+
+    return { headers, rows };
+}
+
+// Zwei Tabellen vergleichen (Spaltenreihenfolge und Namen ignorieren)
+function compareRelationTables(userTable, solutionTable, allowExtraColumns) {
+    if (!userTable || !solutionTable) {
+        console.error("Tabellen nicht vorhanden für Vergleich");
+        return false;
+    }
+
+    // Spalten normalisieren und in Sets konvertieren
+    const userCols = new Set(userTable.headers);
+    const solutionCols = new Set(solutionTable.headers);
+
+    // Überprüfe ob Solution-Spalten alle in User-Spalten enthalten sind
+    for (const col of solutionCols) {
+        if (!userCols.has(col)) {
+            console.error(`Fehlende Spalte: ${col}`);
+            return false;
+        }
+    }
+
+    // Überprüfe extra Spalten
+    if (!allowExtraColumns && userCols.size !== solutionCols.size) {
+        console.error("Zu viele Spalten im Ergebnis");
+        return false;
+    }
+
+    // Spalten-Indices im User-Ergebnis finden
+    const colIndices = {};
+    solutionTable.headers.forEach((col) => {
+        colIndices[col] = userTable.headers.indexOf(col);
+    });
+
+    // Zeilen vergleichen (Reihenfolge egal)
+    const solutionRowSet = new Set();
+    solutionTable.rows.forEach((row) => {
+        const mappedRow = row.map((val, idx) => val).join("|||");
+        solutionRowSet.add(mappedRow);
+    });
+
+    const userRowSet = new Set();
+    userTable.rows.forEach((row) => {
+        const mappedRow = solutionTable.headers
+            .map((col, idx) => row[colIndices[col]] || "")
+            .join("|||");
+        userRowSet.add(mappedRow);
+    });
+
+    // Zeilenmenge vergleichen
+    if (userRowSet.size !== solutionRowSet.size) {
+        console.error(`Unterschiedliche Zeilenzahl: ${userRowSet.size} vs ${solutionRowSet.size}`);
+        return false;
+    }
+
+    for (const userRow of userRowSet) {
+        if (!solutionRowSet.has(userRow)) {
+            console.error(`Unterschiedliche Zeile gefunden: ${userRow}`);
+            return false;
+        }
+    }
+
+    return true;
+}
+
 // RA-Ergebnis-Validierung
 async function validateRASolution(taskId, userQuery, task) {
     try {
         console.log("✅ Validating solution...");
 
-        // Für jetzt: einfacher String-Vergleich oder struktureller Vergleich
-        // In einer echten Implementierung würde man die Ergebnisse vergleichen
+        const allowExtraColumns = task.validation?.extraColumnsAllowed ?? false;
 
-        const isCorrect = userQuery.trim() === task.solutionCode.trim();
+        // User-Ergebnis in separatem Container mit ALLEN Zeilen extrahieren (für Vergleich)
+        const userValidationContainer = document.createElement("div");
+        userValidationContainer.style.display = "none";
+        document.body.appendChild(userValidationContainer);
 
-        if (isCorrect) {
-            updateTaskStatus(taskId, "correct");
-            showValidationFeedback(true);
-        } else {
-            updateTaskStatus(taskId, "incorrect");
-            showValidationFeedback(false);
+        try {
+            RelaxEngine.execute(userQuery, userValidationContainer, {
+                showTree: false,
+                showFormula: false,
+                maxRowsPerPage: 10000,  // ALLE Zeilen für Vergleich
+            });
+
+            // Warte auf Rendering
+            let userTable = null;
+            for (let i = 0; i < 20; i++) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                userTable = extractTableFromContainer(userValidationContainer);
+                if (userTable) break;
+            }
+
+            console.log("🔍 User table extracted (full):", userTable);
+
+            if (!userTable) {
+                console.error("User-Tabelle konnte nicht extrahiert werden");
+                updateTaskStatus(taskId, "incorrect");
+                showValidationFeedback(false);
+                return;
+            }
+
+            // Solution-Query in separatem Container ausführen (mit ALLEN Zeilen)
+            const tempContainer = document.createElement("div");
+            tempContainer.style.display = "none";
+            document.body.appendChild(tempContainer);
+
+            try {
+                RelaxEngine.execute(task.solutionCode, tempContainer, {
+                    showTree: false,
+                    showFormula: false,
+                    maxRowsPerPage: 10000,  // ALLE Zeilen für Vergleich
+                });
+
+                // Warte auf Rendering der Tabelle
+                let solutionTable = null;
+                for (let i = 0; i < 20; i++) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    solutionTable = extractTableFromContainer(tempContainer);
+                    if (solutionTable) break;
+                }
+
+                console.log("🔍 Solution table extracted (full):", solutionTable);
+
+                if (!solutionTable) {
+                    console.error("Solution-Tabelle konnte nicht extrahiert werden");
+                    updateTaskStatus(taskId, "incorrect");
+                    showValidationFeedback(false);
+                    return;
+                }
+
+                // Tabellen vergleichen
+                const isCorrect = compareRelationTables(userTable, solutionTable, allowExtraColumns);
+
+                console.log(
+                    `📊 Validation result: ${isCorrect ? "CORRECT" : "INCORRECT"}`,
+                    {
+                        userTable,
+                        solutionTable,
+                    }
+                );
+
+                if (isCorrect) {
+                    updateTaskStatus(taskId, "correct");
+                    showValidationFeedback(true);
+                } else {
+                    updateTaskStatus(taskId, "incorrect");
+                    showValidationFeedback(false);
+                }
+            } finally {
+                document.body.removeChild(tempContainer);
+            }
+        } finally {
+            document.body.removeChild(userValidationContainer);
         }
     } catch (e) {
         console.error("Validation error:", e);
         updateTaskStatus(taskId, "incorrect");
+        showValidationFeedback(false);
     }
 }
 

@@ -16,23 +16,27 @@
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     
     <!-- CodeMirror -->
-    <link rel="stylesheet" href="codemirror/codemirror.css" />
+    <link rel="stylesheet" th:href="@{/css/codemirror/codemirror.css}" href="codemirror/codemirror.css" />
     
     
     <!-- JavaScript Libraries -->
-    <script src="codemirror/codemirror.js"></script>
+    <script th:src="@{/js/codemirror/codemirror.js}" src="codemirror/codemirror.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
-    <script src="relax-engine.bundle.js"></script>
+    <script th:src="@{/js/relax-engine.bundle.js}" src="relax-engine.bundle.js"></script>
 </head>
 
 <body>
     <!-- Versteckte Content-Divs für Thymeleaf -->
     <div id="task-save-url" style="display: none"
-        th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? 'api/tasks/usertasks/' + userTaskId + '/content' : 'api/tasks/' + task.id + '/content'}"
+        th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null)}
+          ? @{/api/tasks/usertasks/{id}/content(id=${userTaskId})}
+          : @{/api/tasks/{id}/content(id=${task.id})}"
         data-url="/dev/save"></div>
     
     <div id="task-submit-url" style="display: none"
-        th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? '' : 'api/tasks/' + task.id + '/submit'}"
+        th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null)}
+          ? '' 
+          : @{/api/tasks/{id}/submit(id=${task.id})}"
         data-url="/dev/submit"></div>
     
     <div id="currentContent" style="display: none" th:text="${currentContent}"></div>
@@ -59,7 +63,7 @@
                     "columns": [
                         { "name": "MatrNr", "type": "number" },
                         { "name": "Fach", "type": "string" },
-                        { "name": "Note", "type": "number" }
+                        { "name": "Grade", "type": "number" }
                     ],
                     "rows": [
                         [12345, "Datenbanken", 1.7],
@@ -91,8 +95,9 @@
                     "id": "task-1",
                     "title": "Aufgabe 1: Projektion",
                     "description": "# Projektion - Spalten auswählen\n\nProjiziere nur die **Spalten MatrNr und Name** aus der Tabelle `S`.\n\n**Hinweis:** Verwende den Operator π (pi) um Spalten auszuwählen.",
-                    "defaultCode": "",
-                    "solutionCode": "pi MatrNr, Name (S)",
+                    "defaultCode": "S join Noten",
+                    "solutionCode": "S join Noten",
+                    "showLKOperations": true,
                     "validation": {
                         "orderMatters": false,
                         "extraColumnsAllowed": false,
@@ -105,6 +110,7 @@
                     "description": "# Selektion - Zeilen filtern\n\nSelektiere alle **Noten mit einer Note besser oder gleich 2.0** und projiziere dann die Spalten `MatrNr` und `Note`.\n\n**Hinweis:** Verwende σ (sigma) für Selektion und kombiniere mit π (pi).",
                     "defaultCode": "",
                     "solutionCode": "pi MatrNr, Note (sigma Note &lt;= 2.0 (Noten))",
+                    "showLKOperations": false,
                     "validation": {
                         "orderMatters": false,
                         "extraColumnsAllowed": false,
@@ -117,6 +123,7 @@
                     "description": "# Natural Join - Tabellen verbinden\n\nVerbinde die Tabellen `S` und `Noten` über den **Natural Join**. Diese sollten automatisch über die gemeinsame Spalte `MatrNr` verbunden werden.\n\n**Hinweis:** Verwende die join Operator um zwei Tabellen zu verbinden.",
                     "defaultCode": "",
                     "solutionCode": "S join Noten",
+                    "showLKOperations": false,
                     "validation": {
                         "orderMatters": false,
                         "extraColumnsAllowed": false,

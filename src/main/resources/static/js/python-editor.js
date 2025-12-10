@@ -323,6 +323,14 @@ function initializeControls() {
     document.getElementById('submitButton').addEventListener('click', function() {
         submitTask();
     });
+
+    // Zurücksetzen-Button
+    const resetBtn = document.getElementById('resetBtn');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+            resetToDefault();
+        });
+    }
 }
 
 // Utility-Funktionen
@@ -967,6 +975,27 @@ function loadSavedContent() {
     if (contentElement) {
         const savedContent = contentElement.textContent.trim();
         loadContentToView(savedContent);
+    }
+}
+
+// Auf Standardwert zurücksetzen
+function resetToDefault() {
+    const defaultElement = document.getElementById('defaultSubmission');
+    if (!defaultElement) {
+        console.warn('defaultSubmission nicht gefunden');
+        return;
+    }
+
+    const defaultCode = defaultElement.textContent.trim();
+    if (!defaultCode) {
+        console.warn('Kein Standardcode vorhanden');
+        return;
+    }
+
+    if (confirm('Möchten Sie den Code wirklich auf den Standardwert zurücksetzen?')) {
+        pythonEditor.setValue(defaultCode);
+        updateSaveStatus('ready');
+        console.log('Code auf Standardwert zurückgesetzt');
     }
 }
 
