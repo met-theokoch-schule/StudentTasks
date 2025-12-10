@@ -993,8 +993,20 @@ function resetToDefault() {
     }
 
     if (confirm('Möchten Sie den Code wirklich auf den Standardwert zurücksetzen?')) {
-        pythonEditor.setValue(defaultCode);
-        updateSaveStatus('ready');
+        // Erstelle JSON-Format für loadContentToView
+        const content = JSON.stringify({
+            version: "1.0",
+            type: "python-code-editor",
+            pythonCode: defaultCode,
+            currentTutorialIndex: currentTutorialIndex,
+            metadata: {
+                lastModified: new Date().toISOString(),
+                codeLength: defaultCode.length
+            }
+        });
+        
+        // Nutze loadContentToView um den Code korrekt zu laden
+        loadContentToView(content);
         console.log('Code auf Standardwert zurückgesetzt');
     }
 }
