@@ -43,8 +43,6 @@
                     <option value="24">24pt</option>
                     <option value="30">30pt</option>
                 </select>
-                <button id="resetBtn" class="btn btn-outline-secondary btn-sm" title="Auf Standardwert zurücksetzen"><i
-                        class='fas fa-undo'></i> Zurücksetzen</button>
                 <button id="fullscreenBtn" class="btn btn-outline-secondary btn-sm" title="Vollbild"><i
                         class='fas fa-expand'></i></button>
                 <a th:href="@{/student/dashboard}" href="/student/dashboard" class="btn btn-outline-secondary btn-sm"><i
@@ -104,7 +102,7 @@
         th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? '' : 'api/tasks/' + task.id + '/submit'}"
         data-url="/dev/submit"></div>
     <div id="currentContent" style="display: none" th:text="${currentContent}"></div>
-    <div id="defaultSubmission" style="display: none" th:text="${defaultSubmission}"></div>
+    <div id="defaultSubmission" style="display: none" th:text="${task.defaultSubmission} "></div>
     <div id="description" style="display: none" th:text="${task.description}">*Test*</div>
     <div id="tutorial" style="display: none" th:utext="${task.tutorial}">[
         {
