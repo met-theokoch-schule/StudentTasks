@@ -550,6 +550,7 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
                         <select class="form-select form-select-sm" style="width: auto;" id="previewFile" onchange="switchPreviewFile()">
                             <option value="">Datei auswählen...</option>
                         </select>
+                        <button id="fullscreenBtn" class="btn btn-outline-secondary btn-sm" title="Vollbild" onclick="toggleFullscreen()"><i class='fas fa-expand'></i></button>
                         <a th:href="@{/student/dashboard}" href="/student/dashboard" class="btn btn-sm btn-outline-secondary" title="Zum Dashboard">
                             <i class="fas fa-home"></i>
                         </a>
@@ -1433,6 +1434,36 @@ In dieser Aufgabe lernen Sie die **Grundlagen von HTML und CSS** kennen.
                 .replace(/<p>(<h[1-6]>.*<\/h[1-6]>)<\/p>/g, '$1')
                 .replace(/<p>(<li>.*<\/li>)<\/p>/g, '<ul>$1</ul>');
         }
+
+        // Fullscreen Toggle Funktion
+        function toggleFullscreen() {
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+            const mainContainer = document.querySelector('.main-container');
+            
+            if (!document.fullscreenElement) {
+                mainContainer.requestFullscreen().catch(err => {
+                    console.error('❌ Fullscreen-Fehler:', err);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        document.addEventListener('fullscreenchange', function() {
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+            if (fullscreenBtn) {
+                const icon = fullscreenBtn.querySelector('i');
+                if (document.fullscreenElement) {
+                    icon.classList.remove('fa-expand');
+                    icon.classList.add('fa-compress');
+                    fullscreenBtn.title = 'Vollbild verlassen';
+                } else {
+                    icon.classList.remove('fa-compress');
+                    icon.classList.add('fa-expand');
+                    fullscreenBtn.title = 'Vollbild';
+                }
+            }
+        });
 
         // iFrame-Kommunikation für Lehrer-Integration
         if (window.parent && window.parent !== window) {

@@ -986,14 +986,22 @@ function resetToDefault() {
         return;
     }
 
-    const defaultCode = defaultElement.textContent.trim();
-    if (!defaultCode) {
+    const defaultContent = defaultElement.textContent.trim();
+    if (!defaultContent) {
         console.warn('Kein Standardcode vorhanden');
         return;
     }
 
     if (confirm('Möchten Sie den Code wirklich auf den Standardwert zurücksetzen?')) {
-        pythonEditor.setValue(defaultCode);
+        try {
+            // Parse JSON wenn es JSON ist, sonst verwende direkten Code
+            const data = JSON.parse(defaultContent);
+            const codeToLoad = data.pythonCode || defaultContent;
+            pythonEditor.setValue(codeToLoad);
+        } catch (e) {
+            // Fallback: verwende direkten Code wenn nicht JSON
+            pythonEditor.setValue(defaultContent);
+        }
         updateSaveStatus('ready');
         console.log('Code auf Standardwert zurückgesetzt');
     }
