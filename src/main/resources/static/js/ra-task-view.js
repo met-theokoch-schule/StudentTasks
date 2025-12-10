@@ -515,6 +515,7 @@ function loadContentToView(contentString) {
         });
 
         console.log("✅ Content loaded successfully");
+        updateSaveStatus("saved");
     } catch (e) {
         console.error("Error loading content:", e);
     }
@@ -524,6 +525,7 @@ function loadContentToView(contentString) {
 async function saveContent(isSubmission = false) {
     const content = getContentFromView();
     const url = isSubmission ? submitUrl : saveUrl;
+    
 
     if (!url) {
         console.error("No save URL configured");
@@ -572,6 +574,7 @@ function updateSaveStatus(status) {
 
     statusElement.className = "fas fa-circle";
     statusElement.title = "";
+    statusElement.style.color = "";
 
     switch (status) {
         case "saved":
@@ -593,26 +596,17 @@ function updateSaveStatus(status) {
             statusElement.title = "Abgegeben";
             break;
         default:
-            statusElement.classList.add("text-muted");
+            statusElement.style.color = "rgb(255, 193, 7)";
             statusElement.title = "Bereit zum Speichern";
     }
 }
 
-// Dirty-Flag setzen
+// Dirty-Flag setzen (nur Status aktualisieren, kein Auto-Save)
 function markDirty() {
     isDirty = true;
     updateSaveStatus("ready");
 
-    // Auto-Save Timeout
-    if (autoSaveTimeout) {
-        clearTimeout(autoSaveTimeout);
-    }
-
-    autoSaveTimeout = setTimeout(() => {
-        if (isDirty) {
-            saveContent(false);
-        }
-    }, AUTO_SAVE_DELAY);
+    // Auto-Save wurde deaktiviert - nur manuelles Speichern via "Speichern" Button
 }
 
 // Task-Status aktualisieren

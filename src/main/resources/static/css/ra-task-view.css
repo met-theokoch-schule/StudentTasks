@@ -1,3 +1,8 @@
+@font-face {
+    font-family: FreeSansMinimal;
+    src: url('../fonts/FreeSansMinimal.otf') format('opentype');
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -345,11 +350,97 @@ html, body {
     margin-bottom: 10px;
 }
 
+/* Symbol Buttons Container */
+.symbol-buttons-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 0;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #404040;
+    padding-bottom: 8px;
+}
+
+.symbol-button {
+    position: relative;
+    background-color: #404040;
+    color: #ffffff;
+    border: 1px solid #505050;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: FreeSansMinimal;
+    transition: all 0.2s ease;
+    min-width: 36px;
+    text-align: center;
+}
+
+.symbol-button:hover {
+    background-color: #007acc;
+    border-color: #007acc;
+}
+
+.symbol-button:active {
+    background-color: #005a9e;
+}
+
+/* Tooltip für Symbol-Buttons */
+.symbol-tooltip {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    background: rgba(0, 0, 0, 0.95);
+    color: #ffffff;
+    padding: 0;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: normal;
+    font-family: FreeSansMinimal;
+    white-space: pre;
+    max-width: 200px;
+    z-index: 1000;
+    margin-bottom: 8px;
+    border: 1px solid #007acc;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    line-height: 1.4;
+    overflow: hidden;
+}
+
+.symbol-tooltip-title {
+    background: #007acc;
+    padding: 6px 10px;
+    font-weight: 600;
+    font-family: FreeSansMinimal;
+    border-bottom: 1px solid #005a9e;
+}
+
+.symbol-tooltip-content {
+    padding: 6px 10px;
+}
+
+.symbol-button:hover .symbol-tooltip {
+    display: block;
+}
+
+.symbol-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 8px;
+    border: 6px solid transparent;
+    border-top-color: rgba(0, 0, 0, 0.95);
+}
+
 .task-editor .CodeMirror {
     height: 150px;
     border: 1px solid #404040;
     border-radius: 4px;
-    font-size: 14px;
+    font-size: 16px;
+    font-family: FreeSansMinimal;
 }
 
 .task-actions {
