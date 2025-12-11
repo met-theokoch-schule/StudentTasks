@@ -125,67 +125,6 @@
             white-space: pre !important;
         }
 
-        /* Ace a11y-dark theme - direkt embedded für python-renderer */
-        .ace-a11y-dark {
-            background-color: #2b2b2b;
-            color: #f8f8f2;
-        }
-
-        .ace-a11y-dark .ace_gutter {
-            background: #2b2b2b;
-            color: #d4d0ab;
-        }
-
-        .ace-a11y-dark .ace_keyword,
-        .ace-a11y-dark .ace_meta,
-        .ace-a11y-dark .ace_storage,
-        .ace-a11y-dark .ace_storage.ace_type {
-            color: #dcc6e0;
-        }
-
-        .ace-a11y-dark .ace_constant,
-        .ace-a11y-dark .ace_constant.ace_character,
-        .ace-a11y-dark .ace_constant.ace_other,
-        .ace-a11y-dark .ace_constant.ace_language,
-        .ace-a11y-dark .ace_constant.ace_numeric {
-            color: #f5ab35;
-        }
-
-        .ace-a11y-dark .ace_string,
-        .ace-a11y-dark .ace_heading,
-        .ace-a11y-dark .ace_markup.ace_heading {
-            color: #abe338;
-        }
-
-        .ace-a11y-dark .ace_support.ace_constant,
-        .ace-a11y-dark .ace_support.ace_function,
-        .ace-a11y-dark .ace_support.ace_class,
-        .ace-a11y-dark .ace_support.ace_type,
-        .ace-a11y-dark .ace_function {
-            color: #00e0e0;
-        }
-
-        .ace-a11y-dark .ace_entity.ace_name.ace_tag,
-        .ace-a11y-dark .ace_entity.ace_other.ace_attribute-name,
-        .ace-a11y-dark .ace_meta.ace_tag,
-        .ace-a11y-dark .ace_entity.ace_name.ace_function,
-        .ace-a11y-dark .ace_entity.ace_other,
-        .ace-a11y-dark .ace_variable {
-            color: #ffa07a;
-        }
-
-        .ace-a11y-dark .ace_comment {
-            color: #d4d0ab;
-        }
-
-        .ace-a11y-dark .ace_parameter {
-            color: #f5ab35;
-        }
-
-        .ace-a11y-dark .ace_paren {
-            color: #f8f8f2;
-        }
-
         @media print {
             body {
                 background-color: white;
@@ -237,6 +176,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/mode-html.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/mode-css.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ext-static_highlight.js"></script>
+    <script th:src="@{/js/ace-theme-a11y-dark.js}" src="../../static/js/ace-theme-a11y-dark.js"></script>
 
     <script>
         // Wie im python-editor.js: Markdown rendering mit Ace Static Highlight
@@ -268,17 +208,41 @@
                 }
                 
                 const aceMode = 'ace/mode/' + language;
-                const highlighted = staticHighlight.render(code, aceMode, 'ace/theme/a11y_dark', 1, true);
                 
-                if (highlighted && highlighted.html) {
-                    outputContainer.innerHTML = highlighted.html;
-                    console.log('✅ Code erfolgreich gerendert mit Sprache:', language, 'mittels Ace Static Highlight');
-                } else {
-                    throw new Error('No HTML output from staticHighlight.render');
-                }
+                // Genau wie im python-editor.js: Erstelle HTML mit pre/code Blocks
+                let html = '<pre><code class="language-' + language + '">' + 
+                    code.replace(/</g, '&lt;').replace(/>/g, '&gt;') + 
+                    '</code></pre>';
+                
+                // Parse und highlighting anwenden wie in renderMarkdown()
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const codeBlocks = doc.querySelectorAll('pre code');
+                
+                codeBlocks.forEach(block => {
+                    const langClass = block.className.match(/language-(\w+)/);
+                    const lang = langClass ? langClass[1] : language;
+                    const codeText = block.textContent.trimEnd();
+                    
+                    try {
+                        const aceMode2 = 'ace/mode/' + lang;
+                        const highlighted = staticHighlight.render(codeText, aceMode2, 'ace/theme/a11y_dark', 1, true);
+                        
+                        const preElement = block.parentElement;
+                        if (preElement && preElement.tagName === 'PRE' && highlighted && highlighted.html) {
+                            preElement.outerHTML = highlighted.html;
+                            console.log('✅ Code erfolgreich gerendert mit Sprache:', lang);
+                        }
+                    } catch (e) {
+                        console.warn('⚠️ Ace Highlighting Fehler:', e);
+                    }
+                });
+                
+                // Setze das finale HTML
+                outputContainer.innerHTML = doc.body.innerHTML;
             } catch (e) {
                 console.error('❌ Rendering error:', e.message);
-                outputContainer.innerHTML = '<pre style="color: #f8f8f2; font-family: Consolas, Monaco, Courier New, monospace; padding: 15px; background-color: #2b2b2b; border-radius: 4px;">' + 
+                outputContainer.innerHTML = '<pre class="ace-a11y-dark" style="color: #f8f8f2; font-family: Consolas, Monaco, Courier New, monospace; padding: 15px; background-color: #2b2b2b; border-radius: 4px;">' + 
                     code.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre>';
             }
         }
