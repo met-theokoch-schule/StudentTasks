@@ -1,0 +1,148 @@
+/* a11y-dark theme - angepasst für Konsistenz mit Ace Editor */
+/* Based on the Tomorrow Night Eighties theme */
+/* @author: ericwbailey */
+/* Modified to match ace-theme-a11y-dark.js token colors */
+
+@layer vendor-highlight {
+  @media (forced-colors: none), (forced-colors: active) {
+    :root {
+      --highlight-a11y-code-block-padding: 0.5em;
+
+      /* Farben abgestimmt auf Ace Editor a11y_dark Theme */
+      --highlight-a11y-color-background: #2b2b2b;
+      --highlight-a11y-color-text-no-token: #f8f8f2;
+      --highlight-a11y-color-text-comment: #d4d0ab;
+      --highlight-a11y-color-text-cyan: #00e0e0;
+      --highlight-a11y-color-text-green: #abe338;
+      --highlight-a11y-color-text-orange: #f5ab35;
+      --highlight-a11y-color-text-purple: #dcc6e0;
+      --highlight-a11y-color-text-red: #ffa07a;
+      --highlight-a11y-color-text-yellow: gold;
+    }
+  }
+
+
+  @media (forced-colors: none), (forced-colors: active) {
+    /*
+     * MARK: Theme - angepasst auf Ace Editor Token-Farben
+     */
+
+    /* Kommentare - beige (wie ace_comment) */
+    :where(
+      .hljs-comment,
+      .hljs-quote
+    ) {
+      color: var(--highlight-a11y-color-text-comment);
+    }
+
+    /* Keywords - lila (wie ace_keyword) */
+    :where(
+      .hljs-keyword,
+      .hljs-selector-tag,
+      .hljs-meta
+    ) {
+      color: var(--highlight-a11y-color-text-purple);
+    }
+
+    /* Strings - grün (wie ace_string) */
+    :where(
+      .hljs-string,
+      .hljs-symbol,
+      .hljs-bullet,
+      .hljs-addition
+    ) {
+      color: var(--highlight-a11y-color-text-green);
+    }
+
+    /* Zahlen/Literale/Parameter - orange (wie ace_constant.ace_numeric) */
+    :where(
+      .hljs-number,
+      .hljs-literal,
+      .hljs-params
+    ) {
+      color: var(--highlight-a11y-color-text-orange);
+    }
+
+    /* Funktionen/Built-ins/Typen/Titel - cyan (wie ace_support.ace_function) */
+    :where(
+      .hljs-built_in,
+      .hljs-title,
+      .hljs-section,
+      .hljs-type,
+      .hljs-class,
+      .hljs-title.function_
+    ) {
+      color: var(--highlight-a11y-color-text-cyan);
+    }
+
+    /* Variablen/Tags - rot-orange (wie ace_variable) */
+    :where(
+      .hljs-variable,
+      .hljs-template-variable,
+      .hljs-tag,
+      .hljs-name,
+      .hljs-selector-id,
+      .hljs-selector-class,
+      .hljs-regexp,
+      .hljs-deletion,
+      .hljs-link
+    ) {
+      color: var(--highlight-a11y-color-text-red);
+    }
+
+    /* Attribute - gelb (wie ace_attribute) */
+    :where(
+      .hljs-attribute
+    ) {
+      color: var(--highlight-a11y-color-text-yellow);
+    }
+
+    /* Basis-Styling */
+    :where(
+      .hljs
+    ) {
+      display: block;
+      overflow-x: auto;
+      background: var(--highlight-a11y-color-background);
+      color: var(--highlight-a11y-color-text-no-token);
+      padding: var(--highlight-a11y-code-block-padding);
+    }
+
+    :where(
+      .hljs-emphasis
+    ) {
+      font-style: italic;
+    }
+
+    :where(
+      .hljs-strong
+    ) {
+      font-weight: bold;
+    }
+  }
+
+
+  /*
+   * MARK: Forced color mode support (High Contrast)
+   */
+  @media (forced-colors: active) {
+    :root {
+      --highlight-a11y-color-background: Canvas;
+      --highlight-a11y-color-text-no-token: CanvasText;
+      --highlight-a11y-color-text-comment: GrayText;
+      --highlight-a11y-color-text-cyan: LinkText;
+      --highlight-a11y-color-text-green: CanvasText;
+      --highlight-a11y-color-text-orange: CanvasText;
+      --highlight-a11y-color-text-purple: CanvasText;
+      --highlight-a11y-color-text-red: CanvasText;
+      --highlight-a11y-color-text-yellow: GrayText;
+    }
+
+    :where(
+      .hljs-keyword,
+      .hljs-selector-tag
+    ) {
+      font-weight: bold;
+    }
+  }
+}

@@ -12,6 +12,7 @@ com/example/studenttask/model/TaskReview.class
 com/example/studenttask/controller/TeacherGroupController$GroupInfo.class
 com/example/studenttask/service/GroupService.class
 com/example/studenttask/controller/TeacherGroupController$StudentTaskMatrix.class
+com/example/studenttask/controller/PythonRendererController.class
 com/example/studenttask/repository/UserRepository.class
 com/example/studenttask/controller/TaskController.class
 com/example/studenttask/controller/TeacherTaskController.class
