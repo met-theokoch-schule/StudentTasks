@@ -12,13 +12,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ext-static_highlight.js"></script>
     <link th:href="@{/css/python-editor.css}" href="../../static/css/python-editor.css" rel="stylesheet">
     <style>
+        html, body {
+            height: 100%;
+            overflow: auto;
+        }
+        
         body {
             background-color: #1e1e1e;
             color: #f8f8f2;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
             padding: 20px;
-            min-height: 100vh;
         }
         
         .container-fluid {
@@ -68,16 +72,11 @@
             min-height: 200px;
         }
         
-        #screenshotOutput, #printOutput {
+        #screenshotOutput {
             background-color: #2b2b2b;
             border-radius: 4px;
             padding: 15px;
             min-height: 150px;
-        }
-        
-        #printOutput {
-            background-color: #ffffff;
-            color: #000000;
         }
         
         .nav-tabs .nav-link {
@@ -128,34 +127,16 @@
                 <i class="fas fa-camera"></i> Screenshot-Ansicht
             </button>
             <button id="btnPrint" class="btn btn-success">
-                <i class="fas fa-print"></i> Druckansicht (PDF)
+                <i class="fas fa-print"></i> Drucken (PDF)
             </button>
         </div>
         
         <div class="panel output-panel">
-            <ul class="nav nav-tabs no-print" role="tablist">
-                <li class="nav-item">
-                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabScreenshot">
-                        <i class="fas fa-camera"></i> Screenshot
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabPrint">
-                        <i class="fas fa-print"></i> Druck/PDF
-                    </button>
-                </li>
-            </ul>
-            <div class="tab-content">
-                <div class="tab-pane fade show active" id="tabScreenshot">
-                    <div id="screenshotOutput">
-                        <p style="color: #888;">Klicke auf "Screenshot-Ansicht" um den Code zu rendern.</p>
-                    </div>
-                </div>
-                <div class="tab-pane fade" id="tabPrint">
-                    <div id="printOutput">
-                        <p style="color: #888;">Klicke auf "Druckansicht" um den Code druckfertig zu rendern.</p>
-                    </div>
-                </div>
+            <div class="panel-header no-print">
+                <span class="panel-title"><i class="fas fa-camera"></i> Vorschau</span>
+            </div>
+            <div id="screenshotOutput" style="overflow-y: auto; max-height: 600px;">
+                <p style="color: #888;">Klicke auf "Screenshot-Ansicht" um den Code zu rendern.</p>
             </div>
         </div>
     </div>
@@ -231,47 +212,13 @@ print(student1.name)`);
         
         function renderPrint() {
             const code = editor.getValue();
-            const output = document.getElementById('printOutput');
             
             if (!code.trim()) {
-                output.innerHTML = '<p style="color: #c00;">Bitte Code eingeben.</p>';
+                alert('Bitte Code eingeben.');
                 return;
             }
             
-            const staticHighlight = ace.require('ace/ext/static_highlight');
-            if (!staticHighlight) {
-                output.innerHTML = '<p style="color: #c00;">Static Highlight nicht verfügbar.</p>';
-                return;
-            }
-            
-            const html = '<pre><code class="language-python">' + 
-                code.replace(/</g, '&lt;').replace(/>/g, '&gt;') + 
-                '</code></pre>';
-            
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const codeBlock = doc.querySelector('pre code');
-            
-            if (codeBlock) {
-                const codeText = codeBlock.textContent.trimEnd();
-                try {
-                    const highlighted = staticHighlight.render(codeText, 'ace/mode/python', 'ace/theme/a11y_dark', 1, true);
-                    if (highlighted && highlighted.html) {
-                        codeBlock.parentElement.outerHTML = highlighted.html;
-                    }
-                } catch (e) {
-                    console.error('Highlighting error:', e);
-                }
-            }
-            
-            let renderedHtml = doc.body.innerHTML;
-            
-            renderedHtml = renderedHtml.replace(/background-color:\s*#[0-9a-fA-F]+/gi, 'background-color: #ffffff');
-            renderedHtml = '<div style="background: white; padding: 20px; border-radius: 4px;">' + renderedHtml + '</div>';
-            
-            output.innerHTML = renderedHtml;
-            
-            document.querySelector('[data-bs-target="#tabPrint"]').click();
+            window.print();
         }
     </script>
 </body>
