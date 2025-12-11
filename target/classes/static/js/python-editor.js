@@ -1019,13 +1019,28 @@ function renderMarkdown(markdownText) {
             // target="_blank" und rel="noopener noreferrer" hinzufügen
             return html.replace(/^<a /, '<a target="_blank" rel="noopener noreferrer" ');
         };
+        
+        // Highlight Funktion mit Fallback
+        const highlightFunction = function(code, lang) {
+            if (typeof hljs === 'undefined') {
+                console.warn('⚠️ highlight.js nicht verfügbar, verwende ungestyled Code');
+                return code;
+            }
+            
+            try {
+                if (lang && hljs.getLanguage(lang)) {
+                    return hljs.highlight(code, { language: lang }).value;
+                }
+                // Versuche automatische Erkennung
+                return hljs.highlightAuto(code).value;
+            } catch (error) {
+                console.warn('⚠️ Fehler beim Syntax Highlighting:', error);
+                return code;
+            }
+        };
+        
         // Verwende den angepassten Renderer
-        return marked.parse(markdownText, { renderer: renderer, highlight: function(code, lang) {
-                                              if (hljs.getLanguage(lang)) {
-                                                return hljs.highlight(code, { language: lang }).value;
-                                              }
-                                              return hljs.highlightAuto(code).value;
-                                            }});
+        return marked.parse(markdownText, { renderer: renderer, highlight: highlightFunction });
     } else {
         // Fallback für einfaches Markdown-Rendering
         // Links werden hier NICHT in einem neuen Tab geöffnet, da dieser Fallback nur eine Basis-Umwandlung macht
@@ -1068,12 +1083,23 @@ function initializeTaskContent() {
                 const html = originalLinkRenderer.call(this, href, title, text);
                 return html.replace(/^<a /, '<a target="_blank" rel="noopener noreferrer" ');
             };
-            taskOutput.innerHTML = marked.parse(description, { renderer: renderer, highlight: function(code, lang) {
-                                                                 if (hljs.getLanguage(lang)) {
-                                                                   return hljs.highlight(code, { language: lang }).value;
-                                                                 }
-                                                                 return hljs.highlightAuto(code).value;
-                                                               } });
+            
+            // Highlight Funktion mit Fallback
+            const highlightFunction = function(code, lang) {
+                if (typeof hljs === 'undefined') {
+                    return code;
+                }
+                try {
+                    if (lang && hljs.getLanguage(lang)) {
+                        return hljs.highlight(code, { language: lang }).value;
+                    }
+                    return hljs.highlightAuto(code).value;
+                } catch (error) {
+                    return code;
+                }
+            };
+            
+            taskOutput.innerHTML = marked.parse(description, { renderer: renderer, highlight: highlightFunction });
         }
     }
 }
