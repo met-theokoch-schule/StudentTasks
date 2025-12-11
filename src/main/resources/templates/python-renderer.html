@@ -249,8 +249,7 @@ print(student1.name)`);
             const output = document.getElementById('screenshotOutput');
             
             if (!output.querySelector('.ace_static_highlight')) {
-                alert('Bitte zuerst den Code rendern (Screenshot-Ansicht klicken).');
-                return;
+                renderScreenshot();
             }
             
             try {
@@ -273,8 +272,7 @@ print(student1.name)`);
             const output = document.getElementById('screenshotOutput');
             
             if (!output.querySelector('.ace_static_highlight')) {
-                alert('Bitte zuerst den Code rendern (Screenshot-Ansicht klicken).');
-                return;
+                renderScreenshot();
             }
             
             window.print();
