@@ -24,6 +24,10 @@
             margin: 0;
             padding: 20px;
         }
+
+        .ace_static_highlight {
+          background: #fefefe;
+        }
         
         .container-fluid {
             max-width: 1400px;
@@ -79,6 +83,8 @@
             padding: 15px;
             min-height: 150px;
             border: 1px solid #e0e0e0;
+            display: inline-block;
+            width: fit-content;
         }
         
         .nav-tabs .nav-link {
@@ -126,20 +132,15 @@
         
         <div class="btn-group-render no-print">
             <button id="btnScreenshot" class="btn btn-primary">
-                <i class="fas fa-camera"></i> Screenshot-Ansicht
+                Render Code
             </button>
             <button id="btnPrint" class="btn btn-success">
-                <i class="fas fa-print"></i> Drucken (PDF)
+                <i class="fas fa-print"></i> Drucken
             </button>
         </div>
         
-        <div class="panel output-panel">
-            <div class="panel-header no-print">
-                <span class="panel-title"><i class="fas fa-camera"></i> Vorschau</span>
-            </div>
-            <div id="screenshotOutput" style="overflow-y: auto; max-height: 600px;">
+        <div id="screenshotOutput" style="overflow-y: auto; max-height: 600px;">
                 <p style="color: #888;">Klicke auf "Screenshot-Ansicht" um den Code zu rendern.</p>
-            </div>
         </div>
     </div>
 
