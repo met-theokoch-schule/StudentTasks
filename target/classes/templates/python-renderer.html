@@ -125,6 +125,18 @@
             white-space: pre !important;
         }
 
+        /* Print Theme Colors */
+        .ace-print-a11y-dark { background-color: #FEFEFE; color: #545454; }
+        .ace-print-a11y-dark .ace_keyword { color: #9400D3; }
+        .ace-print-a11y-dark .ace_meta { color: #9400D3; }
+        .ace-print-a11y-dark .ace_storage { color: #9400D3; }
+        .ace-print-a11y-dark .ace_constant { color: #A85D00; }
+        .ace-print-a11y-dark .ace_support { color: #1F7C93; }
+        .ace-print-a11y-dark .ace_function { color: #1F7C93; }
+        .ace-print-a11y-dark .ace_string { color: #008000; }
+        .ace-print-a11y-dark .ace_variable { color: #D91E18; }
+        .ace-print-a11y-dark .ace_comment { color: #802200; }
+
         @media print {
             body {
                 background-color: white;
@@ -170,55 +182,11 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.35.2/ace.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.35.2/ext-static_highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.35.2/ace.min.js" integrity="sha512-5p1bP2tLMSqI7C5+6ZzW2hCLvjx5p5jcWdC3Z5rvR+zzz4hB1W8RJh7Q37zj+h7YpwKJTk/B3DaV6D8UQWFGA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.35.2/ext-static_highlight.min.js" integrity="sha512-W6GfOvP0eQwV5m4Kt7L5WGtYtT8EIG2Bi4nCQhXYHhNvJQrJk7Dn4Rk6E+dJpN5uQ1xqsU5/qL8O/mYxhRCQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <script>
-        // Configure Ace to use local mode files
         ace.config.set('basePath', 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.35.2/');
-
-        // Register print_a11y_dark theme inline
-        ace.define("ace/theme/print_a11y_dark", ["require", "exports", "module"], function(require, exports, module) {
-            exports.isDark = false;
-            exports.cssClass = "ace-print-a11y-dark";
-            exports.cssText = `
-.ace-print-a11y-dark { background-color: #FEFEFE; color: #545454; }
-.ace-print-a11y-dark .ace_gutter { background: #FEFEFE; color: #802200; }
-.ace-print-a11y-dark .ace_print-margin { width: 1px; background: #e0e0e0; }
-.ace-print-a11y-dark .ace_cursor { color: #545454; }
-.ace-print-a11y-dark .ace_marker-layer .ace_selection { background: rgba(50, 107, 173, 0.15); }
-.ace-print-a11y-dark .ace_marker-layer .ace_active-line { background: rgba(0, 0, 0, 0.05); }
-.ace-print-a11y-dark .ace_gutter-active-line { background-color: rgba(0, 0, 0, 0.05); }
-.ace-print-a11y-dark .ace_invisible { color: #c0c0c0; }
-.ace-print-a11y-dark .ace_keyword,
-.ace-print-a11y-dark .ace_meta,
-.ace-print-a11y-dark .ace_storage { color: #9400D3; }
-.ace-print-a11y-dark .ace_keyword.ace_operator { color: #545454; }
-.ace-print-a11y-dark .ace_constant,
-.ace-print-a11y-dark .ace_constant.ace_character { color: #A85D00; }
-.ace-print-a11y-dark .ace_constant.ace_language,
-.ace-print-a11y-dark .ace_constant.ace_numeric { color: #A85D00; }
-.ace-print-a11y-dark .ace_invalid { color: #545454; background-color: #D91E18; }
-.ace-print-a11y-dark .ace_invalid.ace_deprecated { color: #545454; background-color: #A85D00; }
-.ace-print-a11y-dark .ace_support.ace_constant,
-.ace-print-a11y-dark .ace_support.ace_function,
-.ace-print-a11y-dark .ace_support.ace_class,
-.ace-print-a11y-dark .ace_support.ace_type,
-.ace-print-a11y-dark .ace_function { color: #1F7C93; }
-.ace-print-a11y-dark .ace_fold { background-color: #1F7C93; border-color: #545454; }
-.ace-print-a11y-dark .ace_heading,
-.ace-print-a11y-dark .ace_markup.ace_heading,
-.ace-print-a11y-dark .ace_string { color: #008000; }
-.ace-print-a11y-dark .ace_entity.ace_name.ace_tag,
-.ace-print-a11y-dark .ace_entity.ace_other.ace_attribute-name,
-.ace-print-a11y-dark .ace_meta.ace_tag,
-.ace-print-a11y-dark .ace_variable,
-.ace-print-a11y-dark .ace_entity.ace_name.ace_function { color: #D91E18; }
-.ace-print-a11y-dark .ace_comment { color: #802200; }
-.ace-print-a11y-dark .ace_parameter { color: #A85D00; }
-.ace-print-a11y-dark .ace_paren { color: #545454; }
-            `;
-        });
 
         function renderCode() {
             const codeInput = document.getElementById('codeInput').value;
@@ -229,8 +197,8 @@
                 return;
             }
 
-            // Detect language (simple heuristic)
-            let language = 'python'; // default
+            // Detect language
+            let language = 'python';
             const code = codeInput.trim();
             if (code.includes('SELECT') || code.includes('CREATE TABLE')) {
                 language = 'sql';
@@ -240,27 +208,29 @@
                 language = 'css';
             }
 
-            // Render with Ace static highlight
             try {
+                if (typeof ace === 'undefined' || !ace.require) {
+                    throw new Error('Ace not loaded');
+                }
                 const staticHighlight = ace.require('ace/ext/static_highlight');
+                if (!staticHighlight) {
+                    throw new Error('Static highlight not available');
+                }
                 const aceMode = 'ace/mode/' + language;
-                const highlighted = staticHighlight.render(
-                    code,
-                    aceMode,
-                    'ace/theme/print_a11y_dark',
-                    1,
-                    true
-                );
-                outputContainer.innerHTML = highlighted.html;
-                console.log('✅ Code erfolgreich gerendert mit Sprache:', language);
+                const highlighted = staticHighlight.render(code, aceMode, 'ace/theme/print_a11y_dark', 1, true);
+                if (highlighted && highlighted.html) {
+                    outputContainer.innerHTML = highlighted.html;
+                    console.log('✅ Code erfolgreich gerendert mit Sprache:', language);
+                } else {
+                    throw new Error('No HTML output');
+                }
             } catch (e) {
-                console.error('❌ Rendering error:', e);
+                console.error('❌ Rendering error:', e.message);
                 outputContainer.innerHTML = '<pre style="color: #545454; font-family: Consolas, Monaco, Courier New, monospace; padding: 15px; background-color: #FEFEFE; border-radius: 4px;">' + 
                     code.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre>';
             }
         }
 
-        // Render on Enter (Ctrl+Enter)
         document.getElementById('codeInput').addEventListener('keydown', function(e) {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 renderCode();
