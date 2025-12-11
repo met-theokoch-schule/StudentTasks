@@ -1014,29 +1014,43 @@ function renderMarkdown(markdownText) {
     if (typeof marked !== 'undefined') {
         // Highlight Funktion mit Fallback
         const highlightFunction = function(code, lang) {
-            console.log('✨ Highlight-Funktion aufgerufen für Sprache:', lang);
+            console.log('✨ Highlight-Funktion aufgerufen für Sprache:', lang, 'hljs verfügbar:', typeof hljs !== 'undefined');
             
             if (typeof hljs === 'undefined') {
                 console.warn('⚠️ highlight.js nicht verfügbar');
-                return code;
+                return null; // null bedeutet: nicht highlighting, verwende default
             }
             
             try {
-                if (lang && hljs.getLanguage(lang)) {
-                    const highlighted = hljs.highlight(code, { language: lang }).value;
-                    console.log('✅ Highlighting für', lang, 'erfolgreich');
-                    return highlighted;
+                if (lang) {
+                    console.log('🔍 Prüfe auf hljs.getLanguage(' + lang + ')');
+                    if (hljs.getLanguage(lang)) {
+                        const highlighted = hljs.highlight(code, { language: lang }).value;
+                        console.log('✅ Highlighting für', lang, 'erfolgreich');
+                        return highlighted;
+                    }
                 }
                 // Versuche automatische Erkennung
-                return hljs.highlightAuto(code).value;
+                console.log('🤖 Verwende auto-detection für Code-Sprache');
+                const auto = hljs.highlightAuto(code).value;
+                console.log('✅ Auto-Highlighting erfolgreich');
+                return auto;
             } catch (error) {
                 console.warn('⚠️ Fehler beim Syntax Highlighting:', error);
-                return code;
+                return null;
             }
         };
         
         // Konfiguriere marked mit marked.use()
         const renderer = new marked.Renderer();
+        
+        // Überschreibe codeblock um highlighting direkt zu applizieren
+        renderer.codeblock = function(code, language) {
+            console.log('🔗 Renderer.codeblock aufgerufen mit language:', language);
+            const highlighted = highlightFunction(code, language);
+            return '<pre><code class="hljs ' + (language ? 'language-' + language : '') + '">' + highlighted + '</code></pre>';
+        };
+        
         const originalLinkRenderer = renderer.link;
         renderer.link = function(href, title, text) {
             const html = originalLinkRenderer.call(this, href, title, text);
