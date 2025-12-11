@@ -1,0 +1,137 @@
+
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Aufgaben-System</title>
+    <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" th:href="@{/}">Aufgaben-System</a>
+            <div class="navbar-nav ms-auto">
+                <a class="btn btn-outline-light me-2" th:href="@{/dashboard}">Zurück zum Dashboard</a>
+                <span class="navbar-text me-3" th:text="${user?.name ?: name ?: 'Unbekannter Benutzer'}"></span>
+                <a class="btn btn-outline-light" th:href="@{/logout}">Abmelden</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1>🔧 Debug-Informationen</h1>
+        <p class="text-muted">Diese Seite zeigt detaillierte Informationen über den angemeldeten Benutzer und die OAuth2-Integration.</p>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Benutzerinformationen</h5>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${user}">
+                            <h6 class="text-primary mb-3">Aus OAuth2 (aktuell)</h6>
+                            <p><strong>Name:</strong> <span th:text="${name}">Nicht verfügbar</span></p>
+                            <p><strong>E-Mail:</strong> <span th:text="${email}">Nicht verfügbar</span></p>
+                            
+                            <hr>
+                            <h6 class="text-success mb-3">Aus Datenbank (User Entity)</h6>
+                            <p><strong>User ID:</strong> <span th:text="${user.id}" class="badge bg-secondary">-</span></p>
+                            <p><strong>Vollständiger Name:</strong> <span th:text="${user.name}">-</span></p>
+                            <p><strong>E-Mail (DB):</strong> <span th:text="${user.email}">-</span></p>
+                            <p><strong>Vorname:</strong> <span th:text="${user.givenName}">-</span></p>
+                            <p><strong>Nachname:</strong> <span th:text="${user.familyName}">-</span></p>
+                            <p><strong>Benutzername:</strong> <span th:text="${user.preferredUsername}">-</span></p>
+                            <p><strong>OpenID Subject:</strong> <span th:text="${user.openIdSubject}" class="text-muted small">-</span></p>
+                        </div>
+                        <div th:unless="${user}">
+                            <div class="alert alert-warning">
+                                <h6>⚠️ User-Objekt nicht geladen</h6>
+                                <p><strong>OAuth2 Name:</strong> <span th:text="${name}">Nicht verfügbar</span></p>
+                                <p><strong>OAuth2 E-Mail:</strong> <span th:text="${email}">Nicht verfügbar</span></p>
+                                <small class="text-muted">User wird bei erstem Login automatisch in der Datenbank erstellt.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Rollen und Gruppen</h5>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${user}">
+                            <div class="mb-3">
+                                <strong>Rollen:</strong>
+                                <div th:if="${roles != null and #lists.isEmpty(roles)}" class="text-muted">Keine Rollen zugewiesen</div>
+                                <div th:if="${roles != null and !#lists.isEmpty(roles)}">
+                                    <div th:each="role : ${roles}" class="mb-1">
+                                        <span class="badge bg-primary me-1" th:text="${role.name}">Role</span>
+                                        <small th:if="${role.description}" class="text-muted" th:text="${role.description}">Description</small>
+                                    </div>
+                                </div>
+                                <div th:if="${roles == null}" class="text-warning">Rollen-Collection ist null</div>
+                                
+                                <div class="mt-2">
+                                    <span th:if="${isTeacher != null and isTeacher}" class="badge bg-success">✓ Lehrer</span>
+                                    <span th:if="${isStudent != null and isStudent}" class="badge bg-info">✓ Schüler</span>
+                                    <span th:if="${isTeacher != null and !isTeacher and isStudent != null and !isStudent}" class="badge bg-warning">Keine Rollen-Flags</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <strong>Gruppen:</strong>
+                                <div th:if="${groups != null and #lists.isEmpty(groups)}" class="text-muted">Keine Gruppen zugewiesen</div>
+                                <div th:if="${groups != null and !#lists.isEmpty(groups)}">
+                                    <div th:each="group : ${groups}" class="mb-1">
+                                        <span class="badge bg-secondary me-1" th:text="${group.name}">Group</span>
+                                        <small th:if="${group.description}" class="text-muted" th:text="${group.description}">Description</small>
+                                    </div>
+                                </div>
+                                <div th:if="${groups == null}" class="text-warning">Gruppen-Collection ist null</div>
+                            </div>
+                            
+                            <hr class="mt-3">
+                            <h6 class="text-info">Debug-Information</h6>
+                            <small class="text-muted">
+                                <p><strong>User-Objekt vorhanden:</strong> <span th:text="${user != null}">false</span></p>
+                                <p><strong>Rollen-Collection:</strong> <span th:text="${roles != null ? #lists.size(roles) + ' Einträge' : 'null'}">-</span></p>
+                                <p><strong>Gruppen-Collection:</strong> <span th:text="${groups != null ? #lists.size(groups) + ' Einträge' : 'null'}">-</span></p>
+                                <p><strong>isTeacher Flag:</strong> <span th:text="${isTeacher}">-</span></p>
+                                <p><strong>isStudent Flag:</strong> <span th:text="${isStudent}">-</span></p>
+                            </small>
+                        </div>
+                        <div th:unless="${user}">
+                            <div class="alert alert-danger">
+                                <h6>❌ User-Objekt nicht verfügbar</h6>
+                                <p>Der Benutzer wurde noch nicht in der Datenbank erstellt oder konnte nicht geladen werden.</p>
+                                <small class="text-muted">
+                                    Dies passiert beim ersten Login automatisch durch den OAuth2UserService.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>OAuth2 Test - Alle Attribute</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="small">
+                            <pre th:text="${attributes}"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

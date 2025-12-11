@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code-Editor</title>
+    <link th:href="@{/css/python-editor.css}" href="../../static/css/python-editor.css?v=20251211-v2" rel="stylesheet" type="text/css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ace.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/mode-python.js"></script>
+    <script th:src="@{/js/ace-theme-a11y-dark.js}" src="../../static/js/ace-theme-a11y-dark.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ext-language_tools.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ext-static_highlight.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+</head>
+
+<body>
+    <!-- Versteckte Content-Divs für JavaScript -->
+    <a id="default-link" style="display: none;" href="/static/" th:href="@{/}"></a>
+    <div class="mycontainer">
+        <!-- Header mit Buttons und Dropdown -->
+        <header class="header">
+            <div class="button-group">
+                <button id="runBtn" class="btn btn-primary" disabled style="opacity: 0.6;"><i class="fas fa-play"></i> Ausführen</button>
+            </div>
+            <div class="controls">
+                <span id="save-status" class="fas fa-circle text-muted" style="font-size: 0.8rem; cursor: help;"
+                    data-title="Bereit zum Speichern"></span>
+                <button id="saveButton" class="btn btn-success btn-sm"><i class='fas fa-save'></i> Speichern</button>
+                <button id="submitButton" class="btn btn-primary btn-sm"><i class='fas fa-paper-plane'></i>
+                    Abgeben</button>
+
+            </div>
+            <div class="controls">
+                
+                <label for="fontSizeSelect"><i class="fas fa-text-height"></i></label>
+                <select id="fontSizeSelect" class="dropdown">
+                    <option value="12">12pt</option>
+                    <option value="14" selected>14pt</option>
+                    <option value="18">18pt</option>
+                    <option value="24">24pt</option>
+                    <option value="30">30pt</option>
+                </select>
+                <button id="resetBtn" class="btn btn-outline-secondary btn-sm" title="Auf Standardwert zurücksetzen"><i
+                    class='fas fa-undo'></i></button>
+                <button id="fullscreenBtn" class="btn btn-outline-secondary btn-sm" title="Vollbild"><i
+                        class='fas fa-expand'></i></button>
+                <a th:href="@{/student/dashboard}" href="/student/dashboard" class="btn btn-outline-secondary btn-sm"><i
+                        class='fas fa-house'></i></a>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Editor Panel -->
+            <div class="editor-panel">
+                <div class="tab-container">
+                    <div class="tabs">
+                        <button class="editor-tab active" data-tab="python">Python</button>
+                    </div>
+                </div>
+                <div class="editor-container">
+                    <div id="pythonEditor" class="editor-content active"></div>
+                </div>
+            </div>
+
+            <!-- Resizable Splitter -->
+            <div class="splitter" id="splitter"></div>
+
+            <!-- Output Panel -->
+            <div class="output-panel">
+                <div class="tab-container">
+                    <div class="tabs">
+                        <button class="output-tab active" data-output-tab="result">Ausgabe</button>
+                        <button class="output-tab" data-output-tab="task">Aufgabe</button>
+                        <button class="output-tab" data-output-tab="tutorial">Tutorial</button>
+                    </div>
+                    <button id="clearOutputBtn" class="btn btn-outline-secondary btn-sm"><i
+                            class="fas fa-trash"></i></button>
+                </div>
+                <div class="output-container">
+                    <div id="resultOutput" class="output-content active">
+                        <div id="objectViewerContainer" class="object-viewer-container" style="display: none;">
+                            <div id="objectViewer" class="object-viewer"></div>
+                        </div>
+                        <div id="consoleOutput" class="console-output"></div>
+                    </div>
+                    <div id="taskOutput" class="output-content">
+                        <!-- Markdown-gerenderte Anleitung -->
+                    </div>
+                    <div id="tutorialOutput" class="output-content">
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="task-save-url" style="display: none"
+        th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? 'api/tasks/usertasks/' + userTaskId + '/content' : 'api/tasks/' + task.id + '/content'}"
+        data-url="/dev/save"></div>
+    <div id="task-submit-url" style="display: none"
+        th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? '' : 'api/tasks/' + task.id + '/submit'}"
+        data-url="/dev/submit"></div>
+    <div id="currentContent" style="display: none" th:text="${currentContent}"></div>
+    <div id="defaultSubmission" style="display: none" th:text="${task.defaultSubmission} "></div>
+    <div id="description" style="display: none" th:text="${task.description}">Im folgenden findest du drei Code-Blöcke, die versuchen, einem Objekt der Klasse Mensch zu ermöglichen, ein Objekt der Klasse Hund zu streicheln.
+
+# Aufgaben
+- Kopiere Code 1 in den Editor und untersuche, was passiert. Ersetze ihn durch Code 2 und untersuche erneut.
+- Finde heraus, warum der eine Code funktioniert und der andere nicht! *Tipp: Schlagwörter zum Suchen nach Hinweisen sind "private Attribute" und "mangling"!*
+- Ersetze den Code nun durch Code 3 und untersuche auch diesen. Wie unterscheidet sich dieser Ansatz von dem bisherigen?
+- Entscheide, welches Vorgehen "besser" ist, um das Problem der "streichelnden Objekte" zu lösen. *Tipp: Berücksichtige besonders den Fall, dass unterschiedliche Programmier\*innen an dem Projekt arbeiten!*
+
+# Code 1
+```python
+# Hier ist ein Hund definiert
+class Hund:
+    def __init__(self, name):
+        self.name = name 
+        self.glueck = 0
+
+# Hier ist ein Mensch, der den Hund streicheln will
+class Mensch:
+    def __init__(self, name):
+        self.__name = name
+
+    def streicheln(self, tier):
+        print(f"{self.__name} streichelt {tier.name}!")
+        tier.glueck += 100
+
+#Ab hier wird losgestreichelt - oder?
+hund1 = Hund("Wuffi")
+mensch1 = Mensch("Elisabeth")
+mensch1.streicheln(hund1)
+```
+
+# Code 2
+```python
+# Hier ist ein Hund definiert
+class Hund:
+    def __init__(self, name):
+        self.__name = name 
+        self.__glueck = 0
+
+
+# Hier ist ein Mensch, der den Hund streicheln will
+class Mensch:
+    def __init__(self, name):
+        self.__name = name
+
+    def streicheln(self, tier):
+        print(f"{self.__name} streichelt {tier.__name}!")
+        tier.__glueck += 100
+
+
+
+#Ab hier wird losgestreichelt - oder?
+hund1 = Hund("Wuffi")
+mensch1 = Mensch("Elisabeth")
+mensch1.streicheln(hund1)
+```
+
+# Code 3
+```python
+# Hier ist ein Hund definiert
+class Hund:
+    def __init__(self, name):
+        self.__name = name 
+        self.__glueck = 0
+
+    def wirdGestreichelt(self, streichlerName):
+        print(f"{streichlerName} streichelt {self.__name}!")
+        self.__glueck += 1
+
+# Hier ist ein Mensch, der den Hund streicheln will
+class Mensch:
+    def __init__(self, name):
+        self.__name = name
+
+    def streicheln(self, tier):
+        tier.wirdGestreichelt(self.__name)
+
+
+
+#Ab hier wird losgestreichelt - oder?
+hund1 = Hund("Wuffi")
+mensch1 = Mensch("Elisabeth")
+mensch1.streicheln(hund1)
+```</div>
+    <div id="tutorial" style="display: none" th:utext="${task.tutorial}">[
+        {
+        title: "Grundlagen der p-q-Formel",
+        content: `# Tutorial 1: Grundlagen der p-q-Formel`
+        },
+        {
+        title: "Grundlagen der p-q-Formel",
+        content: `# Tutorial 1: Grundlagen der p-q-Formel`
+        }]
+    </div>
+
+    <script th:src="@{/js/code-analyzer.js}" src="../../static/js/code-analyzer.js?v=20251211-v10"></script>
+    <script th:src="@{/js/object-viewer.js}" src="../../static/js/object-viewer.js?v=20251211-v10"></script>
+    <script th:src="@{/js/python-editor.js}" src="../../static/js/python-editor.js?v=20251211-v10"></script>
+    <script th:src="@{/js/ping.js}"></script>
+</body>
+
+</html>
