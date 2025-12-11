@@ -419,7 +419,7 @@ input[type="checkbox"] {
     background-color: #2d2d2d;
     padding: 15px;
     border-radius: 5px;
-    overflow-x: auto;
+    overflow: visible;
     margin: 15px 0;
 }
 

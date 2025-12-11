@@ -1019,9 +1019,13 @@ function renderMarkdown(markdownText) {
             // target="_blank" und rel="noopener noreferrer" hinzufügen
             return html.replace(/^<a /, '<a target="_blank" rel="noopener noreferrer" ');
         };
-
         // Verwende den angepassten Renderer
-        return marked.parse(markdownText, { renderer: renderer });
+        return marked.parse(markdownText, { renderer: renderer, highlight: function(code, lang) {
+                                              if (hljs.getLanguage(lang)) {
+                                                return hljs.highlight(code, { language: lang }).value;
+                                              }
+                                              return hljs.highlightAuto(code).value;
+                                            }});
     } else {
         // Fallback für einfaches Markdown-Rendering
         // Links werden hier NICHT in einem neuen Tab geöffnet, da dieser Fallback nur eine Basis-Umwandlung macht
@@ -1064,7 +1068,12 @@ function initializeTaskContent() {
                 const html = originalLinkRenderer.call(this, href, title, text);
                 return html.replace(/^<a /, '<a target="_blank" rel="noopener noreferrer" ');
             };
-            taskOutput.innerHTML = marked.parse(description, { renderer: renderer });
+            taskOutput.innerHTML = marked.parse(description, { renderer: renderer, highlight: function(code, lang) {
+                                                                 if (hljs.getLanguage(lang)) {
+                                                                   return hljs.highlight(code, { language: lang }).value;
+                                                                 }
+                                                                 return hljs.highlightAuto(code).value;
+                                                               } });
         }
     }
 }
