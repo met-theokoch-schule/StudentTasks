@@ -207,7 +207,7 @@ print(student1.name)`);
             if (showLineNumbers) {
                 codeToRender = lines.map((line, i) => {
                     const lineNum = String(i + 1).padStart(numWidth, ' ');
-                    return lineNum + ' ' + line;
+                    return lineNum + '    ' + line;
                 }).join('\n');
             }
             
