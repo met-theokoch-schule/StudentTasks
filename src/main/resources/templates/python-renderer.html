@@ -198,8 +198,21 @@ print(student1.name)`);
                 return;
             }
             
+            let codeToRender = code;
+            const lines = code.split('\n');
+            const maxLineNum = lines.length;
+            const numWidth = String(maxLineNum).length;
+            
+            // Zeilennummern hinzufügen wenn aktiviert
+            if (showLineNumbers) {
+                codeToRender = lines.map((line, i) => {
+                    const lineNum = String(i + 1).padStart(numWidth, ' ');
+                    return lineNum + ' ' + line;
+                }).join('\n');
+            }
+            
             const html = '<pre><code class="language-python">' + 
-                code.replace(/</g, '&lt;').replace(/>/g, '&gt;') + 
+                codeToRender.replace(/</g, '&lt;').replace(/>/g, '&gt;') + 
                 '</code></pre>';
             
             const parser = new DOMParser();
@@ -219,29 +232,6 @@ print(student1.name)`);
             }
             
             output.innerHTML = doc.body.innerHTML;
-            
-            // Zeilennummern hinzufügen wenn aktiviert
-            if (showLineNumbers) {
-                const lines = code.split('\n');
-                const maxLineNum = lines.length;
-                const numWidth = String(maxLineNum).length;
-                
-                const preTags = output.querySelectorAll('pre');
-                preTags.forEach(pre => {
-                    const textLines = pre.textContent.split('\n');
-                    let numberedText = '';
-                    
-                    for (let i = 0; i < textLines.length; i++) {
-                        const lineNum = String(i + 1).padStart(numWidth, ' ');
-                        numberedText += lineNum + ' ' + textLines[i];
-                        if (i < textLines.length - 1) {
-                            numberedText += '\n';
-                        }
-                    }
-                    
-                    pre.textContent = numberedText;
-                });
-            }
             
             // Stelle sicher, dass die Hintergrundfarbe #FEFEFE ist
             const renderedPre = output.querySelector('pre');
