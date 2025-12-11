@@ -1011,23 +1011,13 @@ function resetToDefault() {
 function renderMarkdown(markdownText) {
     console.log('🔄 renderMarkdown aufgerufen');
     if (typeof marked !== 'undefined') {
-        // Konfiguriere marked für Links in neuem Tab
-        const renderer = new marked.Renderer();
-        const originalLinkRenderer = renderer.link;
-        renderer.link = function(href, title, text) {
-            // Standard-Link erstellen
-            const html = originalLinkRenderer.call(this, href, title, text);
-            // target="_blank" und rel="noopener noreferrer" hinzufügen
-            return html.replace(/^<a /, '<a target="_blank" rel="noopener noreferrer" ');
-        };
-        
         // Highlight Funktion mit Fallback
         const highlightFunction = function(code, lang) {
-            console.log('✨ Highlight-Funktion aufgerufen für Sprache:', lang, 'hljs verfügbar:', typeof hljs !== 'undefined');
+            console.log('✨ Highlight-Funktion aufgerufen für Sprache:', lang);
             
             if (typeof hljs === 'undefined') {
-                console.warn('⚠️ highlight.js nicht verfügbar, verwende ungestyled Code');
-                return `<pre><code class="language-${lang || 'text'}">${code}</code></pre>`;
+                console.warn('⚠️ highlight.js nicht verfügbar');
+                return code;
             }
             
             try {
@@ -1037,24 +1027,32 @@ function renderMarkdown(markdownText) {
                     return highlighted;
                 }
                 // Versuche automatische Erkennung
-                const auto = hljs.highlightAuto(code).value;
-                console.log('✅ Auto-Highlighting erfolgreich');
-                return auto;
+                return hljs.highlightAuto(code).value;
             } catch (error) {
                 console.warn('⚠️ Fehler beim Syntax Highlighting:', error);
-                return `<pre><code class="language-${lang || 'text'}">${code}</code></pre>`;
+                return code;
             }
         };
         
-        // Verwende den angepassten Renderer
+        // Konfiguriere marked mit marked.use()
+        const renderer = new marked.Renderer();
+        const originalLinkRenderer = renderer.link;
+        renderer.link = function(href, title, text) {
+            const html = originalLinkRenderer.call(this, href, title, text);
+            return html.replace(/^<a /, '<a target="_blank" rel="noopener noreferrer" ');
+        };
+        
+        marked.use({ 
+            renderer: renderer,
+            highlight: highlightFunction
+        });
+        
         console.log('📝 marked.parse wird aufgerufen');
-        const result = marked.parse(markdownText, { renderer: renderer, highlight: highlightFunction });
+        const result = marked.parse(markdownText);
         console.log('✅ marked.parse fertig');
         return result;
     } else {
         console.error('❌ marked.js nicht verfügbar');
-        // Fallback für einfaches Markdown-Rendering
-        // Links werden hier NICHT in einem neuen Tab geöffnet, da dieser Fallback nur eine Basis-Umwandlung macht
         return markdownText
             .replace(/^# (.*$)/gm, '<h1>$1</h1>')
             .replace(/^## (.*$)/gm, '<h2>$1</h2>')
@@ -1087,30 +1085,7 @@ function initializeTaskContent() {
     if (description) {
         const taskOutput = document.getElementById('taskOutput');
         if (taskOutput) {
-            // Konfiguriere marked für Links in neuem Tab
-            const renderer = new marked.Renderer();
-            const originalLinkRenderer = renderer.link;
-            renderer.link = function(href, title, text) {
-                const html = originalLinkRenderer.call(this, href, title, text);
-                return html.replace(/^<a /, '<a target="_blank" rel="noopener noreferrer" ');
-            };
-            
-            // Highlight Funktion mit Fallback
-            const highlightFunction = function(code, lang) {
-                if (typeof hljs === 'undefined') {
-                    return code;
-                }
-                try {
-                    if (lang && hljs.getLanguage(lang)) {
-                        return hljs.highlight(code, { language: lang }).value;
-                    }
-                    return hljs.highlightAuto(code).value;
-                } catch (error) {
-                    return code;
-                }
-            };
-            
-            taskOutput.innerHTML = marked.parse(description, { renderer: renderer, highlight: highlightFunction });
+            taskOutput.innerHTML = renderMarkdown(description);
         }
     }
 }
