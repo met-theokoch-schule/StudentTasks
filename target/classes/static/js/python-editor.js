@@ -1030,7 +1030,7 @@ function renderMarkdown(markdownText) {
             codeBlocks.forEach(block => {
                 const langClass = block.className.match(/language-(\w+)/);
                 const lang = langClass ? langClass[1] : 'python';
-                const code = block.textContent;
+                const code = block.textContent.trimEnd();
                 console.log('✨ Ace Highlighting Code Block mit Sprache:', lang);
                 
                 try {

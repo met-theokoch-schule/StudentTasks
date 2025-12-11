@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Renderer für Drucksachen</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        textarea {
+            width: 100%;
+            height: 250px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            line-height: 1.5;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #326BAD;
+            box-shadow: 0 0 0 3px rgba(50, 107, 173, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-render {
+            background-color: #326BAD;
+            color: white;
+        }
+
+        .btn-render:hover {
+            background-color: #1F7C93;
+        }
+
+        .btn-print {
+            background-color: #008000;
+            color: white;
+        }
+
+        .btn-print:hover {
+            background-color: #004d00;
+        }
+
+        .output-section {
+            margin-top: 30px;
+            border-top: 2px solid #eee;
+            padding-top: 30px;
+        }
+
+        #outputContainer {
+            background-color: #FEFEFE;
+            padding: 20px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .ace_static_highlight {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+            font-size: 13px;
+            line-height: 1.5;
+            white-space: pre !important;
+            background-color: #FEFEFE;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 0;
+            overflow-x: auto;
+        }
+
+        .ace_static_highlight .ace_line {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+            white-space: pre !important;
+        }
+
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+            }
+
+            .container {
+                max-width: 100%;
+                box-shadow: none;
+                padding: 0;
+            }
+
+            .input-section,
+            .button-group,
+            h1 {
+                display: none;
+            }
+
+            #outputContainer {
+                border: none;
+                background-color: white;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Code Renderer für Drucksachen</h1>
+
+        <div class="input-section">
+            <label for="codeInput">Code eingeben oder einfügen:</label>
+            <textarea id="codeInput" placeholder="Paste your Python/SQL/HTML/CSS code here..."></textarea>
+        </div>
+
+        <div class="button-group">
+            <button class="btn-render" onclick="renderCode()">Code rendern</button>
+            <button class="btn-print" onclick="window.print()">Drucken</button>
+        </div>
+
+        <div class="output-section">
+            <div id="outputContainer"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.35.2/ace.min.js"></script>
+    <script th:src="@{/js/ace-theme-print-a11y-dark.js}" src="../../static/js/ace-theme-print-a11y-dark.js"></script>
+
+    <script>
+        function renderCode() {
+            const codeInput = document.getElementById('codeInput').value;
+            const outputContainer = document.getElementById('outputContainer');
+
+            if (!codeInput.trim()) {
+                outputContainer.innerHTML = '<p style="color: #999;">Bitte geben Sie Code ein.</p>';
+                return;
+            }
+
+            // Detect language (simple heuristic)
+            let language = 'python';
+            const code = codeInput.trim();
+            if (code.includes('SELECT') || code.includes('CREATE TABLE')) {
+                language = 'sql';
+            } else if (code.includes('<html>') || code.includes('<div>')) {
+                language = 'html';
+            } else if (code.includes('CSS') || code.includes('{') && code.includes('}')) {
+                language = 'css';
+            }
+
+            // Render with Ace static highlight
+            try {
+                const staticHighlight = ace.require('ace/ext/static_highlight');
+                const aceMode = 'ace/mode/' + language;
+                const highlighted = staticHighlight.render(
+                    code,
+                    aceMode,
+                    'ace/theme/print_a11y_dark',
+                    1,
+                    true
+                );
+                outputContainer.innerHTML = highlighted.html;
+            } catch (e) {
+                console.error('Rendering error:', e);
+                outputContainer.innerHTML = '<pre style="color: #545454;">' + 
+                    code.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre>';
+            }
+        }
+
+        // Render on Enter (Ctrl+Enter)
+        document.getElementById('codeInput').addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                renderCode();
+            }
+        });
+    </script>
+</body>
+</html>

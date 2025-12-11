@@ -107,7 +107,90 @@
         data-url="/dev/submit"></div>
     <div id="currentContent" style="display: none" th:text="${currentContent}"></div>
     <div id="defaultSubmission" style="display: none" th:text="${task.defaultSubmission} "></div>
-    <div id="description" style="display: none" th:text="${task.description}"># Code 3&#10;```python&#10;# Hier ist ein Hund definiert&#10;class Hund:&#10;    def __init__(self, name):&#10;        self.__name = name&#10;        self.__glueck = 0&#10;&#10;    def wirdGestreichelt(self, streichlerName):&#10;        print(f&quot;{streichlerName} streichelt {self.__name}!&quot;)&#10;        self.__glueck += 1&#10;&#10;# Hier ist ein Mensch, der den Hund streicheln will&#10;class Mensch:&#10;    def __init__(self, name):&#10;        self.__name = name&#10;&#10;    def streicheln(self, tier):&#10;        tier.wirdGestreichelt(self.__name)&#10;&#10;&#10;&#10;#Ab hier wird losgestreichelt - oder?&#10;hund1 = Hund(&quot;Wuffi&quot;)&#10;mensch1 = Mensch(&quot;Elisabeth&quot;)&#10;mensch1.streicheln(hund1)&#10;```</div>
+    <div id="description" style="display: none" th:text="${task.description}">Im folgenden findest du drei Code-Blöcke, die versuchen, einem Objekt der Klasse Mensch zu ermöglichen, ein Objekt der Klasse Hund zu streicheln.
+
+# Aufgaben
+- Kopiere Code 1 in den Editor und untersuche, was passiert. Ersetze ihn durch Code 2 und untersuche erneut.
+- Finde heraus, warum der eine Code funktioniert und der andere nicht! *Tipp: Schlagwörter zum Suchen nach Hinweisen sind "private Attribute" und "mangling"!*
+- Ersetze den Code nun durch Code 3 und untersuche auch diesen. Wie unterscheidet sich dieser Ansatz von dem bisherigen?
+- Entscheide, welches Vorgehen "besser" ist, um das Problem der "streichelnden Objekte" zu lösen. *Tipp: Berücksichtige besonders den Fall, dass unterschiedliche Programmier\*innen an dem Projekt arbeiten!*
+
+# Code 1
+```python
+# Hier ist ein Hund definiert
+class Hund:
+    def __init__(self, name):
+        self.name = name 
+        self.glueck = 0
+
+# Hier ist ein Mensch, der den Hund streicheln will
+class Mensch:
+    def __init__(self, name):
+        self.__name = name
+
+    def streicheln(self, tier):
+        print(f"{self.__name} streichelt {tier.name}!")
+        tier.glueck += 100
+
+#Ab hier wird losgestreichelt - oder?
+hund1 = Hund("Wuffi")
+mensch1 = Mensch("Elisabeth")
+mensch1.streicheln(hund1)
+```
+
+# Code 2
+```python
+# Hier ist ein Hund definiert
+class Hund:
+    def __init__(self, name):
+        self.__name = name 
+        self.__glueck = 0
+
+
+# Hier ist ein Mensch, der den Hund streicheln will
+class Mensch:
+    def __init__(self, name):
+        self.__name = name
+
+    def streicheln(self, tier):
+        print(f"{self.__name} streichelt {tier.__name}!")
+        tier.__glueck += 100
+
+
+
+#Ab hier wird losgestreichelt - oder?
+hund1 = Hund("Wuffi")
+mensch1 = Mensch("Elisabeth")
+mensch1.streicheln(hund1)
+```
+
+# Code 3
+```python
+# Hier ist ein Hund definiert
+class Hund:
+    def __init__(self, name):
+        self.__name = name 
+        self.__glueck = 0
+
+    def wirdGestreichelt(self, streichlerName):
+        print(f"{streichlerName} streichelt {self.__name}!")
+        self.__glueck += 1
+
+# Hier ist ein Mensch, der den Hund streicheln will
+class Mensch:
+    def __init__(self, name):
+        self.__name = name
+
+    def streicheln(self, tier):
+        tier.wirdGestreichelt(self.__name)
+
+
+
+#Ab hier wird losgestreichelt - oder?
+hund1 = Hund("Wuffi")
+mensch1 = Mensch("Elisabeth")
+mensch1.streicheln(hund1)
+```</div>
     <div id="tutorial" style="display: none" th:utext="${task.tutorial}">[
         {
         title: "Grundlagen der p-q-Formel",
