@@ -247,8 +247,15 @@ public class GroupService {
     }
 
     public Map<String, Object> getStudentTaskMatrix(Group group, User teacher) {
-        // Alle Schüler der Gruppe laden
-        List<User> students = userRepository.findByGroupsContaining(group);
+        // Alle Schüler der Gruppe laden und nach Nachname sortieren
+        List<User> students = userRepository.findByGroupsContaining(group)
+            .stream()
+            .sorted((s1, s2) -> {
+                String name1 = s1.getFamilyName() != null ? s1.getFamilyName() : s1.getName();
+                String name2 = s2.getFamilyName() != null ? s2.getFamilyName() : s2.getName();
+                return name1.compareTo(name2);
+            })
+            .collect(Collectors.toList());
 
         // Alle aktiven Aufgaben finden, die dieser Gruppe zugewiesen sind (unabhängig vom Ersteller)
         List<Task> activeTasks = taskRepository.findByIsActiveTrue()
