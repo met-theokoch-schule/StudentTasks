@@ -123,7 +123,6 @@ class Hund:
         self.name = name 
         self.glueck = 0
 
-
 # Hier ist ein Mensch, der den Hund streicheln will
 class Mensch:
     def __init__(self, name):
@@ -133,13 +132,10 @@ class Mensch:
         print(f"{self.__name} streichelt {tier.name}!")
         tier.glueck += 100
 
-
-
 #Ab hier wird losgestreichelt - oder?
 hund1 = Hund("Wuffi")
 mensch1 = Mensch("Elisabeth")
-mensch1.streicheln(hund1)
-```
+mensch1.streicheln(hund1)```
 
 # Code 2
 ```python
