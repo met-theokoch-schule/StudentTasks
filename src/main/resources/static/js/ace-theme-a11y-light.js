@@ -8,6 +8,10 @@ exports.cssText = `
   color: #802200;
 }
 
+.ace_static_highlight {
+  background: #fefefe;
+}
+
 .ace-a11y-light .ace_print-margin {
   width: 1px;
   background: #e0e0e0;
