@@ -171,9 +171,13 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.35.2/ace.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.35.2/ext-static_highlight.min.js"></script>
     <script th:src="@{/js/ace-theme-print-a11y-dark.js}" src="../../static/js/ace-theme-print-a11y-dark.js"></script>
 
     <script>
+        // Configure Ace to use local mode files
+        ace.config.set('basePath', 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.35.2/');
+
         function renderCode() {
             const codeInput = document.getElementById('codeInput').value;
             const outputContainer = document.getElementById('outputContainer');
@@ -206,9 +210,10 @@
                     true
                 );
                 outputContainer.innerHTML = highlighted.html;
+                console.log('✅ Code erfolgreich gerendert mit Sprache:', language);
             } catch (e) {
-                console.error('Rendering error:', e);
-                outputContainer.innerHTML = '<pre style="color: #545454;">' + 
+                console.error('❌ Rendering error:', e);
+                outputContainer.innerHTML = '<pre style="color: #545454; font-family: Consolas, Monaco, Courier New, monospace; padding: 15px; background-color: #FEFEFE; border-radius: 4px;">' + 
                     code.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre>';
             }
         }
