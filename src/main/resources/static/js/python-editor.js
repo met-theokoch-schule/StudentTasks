@@ -12,6 +12,7 @@ let mainThreadPyodide = null; // Separate Pyodide-Instanz für MyPy
 
 // Initialisierung beim Laden der Seite
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Python Editor v' + new Date().toISOString() + ' GELADEN');
     initializeEditors();
     initializeTabs();
     initializeOutputTabs();
@@ -1042,10 +1043,12 @@ function renderMarkdown(markdownText) {
             return html.replace(/^<a /, '<a target="_blank" rel="noopener noreferrer" ');
         };
         
+        console.log('⚙️ marked.use() wird aufgerufen mit Renderer und Highlight-Funktion');
         marked.use({ 
             renderer: renderer,
             highlight: highlightFunction
         });
+        console.log('✨ marked.use() erfolgreich konfiguriert');
         
         console.log('📝 marked.parse wird aufgerufen');
         const result = marked.parse(markdownText);
