@@ -125,47 +125,50 @@
             white-space: pre !important;
         }
 
-        /* Print Theme Colors for Highlight.js - abgestimmt auf a11y-dark.css */
-        .ace-print-a11y-dark { color: #545454; }
+        /* Print Theme Colors for Highlight.js - Same as Python Editor a11y-dark */
+        .ace-print-a11y-dark { color: #f8f8f2; }
         
-        /* Keywords - Purple #9400D3 */
-        .ace-print-a11y-dark .hljs-keyword { color: #9400D3; }
-        .ace-print-a11y-dark .hljs-meta { color: #9400D3; }
-        .ace-print-a11y-dark .hljs-literal { color: #9400D3; }
-        .ace-print-a11y-dark .hljs-selector-tag { color: #9400D3; }
+        /* Keywords - Lila #dcc6e0 (same as ace_keyword) */
+        .ace-print-a11y-dark .hljs-keyword { color: #dcc6e0; }
+        .ace-print-a11y-dark .hljs-meta { color: #dcc6e0; }
+        .ace-print-a11y-dark .hljs-literal { color: #dcc6e0; }
+        .ace-print-a11y-dark .hljs-selector-tag { color: #dcc6e0; }
+        .ace-print-a11y-dark .hljs-storage { color: #dcc6e0; }
         
-        /* Numbers/Constants - Orange #A85D00 */
-        .ace-print-a11y-dark .hljs-number { color: #A85D00; }
+        /* Numbers/Constants/Parameters - Orange #f5ab35 (same as ace_constant.ace_numeric) */
+        .ace-print-a11y-dark .hljs-number { color: #f5ab35; }
+        .ace-print-a11y-dark .hljs-params { color: #f5ab35; }
         
-        /* Strings - Green #008000 */
-        .ace-print-a11y-dark .hljs-string { color: #008000; }
-        .ace-print-a11y-dark .hljs-symbol { color: #008000; }
-        .ace-print-a11y-dark .hljs-bullet { color: #008000; }
-        .ace-print-a11y-dark .hljs-addition { color: #008000; }
+        /* Strings - Grün #abe338 (same as ace_string) */
+        .ace-print-a11y-dark .hljs-string { color: #abe338; }
+        .ace-print-a11y-dark .hljs-symbol { color: #abe338; }
+        .ace-print-a11y-dark .hljs-bullet { color: #abe338; }
+        .ace-print-a11y-dark .hljs-addition { color: #abe338; }
         
-        /* Functions/Built-ins/Types - Cyan #1F7C93 */
-        .ace-print-a11y-dark .hljs-built_in { color: #1F7C93; }
-        .ace-print-a11y-dark .hljs-attr { color: #1F7C93; }
-        .ace-print-a11y-dark .hljs-title { color: #1F7C93; }
-        .ace-print-a11y-dark .hljs-section { color: #1F7C93; }
-        .ace-print-a11y-dark .hljs-type { color: #1F7C93; }
-        .ace-print-a11y-dark .hljs-class { color: #1F7C93; }
-        .ace-print-a11y-dark .hljs-title.function_ { color: #1F7C93; }
+        /* Functions/Built-ins/Types - Cyan #00e0e0 (same as ace_support.ace_function) */
+        .ace-print-a11y-dark .hljs-built_in { color: #00e0e0; }
+        .ace-print-a11y-dark .hljs-attr { color: #00e0e0; }
+        .ace-print-a11y-dark .hljs-title { color: #00e0e0; }
+        .ace-print-a11y-dark .hljs-section { color: #00e0e0; }
+        .ace-print-a11y-dark .hljs-type { color: #00e0e0; }
+        .ace-print-a11y-dark .hljs-class { color: #00e0e0; }
+        .ace-print-a11y-dark .hljs-title.function_ { color: #00e0e0; }
+        .ace-print-a11y-dark .hljs-function { color: #00e0e0; }
         
-        /* Variables/Tags - Red #D91E18 */
-        .ace-print-a11y-dark .hljs-variable { color: #D91E18; }
-        .ace-print-a11y-dark .hljs-template-variable { color: #D91E18; }
-        .ace-print-a11y-dark .hljs-tag { color: #D91E18; }
-        .ace-print-a11y-dark .hljs-name { color: #D91E18; }
-        .ace-print-a11y-dark .hljs-selector-id { color: #D91E18; }
-        .ace-print-a11y-dark .hljs-selector-class { color: #D91E18; }
-        .ace-print-a11y-dark .hljs-regexp { color: #D91E18; }
-        .ace-print-a11y-dark .hljs-deletion { color: #D91E18; }
-        .ace-print-a11y-dark .hljs-link { color: #D91E18; }
+        /* Variables/Tags - Rot-Orange #ffa07a (same as ace_variable) */
+        .ace-print-a11y-dark .hljs-variable { color: #ffa07a; }
+        .ace-print-a11y-dark .hljs-template-variable { color: #ffa07a; }
+        .ace-print-a11y-dark .hljs-tag { color: #ffa07a; }
+        .ace-print-a11y-dark .hljs-name { color: #ffa07a; }
+        .ace-print-a11y-dark .hljs-selector-id { color: #ffa07a; }
+        .ace-print-a11y-dark .hljs-selector-class { color: #ffa07a; }
+        .ace-print-a11y-dark .hljs-regexp { color: #ffa07a; }
+        .ace-print-a11y-dark .hljs-deletion { color: #ffa07a; }
+        .ace-print-a11y-dark .hljs-link { color: #ffa07a; }
         
-        /* Comments - Brown #802200 */
-        .ace-print-a11y-dark .hljs-comment { color: #802200; }
-        .ace-print-a11y-dark .hljs-quote { color: #802200; }
+        /* Comments - Beige #d4d0ab (same as ace_comment) */
+        .ace-print-a11y-dark .hljs-comment { color: #d4d0ab; }
+        .ace-print-a11y-dark .hljs-quote { color: #d4d0ab; }
 
         @media print {
             body {
