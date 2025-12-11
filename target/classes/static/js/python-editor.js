@@ -65,8 +65,10 @@ function initializeEditors() {
     try {
         // Python Editor
         pythonEditor = ace.edit("pythonEditor");
-        pythonEditor.setTheme("ace/theme/monokai");
+        pythonEditor.setTheme("ace/theme/a11y_dark");
         pythonEditor.session.setMode("ace/mode/python");
+        console.log('🎨 Ace Theme gesetzt auf:', "ace/theme/a11y_dark");
+        console.log('🎨 Aktueller Ace Theme:', pythonEditor.getTheme());
         pythonEditor.setOptions({
             fontSize: 14,
             showPrintMargin: false,
