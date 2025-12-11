@@ -209,6 +209,12 @@ print(student1.name)`);
             
             output.innerHTML = doc.body.innerHTML;
             
+            // Stelle sicher, dass die Hintergrundfarbe #FEFEFE ist
+            const renderedPre = output.querySelector('pre');
+            if (renderedPre) {
+                renderedPre.style.backgroundColor = '#fefefe';
+            }
+            
             document.querySelector('[data-bs-target="#tabScreenshot"]').click();
         }
         
