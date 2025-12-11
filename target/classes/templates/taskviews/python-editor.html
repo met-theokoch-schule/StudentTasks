@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Code-Editor</title>
-    <link th:href="@{/css/python-editor.css}" href="python-editor.css" rel="stylesheet" type="text/css" />
+    <link th:href="@{/css/python-editor.css}" href="../../static/css/python-editor.css" rel="stylesheet" type="text/css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
         crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -22,7 +22,7 @@
 
 <body>
     <!-- Versteckte Content-Divs für JavaScript -->
-    <a id="default-link" style="display: none;" href="/" th:href="@{/}"></a>
+    <a id="default-link" style="display: none;" href="/static/" th:href="@{/}"></a>
     <div class="mycontainer">
         <!-- Header mit Buttons und Dropdown -->
         <header class="header">
@@ -109,7 +109,34 @@
         data-url="/dev/submit"></div>
     <div id="currentContent" style="display: none" th:text="${currentContent}"></div>
     <div id="defaultSubmission" style="display: none" th:text="${task.defaultSubmission} "></div>
-    <div id="description" style="display: none" th:text="${task.description}">*Test*</div>
+    <div id="description" style="display: none" th:text="${task.description}">
+    # Code 3
+    ```python
+    # Hier ist ein Hund definiert
+    class Hund:
+        def __init__(self, name):
+            self.__name = name 
+            self.__glueck = 0
+
+        def wirdGestreichelt(self, streichlerName):
+            print(f"{streichlerName} streichelt {self.__name}!")
+            self.__glueck += 1
+
+    # Hier ist ein Mensch, der den Hund streicheln will
+    class Mensch:
+        def __init__(self, name):
+            self.__name = name
+
+        def streicheln(self, tier):
+            tier.wirdGestreichelt(self.__name)
+
+
+
+    #Ab hier wird losgestreichelt - oder?
+    hund1 = Hund("Wuffi")
+    mensch1 = Mensch("Elisabeth")
+    mensch1.streicheln(hund1)
+    ```</div>
     <div id="tutorial" style="display: none" th:utext="${task.tutorial}">[
         {
         title: "Grundlagen der p-q-Formel",
@@ -121,9 +148,9 @@
         }]
     </div>
 
-    <script th:src="@{/js/code-analyzer.js}" src="js/code-analyzer.js"></script>
-    <script th:src="@{/js/object-viewer.js}" src="js/object-viewer.js"></script>
-    <script th:src="@{/js/python-editor.js}" src="python-editor.js"></script>
+    <script th:src="@{/js/code-analyzer.js}" src="../../static/js/code-analyzer.js"></script>
+    <script th:src="@{/js/object-viewer.js}" src="../../static/js/object-viewer.js"></script>
+    <script th:src="@{/js/python-editor.js}" src="../../static/js/python-editor.js"></script>
     <script th:src="@{/js/ping.js}"></script>
 </body>
 
