@@ -188,13 +188,13 @@
             }
 
             // Detect language (simple heuristic)
-            let language = 'python';
+            let language = 'python'; // default
             const code = codeInput.trim();
             if (code.includes('SELECT') || code.includes('CREATE TABLE')) {
                 language = 'sql';
-            } else if (code.includes('<html>') || code.includes('<div>')) {
+            } else if (code.includes('<html>') || code.includes('<div>') || code.includes('<!DOCTYPE')) {
                 language = 'html';
-            } else if (code.includes('CSS') || code.includes('{') && code.includes('}')) {
+            } else if (code.includes('{') && code.includes('}') && (code.includes(';}') || (code.includes(':') && code.includes(';'))) && !code.includes('def ')) {
                 language = 'css';
             }
 
