@@ -218,19 +218,26 @@ print(student1.name)`);
                 }
             }
             
-            output.innerHTML = doc.body.innerHTML;
+            let resultHtml = doc.body.innerHTML;
+            
+            // Zeilennummern hinzufügen wenn aktiviert
+            if (showLineNumbers) {
+                const lines = code.split('\n');
+                let gutterHtml = '<div style="display: inline-block; background-color: #f5f5f5; padding: 0; margin-right: 10px; text-align: right; border-right: 1px solid #e0e0e0; min-width: 40px; user-select: none;">';
+                for (let i = 1; i <= lines.length; i++) {
+                    gutterHtml += `<div style="color: #999; font-family: monospace; font-size: 14px; line-height: 1.5; padding: 0 8px;">${i}</div>`;
+                }
+                gutterHtml += '</div>';
+                resultHtml = `<div style="display: flex; background-color: #fefefe; border-radius: 4px;">${gutterHtml}<div>${resultHtml}</div></div>`;
+            }
+            
+            output.innerHTML = resultHtml;
             
             // Stelle sicher, dass die Hintergrundfarbe #FEFEFE ist
             const renderedPre = output.querySelector('pre');
             if (renderedPre) {
                 renderedPre.style.backgroundColor = '#fefefe';
             }
-            
-            // Zeilennummern anzeigen/verstecken
-            const gutters = output.querySelectorAll('.ace_gutter');
-            gutters.forEach(gutter => {
-                gutter.style.display = showLineNumbers ? 'block' : 'none';
-            });
             
             document.querySelector('[data-bs-target="#tabScreenshot"]').click();
         }
