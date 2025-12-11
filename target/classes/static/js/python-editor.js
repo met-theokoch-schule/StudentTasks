@@ -12,6 +12,7 @@ let mainThreadPyodide = null; // Separate Pyodide-Instanz für MyPy
 
 // Initialisierung beim Laden der Seite
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Python Editor v' + new Date().toISOString() + ' GELADEN');
     initializeEditors();
     initializeTabs();
     initializeOutputTabs();
@@ -1010,42 +1011,60 @@ function resetToDefault() {
 // Markdown-zu-HTML Parser
 function renderMarkdown(markdownText) {
     console.log('🔄 renderMarkdown aufgerufen');
+    console.log('📄 Eingabe Markdown (erste 200 chars):', markdownText.substring(0, 200));
+    console.log('📄 Eingabe Markdown enthält Code-Block (```)?', markdownText.includes('```'));
     if (typeof marked !== 'undefined') {
         // Highlight Funktion mit Fallback
         const highlightFunction = function(code, lang) {
-            console.log('✨ Highlight-Funktion aufgerufen für Sprache:', lang);
+            console.log('✨ Highlight-Funktion aufgerufen für Sprache:', lang, 'hljs verfügbar:', typeof hljs !== 'undefined');
             
             if (typeof hljs === 'undefined') {
                 console.warn('⚠️ highlight.js nicht verfügbar');
-                return code;
+                return null; // null bedeutet: nicht highlighting, verwende default
             }
             
             try {
-                if (lang && hljs.getLanguage(lang)) {
-                    const highlighted = hljs.highlight(code, { language: lang }).value;
-                    console.log('✅ Highlighting für', lang, 'erfolgreich');
-                    return highlighted;
+                if (lang) {
+                    console.log('🔍 Prüfe auf hljs.getLanguage(' + lang + ')');
+                    if (hljs.getLanguage(lang)) {
+                        const highlighted = hljs.highlight(code, { language: lang }).value;
+                        console.log('✅ Highlighting für', lang, 'erfolgreich');
+                        return highlighted;
+                    }
                 }
                 // Versuche automatische Erkennung
-                return hljs.highlightAuto(code).value;
+                console.log('🤖 Verwende auto-detection für Code-Sprache');
+                const auto = hljs.highlightAuto(code).value;
+                console.log('✅ Auto-Highlighting erfolgreich');
+                return auto;
             } catch (error) {
                 console.warn('⚠️ Fehler beim Syntax Highlighting:', error);
-                return code;
+                return null;
             }
         };
         
         // Konfiguriere marked mit marked.use()
         const renderer = new marked.Renderer();
+        
+        // Überschreibe codeblock um highlighting direkt zu applizieren
+        renderer.codeblock = function(code, language) {
+            console.log('🔗 Renderer.codeblock aufgerufen mit language:', language);
+            const highlighted = highlightFunction(code, language);
+            return '<pre><code class="hljs ' + (language ? 'language-' + language : '') + '">' + highlighted + '</code></pre>';
+        };
+        
         const originalLinkRenderer = renderer.link;
         renderer.link = function(href, title, text) {
             const html = originalLinkRenderer.call(this, href, title, text);
             return html.replace(/^<a /, '<a target="_blank" rel="noopener noreferrer" ');
         };
         
+        console.log('⚙️ marked.use() wird aufgerufen mit Renderer und Highlight-Funktion');
         marked.use({ 
             renderer: renderer,
             highlight: highlightFunction
         });
+        console.log('✨ marked.use() erfolgreich konfiguriert');
         
         console.log('📝 marked.parse wird aufgerufen');
         const result = marked.parse(markdownText);
