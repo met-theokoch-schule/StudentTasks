@@ -11,7 +11,7 @@
     <script th:src="@{/js/ace-theme-a11y-light.js}" src="../../static/js/ace-theme-a11y-light.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ext-static_highlight.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <link th:href="@{/css/python-editor.css}" href="../../static/css/python-editor.css" rel="stylesheet">
     <style>
         html, body {
@@ -272,38 +272,108 @@ print(student1.name)`);
         
         async function downloadPDF() {
             const output = document.getElementById('screenshotOutput');
+            const highlight = output.querySelector('.ace_static_highlight');
             
-            if (!output.querySelector('.ace_static_highlight')) {
+            if (!highlight) {
                 alert('Bitte zuerst den Code rendern (Screenshot-Ansicht klicken).');
                 return;
             }
             
             try {
-                const canvas = await html2canvas(output, {
-                    backgroundColor: '#fefefe',
-                    scale: 2
+                const { PDFDocument, StandardFonts, rgb } = PDFLib;
+                
+                const pdfDoc = await PDFDocument.create();
+                const font = await pdfDoc.embedFont(StandardFonts.Courier);
+                
+                const fontSize = 12;
+                const lineHeight = fontSize * 1.4;
+                const margin = 40;
+                
+                // Token-Extraktion: Text und Farben aus dem gerenderten HTML
+                const tokens = [];
+                const lines = highlight.querySelectorAll('.ace_line');
+                
+                lines.forEach((line, lineIndex) => {
+                    const lineTokens = [];
+                    
+                    line.childNodes.forEach(node => {
+                        let text, color;
+                        
+                        if (node.nodeType === Node.TEXT_NODE) {
+                            text = node.textContent;
+                            color = getComputedStyle(line).color;
+                        } else if (node.nodeType === Node.ELEMENT_NODE) {
+                            text = node.textContent;
+                            color = getComputedStyle(node).color;
+                        }
+                        
+                        if (text) {
+                            lineTokens.push({ text, color });
+                        }
+                    });
+                    
+                    tokens.push(lineTokens);
                 });
                 
-                const { jsPDF } = window.jspdf;
-                const imgData = canvas.toDataURL('image/png');
+                // Seitenbreite berechnen
+                const maxLineWidth = tokens.reduce((max, lineTokens) => {
+                    const lineText = lineTokens.map(t => t.text).join('');
+                    const width = font.widthOfTextAtSize(lineText, fontSize);
+                    return Math.max(max, width);
+                }, 0);
                 
-                const imgWidth = canvas.width;
-                const imgHeight = canvas.height;
+                const pageWidth = maxLineWidth + margin * 2;
+                const pageHeight = tokens.length * lineHeight + margin * 2;
                 
-                const pdfWidth = imgWidth * 0.264583;
-                const pdfHeight = imgHeight * 0.264583;
+                const page = pdfDoc.addPage([pageWidth, pageHeight]);
                 
-                const pdf = new jsPDF({
-                    orientation: pdfWidth > pdfHeight ? 'landscape' : 'portrait',
-                    unit: 'mm',
-                    format: [pdfWidth, pdfHeight]
+                // Hintergrund
+                page.drawRectangle({
+                    x: 0, y: 0,
+                    width: pageWidth, height: pageHeight,
+                    color: rgb(0.996, 0.996, 0.996)
                 });
                 
-                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-                pdf.save('code-screenshot.pdf');
+                // Text zeichnen
+                tokens.forEach((lineTokens, lineIndex) => {
+                    let xPos = margin;
+                    const yPos = pageHeight - margin - (lineIndex * lineHeight);
+                    
+                    lineTokens.forEach(token => {
+                        const colorMatch = token.color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+                        let pdfColor = rgb(0.33, 0.33, 0.33);
+                        
+                        if (colorMatch) {
+                            pdfColor = rgb(
+                                parseInt(colorMatch[1]) / 255,
+                                parseInt(colorMatch[2]) / 255,
+                                parseInt(colorMatch[3]) / 255
+                            );
+                        }
+                        
+                        page.drawText(token.text, {
+                            x: xPos,
+                            y: yPos,
+                            size: fontSize,
+                            font: font,
+                            color: pdfColor
+                        });
+                        
+                        xPos += font.widthOfTextAtSize(token.text, fontSize);
+                    });
+                });
+                
+                const pdfBytes = await pdfDoc.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'code-screenshot.pdf';
+                link.click();
+                URL.revokeObjectURL(link.href);
+                
             } catch (e) {
                 console.error('PDF Download Fehler:', e);
-                alert('Fehler beim PDF-Download.');
+                alert('Fehler beim PDF-Download: ' + e.message);
             }
         }
     </script>
