@@ -11,7 +11,6 @@
     <script th:src="@{/js/ace-theme-a11y-light.js}" src="../../static/js/ace-theme-a11y-light.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ext-static_highlight.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link th:href="@{/css/python-editor.css}" href="../../static/css/python-editor.css" rel="stylesheet">
     <style>
         html, body {
@@ -140,7 +139,7 @@
                 <i class="fas fa-image"></i> PNG Download
             </button>
             <button id="btnDownloadPDF" class="btn btn-success">
-                <i class="fas fa-file-pdf"></i> PDF Download
+                <i class="fas fa-print"></i> Drucken / PDF
             </button>
             <div class="form-check form-switch" style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
                 <input class="form-check-input" type="checkbox" id="toggleLineNumbers" checked>
@@ -270,7 +269,7 @@ print(student1.name)`);
             }
         }
         
-        async function downloadPDF() {
+        function downloadPDF() {
             const output = document.getElementById('screenshotOutput');
             
             if (!output.querySelector('.ace_static_highlight')) {
@@ -278,33 +277,7 @@ print(student1.name)`);
                 return;
             }
             
-            try {
-                const canvas = await html2canvas(output, {
-                    backgroundColor: '#fefefe',
-                    scale: 2
-                });
-                
-                const { jsPDF } = window.jspdf;
-                const imgData = canvas.toDataURL('image/png');
-                
-                const imgWidth = canvas.width;
-                const imgHeight = canvas.height;
-                
-                const pdfWidth = imgWidth * 0.264583;
-                const pdfHeight = imgHeight * 0.264583;
-                
-                const pdf = new jsPDF({
-                    orientation: pdfWidth > pdfHeight ? 'landscape' : 'portrait',
-                    unit: 'mm',
-                    format: [pdfWidth, pdfHeight]
-                });
-                
-                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-                pdf.save('code-screenshot.pdf');
-            } catch (e) {
-                console.error('PDF Download Fehler:', e);
-                alert('Fehler beim PDF-Download.');
-            }
+            window.print();
         }
     </script>
 </body>
