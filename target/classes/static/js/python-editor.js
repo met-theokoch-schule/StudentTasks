@@ -1009,6 +1009,7 @@ function resetToDefault() {
 
 // Markdown-zu-HTML Parser
 function renderMarkdown(markdownText) {
+    console.log('🔄 renderMarkdown aufgerufen');
     if (typeof marked !== 'undefined') {
         // Konfiguriere marked für Links in neuem Tab
         const renderer = new marked.Renderer();
@@ -1022,26 +1023,36 @@ function renderMarkdown(markdownText) {
         
         // Highlight Funktion mit Fallback
         const highlightFunction = function(code, lang) {
+            console.log('✨ Highlight-Funktion aufgerufen für Sprache:', lang, 'hljs verfügbar:', typeof hljs !== 'undefined');
+            
             if (typeof hljs === 'undefined') {
                 console.warn('⚠️ highlight.js nicht verfügbar, verwende ungestyled Code');
-                return code;
+                return `<pre><code class="language-${lang || 'text'}">${code}</code></pre>`;
             }
             
             try {
                 if (lang && hljs.getLanguage(lang)) {
-                    return hljs.highlight(code, { language: lang }).value;
+                    const highlighted = hljs.highlight(code, { language: lang }).value;
+                    console.log('✅ Highlighting für', lang, 'erfolgreich');
+                    return highlighted;
                 }
                 // Versuche automatische Erkennung
-                return hljs.highlightAuto(code).value;
+                const auto = hljs.highlightAuto(code).value;
+                console.log('✅ Auto-Highlighting erfolgreich');
+                return auto;
             } catch (error) {
                 console.warn('⚠️ Fehler beim Syntax Highlighting:', error);
-                return code;
+                return `<pre><code class="language-${lang || 'text'}">${code}</code></pre>`;
             }
         };
         
         // Verwende den angepassten Renderer
-        return marked.parse(markdownText, { renderer: renderer, highlight: highlightFunction });
+        console.log('📝 marked.parse wird aufgerufen');
+        const result = marked.parse(markdownText, { renderer: renderer, highlight: highlightFunction });
+        console.log('✅ marked.parse fertig');
+        return result;
     } else {
+        console.error('❌ marked.js nicht verfügbar');
         // Fallback für einfaches Markdown-Rendering
         // Links werden hier NICHT in einem neuen Tab geöffnet, da dieser Fallback nur eine Basis-Umwandlung macht
         return markdownText

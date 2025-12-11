@@ -2,6 +2,7 @@ compile = "javac -classpath .:target/dependency/* -d . $(find . -type f -name '*
 run = "mvn clean spring-boot:run -Dspring-boot.run.arguments='--spring.config.additional-location=classpath:application-replit.properties'"
 entrypoint = "src/main/java/Main.java"
 hidden = ["**/*.class"]
+modules = ["python-3.11"]
 
 [packager]
 language = "java"
@@ -71,6 +72,7 @@ run = ["java", "-classpath", ".:target/dependency/*", "Main"]
 deploymentTarget = "cloudrun"
 
 [workflows]
+runButton = "Project"
 
 
 [[workflows.workflow]]
@@ -100,6 +102,10 @@ author = "agent"
 task = "workflow.run"
 args = "Start Spring Boot Server"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Serve Static Resources"
+
 [[workflows.workflow]]
 name = "Start Spring Boot Server"
 author = "agent"
@@ -112,9 +118,25 @@ waitForPort = 8080
 [workflows.workflow.metadata]
 outputType = "console"
 
+[[workflows.workflow]]
+name = "Serve Static Resources"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd src/main/resources && python3 -m http.server 8080"
+waitForPort = 8080
+
+[workflows.workflow.metadata]
+outputType = "console"
+
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 8080
+externalPort = 8080
 
 [agent]
 expertMode = true
