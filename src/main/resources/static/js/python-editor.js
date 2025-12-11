@@ -65,9 +65,9 @@ function initializeEditors() {
     try {
         // Python Editor
         pythonEditor = ace.edit("pythonEditor");
-        pythonEditor.setTheme("ace/theme/a11y-dark");
+        pythonEditor.setTheme("ace/theme/a11y");
         pythonEditor.session.setMode("ace/mode/python");
-        console.log('🎨 Ace Theme gesetzt auf:', "ace/theme/a11y-dark");
+        console.log('🎨 Ace Theme gesetzt auf:', "ace/theme/a11y");
         console.log('🎨 Aktueller Ace Theme:', pythonEditor.getTheme());
         pythonEditor.setOptions({
             fontSize: 14,
