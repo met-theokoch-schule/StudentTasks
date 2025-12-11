@@ -1010,7 +1010,7 @@ function resetToDefault() {
     }
 }
 
-// Markdown-zu-HTML Parser
+// Markdown-zu-HTML Parser mit Ace Static Highlighting
 function renderMarkdown(markdownText) {
     console.log('🔄 renderMarkdown aufgerufen');
     
@@ -1019,31 +1019,36 @@ function renderMarkdown(markdownText) {
         let html = marked.parse(markdownText);
         console.log('✅ marked.parse fertig');
         
-        // Highlighting NACH dem Parse mit highlight.js
-        if (typeof hljs !== 'undefined') {
-            console.log('🎨 Wende highlight.js auf <code> Blocks an');
+        // Highlighting NACH dem Parse mit Ace Static Highlight
+        const staticHighlight = ace.require('ace/ext/static_highlight');
+        if (staticHighlight) {
+            console.log('🎨 Wende Ace Static Highlight auf <code> Blocks an');
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
             const codeBlocks = doc.querySelectorAll('pre code');
             
             codeBlocks.forEach(block => {
-                const lang = block.className.replace('language-', '').trim();
+                const langClass = block.className.match(/language-(\w+)/);
+                const lang = langClass ? langClass[1] : 'python';
                 const code = block.textContent;
-                console.log('✨ Highlighting Code Block mit Sprache:', lang || 'auto');
+                console.log('✨ Ace Highlighting Code Block mit Sprache:', lang);
                 
                 try {
-                    let highlighted;
-                    if (lang && hljs.getLanguage(lang)) {
-                        highlighted = hljs.highlight(code, { language: lang }).value;
-                        console.log('✅ Highlighting für', lang, 'erfolgreich');
-                    } else {
-                        highlighted = hljs.highlightAuto(code).value;
-                        console.log('✅ Auto-Highlighting erfolgreich');
+                    // Ace Mode für die Sprache bestimmen
+                    const aceMode = 'ace/mode/' + lang;
+                    
+                    // Static Highlight mit Ace
+                    const highlighted = staticHighlight.render(code, aceMode, 'ace/theme/a11y_dark', 1, true);
+                    
+                    // Pre-Element mit Ace-Styling ersetzen
+                    const preElement = block.parentElement;
+                    if (preElement && preElement.tagName === 'PRE') {
+                        preElement.outerHTML = highlighted.html;
+                        console.log('✅ Ace Highlighting für', lang, 'erfolgreich');
                     }
-                    block.innerHTML = highlighted;
-                    block.className = 'hljs ' + (lang ? 'language-' + lang : '');
                 } catch (e) {
-                    console.warn('⚠️ Highlighting Fehler:', e);
+                    console.warn('⚠️ Ace Highlighting Fehler:', e);
+                    // Fallback: Code ohne Highlighting
                 }
             });
             
