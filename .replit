@@ -110,13 +110,13 @@ args = "Serve Static Resources"
 name = "Start Spring Boot Server"
 author = "agent"
 
+[workflows.workflow.metadata]
+outputType = "webview"
+
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd /root && gradle bootRun"
-waitForPort = 8080
-
-[workflows.workflow.metadata]
-outputType = "console"
+args = "gradle bootRun"
+waitForPort = 5000
 
 [[workflows.workflow]]
 name = "Serve Static Resources"
@@ -133,10 +133,6 @@ outputType = "console"
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 8080
-externalPort = 8080
 
 [agent]
 expertMode = true
