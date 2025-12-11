@@ -100,6 +100,19 @@ public class TeacherGroupController {
             matrix.setTasks(sortedTasks);
         }
 
+        // Schüler nach Nachname sortieren
+        if (matrix != null && matrix.getStudents() != null && !matrix.getStudents().isEmpty()) {
+            List<User> sortedStudents = matrix.getStudents().stream()
+                .sorted((s1, s2) -> {
+                    String name1 = s1.getFamilyName() != null ? s1.getFamilyName() : s1.getName();
+                    String name2 = s2.getFamilyName() != null ? s2.getFamilyName() : s2.getName();
+                    return name1.compareTo(name2);
+                })
+                .collect(Collectors.toList());
+
+            matrix.setStudents(sortedStudents);
+        }
+
         model.addAttribute("group", group);
         model.addAttribute("statistics", statistics);
         model.addAttribute("matrix", matrixData);
