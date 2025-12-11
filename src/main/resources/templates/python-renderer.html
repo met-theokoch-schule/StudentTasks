@@ -125,17 +125,20 @@
             white-space: pre !important;
         }
 
-        /* Print Theme Colors */
-        .ace-print-a11y-dark { background-color: #FEFEFE; color: #545454; }
-        .ace-print-a11y-dark .ace_keyword { color: #9400D3; }
-        .ace-print-a11y-dark .ace_meta { color: #9400D3; }
-        .ace-print-a11y-dark .ace_storage { color: #9400D3; }
-        .ace-print-a11y-dark .ace_constant { color: #A85D00; }
-        .ace-print-a11y-dark .ace_support { color: #1F7C93; }
-        .ace-print-a11y-dark .ace_function { color: #1F7C93; }
-        .ace-print-a11y-dark .ace_string { color: #008000; }
-        .ace-print-a11y-dark .ace_variable { color: #D91E18; }
-        .ace-print-a11y-dark .ace_comment { color: #802200; }
+        /* Print Theme Colors for Highlight.js */
+        .ace-print-a11y-dark { color: #545454; }
+        .ace-print-a11y-dark .hljs-keyword { color: #9400D3; }
+        .ace-print-a11y-dark .hljs-meta { color: #9400D3; }
+        .ace-print-a11y-dark .hljs-literal { color: #9400D3; }
+        .ace-print-a11y-dark .hljs-number { color: #A85D00; }
+        .ace-print-a11y-dark .hljs-built_in { color: #1F7C93; }
+        .ace-print-a11y-dark .hljs-attr { color: #1F7C93; }
+        .ace-print-a11y-dark .hljs-string { color: #008000; }
+        .ace-print-a11y-dark .hljs-variable { color: #D91E18; }
+        .ace-print-a11y-dark .hljs-comment { color: #802200; }
+        .ace-print-a11y-dark .hljs-title { color: #D91E18; }
+        .ace-print-a11y-dark .hljs-function { color: #1F7C93; }
+        .ace-print-a11y-dark .hljs-class { color: #1F7C93; }
 
         @media print {
             body {
@@ -182,12 +185,10 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.35.2/ace.min.js" integrity="sha512-5p1bP2tLMSqI7C5+6ZzW2hCLvjx5p5jcWdC3Z5rvR+zzz4hB1W8RJh7Q37zj+h7YpwKJTk/B3DaV6D8UQWFGA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.35.2/ext-static_highlight.min.js" integrity="sha512-W6GfOvP0eQwV5m4Kt7L5WGtYtT8EIG2Bi4nCQhXYHhNvJQrJk7Dn4Rk6E+dJpN5uQ1xqsU5/qL8O/mYxhRCQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-light.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
 
     <script>
-        ace.config.set('basePath', 'https://cdnjs.cloudflare.com/ajax/libs/ace/1.35.2/');
-
         function renderCode() {
             const codeInput = document.getElementById('codeInput').value;
             const outputContainer = document.getElementById('outputContainer');
@@ -197,9 +198,9 @@
                 return;
             }
 
-            // Detect language
-            let language = 'python';
             const code = codeInput.trim();
+            let language = 'python';
+            
             if (code.includes('SELECT') || code.includes('CREATE TABLE')) {
                 language = 'sql';
             } else if (code.includes('<html>') || code.includes('<div>') || code.includes('<!DOCTYPE')) {
@@ -209,21 +210,13 @@
             }
 
             try {
-                if (typeof ace === 'undefined' || !ace.require) {
-                    throw new Error('Ace not loaded');
+                if (typeof hljs === 'undefined') {
+                    throw new Error('Highlight.js not loaded');
                 }
-                const staticHighlight = ace.require('ace/ext/static_highlight');
-                if (!staticHighlight) {
-                    throw new Error('Static highlight not available');
-                }
-                const aceMode = 'ace/mode/' + language;
-                const highlighted = staticHighlight.render(code, aceMode, 'ace/theme/print_a11y_dark', 1, true);
-                if (highlighted && highlighted.html) {
-                    outputContainer.innerHTML = highlighted.html;
-                    console.log('✅ Code erfolgreich gerendert mit Sprache:', language);
-                } else {
-                    throw new Error('No HTML output');
-                }
+                const highlighted = hljs.highlight(code, { language, ignoreIllegals: true }).value;
+                outputContainer.innerHTML = '<pre style="background-color: #FEFEFE; padding: 15px; border-radius: 4px; margin: 0;"><code class="hljs ace-print-a11y-dark" style="color: #545454; font-family: Consolas, Monaco, Courier New, monospace;">' + 
+                    highlighted + '</code></pre>';
+                console.log('✅ Code erfolgreich gerendert mit Sprache:', language);
             } catch (e) {
                 console.error('❌ Rendering error:', e.message);
                 outputContainer.innerHTML = '<pre style="color: #545454; font-family: Consolas, Monaco, Courier New, monospace; padding: 15px; background-color: #FEFEFE; border-radius: 4px;">' + 
