@@ -1011,6 +1011,8 @@ function resetToDefault() {
 // Markdown-zu-HTML Parser
 function renderMarkdown(markdownText) {
     console.log('🔄 renderMarkdown aufgerufen');
+    console.log('📄 Eingabe Markdown (erste 200 chars):', markdownText.substring(0, 200));
+    console.log('📄 Eingabe Markdown enthält Code-Block (```)?', markdownText.includes('```'));
     if (typeof marked !== 'undefined') {
         // Highlight Funktion mit Fallback
         const highlightFunction = function(code, lang) {
