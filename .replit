@@ -100,23 +100,11 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Start Spring Boot Server"
+args = "Serve Static Resources"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Serve Static Resources"
-
-[[workflows.workflow]]
-name = "Start Spring Boot Server"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd /root && gradle bootRun"
-waitForPort = 8080
-
-[workflows.workflow.metadata]
-outputType = "console"
+args = "Start Spring Boot Server"
 
 [[workflows.workflow]]
 name = "Serve Static Resources"
@@ -130,9 +118,25 @@ waitForPort = 8080
 [workflows.workflow.metadata]
 outputType = "console"
 
+[[workflows.workflow]]
+name = "Start Spring Boot Server"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "./gradlew bootRun"
+waitForPort = 8000
+
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 8000
+externalPort = 8000
 
 [[ports]]
 localPort = 8080
