@@ -10,6 +10,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/mode-python.js"></script>
     <script th:src="@{/js/ace-theme-a11y-light.js}" src="../../static/js/ace-theme-a11y-light.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ext-static_highlight.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link th:href="@{/css/python-editor.css}" href="../../static/css/python-editor.css" rel="stylesheet">
     <style>
         html, body {
@@ -134,8 +136,11 @@
             <button id="btnScreenshot" class="btn btn-primary">
                 <i class="fas fa-camera"></i> Screenshot-Ansicht
             </button>
-            <button id="btnPrint" class="btn btn-success">
-                <i class="fas fa-print"></i> Drucken (PDF)
+            <button id="btnDownloadPNG" class="btn btn-info">
+                <i class="fas fa-image"></i> PNG Download
+            </button>
+            <button id="btnDownloadPDF" class="btn btn-success">
+                <i class="fas fa-file-pdf"></i> PDF Download
             </button>
             <div class="form-check form-switch" style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
                 <input class="form-check-input" type="checkbox" id="toggleLineNumbers" checked>
@@ -177,7 +182,8 @@ print(student1.name)`);
             editor.gotoLine(1);
             
             document.getElementById('btnScreenshot').addEventListener('click', renderScreenshot);
-            document.getElementById('btnPrint').addEventListener('click', renderPrint);
+            document.getElementById('btnDownloadPNG').addEventListener('click', downloadPNG);
+            document.getElementById('btnDownloadPDF').addEventListener('click', downloadPDF);
             document.getElementById('toggleLineNumbers').addEventListener('change', function() {
                 showLineNumbers = this.checked;
             });
@@ -240,15 +246,65 @@ print(student1.name)`);
             }
         }
         
-        function renderPrint() {
-            const code = editor.getValue();
+        async function downloadPNG() {
+            const output = document.getElementById('screenshotOutput');
             
-            if (!code.trim()) {
-                alert('Bitte Code eingeben.');
+            if (!output.querySelector('pre')) {
+                alert('Bitte zuerst den Code rendern (Screenshot-Ansicht klicken).');
                 return;
             }
             
-            window.print();
+            try {
+                const canvas = await html2canvas(output, {
+                    backgroundColor: '#fefefe',
+                    scale: 2
+                });
+                
+                const link = document.createElement('a');
+                link.download = 'code-screenshot.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch (e) {
+                console.error('PNG Download Fehler:', e);
+                alert('Fehler beim PNG-Download.');
+            }
+        }
+        
+        async function downloadPDF() {
+            const output = document.getElementById('screenshotOutput');
+            
+            if (!output.querySelector('pre')) {
+                alert('Bitte zuerst den Code rendern (Screenshot-Ansicht klicken).');
+                return;
+            }
+            
+            try {
+                const canvas = await html2canvas(output, {
+                    backgroundColor: '#fefefe',
+                    scale: 2
+                });
+                
+                const { jsPDF } = window.jspdf;
+                const imgData = canvas.toDataURL('image/png');
+                
+                const imgWidth = canvas.width;
+                const imgHeight = canvas.height;
+                
+                const pdfWidth = imgWidth * 0.264583;
+                const pdfHeight = imgHeight * 0.264583;
+                
+                const pdf = new jsPDF({
+                    orientation: pdfWidth > pdfHeight ? 'landscape' : 'portrait',
+                    unit: 'mm',
+                    format: [pdfWidth, pdfHeight]
+                });
+                
+                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                pdf.save('code-screenshot.pdf');
+            } catch (e) {
+                console.error('PDF Download Fehler:', e);
+                alert('Fehler beim PDF-Download.');
+            }
         }
     </script>
 </body>
