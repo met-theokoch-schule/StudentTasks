@@ -441,7 +441,9 @@ input[type="checkbox"] {
     line-height: 1.5;
     white-space: pre !important;
     background-color: #2b2b2b;
-    padding: 15px;
+    padding: 0 15px;
+    padding-top: 0;
+    padding-bottom: 0;
     border-radius: 5px;
     margin: 15px 0;
     overflow-x: auto;
@@ -1013,4 +1015,8 @@ input[type="checkbox"] {
 
 ::-webkit-scrollbar-thumb:hover {
     background: #505050;
+}
+
+.ace-a11y-dark {
+    margin-bottom: 15px;
 }

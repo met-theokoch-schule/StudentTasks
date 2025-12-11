@@ -1016,3 +1016,7 @@ input[type="checkbox"] {
 ::-webkit-scrollbar-thumb:hover {
     background: #505050;
 }
+
+.ace-a11y-dark {
+    margin-bottom: 15px;
+}

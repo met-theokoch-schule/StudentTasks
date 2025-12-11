@@ -16,6 +16,7 @@ exports.cssText = `
 .ace-a11y-dark {
   background-color: #2b2b2b;
   color: #f8f8f2;
+  margin-bottom: 15px;
 }
 
 .ace-a11y-dark .ace_cursor {
