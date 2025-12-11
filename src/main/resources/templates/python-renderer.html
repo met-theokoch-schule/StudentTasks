@@ -125,20 +125,48 @@
             white-space: pre !important;
         }
 
-        /* Print Theme Colors for Highlight.js */
+        /* Print Theme Colors for Highlight.js - abgestimmt auf a11y-dark.css */
         .ace-print-a11y-dark { color: #545454; }
+        
+        /* Keywords - Purple #9400D3 */
         .ace-print-a11y-dark .hljs-keyword { color: #9400D3; }
         .ace-print-a11y-dark .hljs-meta { color: #9400D3; }
         .ace-print-a11y-dark .hljs-literal { color: #9400D3; }
+        .ace-print-a11y-dark .hljs-selector-tag { color: #9400D3; }
+        
+        /* Numbers/Constants/Parameters - Orange #A85D00 */
         .ace-print-a11y-dark .hljs-number { color: #A85D00; }
+        .ace-print-a11y-dark .hljs-params { color: #A85D00; }
+        
+        /* Strings - Green #008000 */
+        .ace-print-a11y-dark .hljs-string { color: #008000; }
+        .ace-print-a11y-dark .hljs-symbol { color: #008000; }
+        .ace-print-a11y-dark .hljs-bullet { color: #008000; }
+        .ace-print-a11y-dark .hljs-addition { color: #008000; }
+        
+        /* Functions/Built-ins/Types - Cyan #1F7C93 */
         .ace-print-a11y-dark .hljs-built_in { color: #1F7C93; }
         .ace-print-a11y-dark .hljs-attr { color: #1F7C93; }
-        .ace-print-a11y-dark .hljs-string { color: #008000; }
-        .ace-print-a11y-dark .hljs-variable { color: #D91E18; }
-        .ace-print-a11y-dark .hljs-comment { color: #802200; }
-        .ace-print-a11y-dark .hljs-title { color: #D91E18; }
-        .ace-print-a11y-dark .hljs-function { color: #1F7C93; }
+        .ace-print-a11y-dark .hljs-title { color: #1F7C93; }
+        .ace-print-a11y-dark .hljs-section { color: #1F7C93; }
+        .ace-print-a11y-dark .hljs-type { color: #1F7C93; }
         .ace-print-a11y-dark .hljs-class { color: #1F7C93; }
+        .ace-print-a11y-dark .hljs-title.function_ { color: #1F7C93; }
+        
+        /* Variables/Tags - Red #D91E18 */
+        .ace-print-a11y-dark .hljs-variable { color: #D91E18; }
+        .ace-print-a11y-dark .hljs-template-variable { color: #D91E18; }
+        .ace-print-a11y-dark .hljs-tag { color: #D91E18; }
+        .ace-print-a11y-dark .hljs-name { color: #D91E18; }
+        .ace-print-a11y-dark .hljs-selector-id { color: #D91E18; }
+        .ace-print-a11y-dark .hljs-selector-class { color: #D91E18; }
+        .ace-print-a11y-dark .hljs-regexp { color: #D91E18; }
+        .ace-print-a11y-dark .hljs-deletion { color: #D91E18; }
+        .ace-print-a11y-dark .hljs-link { color: #D91E18; }
+        
+        /* Comments - Brown #802200 */
+        .ace-print-a11y-dark .hljs-comment { color: #802200; }
+        .ace-print-a11y-dark .hljs-quote { color: #802200; }
 
         @media print {
             body {
