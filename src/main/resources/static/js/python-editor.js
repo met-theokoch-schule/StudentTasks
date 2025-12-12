@@ -1099,38 +1099,48 @@ function initializeTaskContent() {
 // Tutorial Navigation initialisieren
 function initializeTutorialNavigation() {
     const tutorialTab = document.querySelector('.output-tab[data-output-tab="tutorial"]');
+    const tutorialNav = document.getElementById('tutorialNav');
+    const tutorialDots = document.getElementById('tutorialDots');
     
     // Überprüfen, ob tutorialContents leer ist
     if (!tutorialContents || tutorialContents.length === 0) {
         if (tutorialTab) {
             tutorialTab.style.display = 'none';
         }
+        if (tutorialNav) {
+            tutorialNav.style.display = 'none';
+        }
         return;
     }
 
-    // Dots hinzufügen
-    const dotsContainer = document.querySelector('.tutorial-dots') || document.createElement('div');
-    if (!dotsContainer.id) {
-        dotsContainer.className = 'tutorial-dots';
-        dotsContainer.innerHTML = tutorialContents.map((_, index) =>
+    // Dots dynamisch erstellen
+    if (tutorialDots) {
+        tutorialDots.innerHTML = tutorialContents.map((_, index) =>
             `<span class="tutorial-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>`
         ).join('');
     }
 
     // Event Listeners hinzufügen
-    document.getElementById('tutorialPrev')?.addEventListener('click', () => {
-        if (currentTutorialIndex > 0) {
-            currentTutorialIndex--;
-            updateTutorialDisplay();
-        }
-    });
+    const prevBtn = document.getElementById('tutorialPrev');
+    const nextBtn = document.getElementById('tutorialNext');
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            if (currentTutorialIndex > 0) {
+                currentTutorialIndex--;
+                updateTutorialDisplay();
+            }
+        });
+    }
 
-    document.getElementById('tutorialNext')?.addEventListener('click', () => {
-        if (currentTutorialIndex < tutorialContents.length - 1) {
-            currentTutorialIndex++;
-            updateTutorialDisplay();
-        }
-    });
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            if (currentTutorialIndex < tutorialContents.length - 1) {
+                currentTutorialIndex++;
+                updateTutorialDisplay();
+            }
+        });
+    }
 
     // Dot Navigation
     document.querySelectorAll('.tutorial-dot').forEach(dot => {
@@ -1145,17 +1155,29 @@ function initializeTutorialNavigation() {
 
 // Tutorial Display aktualisieren
 function updateTutorialDisplay() {
+    // Guard: Prüfen ob tutorialContents vorhanden ist
+    if (!tutorialContents || tutorialContents.length === 0) {
+        return;
+    }
+
     // Dots aktualisieren
     document.querySelectorAll('.tutorial-dot').forEach((dot, index) => {
         dot.classList.toggle('active', index === currentTutorialIndex);
     });
 
     // Button States
-    document.getElementById('tutorialPrev').disabled = currentTutorialIndex === 0;
-    document.getElementById('tutorialNext').disabled = currentTutorialIndex === tutorialContents.length - 1;
+    const prevBtn = document.getElementById('tutorialPrev');
+    const nextBtn = document.getElementById('tutorialNext');
+    if (prevBtn) prevBtn.disabled = currentTutorialIndex === 0;
+    if (nextBtn) nextBtn.disabled = currentTutorialIndex === tutorialContents.length - 1;
 
     // Content aktualisieren - zeige Markdown in div
     const tutorialContent = document.getElementById('tutorialContent');
+    if (!tutorialContent) {
+        console.error('tutorialContent Element nicht gefunden');
+        return;
+    }
+    
     const currentContent = tutorialContents[currentTutorialIndex].content;
 
     // Markdown rendern mit ACE-Highlighting im Hauptkontext
