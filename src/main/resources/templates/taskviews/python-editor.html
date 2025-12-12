@@ -192,77 +192,14 @@ mensch1 = Mensch("Elisabeth")
 mensch1.streicheln(hund1)
 ```</div>
     <div id="tutorial" style="display: none" th:utext="${task.tutorial}">[
-          {
-            "title": "Die Feuermagierin und die Monster",
-            "content": `# Die Mission
-
-        ![Bild einer Feuermagierin, die Monster mit einem Feuerring angreift](https://theokoch.schule/informatik/feuermagierin.png "Feuermagierin Artemis greift Monster mit Feuerring an")
-
-        In dieser Aufgabe wirst du mit **Objekten in Arrays** arbeiten.  
-        Du lernst dabei:
-        - wie man **mehrere Objekte** in einem **Array** speichert,
-        - und wie man mit **Schleifen** alle Objekte eines Arrays verarbeitet.
-
-        Dabei wiederholst du, dass du bereits gelernt hast, wie eine Klasse **Methoden anderer Objekte** aufrufen kann.
-
-        **Ziel:** Die **Heldin** soll mit einem **Feuerring-Zauber** zehn  Monster angreifen.  
-        Jedes Monster verliert dabei Lebenspunkte – und die Magierin verbraucht Magiepunkte.`
-          },
-
-          {
-            "title": "Aufgabe",
-            "content": `# Aufgabe: Der Feuerring
-
-        Im vorbereiteten Programm sind zwei Klassen enthalten:  
-        - **Heldin** mit Name und magischer Energie  
-        - **Monster** mit Name und Lebenspunkten  
-
-        Außerdem wird ein **Array aus 10 Monstern** erzeugt.
-
-        Tipp: Kopiere dir den Code wieder zu 
-        <a href="https://www.online-python.com/" target="_blank">Online Python – öffne den Editor</a> um das Problem mit der Anzeige zu umgehen.
-
-        ---
-
-        ### Deine Aufgabe
-
-        1. **Untersuche** den vorgegebenen Code. Wie werden die 10 Monster erzeugt und im Array gespeichert?
-
-        2. **Implementiere** in der Klasse \`Heldin\` die Methode \`feuerring\`  
-
-           Die Methode soll:
-           - alle Monster im Array **nacheinander angreifen**,
-           - jedem Monster **10 Lebenspunkte** abziehen,
-           - am Ende ausgeben, wie viele Lebenspunkte jedes Monster noch hat.
-
-        3. **Starte das Programm** und überprüfe, ob sich die Lebenspunkte aller Monster verändert haben.`
-          },
-
-          {
-            "title": "Zusatzaufgaben",
-            "content": `# Zusatzaufgaben
-
-        Wenn du den Feuerring erfolgreich implementiert hast, erweitere dein Programm!
-
-        ### 🔹 Zusatz 1 – Besiegte Monster
-        Erweitere \`Monster.status()\`, sodass Monster mit 0 Lebenspunkten als **„(besiegt)“** angezeigt werden.
-
-        ### 🔹 Zusatz 2 – Magieverbrauch
-        Lasse die Heldin pro getroffenem Monster **5 Magiepunkte** verlieren. Wenn keine Magie mehr vorhanden ist, soll der Zauber **abbrechen**.
-
-        ### 🔹 Zusatz 3 – Zufälliger Schaden
-        Nutze \`random.randint(8, 15)\` und erzeuge **zufälligen Schaden** pro Monster im Bereich **8–15**.
-
-        ### 🔹 Zusatz 4 – Zusammenfassung
-        Gib nach dem Angriff aus, wie viele Monster **besiegt** wurden und wie viel **Magie** Artemis noch hat.`
-          },
-
-          {
-            "title": "Musterlösung",
-            "content": "# Musterlösung\n\n```python\n# Hier ist die Heldin definiert\nclass Heldin:\n    def __init__(self, name):\n        self.__name = name\n        self.__magie = 100\n\n    def status(self):\n        print(f\"Heldin: {self.__name}, Magie = {self.__magie}\")\n        print()\n\n    # Musterlösung: Feuerring greift alle Monster an (fester Schaden: 10)\n    def feuerring(self, monster_array):\n        print(f\"{self.__name} wirkt FEUERRING! \")\n        for i in range(len(monster_array)):\n            monster_array[i].treffer(10)\n        print(\"Der Feuerring verglüht...\\n\")\n\n\n# Hier ist ein Monster definiert\nclass Monster:\n    def __init__(self, name):\n        self.__name = name\n        self.__leben = 50\n\n    def treffer(self, schaden):\n        self.__leben -= schaden\n        if self.__leben < 0:\n            self.__leben = 0\n        print(f\"{self.__name} erleidet {schaden} Schaden (Leben: {self.__leben})\")\n\n    def status(self):\n        print(f\"Monster: {self.__name}, Leben = {self.__leben}\")\n\n\n# --- Hier beginnt das Abenteuer ---\n\n# Das Array für die 10 Monster (feste Größe, ohne append)\nmonster_array = [None] * 10\n\n# 10 Monster werden erzeugt und im Array gespeichert\nfor i in range(10):\n    monster_name = \"Monster_\" + str(i + 1)\n    monster_array[i] = Monster(monster_name)\n\n# Die Heldin betritt die Szene\nheldin1 = Heldin(\"Artemis\")\n\n# Statusausgabe vor dem Angriff\nheldin1.status()\nprint(\"Vor dem Angriff:\")\nfor i in range(10):\n    monster_array[i].status()\nprint()\n\n# Heldin setzt den Feuerring ein (Musterlösung)\nheldin1.feuerring(monster_array)\n\n# Statusausgabe nach dem Angriff\nprint(\"Nach dem Angriff:\")\nfor i in range(10):\n    monster_array[i].status()\n```\n"
-          }
-        ]
-
+        {
+        title: "Grundlagen der p-q-Formel",
+        content: `# Tutorial 1: Grundlagen der p-q-Formel`
+        },
+        {
+        title: "Grundlagen der p-q-Formel",
+        content: `# Tutorial 1: Grundlagen der p-q-Formel`
+        }]
     </div>
 
     <script th:src="@{/js/code-analyzer.js}" src="../../static/js/code-analyzer.js?v=20251211-v10"></script>
