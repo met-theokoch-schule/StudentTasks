@@ -1175,6 +1175,10 @@ function updateTutorialDisplay() {
         <html>
         <head>
             <meta charset="UTF-8">
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ace.js"><\/script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/mode-python.js"><\/script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ext-static_highlight.js"><\/script>
+            <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"><\/script>
             <style>
                 body { 
                     font-family: 'Segoe UI', sans-serif; 
@@ -1213,12 +1217,77 @@ function updateTutorialDisplay() {
                 }
             </style>
             <script>
-                // Alle Links in neuem Tab öffnen
+                // Markdown-zu-HTML Parser mit Ace Static Highlighting (für iframe)
+                function renderMarkdownInIframe(markdownText) {
+                    if (typeof marked !== 'undefined') {
+                        let html = marked.parse(markdownText);
+                        
+                        // Highlighting NACH dem Parse mit Ace Static Highlight
+                        const staticHighlight = ace.require('ace/ext/static_highlight');
+                        if (staticHighlight) {
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, 'text/html');
+                            const codeBlocks = doc.querySelectorAll('pre code');
+                            
+                            codeBlocks.forEach(block => {
+                                const langClass = block.className.match(/language-(\w+)/);
+                                const lang = langClass ? langClass[1] : 'python';
+                                const code = block.textContent.trimEnd();
+                                
+                                try {
+                                    const aceMode = 'ace/mode/' + lang;
+                                    const highlighted = staticHighlight.render(code, aceMode, 'ace/theme/a11y_dark', 1, true);
+                                    
+                                    const preElement = block.parentElement;
+                                    if (preElement && preElement.tagName === 'PRE') {
+                                        preElement.outerHTML = highlighted.html;
+                                    }
+                                } catch (e) {
+                                    // Fallback: Code ohne Highlighting
+                                }
+                            });
+                            
+                            html = doc.body.innerHTML;
+                        }
+                        
+                        return html;
+                    } else {
+                        return markdownText;
+                    }
+                }
+
+                // Alle Links in neuem Tab öffnen und Markdown mit Highlighting rendern
                 document.addEventListener('DOMContentLoaded', function() {
                     document.querySelectorAll('a').forEach(function(link) {
                         link.setAttribute('target', '_blank');
                         link.setAttribute('rel', 'noopener noreferrer');
                     });
+                    
+                    // Highlight code blocks wenn ACE verfügbar ist
+                    setTimeout(function() {
+                        const codeBlocks = document.querySelectorAll('pre code');
+                        if (typeof ace !== 'undefined' && codeBlocks.length > 0) {
+                            const staticHighlight = ace.require('ace/ext/static_highlight');
+                            if (staticHighlight) {
+                                codeBlocks.forEach(block => {
+                                    const langClass = block.className.match(/language-(\w+)/);
+                                    const lang = langClass ? langClass[1] : 'python';
+                                    const code = block.textContent.trimEnd();
+                                    
+                                    try {
+                                        const aceMode = 'ace/mode/' + lang;
+                                        const highlighted = staticHighlight.render(code, aceMode, 'ace/theme/a11y_dark', 1, true);
+                                        const preElement = block.parentElement;
+                                        if (preElement && preElement.tagName === 'PRE') {
+                                            preElement.outerHTML = highlighted.html;
+                                        }
+                                    } catch (e) {
+                                        // Fallback: Code ohne Highlighting
+                                    }
+                                });
+                            }
+                        }
+                    }, 100);
                 });
             </script>
         </head>
