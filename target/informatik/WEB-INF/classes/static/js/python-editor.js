@@ -1098,50 +1098,49 @@ function initializeTaskContent() {
 
 // Tutorial Navigation initialisieren
 function initializeTutorialNavigation() {
-    const tutorialOutput = document.getElementById('tutorialOutput');
-
-    const tutorialTab = document.querySelector('.output-tab[data-output-tab="tutorial"]'); // Referenz auf das Tutorial-Tab
+    const tutorialTab = document.querySelector('.output-tab[data-output-tab="tutorial"]');
+    const tutorialNav = document.getElementById('tutorialNav');
+    const tutorialDots = document.getElementById('tutorialDots');
+    
     // Überprüfen, ob tutorialContents leer ist
     if (!tutorialContents || tutorialContents.length === 0) {
-        // Tab ausblenden, wenn kein Inhalt vorhanden ist
         if (tutorialTab) {
-            tutorialTab.style.display = 'none'; // Tab ausblenden
+            tutorialTab.style.display = 'none';
         }
-        return; // Funktion beenden
+        if (tutorialNav) {
+            tutorialNav.style.display = 'none';
+        }
+        return;
     }
 
-    // Navigation HTML erstellen
-    const navigationHTML = `
-        <div class="tutorial-navigation">
-            <button id="tutorialPrev" class="nav-arrow">←</button>
-            <div class="tutorial-dots">
-                ${tutorialContents.map((_, index) =>
-        `<span class="tutorial-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>`
-    ).join('')}
-            </div>
-            <button id="tutorialNext" class="nav-arrow">→</button>
-        </div>
-        <div class="tutorial-content">
-            <iframe id="tutorialFrame" src="" class="tutorial-iframe"></iframe>
-        </div>
-    `;
-
-    tutorialOutput.innerHTML = navigationHTML;
+    // Dots dynamisch erstellen
+    if (tutorialDots) {
+        tutorialDots.innerHTML = tutorialContents.map((_, index) =>
+            `<span class="tutorial-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>`
+        ).join('');
+    }
 
     // Event Listeners hinzufügen
-    document.getElementById('tutorialPrev').addEventListener('click', () => {
-        if (currentTutorialIndex > 0) {
-            currentTutorialIndex--;
-            updateTutorialDisplay();
-        }
-    });
+    const prevBtn = document.getElementById('tutorialPrev');
+    const nextBtn = document.getElementById('tutorialNext');
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            if (currentTutorialIndex > 0) {
+                currentTutorialIndex--;
+                updateTutorialDisplay();
+            }
+        });
+    }
 
-    document.getElementById('tutorialNext').addEventListener('click', () => {
-        if (currentTutorialIndex < tutorialContents.length - 1) {
-            currentTutorialIndex++;
-            updateTutorialDisplay();
-        }
-    });
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            if (currentTutorialIndex < tutorialContents.length - 1) {
+                currentTutorialIndex++;
+                updateTutorialDisplay();
+            }
+        });
+    }
 
     // Dot Navigation
     document.querySelectorAll('.tutorial-dot').forEach(dot => {
@@ -1156,86 +1155,40 @@ function initializeTutorialNavigation() {
 
 // Tutorial Display aktualisieren
 function updateTutorialDisplay() {
+    // Guard: Prüfen ob tutorialContents vorhanden ist
+    if (!tutorialContents || tutorialContents.length === 0) {
+        return;
+    }
+
     // Dots aktualisieren
     document.querySelectorAll('.tutorial-dot').forEach((dot, index) => {
         dot.classList.toggle('active', index === currentTutorialIndex);
     });
 
     // Button States
-    document.getElementById('tutorialPrev').disabled = currentTutorialIndex === 0;
-    document.getElementById('tutorialNext').disabled = currentTutorialIndex === tutorialContents.length - 1;
+    const prevBtn = document.getElementById('tutorialPrev');
+    const nextBtn = document.getElementById('tutorialNext');
+    if (prevBtn) prevBtn.disabled = currentTutorialIndex === 0;
+    if (nextBtn) nextBtn.disabled = currentTutorialIndex === tutorialContents.length - 1;
 
-    // Content aktualisieren - zeige Markdown statt iframe
-    const tutorialFrame = document.getElementById('tutorialFrame');
+    // Content aktualisieren - zeige Markdown in div
+    const tutorialContent = document.getElementById('tutorialContent');
+    if (!tutorialContent) {
+        console.error('tutorialContent Element nicht gefunden');
+        return;
+    }
+    
     const currentContent = tutorialContents[currentTutorialIndex].content;
 
-    // Erstelle HTML für Markdown-Content
-    const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <style>
-                body { 
-                    font-family: 'Segoe UI', sans-serif; 
-                    line-height: 1.6; 
-                    margin: 20px; 
-                    background: #1e1e1e; 
-                    color: #cccccc; 
-                }
-                h1, h2, h3 { color: #ffffff; }
-                h1 { border-bottom: 2px solid #007acc; padding-bottom: 10px; }
-                h2 { border-bottom: 1px solid #404040; padding-bottom: 5px; }
-                code { 
-                    background: #2d2d2d; 
-                    padding: 2px 6px; 
-                    border-radius: 3px; 
-                    font-family: 'Consolas', monospace;
-                }
-                pre { 
-                    background: #2d2d2d; 
-                    padding: 15px; 
-                    border-radius: 5px; 
-                    overflow-x: auto; 
-                }
-                pre code { background: transparent; padding: 0; }
-                ul { margin-left: 20px; }
-                li { margin-bottom: 5px; }
-                .example { background: #2a4a2a; padding: 10px; border-radius: 5px; margin: 10px 0; }
-                /* Styling für Links - unabhängig vom Besuchsstatus */
-                a {
-                    color: #9cdcfe; /* Hellblau für gute Lesbarkeit im Dark Theme */
-                    text-decoration: none; /* Keine Unterstreichung */
-                }
-                a:hover {
-                    text-decoration: underline; /* Unterstreichung beim Hover */
-                    color: #80c8ff; /* Etwas helleres Blau beim Hover */
-                }
-            </style>
-            <script>
-                // Alle Links in neuem Tab öffnen
-                document.addEventListener('DOMContentLoaded', function() {
-                    document.querySelectorAll('a').forEach(function(link) {
-                        link.setAttribute('target', '_blank');
-                        link.setAttribute('rel', 'noopener noreferrer');
-                    });
-                });
-            </script>
-        </head>
-        <body>
-            ${renderMarkdown(currentContent)}
-        </body>
-        </html>
-    `;
+    // Markdown rendern mit ACE-Highlighting im Hauptkontext
+    const renderedHtml = renderMarkdown(currentContent);
+    tutorialContent.innerHTML = renderedHtml;
 
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    tutorialFrame.src = url;
-
-    // URL nach dem Laden wieder freigeben
-    tutorialFrame.onload = () => {
-        URL.revokeObjectURL(url);
-    };
+    // Links öffnen in neuem Tab
+    tutorialContent.querySelectorAll('a').forEach(link => {
+        link.setAttribute('target', '_blank');
+        link.setAttribute('rel', 'noopener noreferrer');
+    });
 }
 
 // Task-Tab aktualisieren

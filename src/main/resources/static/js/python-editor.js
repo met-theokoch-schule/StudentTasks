@@ -1088,10 +1088,21 @@ let currentTutorialIndex = 0;
 // Task-Content initialisieren
 function initializeTaskContent() {
     const description = document.getElementById('description')?.textContent;
-    if (description) {
+    const taskTab = document.querySelector('.output-tab[data-output-tab="task"]');
+    
+    if (description && description.trim()) {
         const taskOutput = document.getElementById('taskOutput');
         if (taskOutput) {
             taskOutput.innerHTML = renderMarkdown(description);
+        }
+        // Task Tab anzeigen
+        if (taskTab) {
+            taskTab.style.display = '';
+        }
+    } else {
+        // Task Tab verstecken, wenn keine Description vorhanden ist
+        if (taskTab) {
+            taskTab.style.display = 'none';
         }
     }
 }

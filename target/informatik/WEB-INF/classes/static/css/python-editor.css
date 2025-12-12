@@ -491,6 +491,116 @@ input[type="checkbox"] {
     opacity: 0.8;
 }
 
+/* Markdown-Styling für Tutorial-Output */
+#tutorialContent {
+    padding: 20px;
+    background-color: #1e1e1e;
+    color: #cccccc;
+    overflow-y: auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+}
+
+#tutorialContent h1 {
+    color: #ffffff;
+    border-bottom: 2px solid #007acc;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+#tutorialContent h2 {
+    color: #ffffff;
+    margin-top: 25px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #404040;
+    padding-bottom: 5px;
+}
+
+#tutorialContent h3 {
+    color: #ffffff;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+#tutorialContent p {
+    margin-bottom: 15px;
+}
+
+#tutorialContent ul, #tutorialContent ol {
+    margin-left: 20px;
+    margin-bottom: 15px;
+}
+
+#tutorialContent li {
+    margin-bottom: 5px;
+}
+
+#tutorialContent code {
+    background-color: #2d2d2d;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    color: #f8f8f2;
+}
+
+#tutorialContent pre {
+    background-color: #2d2d2d;
+    padding: 15px;
+    border-radius: 5px;
+    overflow: visible;
+    margin: 15px 0;
+}
+
+#tutorialContent pre code {
+    background-color: transparent;
+    padding: 0;
+}
+
+#tutorialContent .ace_static_highlight {
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace !important;
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre !important;
+    background-color: #2b2b2b;
+    padding: 0 15px;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-radius: 5px;
+    margin: 15px 0;
+    overflow-x: auto;
+}
+
+#tutorialContent blockquote {
+    border-left: 4px solid #007acc;
+    margin-left: 0;
+    padding-left: 20px;
+    font-style: italic;
+    color: #aaaaaa;
+}
+
+#tutorialContent strong {
+    color: #ffffff;
+    font-weight: bold;
+}
+
+#tutorialContent em {
+    color: #ffffff;
+    font-style: italic;
+}
+
+#tutorialContent a,
+#tutorialContent a:visited,
+#tutorialContent a:hover,
+#tutorialContent a:active {
+    color: #4fc3f7;
+    text-decoration: underline;
+    transition: opacity 0.2s ease;
+}
+
+#tutorialContent a:hover {
+    opacity: 0.8;
+}
+
 /* Object Viewer Container */
 .object-viewer-container {
     height: 40%;
