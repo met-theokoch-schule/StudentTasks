@@ -1165,104 +1165,19 @@ function updateTutorialDisplay() {
     document.getElementById('tutorialPrev').disabled = currentTutorialIndex === 0;
     document.getElementById('tutorialNext').disabled = currentTutorialIndex === tutorialContents.length - 1;
 
-    // Content aktualisieren - zeige Markdown statt iframe
-    const tutorialFrame = document.getElementById('tutorialFrame');
+    // Content aktualisieren - zeige Markdown in div
+    const tutorialContent = document.getElementById('tutorialContent');
     const currentContent = tutorialContents[currentTutorialIndex].content;
 
-    // Erstelle HTML für Markdown-Content (ohne führende Spaces für marked Parser)
-    const htmlContent = `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ace.js"><\/script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/mode-python.js"><\/script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ext-static_highlight.js"><\/script>
-<script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"><\/script>
-<style>
-body { font-family: 'Segoe UI', sans-serif; line-height: 1.6; margin: 20px; background: #1e1e1e; color: #cccccc; }
-h1, h2, h3 { color: #ffffff; }
-h1 { border-bottom: 2px solid #007acc; padding-bottom: 10px; }
-h2 { border-bottom: 1px solid #404040; padding-bottom: 5px; }
-code { background: #2d2d2d; padding: 2px 6px; border-radius: 3px; font-family: 'Consolas', monospace; }
-pre { background: #2d2d2d; padding: 15px; border-radius: 5px; overflow-x: auto; }
-pre code { background: transparent; padding: 0; }
-ul { margin-left: 20px; }
-li { margin-bottom: 5px; }
-.example { background: #2a4a2a; padding: 10px; border-radius: 5px; margin: 10px 0; }
-a { color: #9cdcfe; text-decoration: none; }
-a:hover { text-decoration: underline; color: #80c8ff; }
-</style>
-<script>
-function renderMarkdownInIframe(markdownText) {
-if (typeof marked !== 'undefined') {
-let html = marked.parse(markdownText);
-const staticHighlight = ace.require('ace/ext/static_highlight');
-if (staticHighlight) {
-const parser = new DOMParser();
-const doc = parser.parseFromString(html, 'text/html');
-const codeBlocks = doc.querySelectorAll('pre code');
-codeBlocks.forEach(block => {
-const langClass = block.className.match(/language-(\\w+)/);
-const lang = langClass ? langClass[1] : 'python';
-const code = block.textContent.trimEnd();
-try {
-const aceMode = 'ace/mode/' + lang;
-const highlighted = staticHighlight.render(code, aceMode, 'ace/theme/a11y_dark', 1, true);
-const preElement = block.parentElement;
-if (preElement && preElement.tagName === 'PRE') {
-preElement.outerHTML = highlighted.html;
-}
-} catch (e) {}
-});
-html = doc.body.innerHTML;
-}
-return html;
-} else {
-return markdownText;
-}
-}
-document.addEventListener('DOMContentLoaded', function() {
-document.querySelectorAll('a').forEach(function(link) {
-link.setAttribute('target', '_blank');
-link.setAttribute('rel', 'noopener noreferrer');
-});
-setTimeout(function() {
-const codeBlocks = document.querySelectorAll('pre code');
-if (typeof ace !== 'undefined' && codeBlocks.length > 0) {
-const staticHighlight = ace.require('ace/ext/static_highlight');
-if (staticHighlight) {
-codeBlocks.forEach(block => {
-const langClass = block.className.match(/language-(\\w+)/);
-const lang = langClass ? langClass[1] : 'python';
-const code = block.textContent.trimEnd();
-try {
-const aceMode = 'ace/mode/' + lang;
-const highlighted = staticHighlight.render(code, aceMode, 'ace/theme/a11y_dark', 1, true);
-const preElement = block.parentElement;
-if (preElement && preElement.tagName === 'PRE') {
-preElement.outerHTML = highlighted.html;
-}
-} catch (e) {}
-});
-}
-}
-}, 100);
-});
-</script>
-</head>
-<body>
-${renderMarkdown(currentContent)}
-</body>
-</html>`;
+    // Markdown rendern mit ACE-Highlighting im Hauptkontext
+    const renderedHtml = renderMarkdown(currentContent);
+    tutorialContent.innerHTML = renderedHtml;
 
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    tutorialFrame.src = url;
-
-    // URL nach dem Laden wieder freigeben
-    tutorialFrame.onload = () => {
-        URL.revokeObjectURL(url);
-    };
+    // Links öffnen in neuem Tab
+    tutorialContent.querySelectorAll('a').forEach(link => {
+        link.setAttribute('target', '_blank');
+        link.setAttribute('rel', 'noopener noreferrer');
+    });
 }
 
 // Task-Tab aktualisieren

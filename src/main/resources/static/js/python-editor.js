@@ -1098,45 +1098,34 @@ function initializeTaskContent() {
 
 // Tutorial Navigation initialisieren
 function initializeTutorialNavigation() {
-    const tutorialOutput = document.getElementById('tutorialOutput');
-
-    const tutorialTab = document.querySelector('.output-tab[data-output-tab="tutorial"]'); // Referenz auf das Tutorial-Tab
+    const tutorialTab = document.querySelector('.output-tab[data-output-tab="tutorial"]');
+    
     // Überprüfen, ob tutorialContents leer ist
     if (!tutorialContents || tutorialContents.length === 0) {
-        // Tab ausblenden, wenn kein Inhalt vorhanden ist
         if (tutorialTab) {
-            tutorialTab.style.display = 'none'; // Tab ausblenden
+            tutorialTab.style.display = 'none';
         }
-        return; // Funktion beenden
+        return;
     }
 
-    // Navigation HTML erstellen
-    const navigationHTML = `
-        <div class="tutorial-navigation">
-            <button id="tutorialPrev" class="nav-arrow">←</button>
-            <div class="tutorial-dots">
-                ${tutorialContents.map((_, index) =>
-        `<span class="tutorial-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>`
-    ).join('')}
-            </div>
-            <button id="tutorialNext" class="nav-arrow">→</button>
-        </div>
-        <div class="tutorial-content">
-            <iframe id="tutorialFrame" src="" class="tutorial-iframe"></iframe>
-        </div>
-    `;
-
-    tutorialOutput.innerHTML = navigationHTML;
+    // Dots hinzufügen
+    const dotsContainer = document.querySelector('.tutorial-dots') || document.createElement('div');
+    if (!dotsContainer.id) {
+        dotsContainer.className = 'tutorial-dots';
+        dotsContainer.innerHTML = tutorialContents.map((_, index) =>
+            `<span class="tutorial-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>`
+        ).join('');
+    }
 
     // Event Listeners hinzufügen
-    document.getElementById('tutorialPrev').addEventListener('click', () => {
+    document.getElementById('tutorialPrev')?.addEventListener('click', () => {
         if (currentTutorialIndex > 0) {
             currentTutorialIndex--;
             updateTutorialDisplay();
         }
     });
 
-    document.getElementById('tutorialNext').addEventListener('click', () => {
+    document.getElementById('tutorialNext')?.addEventListener('click', () => {
         if (currentTutorialIndex < tutorialContents.length - 1) {
             currentTutorialIndex++;
             updateTutorialDisplay();
