@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Code-Editor</title>
-    <link th:href="@{/css/python-editor.css}" href="../../static/css/python-editor.css?v=20251211-v2" rel="stylesheet" type="text/css" />
+    <link th:href="@{/css/python-editor.css}" href="../../static/css/python-editor.css?v=20251212-v1" rel="stylesheet" type="text/css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
         crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -93,6 +93,11 @@
                         <!-- Markdown-gerenderte Anleitung -->
                     </div>
                     <div id="tutorialOutput" class="output-content">
+                        <div class="tutorial-navigation" id="tutorialNav">
+                            <button id="tutorialPrev" class="nav-arrow">←</button>
+                            <div class="tutorial-dots" id="tutorialDots"></div>
+                            <button id="tutorialNext" class="nav-arrow">→</button>
+                        </div>
                         <div id="tutorialContent"></div>
                     </div>
                 </div>
@@ -108,90 +113,7 @@
         data-url="/dev/submit"></div>
     <div id="currentContent" style="display: none" th:text="${currentContent}"></div>
     <div id="defaultSubmission" style="display: none" th:text="${task.defaultSubmission} "></div>
-    <div id="description" style="display: none" th:text="${task.description}">Im folgenden findest du drei Code-Blöcke, die versuchen, einem Objekt der Klasse Mensch zu ermöglichen, ein Objekt der Klasse Hund zu streicheln.
-
-# Aufgaben
-- Kopiere Code 1 in den Editor und untersuche, was passiert. Ersetze ihn durch Code 2 und untersuche erneut.
-- Finde heraus, warum der eine Code funktioniert und der andere nicht! *Tipp: Schlagwörter zum Suchen nach Hinweisen sind "private Attribute" und "mangling"!*
-- Ersetze den Code nun durch Code 3 und untersuche auch diesen. Wie unterscheidet sich dieser Ansatz von dem bisherigen?
-- Entscheide, welches Vorgehen "besser" ist, um das Problem der "streichelnden Objekte" zu lösen. *Tipp: Berücksichtige besonders den Fall, dass unterschiedliche Programmier\*innen an dem Projekt arbeiten!*
-
-# Code 1
-```python
-# Hier ist ein Hund definiert
-class Hund:
-    def __init__(self, name):
-        self.name = name 
-        self.glueck = 0
-
-# Hier ist ein Mensch, der den Hund streicheln will
-class Mensch:
-    def __init__(self, name):
-        self.__name = name
-
-    def streicheln(self, tier):
-        print(f"{self.__name} streichelt {tier.name}!")
-        tier.glueck += 100
-
-#Ab hier wird losgestreichelt - oder?
-hund1 = Hund("Wuffi")
-mensch1 = Mensch("Elisabeth")
-mensch1.streicheln(hund1)
-```
-
-# Code 2
-```python
-# Hier ist ein Hund definiert
-class Hund:
-    def __init__(self, name):
-        self.__name = name 
-        self.__glueck = 0
-
-
-# Hier ist ein Mensch, der den Hund streicheln will
-class Mensch:
-    def __init__(self, name):
-        self.__name = name
-
-    def streicheln(self, tier):
-        print(f"{self.__name} streichelt {tier.__name}!")
-        tier.__glueck += 100
-
-
-
-#Ab hier wird losgestreichelt - oder?
-hund1 = Hund("Wuffi")
-mensch1 = Mensch("Elisabeth")
-mensch1.streicheln(hund1)
-```
-
-# Code 3
-```python
-# Hier ist ein Hund definiert
-class Hund:
-    def __init__(self, name):
-        self.__name = name 
-        self.__glueck = 0
-
-    def wirdGestreichelt(self, streichlerName):
-        print(f"{streichlerName} streichelt {self.__name}!")
-        self.__glueck += 1
-
-# Hier ist ein Mensch, der den Hund streicheln will
-class Mensch:
-    def __init__(self, name):
-        self.__name = name
-
-    def streicheln(self, tier):
-        tier.wirdGestreichelt(self.__name)
-
-
-
-#Ab hier wird losgestreichelt - oder?
-hund1 = Hund("Wuffi")
-mensch1 = Mensch("Elisabeth")
-mensch1.streicheln(hund1)
-```</div>
+    <div id="description" style="display: none" th:text="${task.description}"></div>
     <div id="tutorial" style="display: none" th:utext="${task.tutorial}">[
           {
             "title": "Die Feuermagierin und die Monster",
@@ -268,7 +190,7 @@ Erweitere \`Monster.status()\`, sodass Monster mit 0 Lebenspunkten als **„(bes
 
     <script th:src="@{/js/code-analyzer.js}" src="../../static/js/code-analyzer.js?v=20251211-v10"></script>
     <script th:src="@{/js/object-viewer.js}" src="../../static/js/object-viewer.js?v=20251211-v10"></script>
-    <script th:src="@{/js/python-editor.js}" src="../../static/js/python-editor.js?v=20251211-v10a"></script>
+    <script th:src="@{/js/python-editor.js}" src="../../static/js/python-editor.js?v=20251212-v1"></script>
     <script th:src="@{/js/ping.js}"></script>
 </body>
 
