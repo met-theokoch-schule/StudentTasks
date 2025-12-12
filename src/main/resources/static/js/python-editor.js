@@ -1169,75 +1169,32 @@ function updateTutorialDisplay() {
     const tutorialFrame = document.getElementById('tutorialFrame');
     const currentContent = tutorialContents[currentTutorialIndex].content;
 
-    // Nur Markdown ohne HTML escapen für iframe
-    const escapedMarkdown = currentContent
-        .replace(/\\/g, '\\\\')
-        .replace(/`/g, '\\`')
-        .replace(/\$/g, '\\$');
+    // Markdown rendern mit ACE-Highlighting im Hauptkontext
+    const renderedHtml = renderMarkdown(currentContent);
 
-    // Erstelle HTML für Markdown-Content (ohne führende Spaces für marked Parser)
-    const htmlContent = `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ace.js"><\/script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/mode-python.js"><\/script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ext-static_highlight.js"><\/script>
-<script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"><\/script>
-<style>
-body { font-family: 'Segoe UI', sans-serif; line-height: 1.6; margin: 20px; background: #1e1e1e; color: #cccccc; }
-h1, h2, h3 { color: #ffffff; }
-h1 { border-bottom: 2px solid #007acc; padding-bottom: 10px; }
-h2 { border-bottom: 1px solid #404040; padding-bottom: 5px; }
-code { background: #2d2d2d; padding: 2px 6px; border-radius: 3px; font-family: 'Consolas', monospace; }
-pre { background: #2d2d2d; padding: 15px; border-radius: 5px; overflow-x: auto; }
-pre code { background: transparent; padding: 0; }
-ul { margin-left: 20px; }
-li { margin-bottom: 5px; }
-.example { background: #2a4a2a; padding: 10px; border-radius: 5px; margin: 10px 0; }
-a { color: #9cdcfe; text-decoration: none; }
-a:hover { text-decoration: underline; color: #80c8ff; }
-</style>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-const markdownText = \`${escapedMarkdown}\`;
-if (typeof marked !== 'undefined') {
-let html = marked.parse(markdownText);
-document.body.innerHTML = html;
-}
-document.querySelectorAll('a').forEach(function(link) {
-link.setAttribute('target', '_blank');
-link.setAttribute('rel', 'noopener noreferrer');
-});
-setTimeout(function() {
-if (typeof ace !== 'undefined') {
-const staticHighlight = ace.require('ace/ext/static_highlight');
-if (staticHighlight) {
-const codeBlocks = document.querySelectorAll('pre code');
-codeBlocks.forEach(block => {
-const langClass = block.className.match(/language-(\\w+)/);
-const lang = langClass ? langClass[1] : 'python';
-const code = block.textContent.trimEnd();
-try {
-const aceMode = 'ace/mode/' + lang;
-const highlighted = staticHighlight.render(code, aceMode, 'ace/theme/a11y_dark', 1, true);
-const preElement = block.parentElement;
-if (preElement && preElement.tagName === 'PRE') {
-preElement.outerHTML = highlighted.html;
-}
-} catch (e) {
-console.error('ACE Highlighting error:', e);
-}
-});
-}
-}
-}, 200);
-});
-</script>
-</head>
-<body>
-</body>
-</html>`;
+    // Erstelle HTML für iframe mit String-Concatenation statt Template-String
+    const htmlContent = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>' +
+        'body { font-family: "Segoe UI", sans-serif; line-height: 1.6; margin: 20px; background: #1e1e1e; color: #cccccc; }' +
+        'h1, h2, h3 { color: #ffffff; }' +
+        'h1 { border-bottom: 2px solid #007acc; padding-bottom: 10px; }' +
+        'h2 { border-bottom: 1px solid #404040; padding-bottom: 5px; }' +
+        'code { background: #2d2d2d; padding: 2px 6px; border-radius: 3px; font-family: "Consolas", monospace; }' +
+        'pre { background: #2d2d2d; padding: 15px; border-radius: 5px; overflow-x: auto; }' +
+        'pre code { background: transparent; padding: 0; }' +
+        'ul { margin-left: 20px; }' +
+        'li { margin-bottom: 5px; }' +
+        'a { color: #9cdcfe; text-decoration: none; }' +
+        'a:hover { text-decoration: underline; color: #80c8ff; }' +
+        '</style><script>' +
+        'document.addEventListener("DOMContentLoaded", function() {' +
+        'document.querySelectorAll("a").forEach(function(link) {' +
+        'link.setAttribute("target", "_blank");' +
+        'link.setAttribute("rel", "noopener noreferrer");' +
+        '});' +
+        '});' +
+        '</script></head><body>' +
+        renderedHtml +
+        '</body></html>';
 
     const blob = new Blob([htmlContent], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
