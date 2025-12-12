@@ -3,8 +3,8 @@ com/example/studenttask/repository/TaskStatusRepository.class
 com/example/studenttask/service/TaskService$TaskStatistics.class
 com/example/studenttask/controller/StudentTaskApiController.class
 com/example/studenttask/service/TaskService.class
-com/example/studenttask/repository/TaskContentRepository.class
 com/example/studenttask/model/UnitTitle.class
+com/example/studenttask/repository/TaskContentRepository.class
 com/example/studenttask/service/TaskReviewService.class
 com/example/studenttask/controller/TeacherGroupController$TaskInfo.class
 com/example/studenttask/service/AuthenticationService.class
@@ -23,8 +23,8 @@ com/example/studenttask/repository/TaskRepository.class
 com/example/studenttask/service/SubmissionService.class
 com/example/studenttask/controller/StudentController.class
 com/example/studenttask/model/TaskContent.class
-com/example/studenttask/controller/TeacherController.class
 com/example/studenttask/config/DataInitializer.class
+com/example/studenttask/controller/TeacherController.class
 com/example/studenttask/controller/TeacherGroupController.class
 com/example/studenttask/ServletInitializer.class
 com/example/studenttask/service/UnitTitleService.class

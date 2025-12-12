@@ -1175,8 +1175,6 @@ function updateTutorialDisplay() {
         <html>
         <head>
             <meta charset="UTF-8">
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
             <style>
                 body { 
                     font-family: 'Segoe UI', sans-serif; 
@@ -1215,17 +1213,11 @@ function updateTutorialDisplay() {
                 }
             </style>
             <script>
-                // Syntax-Highlighting aktivieren
+                // Alle Links in neuem Tab öffnen
                 document.addEventListener('DOMContentLoaded', function() {
-                    // Alle Links in neuem Tab öffnen
                     document.querySelectorAll('a').forEach(function(link) {
                         link.setAttribute('target', '_blank');
                         link.setAttribute('rel', 'noopener noreferrer');
-                    });
-                    
-                    // Highlight.js auf alle Code-Blöcke anwenden
-                    document.querySelectorAll('pre code').forEach(function(block) {
-                        hljs.highlightElement(block);
                     });
                 });
             </script>
