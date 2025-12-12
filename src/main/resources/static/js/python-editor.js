@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeTaskContent();
     initializeTutorialNavigation();
     ObjectViewer.init();
+    updateTabVisibility();
 
     // Standardcode für Demo-Zwecke mit Object Viewer Beispiel
     const exampleCode = `#@displayable
@@ -1088,23 +1089,27 @@ let currentTutorialIndex = 0;
 // Task-Content initialisieren
 function initializeTaskContent() {
     const description = document.getElementById('description')?.textContent;
-    const taskTab = document.querySelector('.output-tab[data-output-tab="task"]');
-    
     if (description && description.trim()) {
         const taskOutput = document.getElementById('taskOutput');
         if (taskOutput) {
             taskOutput.innerHTML = renderMarkdown(description);
         }
-        // Task Tab anzeigen
+    }
+}
+
+// Tab-Sichtbarkeit aktualisieren (nach allen Initialisierungen)
+function updateTabVisibility() {
+    const description = document.getElementById('description')?.textContent;
+    const taskTab = document.querySelector('.output-tab[data-output-tab="task"]');
+    
+    // Task Tab verstecken, wenn keine Description vorhanden ist
+    if (!description || !description.trim()) {
         if (taskTab) {
-            taskTab.style.display = '';
-        }
-    } else {
-        // Task Tab verstecken, wenn keine Description vorhanden ist
-        if (taskTab) {
-            taskTab.style.display = 'none';
+            taskTab.style.display = 'none !important';
         }
     }
+    
+    // Tutorial Tab wird bereits in initializeTutorialNavigation() versteckt, wenn leer
 }
 
 // Tutorial Navigation initialisieren
