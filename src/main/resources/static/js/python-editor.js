@@ -1169,6 +1169,12 @@ function updateTutorialDisplay() {
     const tutorialFrame = document.getElementById('tutorialFrame');
     const currentContent = tutorialContents[currentTutorialIndex].content;
 
+    // Nur Markdown ohne HTML escapen für iframe
+    const escapedMarkdown = currentContent
+        .replace(/\\/g, '\\\\')
+        .replace(/`/g, '\\`')
+        .replace(/\$/g, '\\$');
+
     // Erstelle HTML für Markdown-Content (ohne führende Spaces für marked Parser)
     const htmlContent = `<!DOCTYPE html>
 <html>
@@ -1193,44 +1199,21 @@ a { color: #9cdcfe; text-decoration: none; }
 a:hover { text-decoration: underline; color: #80c8ff; }
 </style>
 <script>
-function renderMarkdownInIframe(markdownText) {
+document.addEventListener('DOMContentLoaded', function() {
+const markdownText = \`${escapedMarkdown}\`;
 if (typeof marked !== 'undefined') {
 let html = marked.parse(markdownText);
-const staticHighlight = ace.require('ace/ext/static_highlight');
-if (staticHighlight) {
-const parser = new DOMParser();
-const doc = parser.parseFromString(html, 'text/html');
-const codeBlocks = doc.querySelectorAll('pre code');
-codeBlocks.forEach(block => {
-const langClass = block.className.match(/language-(\\w+)/);
-const lang = langClass ? langClass[1] : 'python';
-const code = block.textContent.trimEnd();
-try {
-const aceMode = 'ace/mode/' + lang;
-const highlighted = staticHighlight.render(code, aceMode, 'ace/theme/a11y_dark', 1, true);
-const preElement = block.parentElement;
-if (preElement && preElement.tagName === 'PRE') {
-preElement.outerHTML = highlighted.html;
+document.body.innerHTML = html;
 }
-} catch (e) {}
-});
-html = doc.body.innerHTML;
-}
-return html;
-} else {
-return markdownText;
-}
-}
-document.addEventListener('DOMContentLoaded', function() {
 document.querySelectorAll('a').forEach(function(link) {
 link.setAttribute('target', '_blank');
 link.setAttribute('rel', 'noopener noreferrer');
 });
 setTimeout(function() {
-const codeBlocks = document.querySelectorAll('pre code');
-if (typeof ace !== 'undefined' && codeBlocks.length > 0) {
+if (typeof ace !== 'undefined') {
 const staticHighlight = ace.require('ace/ext/static_highlight');
 if (staticHighlight) {
+const codeBlocks = document.querySelectorAll('pre code');
 codeBlocks.forEach(block => {
 const langClass = block.className.match(/language-(\\w+)/);
 const lang = langClass ? langClass[1] : 'python';
@@ -1242,16 +1225,17 @@ const preElement = block.parentElement;
 if (preElement && preElement.tagName === 'PRE') {
 preElement.outerHTML = highlighted.html;
 }
-} catch (e) {}
+} catch (e) {
+console.error('ACE Highlighting error:', e);
+}
 });
 }
 }
-}, 100);
+}, 200);
 });
 </script>
 </head>
 <body>
-${renderMarkdown(currentContent)}
 </body>
 </html>`;
 
