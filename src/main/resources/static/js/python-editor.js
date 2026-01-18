@@ -5,14 +5,14 @@ let pyodideReady = false;
 let isExecuting = false;
 let isResizing = false;
 let typeCheckInterval = null;
-let lastPythonCode = '';
+let lastPythonCode = "";
 let mypyReady = false;
 let currentExecutionId = null;
 let mainThreadPyodide = null; // Separate Pyodide-Instanz für MyPy
 
 // Initialisierung beim Laden der Seite
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Python Editor v' + new Date().toISOString() + ' GELADEN');
+document.addEventListener("DOMContentLoaded", function () {
+    console.log("🚀 Python Editor v" + new Date().toISOString() + " GELADEN");
     initializeEditors();
     initializeTabs();
     initializeOutputTabs();
@@ -24,26 +24,9 @@ document.addEventListener('DOMContentLoaded', function() {
     ObjectViewer.init();
 
     // Standardcode für Demo-Zwecke mit Object Viewer Beispiel
-    const exampleCode = `#@displayable
-#@image: https://via.placeholder.com/80/4CAF50/FFFFFF?text=S
-class Student:
-    #@show(name="name", label="Name")
-    #@show(name="age", label="Alter")
-    def __init__(self, name, age):
-        self.name = name
-        self.age = age
-        self.internal_id = 123
-
-# Objekte erstellen
-student1 = Student("Max Mustermann", 20)
-student2 = Student("Lisa Schmidt", 22)
-student3 = Student("Tom Weber", 19)
-
-print("Studenten erstellt!")
-
-# Attribut ändern
-student1.age = 21
-print("Max ist jetzt 21 Jahre alt")
+    const exampleCode = `print("test")
+i = input("hallo")
+print(i)
 `;
     pythonEditor.setValue(exampleCode);
 
@@ -52,11 +35,11 @@ print("Max ist jetzt 21 Jahre alt")
     pythonEditor.gotoLine(1);
 
     // Initialer Status
-    updateSaveStatus('saved');
+    updateSaveStatus("saved");
 
     // Änderungen verfolgen für Status-Updates
-    pythonEditor.on('change', function() {
-        updateSaveStatus('ready');
+    pythonEditor.on("change", function () {
+        updateSaveStatus("ready");
     });
 });
 
@@ -67,8 +50,8 @@ function initializeEditors() {
         pythonEditor = ace.edit("pythonEditor");
         pythonEditor.setTheme("ace/theme/a11y_dark");
         pythonEditor.session.setMode("ace/mode/python");
-        console.log('🎨 Ace Theme gesetzt auf:', "ace/theme/a11y_dark");
-        console.log('🎨 Aktueller Ace Theme:', pythonEditor.getTheme());
+        console.log("🎨 Ace Theme gesetzt auf:", "ace/theme/a11y_dark");
+        console.log("🎨 Aktueller Ace Theme:", pythonEditor.getTheme());
         pythonEditor.setOptions({
             fontSize: 14,
             showPrintMargin: false,
@@ -82,7 +65,7 @@ function initializeEditors() {
             cursorStyle: "ace",
             mergeUndoDeltas: false,
             behavioursEnabled: true,
-            wrapBehavioursEnabled: true
+            wrapBehavioursEnabled: true,
         });
 
         console.log("Editor erfolgreich initialisiert");
@@ -101,62 +84,64 @@ function initializeTabs() {
 
 // Output-Tab-Navigation initialisieren
 function initializeOutputTabs() {
-    const outputTabs = document.querySelectorAll('.output-tab[data-output-tab]');
-    const outputContents = document.querySelectorAll('.output-content');
-    const clearOutputBtn = document.getElementById('clearOutputBtn');
+    const outputTabs = document.querySelectorAll(
+        ".output-tab[data-output-tab]",
+    );
+    const outputContents = document.querySelectorAll(".output-content");
+    const clearOutputBtn = document.getElementById("clearOutputBtn");
 
-    outputTabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            const tabName = this.getAttribute('data-output-tab');
+    outputTabs.forEach((tab) => {
+        tab.addEventListener("click", function () {
+            const tabName = this.getAttribute("data-output-tab");
 
             // Aktive Tab-Klasse entfernen
-            outputTabs.forEach(t => t.classList.remove('active'));
-            outputContents.forEach(oc => oc.classList.remove('active'));
+            outputTabs.forEach((t) => t.classList.remove("active"));
+            outputContents.forEach((oc) => oc.classList.remove("active"));
 
             // Neue aktive Tab setzen
-            this.classList.add('active');
-            document.getElementById(tabName + 'Output').classList.add('active');
+            this.classList.add("active");
+            document.getElementById(tabName + "Output").classList.add("active");
 
             // Löschen-Button nur bei "result" (Ausgabe) Tab anzeigen
-            if (tabName === 'result') {
-                clearOutputBtn.classList.add('show');
+            if (tabName === "result") {
+                clearOutputBtn.classList.add("show");
             } else {
-                clearOutputBtn.classList.remove('show');
+                clearOutputBtn.classList.remove("show");
             }
         });
     });
 
     // Initial das Löschen-Symbol anzeigen (da "result" standardmäßig aktiv ist)
-    clearOutputBtn.classList.add('show');
+    clearOutputBtn.classList.add("show");
 }
 
 // Resizable Splitter initialisieren
 function initializeResizer() {
-    const splitter = document.getElementById('splitter');
-    const editorPanel = document.querySelector('.editor-panel');
-    const outputPanel = document.querySelector('.output-panel');
-    const container = document.querySelector('.main-content');
+    const splitter = document.getElementById("splitter");
+    const editorPanel = document.querySelector(".editor-panel");
+    const outputPanel = document.querySelector(".output-panel");
+    const container = document.querySelector(".main-content");
 
     // Mouse Events
-    splitter.addEventListener('mousedown', startResize);
+    splitter.addEventListener("mousedown", startResize);
 
     // Touch Events für mobile Geräte
-    splitter.addEventListener('touchstart', startResize);
+    splitter.addEventListener("touchstart", startResize);
 
     function startResize(e) {
         e.preventDefault();
         isResizing = true;
 
-        if (e.type === 'mousedown') {
-            document.addEventListener('mousemove', handleMouseMove);
-            document.addEventListener('mouseup', stopResize);
-        } else if (e.type === 'touchstart') {
-            document.addEventListener('touchmove', handleTouchMove);
-            document.addEventListener('touchend', stopResize);
+        if (e.type === "mousedown") {
+            document.addEventListener("mousemove", handleMouseMove);
+            document.addEventListener("mouseup", stopResize);
+        } else if (e.type === "touchstart") {
+            document.addEventListener("touchmove", handleTouchMove);
+            document.addEventListener("touchend", stopResize);
         }
 
-        document.body.style.userSelect = 'none';
-        splitter.style.backgroundColor = '#007acc';
+        document.body.style.userSelect = "none";
+        splitter.style.backgroundColor = "#007acc";
     }
 
     function handleMouseMove(e) {
@@ -186,8 +171,8 @@ function initializeResizer() {
             let topPercent = (newHeight / containerHeight) * 100;
             let bottomPercent = 100 - topPercent;
 
-            editorPanel.style.height = topPercent + '%';
-            outputPanel.style.height = bottomPercent + '%';
+            editorPanel.style.height = topPercent + "%";
+            outputPanel.style.height = bottomPercent + "%";
         } else {
             // Horizontaler Splitter für Desktop-Ansicht
             const mouseX = clientX - containerRect.left;
@@ -199,8 +184,8 @@ function initializeResizer() {
             let leftPercent = (newWidth / containerWidth) * 100;
             let rightPercent = 100 - leftPercent;
 
-            editorPanel.style.width = leftPercent + '%';
-            outputPanel.style.width = rightPercent + '%';
+            editorPanel.style.width = leftPercent + "%";
+            outputPanel.style.width = rightPercent + "%";
         }
 
         // Editor-Größe anpassen
@@ -211,17 +196,17 @@ function initializeResizer() {
 
     function stopResize() {
         isResizing = false;
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', stopResize);
-        document.removeEventListener('touchmove', handleTouchMove);
-        document.removeEventListener('touchend', stopResize);
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("mouseup", stopResize);
+        document.removeEventListener("touchmove", handleTouchMove);
+        document.removeEventListener("touchend", stopResize);
 
-        document.body.style.userSelect = '';
-        splitter.style.backgroundColor = '';
+        document.body.style.userSelect = "";
+        splitter.style.backgroundColor = "";
     }
 
     // Window resize Handler für responsive Verhalten
-    window.addEventListener('resize', function() {
+    window.addEventListener("resize", function () {
         setTimeout(() => {
             pythonEditor.resize();
         }, 100);
@@ -231,54 +216,54 @@ function initializeResizer() {
 // Steuerungselemente initialisieren
 function initializeControls() {
     // Schriftgröße-Dropdown
-    const fontSizeSelect = document.getElementById('fontSizeSelect');
-    fontSizeSelect.addEventListener('change', function() {
+    const fontSizeSelect = document.getElementById("fontSizeSelect");
+    fontSizeSelect.addEventListener("change", function () {
         const fontSize = parseInt(this.value);
 
         // Editor Schriftgröße anpassen
         pythonEditor.setFontSize(fontSize);
 
         // Ausgabe-Bereich Schriftgröße programmatisch setzen
-        const consoleOutput = document.getElementById('consoleOutput');
-        const htmlOutput = document.getElementById('htmlOutput');
+        const consoleOutput = document.getElementById("consoleOutput");
+        const htmlOutput = document.getElementById("htmlOutput");
 
         if (consoleOutput) {
-            consoleOutput.style.fontSize = fontSize + 'px';
+            consoleOutput.style.fontSize = fontSize + "px";
         }
         if (htmlOutput) {
-            htmlOutput.style.fontSize = fontSize + 'px';
+            htmlOutput.style.fontSize = fontSize + "px";
         }
 
         // Speichere Einstellung in localStorage
-        localStorage.setItem('editorFontSize', fontSize);
+        localStorage.setItem("editorFontSize", fontSize);
     });
 
     // Gespeicherte Schriftgröße laden
-    const savedFontSize = localStorage.getItem('editorFontSize');
+    const savedFontSize = localStorage.getItem("editorFontSize");
     if (savedFontSize) {
         fontSizeSelect.value = savedFontSize;
         const fontSize = parseInt(savedFontSize);
         pythonEditor.setFontSize(fontSize);
 
-        const consoleOutput = document.getElementById('consoleOutput');
-        const htmlOutput = document.getElementById('htmlOutput');
+        const consoleOutput = document.getElementById("consoleOutput");
+        const htmlOutput = document.getElementById("htmlOutput");
 
         // Schriftgröße programmatisch setzen
         if (consoleOutput) {
-            consoleOutput.style.fontSize = fontSize + 'px';
+            consoleOutput.style.fontSize = fontSize + "px";
         }
         if (htmlOutput) {
-            htmlOutput.style.fontSize = fontSize + 'px';
+            htmlOutput.style.fontSize = fontSize + "px";
         }
     }
 
     // Vollbild-Button
-    const fullscreenBtn = document.getElementById('fullscreenBtn');
-    fullscreenBtn.addEventListener('click', function() {
+    const fullscreenBtn = document.getElementById("fullscreenBtn");
+    fullscreenBtn.addEventListener("click", function () {
         if (!document.fullscreenElement) {
             // Vollbild aktivieren
-            document.documentElement.requestFullscreen().catch(err => {
-                console.error('Fehler beim Aktivieren des Vollbildmodus:', err);
+            document.documentElement.requestFullscreen().catch((err) => {
+                console.error("Fehler beim Aktivieren des Vollbildmodus:", err);
             });
         } else {
             // Vollbild verlassen
@@ -287,50 +272,54 @@ function initializeControls() {
     });
 
     // Fullscreen-Status überwachen und Icon aktualisieren
-    document.addEventListener('fullscreenchange', function() {
-        const icon = fullscreenBtn.querySelector('i');
+    document.addEventListener("fullscreenchange", function () {
+        const icon = fullscreenBtn.querySelector("i");
         if (document.fullscreenElement) {
             // Im Vollbildmodus: Compress-Icon anzeigen
-            icon.classList.remove('fa-expand');
-            icon.classList.add('fa-compress');
-            fullscreenBtn.title = 'Vollbild verlassen';
+            icon.classList.remove("fa-expand");
+            icon.classList.add("fa-compress");
+            fullscreenBtn.title = "Vollbild verlassen";
         } else {
             // Normal-Modus: Expand-Icon anzeigen
-            icon.classList.remove('fa-compress');
-            icon.classList.add('fa-expand');
-            fullscreenBtn.title = 'Vollbild';
+            icon.classList.remove("fa-compress");
+            icon.classList.add("fa-expand");
+            fullscreenBtn.title = "Vollbild";
         }
     });
 
     // Ausgabe löschen Button
-    const clearOutputBtn = document.getElementById('clearOutputBtn');
-    clearOutputBtn.addEventListener('click', function() {
-        document.getElementById('consoleOutput').innerHTML = '';
+    const clearOutputBtn = document.getElementById("clearOutputBtn");
+    clearOutputBtn.addEventListener("click", function () {
+        document.getElementById("consoleOutput").innerHTML = "";
     });
 
     // Ausführen/Stoppen-Button
-    document.getElementById('runBtn').addEventListener('click', function() {
+    document.getElementById("runBtn").addEventListener("click", function () {
         if (isExecuting) {
             stopPythonExecution();
         } else if (pyodideReady) {
             runPythonCode();
         } else {
-            console.log('Pyodide noch nicht bereit');
+            console.log("Pyodide noch nicht bereit");
         }
     });
 
-    document.getElementById('saveButton').addEventListener('click', function() {
-        saveContent();
-    });
+    document
+        .getElementById("saveButton")
+        .addEventListener("click", function () {
+            saveContent();
+        });
 
-    document.getElementById('submitButton').addEventListener('click', function() {
-        submitTask();
-    });
+    document
+        .getElementById("submitButton")
+        .addEventListener("click", function () {
+            submitTask();
+        });
 
     // Zurücksetzen-Button
-    const resetBtn = document.getElementById('resetBtn');
+    const resetBtn = document.getElementById("resetBtn");
     if (resetBtn) {
-        resetBtn.addEventListener('click', function() {
+        resetBtn.addEventListener("click", function () {
             resetToDefault();
         });
     }
@@ -344,16 +333,16 @@ function getCurrentEditor() {
 // Maximale Konsolengröße in Zeichen (kann hier angepasst werden)
 const MAX_CONSOLE_SIZE = 50000; // 50.000 Zeichen - großzügig aber verhindert Performance-Probleme
 
-function addToConsole(text, type = 'info') {
-    const consoleOutput = document.getElementById('consoleOutput');
+function addToConsole(text, type = "info") {
+    const consoleOutput = document.getElementById("consoleOutput");
     const timestamp = new Date().toLocaleTimeString();
-    const prefix = type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
+    const prefix = type === "error" ? "❌" : type === "warning" ? "⚠️" : "ℹ️";
 
     // HTML-sicher escapen und dann mit <br> hinzufügen
     const escapedText = text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
 
     const newContent = `[${timestamp}] ${prefix} ${escapedText}<br>`;
 
@@ -362,30 +351,36 @@ function addToConsole(text, type = 'info') {
 
     // Bei Überschreitung der maximalen Größe von oben kürzen
     if (consoleOutput.innerHTML.length > MAX_CONSOLE_SIZE) {
-        const excessChars = consoleOutput.innerHTML.length - MAX_CONSOLE_SIZE + 2000; // 2000 Zeichen extra entfernen
-        consoleOutput.innerHTML = '...[frühere Ausgaben entfernt]...<br>' + consoleOutput.innerHTML.substring(excessChars);
+        const excessChars =
+            consoleOutput.innerHTML.length - MAX_CONSOLE_SIZE + 2000; // 2000 Zeichen extra entfernen
+        consoleOutput.innerHTML =
+            "...[frühere Ausgaben entfernt]...<br>" +
+            consoleOutput.innerHTML.substring(excessChars);
     }
 
     consoleOutput.scrollTop = consoleOutput.scrollHeight;
 }
 
 function addToConsoleWithoutTimestamp(text) {
-    const consoleOutput = document.getElementById('consoleOutput');
+    const consoleOutput = document.getElementById("consoleOutput");
 
     // Zeilenumbrüche in <br> Tags umwandeln und HTML sicher escapen
     const escapedText = text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/\n/g, '<br>');
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\n/g, "<br>");
 
     // Neuen Inhalt hinzufügen - immer mit <br> am Ende für Zeilenumbruch
-    consoleOutput.innerHTML += escapedText + '<br>';
+    consoleOutput.innerHTML += escapedText + "<br>";
 
     // Bei Überschreitung der maximalen Größe von oben kürzen
     if (consoleOutput.innerHTML.length > MAX_CONSOLE_SIZE) {
-        const excessChars = consoleOutput.innerHTML.length - MAX_CONSOLE_SIZE + 2000; // 2000 Zeichen extra entfernen
-        consoleOutput.innerHTML = '...[frühere Ausgaben entfernt]...<br>' + consoleOutput.innerHTML.substring(excessChars);
+        const excessChars =
+            consoleOutput.innerHTML.length - MAX_CONSOLE_SIZE + 2000; // 2000 Zeichen extra entfernen
+        consoleOutput.innerHTML =
+            "...[frühere Ausgaben entfernt]...<br>" +
+            consoleOutput.innerHTML.substring(excessChars);
     }
 
     consoleOutput.scrollTop = consoleOutput.scrollHeight;
@@ -394,26 +389,30 @@ function addToConsoleWithoutTimestamp(text) {
 // Python Worker initialisieren
 function initializePythonWorker() {
     try {
-        // Web Worker erstellen
-        pythonWorker = new Worker(document.getElementById('default-link') + 'js/python-worker.js');
+        // Web Worker erstellen - Pfad relativ zum aktuellen Dokument
+        const defaultLink = document.getElementById("default-link");
+        const baseUrl = defaultLink ? defaultLink.getAttribute("href") || "/" : "/";
+        pythonWorker = new Worker(baseUrl + "js/python-worker.js");
 
         // Worker Message Handler
-        pythonWorker.onmessage = function(e) {
+        pythonWorker.onmessage = function (e) {
             handleWorkerMessage(e.data);
         };
 
         // Worker Error Handler
-        pythonWorker.onerror = function(error) {
-            addToConsole('Worker Fehler: ' + error.message, 'error');
+        pythonWorker.onerror = function (error) {
+            addToConsole("Worker Fehler: " + error.message, "error");
             pyodideReady = false;
-            updateRunButton('error');
+            updateRunButton("error");
         };
 
         // Worker initialisieren
-        pythonWorker.postMessage({ type: 'init' });
-
+        pythonWorker.postMessage({ type: "init" });
     } catch (error) {
-        addToConsole('Fehler beim Erstellen des Workers: ' + error.message, 'error');
+        addToConsole(
+            "Fehler beim Erstellen des Workers: " + error.message,
+            "error",
+        );
         pyodideReady = false;
     }
 }
@@ -421,33 +420,36 @@ function initializePythonWorker() {
 // Python-Code ausführen (Web Worker)
 function runPythonCode() {
     if (!pyodideReady) {
-        addToConsole('Pyodide ist noch nicht bereit. Bitte warten...', 'warning');
+        addToConsole(
+            "Pyodide ist noch nicht bereit. Bitte warten...",
+            "warning",
+        );
         return;
     }
 
     if (isExecuting) {
-        addToConsole('Code wird bereits ausgeführt...', 'warning');
+        addToConsole("Code wird bereits ausgeführt...", "warning");
         return;
     }
 
     const code = pythonEditor.getValue();
     if (!code.trim()) {
-        addToConsole('Kein Python-Code zum Ausführen vorhanden.', 'warning');
+        addToConsole("Kein Python-Code zum Ausführen vorhanden.", "warning");
         return;
     }
 
     // Execution State setzen
     isExecuting = true;
     currentExecutionId = Date.now();
-    updateRunButton('executing');
+    updateRunButton("executing");
 
     // Code an Worker senden
     pythonWorker.postMessage({
-        type: 'execute',
+        type: "execute",
         data: {
             code: code,
-            id: currentExecutionId
-        }
+            id: currentExecutionId,
+        },
     });
 }
 
@@ -458,17 +460,20 @@ function stopPythonExecution() {
     }
 
     // UI auf "Stopping" setzen (aber isExecuting NICHT zurücksetzen)
-    updateRunButton('stopping');
-    addToConsole('Stoppe Ausführung...', 'info');
+    updateRunButton("stopping");
+    addToConsole("Stoppe Ausführung...", "info");
 
     // Versuche zunächst normales Stoppen
-    pythonWorker.postMessage({ type: 'stop' });
+    pythonWorker.postMessage({ type: "stop" });
 
     // Nach kurzer Zeit Worker IMMER hart terminieren bei Infinite Loops
     setTimeout(() => {
         // Hart-Terminierung für Infinite Loops - unabhängig vom aktuellen State
         if (isExecuting) {
-            addToConsole('Stopp-Button gedrückt, Programm wird angehalten...', 'warning');
+            addToConsole(
+                "Stopp-Button gedrückt, Programm wird angehalten...",
+                "warning",
+            );
             terminateAndRecreateWorker();
         }
     }, 300); // Nur 300ms warten, dann sofort hart stoppen
@@ -488,38 +493,94 @@ function terminateAndRecreateWorker() {
         currentExecutionId = null;
 
         // UI auf Loading setzen
-        updateRunButton('loading');
-        addToConsole('Worker wird neu initialisiert...', 'info');
+        updateRunButton("loading");
+        addToConsole("Worker wird neu initialisiert...", "info");
 
         // Neuen Worker erstellen
         initializePythonWorker();
-
     } catch (error) {
-        addToConsole('Fehler beim Neustart des Workers: ' + error.message, 'error');
-        updateRunButton('error');
+        addToConsole(
+            "Fehler beim Neustart des Workers: " + error.message,
+            "error",
+        );
+        updateRunButton("error");
     }
 }
 
 // Input-Anfrage vom Worker behandeln
 function handleInputRequest(promptText) {
-    // Prompt-Text in Console anzeigen
+    const consoleOutput = document.getElementById("consoleOutput");
+    
+    // Prompt-Text inline anzeigen (ohne Zeilenumbruch am Ende)
     if (promptText) {
-        addToConsoleWithoutTimestamp(promptText);
+        const promptSpan = document.createElement("span");
+        promptSpan.className = "console-prompt-text";
+        promptSpan.textContent = promptText;
+        consoleOutput.appendChild(promptSpan);
     }
-
-    // Browser-Popup für Eingabe
-    const userInput = window.prompt(promptText || 'Eingabe:');
-
-    // Eingabe in Console anzeigen
-    if (userInput !== null) {
-        addToConsoleWithoutTimestamp(userInput);
+    
+    // Inline-Eingabefeld erstellen
+    const inputContainer = document.createElement("span");
+    inputContainer.className = "console-input-container";
+    
+    const inputField = document.createElement("input");
+    inputField.type = "text";
+    inputField.className = "console-input-field";
+    inputField.setAttribute("autocomplete", "off");
+    inputField.setAttribute("autocorrect", "off");
+    inputField.setAttribute("autocapitalize", "off");
+    inputField.setAttribute("spellcheck", "false");
+    
+    inputContainer.appendChild(inputField);
+    consoleOutput.appendChild(inputContainer);
+    
+    // Scroll zum Eingabefeld
+    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    
+    // Fokus auf Eingabefeld setzen
+    inputField.focus();
+    
+    // Event Handler für Enter-Taste
+    function handleSubmit(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            const userInput = inputField.value;
+            
+            // Eingabefeld durch statischen Text ersetzen
+            const inputText = document.createElement("span");
+            inputText.className = "console-input-text";
+            inputText.textContent = userInput;
+            inputContainer.replaceWith(inputText);
+            
+            // Zeilenumbruch hinzufügen
+            consoleOutput.appendChild(document.createElement("br"));
+            
+            // Antwort an Worker senden
+            pythonWorker.postMessage({
+                type: "input_response",
+                data: userInput,
+            });
+        }
     }
-
-    // Antwort an Worker senden
-    pythonWorker.postMessage({
-        type: 'input_response',
-        data: userInput || ''
+    
+    inputField.addEventListener("keydown", handleSubmit);
+    
+    // Klick auf Console soll Fokus auf Input setzen
+    function focusInput(e) {
+        if (e.target !== inputField) {
+            inputField.focus();
+        }
+    }
+    consoleOutput.addEventListener("click", focusInput);
+    
+    // Aufräumen wenn Input fertig ist
+    const observer = new MutationObserver((mutations) => {
+        if (!document.contains(inputField)) {
+            consoleOutput.removeEventListener("click", focusInput);
+            observer.disconnect();
+        }
     });
+    observer.observe(consoleOutput, { childList: true, subtree: true });
 }
 
 // Worker Message Handler
@@ -527,157 +588,165 @@ function handleWorkerMessage(message) {
     const { type, data, message: msg } = message;
 
     switch (type) {
-        case 'worker_ready':
-            console.log('Worker bereit');
+        case "worker_ready":
+            console.log("Worker bereit");
             break;
 
-        case 'status':
-            if (data === 'loading') {
-                addToConsole(msg, 'info');
-            } else if (data === 'ready') {
+        case "status":
+            if (data === "loading") {
+                addToConsole(msg, "info");
+            } else if (data === "ready") {
                 pyodideReady = true;
-                addToConsole(msg, 'info');
-                updateRunButton('ready');
+                addToConsole(msg, "info");
+                updateRunButton("ready");
                 // MyPy parallel im Hauptthread für Type-Checking laden (nur einmal)
                 if (!mypyReady && !mainThreadPyodide) {
-                    initializeMyPy().catch(error => {
-                        console.error('MyPy Initialisierung fehlgeschlagen:', error);
-                        addToConsole('Type-Checking deaktiviert (MyPy-Fehler)', 'warning');
+                    initializeMyPy().catch((error) => {
+                        console.error(
+                            "MyPy Initialisierung fehlgeschlagen:",
+                            error,
+                        );
+                        addToConsole(
+                            "Type-Checking deaktiviert (MyPy-Fehler)",
+                            "warning",
+                        );
                     });
                 }
-            } else if (data === 'executing') {
-                addToConsole(msg, 'info');
-            } else if (data === 'stopped' || data === 'interrupted') {
+            } else if (data === "executing") {
+                addToConsole(msg, "info");
+            } else if (data === "stopped" || data === "interrupted") {
                 isExecuting = false;
                 currentExecutionId = null;
-                updateRunButton('ready');
-                addToConsole(msg, 'info');
+                updateRunButton("ready");
+                addToConsole(msg, "info");
             }
             break;
 
-        case 'output':
+        case "output":
             // Real-time output ohne Timestamp
             addToConsoleWithoutTimestamp(data);
             break;
 
-        case 'objects_clear':
+        case "objects_clear":
             ObjectViewer.clear();
             break;
 
-        case 'object_created':
+        case "object_created":
             ObjectViewer.createObject(data);
             break;
 
-        case 'object_updated':
+        case "object_updated":
             ObjectViewer.updateObject(data);
             break;
 
-        case 'object_deleted':
+        case "object_deleted":
             ObjectViewer.deleteObject(data.id);
             break;
 
-        case 'input_request':
+        case "input_request":
             // Python input() Anfrage
             handleInputRequest(data);
             break;
 
-        case 'completed':
+        case "completed":
             isExecuting = false;
             currentExecutionId = null;
-            updateRunButton('ready');
-            if (!data || data === 'success') {
+            updateRunButton("ready");
+            if (!data || data === "success") {
                 // Keine zusätzliche Nachricht bei erfolgreichem Abschluss
             }
             break;
 
-        case 'error':
+        case "error":
             isExecuting = false;
             currentExecutionId = null;
-            updateRunButton('ready');
+            updateRunButton("ready");
 
-            if (data === 'not_ready') {
-                addToConsole('Pyodide ist noch nicht bereit. Bitte warten...', 'warning');
-            } else if (data === 'already_executing') {
-                addToConsole('Code wird bereits ausgeführt...', 'warning');
-            } else if (data === 'execution_error') {
-                addToConsole(msg, 'error');
-            } else if (data === 'initialization_failed') {
+            if (data === "not_ready") {
+                addToConsole(
+                    "Pyodide ist noch nicht bereit. Bitte warten...",
+                    "warning",
+                );
+            } else if (data === "already_executing") {
+                addToConsole("Code wird bereits ausgeführt...", "warning");
+            } else if (data === "execution_error") {
+                addToConsole(msg, "error");
+            } else if (data === "initialization_failed") {
                 pyodideReady = false;
-                updateRunButton('error');
-                addToConsole(msg, 'error');
+                updateRunButton("error");
+                addToConsole(msg, "error");
             } else {
-                addToConsole('Unbekannter Fehler: ' + msg, 'error');
+                addToConsole("Unbekannter Fehler: " + msg, "error");
             }
             break;
 
         default:
-            console.log('Unbekannte Worker-Nachricht:', type, data);
+            console.log("Unbekannte Worker-Nachricht:", type, data);
     }
 }
 
 // Run Button Status aktualisieren
 function updateRunButton(state) {
-    const runBtn = document.getElementById('runBtn');
+    const runBtn = document.getElementById("runBtn");
 
     switch (state) {
-        case 'ready':
+        case "ready":
             runBtn.disabled = false;
-            runBtn.style.opacity = '1';
+            runBtn.style.opacity = "1";
             runBtn.innerHTML = '<i class="fas fa-play"></i> Ausführen';
-            runBtn.className = 'btn btn-primary';
+            runBtn.className = "btn btn-primary";
             break;
 
-        case 'executing':
+        case "executing":
             runBtn.disabled = false;
-            runBtn.style.opacity = '1';
+            runBtn.style.opacity = "1";
             runBtn.innerHTML = '<i class="fas fa-stop"></i> Stoppen';
-            runBtn.className = 'btn btn-danger';
+            runBtn.className = "btn btn-danger";
             break;
 
-        case 'stopping':
+        case "stopping":
             runBtn.disabled = true;
-            runBtn.style.opacity = '0.8';
+            runBtn.style.opacity = "0.8";
             runBtn.innerHTML = '<i class="fas fa-pause"></i> Stoppt...';
-            runBtn.className = 'btn btn-warning';
+            runBtn.className = "btn btn-warning";
             break;
 
-        case 'loading':
+        case "loading":
             runBtn.disabled = true;
-            runBtn.style.opacity = '0.6';
+            runBtn.style.opacity = "0.6";
             runBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Lädt...';
-            runBtn.className = 'btn btn-secondary';
+            runBtn.className = "btn btn-secondary";
             break;
 
-        case 'error':
+        case "error":
             runBtn.disabled = true;
-            runBtn.style.opacity = '0.6';
-            runBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Fehler';
-            runBtn.className = 'btn btn-secondary';
+            runBtn.style.opacity = "0.6";
+            runBtn.innerHTML =
+                '<i class="fas fa-exclamation-triangle"></i> Fehler';
+            runBtn.className = "btn btn-secondary";
             break;
 
         default:
             runBtn.disabled = true;
-            runBtn.style.opacity = '0.6';
+            runBtn.style.opacity = "0.6";
             runBtn.innerHTML = '<i class="fas fa-play"></i> Ausführen';
-            runBtn.className = 'btn btn-secondary';
+            runBtn.className = "btn btn-secondary";
     }
 }
-
-
 
 // MyPy initialisieren (läuft parallel im Hauptthread für Type-Checking)
 async function initializeMyPy() {
     try {
-        addToConsole('MyPy wird installiert...', 'info');
+        addToConsole("MyPy wird installiert...", "info");
 
         // Schritt 1: Eigene Pyodide-Instanz für MyPy laden
         mainThreadPyodide = await loadPyodide({
-            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/"
+            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/",
         });
 
         // Schritt 2: Micropip laden für zusätzliche Pakete
-        await mainThreadPyodide.loadPackage(['micropip']);
-        addToConsole('micropip geladen ✓', 'info');
+        await mainThreadPyodide.loadPackage(["micropip"]);
+        addToConsole("micropip geladen ✓", "info");
 
         // Schritt 3: Erforderliche Pakete installieren
         await mainThreadPyodide.runPythonAsync(`
@@ -685,11 +754,14 @@ import micropip
 # typing-extensions und mypy_extensions über micropip installieren
 await micropip.install(['typing-extensions', 'mypy-extensions'])
         `);
-        addToConsole('typing-extensions und mypy-extensions installiert ✓', 'info');
+        addToConsole(
+            "typing-extensions und mypy-extensions installiert ✓",
+            "info",
+        );
 
         // Schritt 4: MyPy installieren
-        await mainThreadPyodide.loadPackage(['mypy']);
-        addToConsole('MyPy-Paket geladen ✓', 'info');
+        await mainThreadPyodide.loadPackage(["mypy"]);
+        addToConsole("MyPy-Paket geladen ✓", "info");
 
         // Schritt 5: MyPy-Umgebung konfigurieren
         mainThreadPyodide.runPython(`
@@ -801,18 +873,20 @@ except Exception as e:
         `);
 
         mypyReady = true;
-        addToConsole('MyPy erfolgreich konfiguriert ✓', 'info');
+        addToConsole("MyPy erfolgreich konfiguriert ✓", "info");
 
         // Type-Checking-Intervall starten
         startTypeChecking();
-
     } catch (error) {
-        addToConsole('Fehler beim Initialisieren von MyPy: ' + error.message, 'error');
-        console.error('MyPy Initialisierungsfehler:', error);
+        addToConsole(
+            "Fehler beim Initialisieren von MyPy: " + error.message,
+            "error",
+        );
+        console.error("MyPy Initialisierungsfehler:", error);
         mypyReady = false;
 
         // Fallback: Einfacher Syntax-Checker ohne MyPy
-        addToConsole('Fallback: Verwende einfachen Syntax-Checker', 'warning');
+        addToConsole("Fallback: Verwende einfachen Syntax-Checker", "warning");
         initializeFallbackChecker();
     }
 }
@@ -845,7 +919,7 @@ type_checker = FallbackTypeChecker()
     `);
 
     mypyReady = true;
-    addToConsole('Fallback Type-Checker aktiviert', 'info');
+    addToConsole("Fallback Type-Checker aktiviert", "info");
     startTypeChecking();
 }
 
@@ -888,7 +962,9 @@ def sleep(duration: float) -> None:
 
         // Anzahl der Stub-Zeilen berechnen (nur wenn Stubs vorhanden)
         const trimmedStubs = stubDefinitions.trim();
-        const stubLineCount = trimmedStubs ? trimmedStubs.split('\n').length : 0;
+        const stubLineCount = trimmedStubs
+            ? trimmedStubs.split("\n").length
+            : 0;
 
         // MyPy ausführen (async für UI-Responsiveness)
         const result = await mainThreadPyodide.runPythonAsync(`
@@ -913,9 +989,8 @@ corrected_errors
         if (errors && errors.length > 0) {
             markTypeErrors(errors);
         }
-
     } catch (error) {
-        console.error('Type-Checking-Fehler:', error);
+        console.error("Type-Checking-Fehler:", error);
     }
 }
 
@@ -930,18 +1005,31 @@ function markTypeErrors(errors) {
         const line = lineNum - 2;
 
         // Annotation hinzufügen
-        session.setAnnotations(session.getAnnotations().concat([{
-            row: line,
-            column: 0,
-            text: message,
-            type: errorType === 'error' ? 'error' : 'warning'
-        }]));
+        session.setAnnotations(
+            session.getAnnotations().concat([
+                {
+                    row: line,
+                    column: 0,
+                    text: message,
+                    type: errorType === "error" ? "error" : "warning",
+                },
+            ]),
+        );
 
         // Marker für rote Unterstreichung
-        const Range = ace.require('ace/range').Range;
-        const range = new Range(line, 0, line, pythonEditor.getSession().getLine(line).length);
+        const Range = ace.require("ace/range").Range;
+        const range = new Range(
+            line,
+            0,
+            line,
+            pythonEditor.getSession().getLine(line).length,
+        );
 
-        session.addMarker(range, errorType === 'error' ? 'type-error' : 'type-warning', 'text');
+        session.addMarker(
+            range,
+            errorType === "error" ? "type-error" : "type-warning",
+            "text",
+        );
     });
 }
 
@@ -955,9 +1043,12 @@ function clearTypeErrors() {
     // Marker löschen
     const markers = session.getMarkers();
     if (markers) {
-        Object.keys(markers).forEach(markerId => {
+        Object.keys(markers).forEach((markerId) => {
             const marker = markers[markerId];
-            if (marker.clazz === 'type-error' || marker.clazz === 'type-warning') {
+            if (
+                marker.clazz === "type-error" ||
+                marker.clazz === "type-warning"
+            ) {
                 session.removeMarker(markerId);
             }
         });
@@ -974,7 +1065,7 @@ function updateTypeCheckingForTab() {
 
 // Lade gespeicherte Inhalte beim Start
 function loadSavedContent() {
-    const contentElement = document.getElementById('currentContent');
+    const contentElement = document.getElementById("currentContent");
     if (contentElement) {
         const savedContent = contentElement.textContent.trim();
         loadContentToView(savedContent);
@@ -983,19 +1074,23 @@ function loadSavedContent() {
 
 // Auf Standardwert zurücksetzen
 function resetToDefault() {
-    const defaultElement = document.getElementById('defaultSubmission');
+    const defaultElement = document.getElementById("defaultSubmission");
     if (!defaultElement) {
-        console.warn('defaultSubmission nicht gefunden');
+        console.warn("defaultSubmission nicht gefunden");
         return;
     }
 
     const defaultContent = defaultElement.textContent.trim();
     if (!defaultContent) {
-        console.warn('Kein Standardcode vorhanden');
+        console.warn("Kein Standardcode vorhanden");
         return;
     }
 
-    if (confirm('Möchten Sie den Code wirklich auf den Standardwert zurücksetzen?')) {
+    if (
+        confirm(
+            "Möchten Sie den Code wirklich auf den Standardwert zurücksetzen?",
+        )
+    ) {
         try {
             // Parse JSON wenn es JSON ist, sonst verwende direkten Code
             const data = JSON.parse(defaultContent);
@@ -1005,81 +1100,94 @@ function resetToDefault() {
             // Fallback: verwende direkten Code wenn nicht JSON
             pythonEditor.setValue(defaultContent);
         }
-        updateSaveStatus('ready');
-        console.log('Code auf Standardwert zurückgesetzt');
+        updateSaveStatus("ready");
+        console.log("Code auf Standardwert zurückgesetzt");
     }
 }
 
 // Markdown-zu-HTML Parser mit Ace Static Highlighting
 function renderMarkdown(markdownText) {
-    console.log('🔄 renderMarkdown aufgerufen');
-    
-    if (typeof marked !== 'undefined') {
-        console.log('📝 marked.parse wird aufgerufen');
+    console.log("🔄 renderMarkdown aufgerufen");
+
+    if (typeof marked !== "undefined") {
+        console.log("📝 marked.parse wird aufgerufen");
         let html = marked.parse(markdownText);
-        console.log('✅ marked.parse fertig');
-        
+        console.log("✅ marked.parse fertig");
+
         // Highlighting NACH dem Parse mit Ace Static Highlight
-        const staticHighlight = ace.require('ace/ext/static_highlight');
+        const staticHighlight = ace.require("ace/ext/static_highlight");
         if (staticHighlight) {
-            console.log('🎨 Wende Ace Static Highlight auf <code> Blocks an');
+            console.log("🎨 Wende Ace Static Highlight auf <code> Blocks an");
             const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const codeBlocks = doc.querySelectorAll('pre code');
-            
-            codeBlocks.forEach(block => {
+            const doc = parser.parseFromString(html, "text/html");
+            const codeBlocks = doc.querySelectorAll("pre code");
+
+            codeBlocks.forEach((block) => {
                 const langClass = block.className.match(/language-(\w+)/);
-                const lang = langClass ? langClass[1] : 'python';
+                const lang = langClass ? langClass[1] : "python";
                 const code = block.textContent.trimEnd();
-                console.log('✨ Ace Highlighting Code Block mit Sprache:', lang);
-                
+                console.log(
+                    "✨ Ace Highlighting Code Block mit Sprache:",
+                    lang,
+                );
+
                 try {
                     // Ace Mode für die Sprache bestimmen
-                    const aceMode = 'ace/mode/' + lang;
-                    
+                    const aceMode = "ace/mode/" + lang;
+
                     // Static Highlight mit Ace
-                    const highlighted = staticHighlight.render(code, aceMode, 'ace/theme/a11y_dark', 1, true);
-                    
+                    const highlighted = staticHighlight.render(
+                        code,
+                        aceMode,
+                        "ace/theme/a11y_dark",
+                        1,
+                        true,
+                    );
+
                     // Pre-Element mit Ace-Styling ersetzen
                     const preElement = block.parentElement;
-                    if (preElement && preElement.tagName === 'PRE') {
+                    if (preElement && preElement.tagName === "PRE") {
                         preElement.outerHTML = highlighted.html;
-                        console.log('✅ Ace Highlighting für', lang, 'erfolgreich');
+                        console.log(
+                            "✅ Ace Highlighting für",
+                            lang,
+                            "erfolgreich",
+                        );
                     }
                 } catch (e) {
-                    console.warn('⚠️ Ace Highlighting Fehler:', e);
+                    console.warn("⚠️ Ace Highlighting Fehler:", e);
                     // Fallback: Code ohne Highlighting
                 }
             });
-            
+
             // Konvertiere DOM zurück zu HTML String
             html = doc.body.innerHTML;
         }
-        
+
         return html;
     } else {
-        console.error('❌ marked nicht verfügbar');
+        console.error("❌ marked nicht verfügbar");
         return markdownText
-            .replace(/^# (.*$)/gm, '<h1>$1</h1>')
-            .replace(/^## (.*$)/gm, '<h2>$1</h2>')
-            .replace(/^### (.*$)/gm, '<h3>$1</h3>')
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/`(.*?)`/g, '<code>$1</code>')
-            .replace(/^\- (.*$)/gm, '<ul><li>$1</li></ul>')
-            .replace(/^\d+\. (.*$)/gm, '<ol><li>$1</li></ol>')
-            .replace(/\n/g, '<br>');
+            .replace(/^# (.*$)/gm, "<h1>$1</h1>")
+            .replace(/^## (.*$)/gm, "<h2>$1</h2>")
+            .replace(/^### (.*$)/gm, "<h3>$1</h3>")
+            .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+            .replace(/\*(.*?)\*/g, "<em>$1</em>")
+            .replace(/`(.*?)`/g, "<code>$1</code>")
+            .replace(/^\- (.*$)/gm, "<ul><li>$1</li></ul>")
+            .replace(/^\d+\. (.*$)/gm, "<ol><li>$1</li></ol>")
+            .replace(/\n/g, "<br>");
     }
 }
 
 // Tutorial-Inhalte Array
-const tutorialText = document.getElementById('tutorial').textContent.trim();
+const tutorialText = document.getElementById("tutorial").textContent.trim();
 
 let tutorialContents;
 if (tutorialText) {
-  // Inhalt vorhanden → als JS-Literal ausführen
-  tutorialContents = new Function(`return (${tutorialText});`)();
-} 
+    // Inhalt vorhanden → als JS-Literal ausführen
+    tutorialContents = new Function(`return (${tutorialText});`)();
+}
 
 console.log(tutorialContents);
 
@@ -1087,56 +1195,63 @@ let currentTutorialIndex = 0;
 
 // Task-Content initialisieren
 function initializeTaskContent() {
-    const description = document.getElementById('description')?.textContent;
-    const taskTab = document.querySelector('.output-tab[data-output-tab="task"]');
-    
+    const description = document.getElementById("description")?.textContent;
+    const taskTab = document.querySelector(
+        '.output-tab[data-output-tab="task"]',
+    );
+
     if (description && description.trim()) {
-        const taskOutput = document.getElementById('taskOutput');
+        const taskOutput = document.getElementById("taskOutput");
         if (taskOutput) {
             taskOutput.innerHTML = renderMarkdown(description);
         }
         // Task Tab anzeigen
         if (taskTab) {
-            taskTab.style.display = '';
+            taskTab.style.display = "";
         }
     } else {
         // Task Tab verstecken, wenn keine Description vorhanden ist
         if (taskTab) {
-            taskTab.style.display = 'none';
+            taskTab.style.display = "none";
         }
     }
 }
 
 // Tutorial Navigation initialisieren
 function initializeTutorialNavigation() {
-    const tutorialTab = document.querySelector('.output-tab[data-output-tab="tutorial"]');
-    const tutorialNav = document.getElementById('tutorialNav');
-    const tutorialDots = document.getElementById('tutorialDots');
-    
+    const tutorialTab = document.querySelector(
+        '.output-tab[data-output-tab="tutorial"]',
+    );
+    const tutorialNav = document.getElementById("tutorialNav");
+    const tutorialDots = document.getElementById("tutorialDots");
+
     // Überprüfen, ob tutorialContents leer ist
     if (!tutorialContents || tutorialContents.length === 0) {
         if (tutorialTab) {
-            tutorialTab.style.display = 'none';
+            tutorialTab.style.display = "none";
         }
         if (tutorialNav) {
-            tutorialNav.style.display = 'none';
+            tutorialNav.style.display = "none";
         }
         return;
     }
 
     // Dots dynamisch erstellen
     if (tutorialDots) {
-        tutorialDots.innerHTML = tutorialContents.map((_, index) =>
-            `<span class="tutorial-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>`
-        ).join('');
+        tutorialDots.innerHTML = tutorialContents
+            .map(
+                (_, index) =>
+                    `<span class="tutorial-dot ${index === 0 ? "active" : ""}" data-index="${index}"></span>`,
+            )
+            .join("");
     }
 
     // Event Listeners hinzufügen
-    const prevBtn = document.getElementById('tutorialPrev');
-    const nextBtn = document.getElementById('tutorialNext');
-    
+    const prevBtn = document.getElementById("tutorialPrev");
+    const nextBtn = document.getElementById("tutorialNext");
+
     if (prevBtn) {
-        prevBtn.addEventListener('click', () => {
+        prevBtn.addEventListener("click", () => {
             if (currentTutorialIndex > 0) {
                 currentTutorialIndex--;
                 updateTutorialDisplay();
@@ -1145,7 +1260,7 @@ function initializeTutorialNavigation() {
     }
 
     if (nextBtn) {
-        nextBtn.addEventListener('click', () => {
+        nextBtn.addEventListener("click", () => {
             if (currentTutorialIndex < tutorialContents.length - 1) {
                 currentTutorialIndex++;
                 updateTutorialDisplay();
@@ -1154,8 +1269,8 @@ function initializeTutorialNavigation() {
     }
 
     // Dot Navigation
-    document.querySelectorAll('.tutorial-dot').forEach(dot => {
-        dot.addEventListener('click', (e) => {
+    document.querySelectorAll(".tutorial-dot").forEach((dot) => {
+        dot.addEventListener("click", (e) => {
             currentTutorialIndex = parseInt(e.target.dataset.index);
             updateTutorialDisplay();
         });
@@ -1172,23 +1287,24 @@ function updateTutorialDisplay() {
     }
 
     // Dots aktualisieren
-    document.querySelectorAll('.tutorial-dot').forEach((dot, index) => {
-        dot.classList.toggle('active', index === currentTutorialIndex);
+    document.querySelectorAll(".tutorial-dot").forEach((dot, index) => {
+        dot.classList.toggle("active", index === currentTutorialIndex);
     });
 
     // Button States
-    const prevBtn = document.getElementById('tutorialPrev');
-    const nextBtn = document.getElementById('tutorialNext');
+    const prevBtn = document.getElementById("tutorialPrev");
+    const nextBtn = document.getElementById("tutorialNext");
     if (prevBtn) prevBtn.disabled = currentTutorialIndex === 0;
-    if (nextBtn) nextBtn.disabled = currentTutorialIndex === tutorialContents.length - 1;
+    if (nextBtn)
+        nextBtn.disabled = currentTutorialIndex === tutorialContents.length - 1;
 
     // Content aktualisieren - zeige Markdown in div
-    const tutorialContent = document.getElementById('tutorialContent');
+    const tutorialContent = document.getElementById("tutorialContent");
     if (!tutorialContent) {
-        console.error('tutorialContent Element nicht gefunden');
+        console.error("tutorialContent Element nicht gefunden");
         return;
     }
-    
+
     const currentContent = tutorialContents[currentTutorialIndex].content;
 
     // Markdown rendern mit ACE-Highlighting im Hauptkontext
@@ -1196,25 +1312,27 @@ function updateTutorialDisplay() {
     tutorialContent.innerHTML = renderedHtml;
 
     // Links öffnen in neuem Tab
-    tutorialContent.querySelectorAll('a').forEach(link => {
-        link.setAttribute('target', '_blank');
-        link.setAttribute('rel', 'noopener noreferrer');
+    tutorialContent.querySelectorAll("a").forEach((link) => {
+        link.setAttribute("target", "_blank");
+        link.setAttribute("rel", "noopener noreferrer");
     });
 }
 
 // Task-Tab aktualisieren
 function updateTaskTab(markdownText) {
-    const taskOutput = document.getElementById('taskOutput');
-    const taskTab = document.querySelector('.output-tab[data-output-tab="task"]');
+    const taskOutput = document.getElementById("taskOutput");
+    const taskTab = document.querySelector(
+        '.output-tab[data-output-tab="task"]',
+    );
 
     if (taskOutput) {
         // Überprüfen, ob markdownText nicht leer ist
-        if (markdownText && markdownText.trim() !== '') {
+        if (markdownText && markdownText.trim() !== "") {
             taskOutput.innerHTML = renderMarkdown(markdownText);
-            taskTab.style.display = 'block'; // Tab anzeigen
+            taskTab.style.display = "block"; // Tab anzeigen
         } else {
-            taskOutput.innerHTML = ''; // Inhalte löschen
-            taskTab.style.display = 'none'; // Tab ausblenden
+            taskOutput.innerHTML = ""; // Inhalte löschen
+            taskTab.style.display = "none"; // Tab ausblenden
         }
     }
 }
@@ -1229,8 +1347,8 @@ function getContentFromView() {
         currentTutorialIndex: currentTutorialIndex,
         metadata: {
             lastModified: new Date().toISOString(),
-            codeLength: pythonEditor.getValue().length
-        }
+            codeLength: pythonEditor.getValue().length,
+        },
     };
 
     return JSON.stringify(content);
@@ -1238,8 +1356,10 @@ function getContentFromView() {
 
 function loadContentToView(content) {
     try {
-        if (!content || content.trim() === '' || content === '{}') {
-            console.log('Kein Inhalt zum Laden vorhanden, verwende Standardcode');
+        if (!content || content.trim() === "" || content === "{}") {
+            console.log(
+                "Kein Inhalt zum Laden vorhanden, verwende Standardcode",
+            );
             return;
         }
 
@@ -1247,109 +1367,121 @@ function loadContentToView(content) {
 
         if (data.pythonCode) {
             pythonEditor.setValue(data.pythonCode);
-            console.log('Python-Code erfolgreich geladen');
+            console.log("Python-Code erfolgreich geladen");
         }
 
-        if (data.currentTutorialIndex !== undefined && data.currentTutorialIndex >= 0 && data.currentTutorialIndex < tutorialContents.length) {
+        if (
+            data.currentTutorialIndex !== undefined &&
+            data.currentTutorialIndex >= 0 &&
+            data.currentTutorialIndex < tutorialContents.length
+        ) {
             currentTutorialIndex = data.currentTutorialIndex;
             updateTutorialDisplay();
         }
 
-        updateSaveStatus('saved');
-
+        updateSaveStatus("saved");
     } catch (error) {
-        console.error('Fehler beim Laden des Inhalts:', error);
-        updateSaveStatus('error');
+        console.error("Fehler beim Laden des Inhalts:", error);
+        updateSaveStatus("error");
     }
 }
 
 function saveContent(isSubmission = false) {
-    console.log('Speichere Inhalt...', isSubmission ? '(Abgabe)' : '(Normal)');
-    updateSaveStatus('saving');
+    console.log("Speichere Inhalt...", isSubmission ? "(Abgabe)" : "(Normal)");
+    updateSaveStatus("saving");
 
     const content = getContentFromView();
-    const urlElement = document.getElementById(isSubmission ? 'task-submit-url' : 'task-save-url');
-    const url = urlElement ? document.getElementById('default-link') + urlElement.getAttribute('data-url') : '';
+    const urlElement = document.getElementById(
+        isSubmission ? "task-submit-url" : "task-save-url",
+    );
+    const url = urlElement
+        ? document.getElementById("default-link") +
+          urlElement.getAttribute("data-url")
+        : "";
 
     if (!url) {
-        console.error('Keine URL für Speicherung gefunden');
-        updateSaveStatus('error');
+        console.error("Keine URL für Speicherung gefunden");
+        updateSaveStatus("error");
         return;
     }
 
     fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: content })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: content }),
     })
-        .then(response => {
+        .then((response) => {
             if (response.ok) {
-                updateSaveStatus(isSubmission ? 'submitted' : 'saved');
-                console.log('Inhalt erfolgreich gespeichert');
+                updateSaveStatus(isSubmission ? "submitted" : "saved");
+                console.log("Inhalt erfolgreich gespeichert");
 
                 // Benachrichtigung an Parent-Window für iFrame-Integration
                 if (window.parent && window.parent !== window) {
-                    window.parent.postMessage('content-saved', '*');
+                    window.parent.postMessage("content-saved", "*");
                 }
             } else {
-                updateSaveStatus('error');
-                console.error('Speicherfehler:', response.status);
+                updateSaveStatus("error");
+                console.error("Speicherfehler:", response.status);
             }
         })
-        .catch(error => {
-            console.error('Speicherfehler:', error);
-            updateSaveStatus('error');
+        .catch((error) => {
+            console.error("Speicherfehler:", error);
+            updateSaveStatus("error");
         });
 }
 
 function submitTask() {
-    if (confirm('Möchten Sie diese Aufgabe wirklich abgeben? Nach der Abgabe können Sie keine Änderungen mehr vornehmen.')) {
+    if (
+        confirm(
+            "Möchten Sie diese Aufgabe wirklich abgeben? Nach der Abgabe können Sie keine Änderungen mehr vornehmen.",
+        )
+    ) {
         saveContent(true);
     }
 }
 
 function updateSaveStatus(status) {
-    const statusElement = document.getElementById('save-status');
+    const statusElement = document.getElementById("save-status");
     if (!statusElement) {
-        console.error('Status-Element nicht gefunden');
+        console.error("Status-Element nicht gefunden");
         return;
     }
 
-    console.log('Status wird aktualisiert auf:', status);
+    console.log("Status wird aktualisiert auf:", status);
 
     // Entferne alle Status-Klassen
-    statusElement.className = '';
+    statusElement.className = "";
 
     switch (status) {
-        case 'saved':
-            statusElement.className = 'fas fa-circle text-success';
-            statusElement.setAttribute('title', 'Änderungen gespeichert');
-            statusElement.style.color = '#28a745';
+        case "saved":
+            statusElement.className = "fas fa-circle text-success";
+            statusElement.setAttribute("title", "Änderungen gespeichert");
+            statusElement.style.color = "#28a745";
             break;
-        case 'saving':
-            statusElement.className = 'fas fa-spinner fa-spin text-primary';
-            statusElement.setAttribute('title', 'Speichere...');
-            statusElement.style.color = '#007bff';
+        case "saving":
+            statusElement.className = "fas fa-spinner fa-spin text-primary";
+            statusElement.setAttribute("title", "Speichere...");
+            statusElement.style.color = "#007bff";
             break;
-        case 'error':
-            statusElement.className = 'fas fa-circle text-danger';
-            statusElement.setAttribute('title', 'Fehler beim Speichern');
-            statusElement.style.color = '#dc3545';
+        case "error":
+            statusElement.className = "fas fa-circle text-danger";
+            statusElement.setAttribute("title", "Fehler beim Speichern");
+            statusElement.style.color = "#dc3545";
             break;
-        case 'ready':
-            statusElement.className = 'fas fa-circle text-warning';
-            statusElement.setAttribute('title', 'Ungespeicherte Änderungen');
-            statusElement.style.color = '#ffc107';
+        case "ready":
+            statusElement.className = "fas fa-circle text-warning";
+            statusElement.setAttribute("title", "Ungespeicherte Änderungen");
+            statusElement.style.color = "#ffc107";
             break;
-        case 'submitted':
-            statusElement.className = 'fas fa-circle text-success';
-            statusElement.setAttribute('title', 'Aufgabe abgegeben');
-            statusElement.style.color = '#28a745';
+        case "submitted":
+            statusElement.className = "fas fa-circle text-success";
+            statusElement.setAttribute("title", "Aufgabe abgegeben");
+            statusElement.style.color = "#28a745";
             break;
         default:
-            statusElement.className = 'fas fa-circle text-muted';
-            statusElement.setAttribute('title', 'Bereit zum Speichern');
-            statusElement.style.color = '#6c757d';
+            statusElement.className = "fas fa-circle text-muted";
+            statusElement.setAttribute("title", "Bereit zum Speichern");
+            statusElement.style.color = "#6c757d";
             break;
     }
 }
@@ -1366,5 +1498,5 @@ window.editorAPI = {
     saveContent: saveContent,
     submitTask: submitTask,
     getContentFromView: getContentFromView,
-    loadContentToView: loadContentToView
+    loadContentToView: loadContentToView,
 };
