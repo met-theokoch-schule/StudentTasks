@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import java.util.Map;
 import java.util.HashMap;
 import com.example.studenttask.service.TaskService;
+import com.example.studenttask.model.TaskView;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -226,13 +227,26 @@ public class StudentTaskApiController {
                 taskContentService.submitContent(userTask, latestContentOpt.get().getContent());
             }
 
-            // Update UserTask status to "ABGEGEBEN"
-            userTaskService.updateStatus(userTask, "ABGEGEBEN");
+            userTaskService.updateStatus(userTask, resolveSubmittedStatusName(userTask));
 
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).build();
         }
+    }
+
+    private String resolveSubmittedStatusName(UserTask userTask) {
+        TaskView taskView = null;
+        Task task = userTask.getTask();
+        if (task != null) {
+            if (task.getTaskView() != null) {
+                taskView = task.getTaskView();
+            } else {
+                taskView = task.getViewType();
+            }
+        }
+        boolean markComplete = taskView != null && Boolean.TRUE.equals(taskView.getSubmitMarksComplete());
+        return markComplete ? "VOLLSTÄNDIG" : "ABGEGEBEN";
     }
 }

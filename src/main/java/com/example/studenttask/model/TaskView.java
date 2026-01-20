@@ -24,6 +24,9 @@ public class TaskView {
     
     @Column(nullable = false)
     private Boolean isActive = true;
+
+    @Column(nullable = false, columnDefinition = "boolean not null default 0")
+    private Boolean submitMarksComplete = false;
     
     @OneToMany(mappedBy = "viewType", cascade = CascadeType.ALL)
     private Set<Task> tasks = new HashSet<>();
@@ -84,6 +87,14 @@ public class TaskView {
     public void setActive(Boolean active) {
         this.isActive = active;
     }
+
+    public Boolean getSubmitMarksComplete() {
+        return submitMarksComplete;
+    }
+
+    public void setSubmitMarksComplete(Boolean submitMarksComplete) {
+        this.submitMarksComplete = submitMarksComplete;
+    }
     
     public Set<Task> getTasks() {
         return tasks;
@@ -114,6 +125,7 @@ public class TaskView {
                 ", description='" + description + '\'' +
                 ", templatePath='" + templatePath + '\'' +
                 ", isActive=" + isActive +
+                ", submitMarksComplete=" + submitMarksComplete +
                 '}';
     }
 }
