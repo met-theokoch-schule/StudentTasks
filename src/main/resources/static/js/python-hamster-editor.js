@@ -52,7 +52,7 @@ function initializeEditors() {
     try {
         // Python Editor
         pythonEditor = ace.edit("pythonEditor");
-        pythonEditor.setTheme("ace/theme/monokai");
+        pythonEditor.setTheme("ace/theme/a11y_dark");
         pythonEditor.session.setMode("ace/mode/python");
         pythonEditor.setOptions({
             fontSize: 14,
@@ -323,24 +323,122 @@ function getCurrentEditor() {
     return pythonEditor;
 }
 
+// Maximale Konsolengröße in Zeichen (kann hier angepasst werden)
+const MAX_CONSOLE_SIZE = 50000; // 50.000 Zeichen - großzügig aber verhindert Performance-Probleme
+
 function addToConsole(text, type = 'info') {
     const consoleOutput = document.getElementById('consoleOutput');
     const timestamp = new Date().toLocaleTimeString();
     const prefix = type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
 
-    consoleOutput.textContent += `[${timestamp}] ${prefix} ${text}\n`;
+    const escapedText = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    const newContent = `[${timestamp}] ${prefix} ${escapedText}<br>`;
+
+    consoleOutput.innerHTML += newContent;
+
+    if (consoleOutput.innerHTML.length > MAX_CONSOLE_SIZE) {
+        const excessChars =
+            consoleOutput.innerHTML.length - MAX_CONSOLE_SIZE + 2000;
+        consoleOutput.innerHTML =
+            '...[frühere Ausgaben entfernt]...<br>' +
+            consoleOutput.innerHTML.substring(excessChars);
+    }
+
     consoleOutput.scrollTop = consoleOutput.scrollHeight;
 }
 
 function addToConsoleWithoutTimestamp(text) {
     const consoleOutput = document.getElementById('consoleOutput');
-    consoleOutput.textContent += `${text}\n`;
+
+    const escapedText = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br>');
+
+    consoleOutput.innerHTML += escapedText + '<br>';
+
+    if (consoleOutput.innerHTML.length > MAX_CONSOLE_SIZE) {
+        const excessChars =
+            consoleOutput.innerHTML.length - MAX_CONSOLE_SIZE + 2000;
+        consoleOutput.innerHTML =
+            '...[frühere Ausgaben entfernt]...<br>' +
+            consoleOutput.innerHTML.substring(excessChars);
+    }
+
     consoleOutput.scrollTop = consoleOutput.scrollHeight;
 }
 
 function clearConsoleOutput() {
     const consoleOutput = document.getElementById('consoleOutput');
-    consoleOutput.textContent = '';
+    consoleOutput.innerHTML = '';
+}
+
+function handleInputRequest(promptText) {
+    const consoleOutput = document.getElementById('consoleOutput');
+
+    if (promptText) {
+        const promptSpan = document.createElement('span');
+        promptSpan.className = 'console-prompt-text';
+        promptSpan.textContent = promptText;
+        consoleOutput.appendChild(promptSpan);
+    }
+
+    const inputContainer = document.createElement('span');
+    inputContainer.className = 'console-input-container';
+
+    const inputField = document.createElement('input');
+    inputField.type = 'text';
+    inputField.className = 'console-input-field';
+    inputField.setAttribute('autocomplete', 'off');
+    inputField.setAttribute('autocorrect', 'off');
+    inputField.setAttribute('autocapitalize', 'off');
+    inputField.setAttribute('spellcheck', 'false');
+
+    inputContainer.appendChild(inputField);
+    consoleOutput.appendChild(inputContainer);
+
+    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    inputField.focus();
+
+    return new Promise((resolve) => {
+        function handleSubmit(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const userInput = inputField.value;
+
+                const inputText = document.createElement('span');
+                inputText.className = 'console-input-text';
+                inputText.textContent = userInput;
+                inputContainer.replaceWith(inputText);
+
+                consoleOutput.appendChild(document.createElement('br'));
+
+                resolve(userInput);
+            }
+        }
+
+        inputField.addEventListener('keydown', handleSubmit);
+
+        function focusInput(e) {
+            if (e.target !== inputField) {
+                inputField.focus();
+            }
+        }
+        consoleOutput.addEventListener('click', focusInput);
+
+        const observer = new MutationObserver(() => {
+            if (!document.contains(inputField)) {
+                consoleOutput.removeEventListener('click', focusInput);
+                observer.disconnect();
+            }
+        });
+        observer.observe(consoleOutput, { childList: true, subtree: true });
+    });
 }
 
 // Pyodide initialisieren
@@ -441,11 +539,10 @@ def maulLeer():
         print(f"Fehler bei maulLeer(): {e}")
         return True
 
-def input(prompt=""):
+async def input(prompt=""):
     """Ersetzt die standardmäßige input()-Funktion mit einer Browser-basierten Version"""
     try:
-        # Verwende Browser-Prompt für Eingabe
-        result = js.getInputFromUser(prompt)
+        result = await js.getInputFromUser(prompt)
         return result if result is not None else ""
     except Exception as e:
         print(f"Fehler bei input(): {e}")
@@ -622,19 +719,7 @@ print("Hamster-Befehle erfolgreich registriert: vor, linksUm, nimm, gib, vornFre
     };
 
     window.getInputFromUser = function(prompt) {
-        // Verwende Browser-Prompt für Benutzereingabe
-        const userInput = window.prompt(prompt || "Eingabe:");
-
-        if (userInput !== null) {
-            addToConsole(`💬 input("${prompt}"): "${userInput}"`, 'info');
-            console.log(`input() ausgeführt: Prompt="${prompt}", Eingabe="${userInput}"`);
-            return userInput;
-        } else {
-            // Benutzer hat Cancel gedrückt
-            addToConsole(`💬 input("${prompt}"): (abgebrochen)`, 'info');
-            console.log(`input() ausgeführt: Prompt="${prompt}", Eingabe abgebrochen`);
-            return "";
-        }
+        return handleInputRequest(prompt || '');
     };
 
     try {
@@ -708,6 +793,10 @@ async function runPythonCode() {
                         processedLine = processedLine.replace(regex, `await ${cmd}`);
                     }
                 });
+                const inputRegex = /\binput\(/g;
+                if (inputRegex.test(processedLine) && !processedLine.includes('await input(')) {
+                    processedLine = processedLine.replace(inputRegex, 'await input(');
+                }
                 return '    ' + processedLine;
             }
             return '';
