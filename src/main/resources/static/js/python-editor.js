@@ -968,7 +968,7 @@ def sleep(duration: float) -> None:
 
         // MyPy ausführen (async für UI-Responsiveness)
         const result = await mainThreadPyodide.runPythonAsync(`
-errors = type_checker.check_code('''${codeToCheck.replace(/'/g, "\\'")}''')
+errors = type_checker.check_code(r'''${codeToCheck.replace(/'/g, "\\'")}''')
 # Zeilennummern korrigieren (Stub-Zeilen abziehen, wenn vorhanden)
 stub_lines = ${stubLineCount}
 corrected_errors = []

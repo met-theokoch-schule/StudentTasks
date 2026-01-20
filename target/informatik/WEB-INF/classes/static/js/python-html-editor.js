@@ -869,7 +869,7 @@ async function checkPythonTypes() {
 
         // MyPy ausführen
         const errors = pyodide.runPython(`
-errors = type_checker.check_code('''${currentCode.replace(/'/g, "\\'")}''')
+errors = type_checker.check_code(r'''${currentCode.replace(/'/g, "\\'")}''')
 errors
         `).toJs();
 

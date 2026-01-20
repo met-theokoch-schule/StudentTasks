@@ -1130,3 +1130,63 @@ input[type="checkbox"] {
 .ace-a11y-dark {
     margin-bottom: 15px;
 }
+
+/* Console Input Styling */
+.console-prompt-text {
+    color: #cccccc;
+}
+
+.console-input-container {
+    display: inline-block;
+}
+
+.console-input-field {
+    background-color: transparent;
+    border: none;
+    outline: none;
+    color: #4fc3f7;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: inherit;
+    width: 200px;
+    max-width: calc(100% - 20px);
+    caret-color: #4fc3f7;
+    padding: 0;
+    margin: 0;
+}
+
+.console-input-field:focus {
+    outline: none;
+}
+
+.console-input-field::placeholder {
+    color: #666666;
+}
+
+.console-input-text {
+    color: #4fc3f7;
+}
+
+/* Blinkender Cursor Animation */
+@keyframes blink-cursor {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+.console-input-field:focus {
+    animation: none;
+}
+
+/* Mobile-optimierte Eingabe */
+@media (max-width: 768px) {
+    .console-input-field {
+        width: 150px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .console-input-field {
+        width: 120px;
+        font-size: 12px;
+    }
+}

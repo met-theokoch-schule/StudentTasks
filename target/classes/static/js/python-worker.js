@@ -123,7 +123,13 @@ async function executePythonCode(code, id) {
     outputCapture.reset();
 
     // input() Funktion für Python konfigurieren (Promise-basiert)
-    pyodide.globals.set('browser_input_impl', (prompt) => {
+    pyodide.globals.set('browser_input_impl', async (prompt) => {
+        // WICHTIG: Zuerst stdout flushen damit alle bisherigen Ausgaben angezeigt werden
+        pyodide.runPython('import sys; sys.stdout.flush(); sys.stderr.flush()');
+        
+        // Kurze Verzögerung um sicherzustellen, dass die Ausgabe im Browser gerendert wird
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
         // Anfrage an Hauptthread senden
         self.postMessage({
             type: 'input_request',
