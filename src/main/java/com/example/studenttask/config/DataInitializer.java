@@ -56,104 +56,68 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     private void initializeTaskViews() {
-        // Initialize Task Views if they don't exist based on unique templatePath
-        /*
-         * String simpleTextTemplatePath = "taskviews/simple-text";
-         * 
-         * if (taskViewRepository.findByTemplatePath(simpleTextTemplatePath) == null) {
-         * TaskView simpleText = new TaskView("Einfacher Texteditor",
-         * simpleTextTemplatePath);
-         * simpleText.setDescription("Einfaches Textfeld für Text-Abgaben");
-         * taskViewRepository.save(simpleText);
-         * System.out.println("TaskView with templatePath '" + simpleTextTemplatePath +
-         * "' initialized");
-         * }
-         */
+        // Initialize or update task views based on unique templatePath
 
         String htmlCssEditor = "taskviews/html-css-editor";
 
-        if (taskViewRepository.findByTemplatePath(htmlCssEditor) == null) {
-            TaskView htmlCSS = new TaskView("HTML+CSS Editor", htmlCssEditor);
-            htmlCSS.setDescription("Erstellen von HTML-Seiten mit CSS und Bildern!");
-            taskViewRepository.save(htmlCSS);
-            System.out.println("TaskView with templatePath '" + htmlCssEditor + "' initialized");
-        }
+        createOrUpdateTaskView("HTML+CSS Editor", htmlCssEditor,
+                "Erstellen von HTML-Seiten mit CSS und Bildern!", false);
 
         String struktogEditor = "taskviews/struktog";
 
-        if (taskViewRepository.findByTemplatePath(struktogEditor) == null) {
-            TaskView struktog = new TaskView("Struktogramm Editor", struktogEditor);
-            struktog.setDescription("Erstellen von Struktogrammen!");
-            taskViewRepository.save(struktog);
-            System.out.println("TaskView with templatePath '" + struktogEditor + "' initialized");
-        }
+        createOrUpdateTaskView("Struktogramm Editor", struktogEditor,
+                "Erstellen von Struktogrammen!", false);
 
         String pythonEditor = "taskviews/python-editor";
 
-        if (taskViewRepository.findByTemplatePath(pythonEditor) == null) {
-            TaskView python = new TaskView("Python Editor", pythonEditor);
-            python.setDescription("Erstellen von Python Konsolenprogrammen!");
-            taskViewRepository.save(python);
-            System.out.println("TaskView with templatePath '" + pythonEditor + "' initialized");
-        }
+        createOrUpdateTaskView("Python Editor", pythonEditor,
+                "Erstellen von Python Konsolenprogrammen!", false);
 
         String pythonHtmlEditor = "taskviews/python-html-editor";
 
-        if (taskViewRepository.findByTemplatePath(pythonHtmlEditor) == null) {
-            TaskView pythonHtml = new TaskView("Python HTML Editor", pythonHtmlEditor);
-            pythonHtml.setDescription("Erstellen von Pythonprogrammen mit HTML als GUI!");
-            taskViewRepository.save(pythonHtml);
-            System.out.println("TaskView with templatePath '" + pythonHtmlEditor + "' initialized");
-        }
+        createOrUpdateTaskView("Python HTML Editor", pythonHtmlEditor,
+                "Erstellen von Pythonprogrammen mit HTML als GUI!", false);
 
         String pythonHamsterEditor = "taskviews/python-hamster-editor";
 
-        if (taskViewRepository.findByTemplatePath(pythonHamsterEditor) == null) {
-            TaskView pythonHamster = new TaskView("Python Hamster Editor", pythonHamsterEditor);
-            pythonHamster.setDescription("Erstellen von Python-Hamster-Programmen!");
-            taskViewRepository.save(pythonHamster);
-            System.out.println("TaskView with templatePath '" + pythonHamsterEditor + "' initialized");
-        }
+        createOrUpdateTaskView("Python Hamster Editor", pythonHamsterEditor,
+                "Erstellen von Python-Hamster-Programmen!", false);
 
         String pythonSortingEditor = "taskviews/python-sorting-editor";
 
-        if (taskViewRepository.findByTemplatePath(pythonSortingEditor) == null) {
-            TaskView pythonSorting = new TaskView("Python Sortier-Editor", pythonSortingEditor);
-            pythonSorting.setDescription("Visualisierung von Sortieralgorithmen");
-            taskViewRepository.save(pythonSorting);
-            System.out.println("TaskView with templatePath '" + pythonSortingEditor + "' initialized");
-        }
+        createOrUpdateTaskView("Python Sortier-Editor", pythonSortingEditor,
+                "Visualisierung von Sortieralgorithmen", false);
 
         String sqlTaskView = "taskviews/sql-task-view";
 
-        if (taskViewRepository.findByTemplatePath(sqlTaskView) == null) {
-            TaskView sql = new TaskView("SQL Aufgaben", sqlTaskView);
-            sql.setDescription("Interaktive SQL Aufgaben stellen");
-            taskViewRepository.save(sql);
-            System.out.println("TaskView with templatePath '" + sqlTaskView + "' initialized");
-        }
+        createOrUpdateTaskView("SQL Aufgaben", sqlTaskView,
+                "Interaktive SQL Aufgaben stellen", false);
 
         String raTaskView = "taskviews/ra-task-view";
 
-        if (taskViewRepository.findByTemplatePath(raTaskView) == null) {
-            TaskView ra = new TaskView("Relationen Algebra Aufgaben", raTaskView);
-            ra.setDescription("Interaktive RA Aufgaben stellen");
-            taskViewRepository.save(ra);
-            System.out.println("TaskView with templatePath '" + raTaskView + "' initialized");
-        }
+        createOrUpdateTaskView("Relationen Algebra Aufgaben", raTaskView,
+                "Interaktive RA Aufgaben stellen", false);
 
         // Hier können weitere TaskViews hinzugefügt werden
         // Beispiel für weitere TaskViews:
         /*
          * String htmlEditorTemplatePath = "taskviews/html-editor";
-         * if (taskViewRepository.findByTemplatePath(htmlEditorTemplatePath) == null) {
-         * TaskView htmlEditor = new TaskView("HTML Editor", htmlEditorTemplatePath);
-         * htmlEditor.setDescription("Rich-Text HTML Editor für Textaufgaben");
-         * taskViewRepository.save(htmlEditor);
-         * System.out.println("TaskView with templatePath '" + htmlEditorTemplatePath +
-         * "' initialized");
-         * }
+         * createOrUpdateTaskView("HTML Editor", htmlEditorTemplatePath,
+         * "Rich-Text HTML Editor für Textaufgaben", false);
          */
+    }
+
+    private void createOrUpdateTaskView(String name, String templatePath, String description,
+            boolean submitMarksComplete) {
+        TaskView taskView = taskViewRepository.findByTemplatePath(templatePath);
+        if (taskView == null) {
+            taskView = new TaskView(name, templatePath);
+        }
+        taskView.setName(name);
+        taskView.setDescription(description);
+        taskView.setTemplatePath(templatePath);
+        taskView.setSubmitMarksComplete(submitMarksComplete);
+        taskViewRepository.save(taskView);
     }
 
     private void initializeUnitTitles() {

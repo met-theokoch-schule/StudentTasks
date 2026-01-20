@@ -74,7 +74,6 @@ deploymentTarget = "cloudrun"
 [workflows]
 runButton = "Project"
 
-
 [[workflows.workflow]]
 name = "Run Spring Boot App"
 author = 12297667

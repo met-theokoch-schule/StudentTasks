@@ -4,6 +4,8 @@ import com.example.studenttask.model.TaskContent;
 import com.example.studenttask.model.UserTask;
 import com.example.studenttask.model.TaskStatus;
 import com.example.studenttask.model.Submission;
+import com.example.studenttask.model.Task;
+import com.example.studenttask.model.TaskView;
 import com.example.studenttask.dto.VersionWithSubmissionStatus;
 import com.example.studenttask.repository.TaskContentRepository;
 import com.example.studenttask.repository.UserTaskRepository;
@@ -60,9 +62,9 @@ public class TaskContentService {
 
         // Update status based on action
         if (isSubmitted) {
-            // If submitted, set to ABGEGEBEN
-            TaskStatus submittedStatus = taskStatusService.findByName("ABGEGEBEN")
-                    .orElseThrow(() -> new RuntimeException("Status ABGEGEBEN not found"));
+            String submittedStatusName = resolveSubmittedStatusName(userTask);
+            TaskStatus submittedStatus = taskStatusService.findByName(submittedStatusName)
+                    .orElseThrow(() -> new RuntimeException("Status " + submittedStatusName + " not found"));
             userTask.setStatus(submittedStatus);
 
             // Create submission record
@@ -229,5 +231,19 @@ public class TaskContentService {
     public void markAsSubmitted(TaskContent taskContent) {
         taskContent.setSubmitted(true);
         taskContentRepository.save(taskContent);
+    }
+
+    private String resolveSubmittedStatusName(UserTask userTask) {
+        TaskView taskView = null;
+        Task task = userTask.getTask();
+        if (task != null) {
+            if (task.getTaskView() != null) {
+                taskView = task.getTaskView();
+            } else {
+                taskView = task.getViewType();
+            }
+        }
+        boolean markComplete = taskView != null && Boolean.TRUE.equals(taskView.getSubmitMarksComplete());
+        return markComplete ? "VOLLSTÄNDIG" : "ABGEGEBEN";
     }
 }
