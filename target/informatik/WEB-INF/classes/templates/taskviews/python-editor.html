@@ -5,13 +5,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Code-Editor</title>
-    <link th:href="@{/css/python-editor.css}" href="../../static/css/python-editor.css?v=20251212-v1" rel="stylesheet" type="text/css" />
+    <link th:href="@{/css/python-editor.css}" href="/css/python-editor.css?v=20251212-v1" rel="stylesheet" type="text/css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ace.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/mode-python.js"></script>
-    <script th:src="@{/js/ace-theme-a11y-dark.js}" src="../../static/js/ace-theme-a11y-dark.js"></script>
+    <script th:src="@{/js/ace-theme-a11y-dark.js}" src="/js/ace-theme-a11y-dark.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ext-language_tools.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.2/ext-static_highlight.js"></script>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
@@ -20,7 +20,7 @@
 
 <body>
     <!-- Versteckte Content-Divs für JavaScript -->
-    <a id="default-link" style="display: none;" href="/static/" th:href="@{/}"></a>
+    <a id="default-link" style="display: none;" href="/" th:href="@{/}"></a>
     <div class="mycontainer">
         <!-- Header mit Buttons und Dropdown -->
         <header class="header">
@@ -113,90 +113,21 @@
         data-url="/dev/submit"></div>
     <div id="currentContent" style="display: none" th:text="${currentContent}"></div>
     <div id="defaultSubmission" style="display: none" th:text="${task.defaultSubmission} "></div>
-    <div id="description" style="display: none" th:text="${task.description}">Im folgenden findest du drei Code-Blöcke, die versuchen, einem Objekt der Klasse Mensch zu ermöglichen, ein Objekt der Klasse Hund zu streicheln.
+    <div id="description" style="display: none" th:text="${task.description}"># Zusatzaufgaben
 
-# Aufgaben
-- Kopiere Code 1 in den Editor und untersuche, was passiert. Ersetze ihn durch Code 2 und untersuche erneut.
-- Finde heraus, warum der eine Code funktioniert und der andere nicht! *Tipp: Schlagwörter zum Suchen nach Hinweisen sind "private Attribute" und "mangling"!*
-- Ersetze den Code nun durch Code 3 und untersuche auch diesen. Wie unterscheidet sich dieser Ansatz von dem bisherigen?
-- Entscheide, welches Vorgehen "besser" ist, um das Problem der "streichelnden Objekte" zu lösen. *Tipp: Berücksichtige besonders den Fall, dass unterschiedliche Programmier\*innen an dem Projekt arbeiten!*
+Wenn du den Feuerring erfolgreich implementiert hast, erweitere dein Programm!
 
-# Code 1
-```python
-# Hier ist ein Hund definiert
-class Hund:
-    def __init__(self, name):
-        self.name = name 
-        self.glueck = 0
+### 🔹 Zusatz 1 – Besiegte Monster
+Erweitere \`Monster.status()\`, sodass Monster mit 0 Lebenspunkten als **„(besiegt)“** angezeigt werden.
 
-# Hier ist ein Mensch, der den Hund streicheln will
-class Mensch:
-    def __init__(self, name):
-        self.__name = name
+            ### 🔹 Zusatz 2 – Magieverbrauch
+            Lasse die Heldin pro getroffenem Monster **5 Magiepunkte** verlieren. Wenn keine Magie mehr vorhanden ist, soll der Zauber **abbrechen**.
 
-    def streicheln(self, tier):
-        print(f"{self.__name} streichelt {tier.name}!")
-        tier.glueck += 100
+            ### 🔹 Zusatz 3 – Zufälliger Schaden
+            Nutze \`random.randint(8, 15)\` und erzeuge **zufälligen Schaden** pro Monster im Bereich **8–15**.
 
-#Ab hier wird losgestreichelt - oder?
-hund1 = Hund("Wuffi")
-mensch1 = Mensch("Elisabeth")
-mensch1.streicheln(hund1)
-```
-
-# Code 2
-```python
-# Hier ist ein Hund definiert
-class Hund:
-    def __init__(self, name):
-        self.__name = name 
-        self.__glueck = 0
-
-
-# Hier ist ein Mensch, der den Hund streicheln will
-class Mensch:
-    def __init__(self, name):
-        self.__name = name
-
-    def streicheln(self, tier):
-        print(f"{self.__name} streichelt {tier.__name}!")
-        tier.__glueck += 100
-
-
-
-#Ab hier wird losgestreichelt - oder?
-hund1 = Hund("Wuffi")
-mensch1 = Mensch("Elisabeth")
-mensch1.streicheln(hund1)
-```
-
-# Code 3
-```python
-# Hier ist ein Hund definiert
-class Hund:
-    def __init__(self, name):
-        self.__name = name 
-        self.__glueck = 0
-
-    def wirdGestreichelt(self, streichlerName):
-        print(f"{streichlerName} streichelt {self.__name}!")
-        self.__glueck += 1
-
-# Hier ist ein Mensch, der den Hund streicheln will
-class Mensch:
-    def __init__(self, name):
-        self.__name = name
-
-    def streicheln(self, tier):
-        tier.wirdGestreichelt(self.__name)
-
-
-
-#Ab hier wird losgestreichelt - oder?
-hund1 = Hund("Wuffi")
-mensch1 = Mensch("Elisabeth")
-mensch1.streicheln(hund1)
-```</div>
+            ### 🔹 Zusatz 4 – Zusammenfassung
+            Gib nach dem Angriff aus, wie viele Monster **besiegt** wurden und wie viel **Magie** Artemis noch hat.`</div>
     <div id="tutorial" style="display: none" th:utext="${task.tutorial}">[
           {
             "title": "Die Feuermagierin und die Monster",
@@ -265,15 +196,15 @@ Erweitere \`Monster.status()\`, sodass Monster mit 0 Lebenspunkten als **„(bes
 
           {
             "title": "Musterlösung",
-            "content": "```python\n# Hier ist die Heldin definiert\nclass Heldin:\n    def __init__(self, name):\n        self.__name = name\n        self.__magie = 100\n\n    def status(self):\n        print(f\"Heldin: {self.__name}, Magie = {self.__magie}\")\n        print()\n\n    # Musterlösung: Feuerring greift alle Monster an (fester Schaden: 10)\n    def feuerring(self, monster_array):\n        print(f\"{self.__name} wirkt FEUERRING! \")\n        for i in range(len(monster_array)):\n            monster_array[i].treffer(10)\n        print(\"Der Feuerring verglüht...\\n\")\n\n\n# Hier ist ein Monster definiert\nclass Monster:\n    def __init__(self, name):\n        self.__name = name\n        self.__leben = 50\n\n    def treffer(self, schaden):\n        self.__leben -= schaden\n        if self.__leben < 0:\n            self.__leben = 0\n        print(f\"{self.__name} erleidet {schaden} Schaden (Leben: {self.__leben})\")\n\n    def status(self):\n        print(f\"Monster: {self.__name}, Leben = {self.__leben}\")\n\n\n# --- Hier beginnt das Abenteuer ---\n\n# Das Array für die 10 Monster (feste Größe, ohne append)\nmonster_array = [None] * 10\n\n# 10 Monster werden erzeugt und im Array gespeichert\nfor i in range(10):\n    monster_name = \"Monster_\" + str(i + 1)\n    monster_array[i] = Monster(monster_name)\n\n# Die Heldin betritt die Szene\nheldin1 = Heldin(\"Artemis\")\n\n# Statusausgabe vor dem Angriff\nheldin1.status()\nprint(\"Vor dem Angriff:\")\nfor i in range(10):\n    monster_array[i].status()\nprint()\n\n# Heldin setzt den Feuerring ein (Musterlösung)\nheldin1.feuerring(monster_array)\n\n# Statusausgabe nach dem Angriff\nprint(\"Nach dem Angriff:\")\nfor i in range(10):\n    monster_array[i].status()\n```\n"
+            "content": ""
           }
         ]
 
     </div>
 
-    <script th:src="@{/js/code-analyzer.js}" src="../../static/js/code-analyzer.js?v=20251211-v10"></script>
-    <script th:src="@{/js/object-viewer.js}" src="../../static/js/object-viewer.js?v=20251211-v10"></script>
-    <script th:src="@{/js/python-editor.js}" src="../../static/js/python-editor.js?v=20251212-v1"></script>
+    <script th:src="@{/js/code-analyzer.js}" src="/js/code-analyzer.js?v=20251211-v10"></script>
+    <script th:src="@{/js/object-viewer.js}" src="/js/object-viewer.js?v=20251211-v10"></script>
+    <script th:src="@{/js/python-editor.js}" src="/js/python-editor.js?v=20251212-v2"></script>
     <script th:src="@{/js/ping.js}"></script>
 </body>
 

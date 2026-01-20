@@ -1031,7 +1031,7 @@ def maulLeer() -> bool:
 
         // MyPy ausführen
         const errors = pyodide.runPython(`
-errors = type_checker.check_code('''${codeForTypeChecking.replace(/'/g, "\\'")}''')
+errors = type_checker.check_code(r'''${codeForTypeChecking.replace(/'/g, "\\'")}''')
 # Zeilennummern um die Anzahl der Dummy-Zeilen korrigieren
 dummy_lines = ${hamsterDummyFunctions.split('\n').length}
 corrected_errors = []
