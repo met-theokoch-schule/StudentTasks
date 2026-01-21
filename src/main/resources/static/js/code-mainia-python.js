@@ -3,6 +3,39 @@ const APP_VERSION = "1.0.12";
 
 const mod = (a, b) => ((a % b) + b) % b;
 
+const defaultConfig = {
+    totalCards: 5,
+    timeToBeat: 15.0,
+    showLastNumber: true,
+    categories: [
+        "Wertzuweisungen",
+        "Verwirrung",
+        "GanzzahlDivision",
+        "BedingteAnweisung",
+        "IfGanzzahlDivision",
+        "IfLogischeOperatoren",
+        "ForSchleife",
+        "WhileSchleife",
+        "SchleifenMitIf",
+        "Listen",
+        "ListenOperationen",
+    ],
+    categoryColors: {
+        Anfangskarten: "#3498db",
+        Wertzuweisungen: "#2ecc71",
+        Verwirrung: "#f1c40f",
+        GanzzahlDivision: "#e67e22",
+        BedingteAnweisung: "#e74c3c",
+        IfGanzzahlDivision: "#9b59b6",
+        IfLogischeOperatoren: "#1abc9c",
+        ForSchleife: "#34495e",
+        WhileSchleife: "#d35400",
+        SchleifenMitIf: "#c0392b",
+        Listen: "#7f8c8d",
+        ListenOperationen: "#27ae60",
+    },
+};
+
 // Kartendefinitionen
 const cards = [
     // Anfangskarten
@@ -707,7 +740,7 @@ const cards = [
         text: "i = 0\n*while* i * i < zahl:\n   i = i + 1\nzahl = zahl + i",
         category: "WhileSchleife",
         calculate: (v) => {
-            i = 0;
+            let i = 0;
             while (i * i < v) {
                 i = i + 1;
             }
@@ -719,7 +752,7 @@ const cards = [
         text: "i = 0\n*while* 2 * i < zahl:\n   i = i + 1\nzahl = zahl + i",
         category: "WhileSchleife",
         calculate: (v) => {
-            i = 0;
+            let i = 0;
             while (2 * i < v) {
                 i = i + 1;
             }
@@ -758,7 +791,7 @@ const cards = [
         text: "i = 5\n*while* i > zahl:\n   zahl = zahl + 2\ni = i - 1",
         category: "WhileSchleife",
         calculate: (v) => {
-            i = 5;
+            let i = 5;
             while (i > v) {
                 v = v + 2;
             }
@@ -859,38 +892,11 @@ const cards = [
     },
 ];
 
-// Configuration
-const config = {
-    totalCards: 5,
-    timeToBeat: 15.0,
-    showLastNumber: true,
-    categories: [
-        "Wertzuweisungen",
-        "Verwirrung",
-        "GanzzahlDivision",
-        "BedingteAnweisung",
-        "IfGanzzahlDivision",
-        "IfLogischeOperatoren",
-        "ForSchleife",
-        "WhileSchleife",
-        "SchleifenMitIf",
-        "Listen",
-        "ListenOperationen",
-    ],
-    categoryColors: {
-        Anfangskarten: "#3498db",
-        Wertzuweisungen: "#2ecc71",
-        Verwirrung: "#f1c40f",
-        GanzzahlDivision: "#e67e22",
-        BedingteAnweisung: "#e74c3c",
-        IfGanzzahlDivision: "#9b59b6",
-        IfLogischeOperatoren: "#1abc9c",
-        ForSchleife: "#34495e",
-        WhileSchleife: "#d35400",
-        SchleifenMitIf: "#c0392b",
-        Listen: "#7f8c8d",
-        ListenOperationen: "#27ae60",
-    },
+// Configuration (loaded from task description when present)
+let config = {
+    ...defaultConfig,
+    categories: [...defaultConfig.categories],
+    categoryColors: { ...defaultConfig.categoryColors },
 };
 
 // State
@@ -936,6 +942,160 @@ let numpadInputValue = "0";
 let lastSubmittedNumber = null;
 let cardSvgTemplate = "";
 let cardStartSvgTemplate = "";
+let bestTime = null;
+let saveUrl = "";
+let submitUrl = "";
+let isSubmitting = false;
+
+function getCurrentContentElement() {
+    return (
+        document.getElementById("current-content") ||
+        document.getElementById("currentContent")
+    );
+}
+
+function getDescriptionText() {
+    return document.getElementById("description")?.textContent?.trim() || "";
+}
+
+function parseConfigFromDescription(descriptionText) {
+    if (!descriptionText) return null;
+
+    const blockMatch = descriptionText.match(
+        /```(?:json|js)?\s*([\s\S]*?)```/i,
+    );
+    const candidate = (blockMatch ? blockMatch[1] : descriptionText).trim();
+
+    if (!candidate) return null;
+
+    try {
+        return JSON.parse(candidate);
+    } catch (e) {
+        const configMatch = candidate.match(/config\s*=\s*({[\s\S]*})\s*;?/i);
+        const objectLiteral = configMatch ? configMatch[1] : candidate;
+        try {
+            return new Function(`return (${objectLiteral});`)();
+        } catch (innerError) {
+            console.warn("Config konnte nicht geparst werden", innerError);
+            return null;
+        }
+    }
+}
+
+function mergeConfig(baseConfig, overrideConfig) {
+    if (!overrideConfig || typeof overrideConfig !== "object") {
+        return {
+            ...baseConfig,
+            categories: [...baseConfig.categories],
+            categoryColors: { ...baseConfig.categoryColors },
+        };
+    }
+
+    const merged = {
+        ...baseConfig,
+        ...overrideConfig,
+    };
+
+    merged.categories = Array.isArray(overrideConfig.categories)
+        ? [...overrideConfig.categories]
+        : [...baseConfig.categories];
+    merged.categoryColors = {
+        ...baseConfig.categoryColors,
+        ...(overrideConfig.categoryColors || {}),
+    };
+
+    return merged;
+}
+
+function applyConfigFromDescription() {
+    const parsedConfig = parseConfigFromDescription(getDescriptionText());
+    if (parsedConfig) {
+        config = mergeConfig(defaultConfig, parsedConfig);
+    }
+}
+
+function loadPersistedBestTime() {
+    const contentText = getCurrentContentElement()?.textContent?.trim() || "";
+    if (!contentText) return;
+
+    let parsed = null;
+    try {
+        parsed = JSON.parse(contentText);
+    } catch (e) {
+        const numeric = parseFloat(contentText);
+        if (Number.isFinite(numeric)) {
+            parsed = { bestTime: numeric };
+        }
+    }
+
+    if (parsed && Number.isFinite(parsed.bestTime)) {
+        bestTime = parsed.bestTime;
+        state.isFirstCorrect = false;
+        updateBestTimeDisplay(bestTime);
+    }
+}
+
+function updateBestTimeDisplay(value) {
+    const bestTimeDisplayEl = document.getElementById("best-time-display");
+    const timeValue = Number.isFinite(value) ? value : null;
+    const displayValue = timeValue ?? config.timeToBeat;
+    const label = timeValue === null ? "Zeit zu schlagen" : "Beste Zeit";
+
+    bestTimeDisplayEl.innerHTML = `${label}: <span id="best-time-value">${displayValue.toFixed(2)}</span>s`;
+}
+
+function initTaskUrls() {
+    saveUrl =
+        document.getElementById("default-link") +
+            document.getElementById("task-save-url")?.dataset.url || "";
+    submitUrl =
+        document.getElementById("default-link") +
+            document.getElementById("task-submit-url")?.dataset.url || "";
+}
+
+function getContentFromView() {
+    return {
+        version: "1.0",
+        bestTime: bestTime,
+        metadata: {
+            savedAt: new Date().toISOString(),
+        },
+    };
+}
+
+async function saveContent(isSubmission = false) {
+    const url = isSubmission ? submitUrl : saveUrl;
+
+    if (!url) {
+        console.warn("Keine URL fuer Speicherung/Abgabe gefunden");
+        return;
+    }
+
+    try {
+        await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content: getContentFromView() }),
+        });
+    } catch (error) {
+        console.error("Fehler beim Speichern der Bestzeit:", error);
+    }
+}
+
+async function submitBestTime() {
+    if (isSubmitting) return;
+    if (!submitUrl) {
+        await saveContent(false);
+        return;
+    }
+
+    isSubmitting = true;
+    try {
+        await saveContent(true);
+    } finally {
+        isSubmitting = false;
+    }
+}
 
 // SVG Templates laden
 async function loadSvgTemplate() {
@@ -1341,9 +1501,7 @@ function endRound() {
     stopTimer();
 
     const totalTime = getTotalTime();
-    const bestTimeValueEl = document.getElementById("best-time-value");
-    const bestTimeDisplayEl = document.getElementById("best-time-display");
-    let currentBest = parseFloat(bestTimeValueEl.textContent);
+    const currentBest = bestTime !== null ? bestTime : config.timeToBeat;
 
     modalTitle.textContent = "Runde beendet!";
     modalMessage.textContent = "Alle Karten richtig berechnet!";
@@ -1363,12 +1521,13 @@ function endRound() {
         if (state.isFirstCorrect || totalTime < currentBest) {
             if (state.isFirstCorrect) {
                 modalCongrats.textContent = "Zeit geschlagen! Erste Bestzeit!";
-                state.isFirstCorrect = false;
             } else {
                 modalCongrats.textContent = "Neue Bestzeit!";
             }
-            bestTimeValueEl.textContent = totalTime.toFixed(2);
-            bestTimeDisplayEl.innerHTML = `Beste Zeit: <span id="best-time-value">${totalTime.toFixed(2)}</span>s`;
+            bestTime = totalTime;
+            state.isFirstCorrect = false;
+            updateBestTimeDisplay(bestTime);
+            submitBestTime();
         } else {
             modalCongrats.textContent = "Gute Zeit!";
         }
@@ -1429,5 +1588,10 @@ function updateScale() {
     document.documentElement.style.setProperty("--game-scale", scale);
 }
 updateScale();
+
+applyConfigFromDescription();
+initTaskUrls();
+updateBestTimeDisplay(bestTime);
+loadPersistedBestTime();
 
 initGame();
