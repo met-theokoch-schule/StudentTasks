@@ -88,6 +88,11 @@ public class DataInitializer implements ApplicationRunner {
         createOrUpdateTaskView("Python Sortier-Editor", pythonSortingEditor,
                 "Visualisierung von Sortieralgorithmen", false);
 
+            String codemainia = "taskviews/code-mainia-python";
+
+            createOrUpdateTaskView("Code Mainia Python", codemainia,
+                    "Single Player Version des Hopp Foundations Spiels", true);
+
         String sqlTaskView = "taskviews/sql-task-view";
 
         createOrUpdateTaskView("SQL Aufgaben", sqlTaskView,
