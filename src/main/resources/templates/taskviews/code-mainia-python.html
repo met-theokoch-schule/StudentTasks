@@ -5,8 +5,11 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Code Mainia Python</title>
         <link rel="stylesheet" href="style.css" />
+        <link th:href="@{/css/code-mainia-python.css}" href="../../static/css/code-mainia-python.css?v=20251212-v1" rel="stylesheet" type="text/css" />
     </head>
     <body>
+        <!-- Versteckte Content-Divs für JavaScript -->
+        <a id="default-link" style="display: none;" href="/static/" th:href="@{/}"></a>
         <div id="game-container">
             <header>
                 <div id="timer-container">
@@ -131,6 +134,50 @@
             </div>
         </div>
 
-        <script type="module" src="script.js"></script>
+        <div id="task-save-url" style="display: none"
+            th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? 'api/tasks/usertasks/' + userTaskId + '/content' : 'api/tasks/' + task.id + '/content'}"
+            data-url="/dev/save"></div>
+        <div id="task-submit-url" style="display: none"
+            th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? '' : 'api/tasks/' + task.id + '/submit'}"
+            data-url="/dev/submit"></div>
+        <div id="currentContent" style="display: none" th:text="${currentContent}">
+            config = {
+                totalCards: 4,
+                timeToBeat: 20.0,
+                showLastNumber: true,
+                categories: [
+                    "Wertzuweisungen",
+                    "Verwirrung",
+                    "GanzzahlDivision",
+                    "BedingteAnweisung",
+                    "IfGanzzahlDivision",
+                    "IfLogischeOperatoren",
+                    "ForSchleife",
+                    "WhileSchleife",
+                    "SchleifenMitIf",
+                    "Listen",
+                    "ListenOperationen",
+                ],
+                categoryColors: {
+                    Anfangskarten: "#3498db",
+                    Wertzuweisungen: "#2ecc71",
+                    Verwirrung: "#f1c40f",
+                    GanzzahlDivision: "#e67e22",
+                    BedingteAnweisung: "#e74c3c",
+                    IfGanzzahlDivision: "#9b59b6",
+                    IfLogischeOperatoren: "#1abc9c",
+                    ForSchleife: "#34495e",
+                    WhileSchleife: "#d35400",
+                    SchleifenMitIf: "#c0392b",
+                    Listen: "#7f8c8d",
+                    ListenOperationen: "#27ae60",
+                },
+            };
+        </div>
+        <div id="description" style="display: none" th:text="${task.description}"></div>
+        
+        
+        <script type="module" th:src="@{/js/code-mainia-python.js}" src="../../static/js/code-mainia-python.js?v=20251212-v2"></script>
+        <script th:src="@{/js/ping.js}"></script>
     </body>
 </html>

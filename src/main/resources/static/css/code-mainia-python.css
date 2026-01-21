@@ -129,7 +129,7 @@ header {
 }
 
 .card-back {
-  background-image: url('card-back.jpg');
+  background-image: url('../images/code-mainia-python/card-back.jpg');
   background-size: cover;
   background-position: center;
   border: 5px solid white;

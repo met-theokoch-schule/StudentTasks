@@ -941,8 +941,16 @@ let cardStartSvgTemplate = "";
 async function loadSvgTemplate() {
     try {
         const [frontRes, startRes] = await Promise.all([
-            fetch("card-front.svg"),
-            fetch("card-start.svg"),
+            fetch(
+                document.getElementById("default-link").href +
+                    "images/code-mainia-python/" +
+                    "card-front.svg",
+            ),
+            fetch(
+                document.getElementById("default-link").href +
+                    "images/code-mainia-python/" +
+                    "card-start.svg",
+            ),
         ]);
         cardSvgTemplate = await frontRes.text();
         cardStartSvgTemplate = await startRes.text();
