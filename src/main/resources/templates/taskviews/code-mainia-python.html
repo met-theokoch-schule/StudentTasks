@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="de">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Code Mainia Python</title>
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+        <div id="game-container">
+            <header>
+                <div id="timer-container">
+                    Zeit: <span id="timer-display">0.00</span>s
+                    <span id="penalty-display" class="hidden">+5</span>
+                    <div
+                        id="best-time-display"
+                        style="font-size: 0.9rem; margin-top: 5px; color: #666"
+                    >
+                        Zeit zu schlagen:
+                        <span id="best-time-value">0.00</span>s
+                    </div>
+                </div>
+            </header>
+
+            <main>
+                <div id="game-area">
+                    <div id="deck-area">
+                        <div id="draw-pile" class="card-stack draw-pile-stack">
+                            Alle Karten gezogen!
+                            <div class="card card-back"></div>
+                            <div class="stack-count">0</div>
+                        </div>
+                        <div
+                            id="discard-pile-container"
+                            style="position: relative"
+                        >
+                            <div
+                                id="discard-pile-bg"
+                                class="card-stack draw-pile-stack"
+                                style="
+                                    position: absolute;
+                                    top: 0;
+                                    left: 0;
+                                    z-index: 0;
+                                    border: 2px dashed #ccc;
+                                    background: rgba(0, 0, 0, 0.05);
+                                    pointer-events: none;
+                                "
+                            >
+                                Klicke auf den Stapel oder drücke Enter, um zu
+                                beginnen!
+                            </div>
+                            <div
+                                id="discard-pile"
+                                class="card-stack discard-pile-stack"
+                                style="
+                                    position: relative;
+                                    z-index: 1;
+                                    background: transparent;
+                                    border-color: transparent;
+                                "
+                            ></div>
+                        </div>
+                    </div>
+                    <div id="numpad-container">
+                        <div id="last-number-display" class="numpad-display">
+                            zahl = <span id="last-number-value">-</span>
+                        </div>
+                        <div id="input-row">
+                            <div
+                                id="current-input-display"
+                                class="numpad-input"
+                            >
+                                0
+                            </div>
+                            <button
+                                id="backspace-btn"
+                                class="numpad-btn special-btn"
+                            >
+                                &#9003;
+                            </button>
+                        </div>
+                        <div id="numpad-grid">
+                            <button class="numpad-btn" data-digit="7">7</button>
+                            <button class="numpad-btn" data-digit="8">8</button>
+                            <button class="numpad-btn" data-digit="9">9</button>
+                            <button class="numpad-btn" data-digit="4">4</button>
+                            <button class="numpad-btn" data-digit="5">5</button>
+                            <button class="numpad-btn" data-digit="6">6</button>
+                            <button class="numpad-btn" data-digit="1">1</button>
+                            <button class="numpad-btn" data-digit="2">2</button>
+                            <button class="numpad-btn" data-digit="3">3</button>
+                            <button
+                                id="minus-btn"
+                                class="numpad-btn special-btn"
+                            >
+                                &#177;
+                            </button>
+                            <button class="numpad-btn" data-digit="0">0</button>
+                            <button
+                                id="enter-btn"
+                                class="numpad-btn special-btn"
+                            >
+                                &#9166;
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="instruction"></div>
+            </main>
+        </div>
+
+        <!-- Result Modal -->
+        <div id="result-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2 id="modal-title">Runde beendet!</h2>
+                <p id="modal-message"></p>
+                <div
+                    id="modal-time"
+                    style="font-size: 2rem; font-weight: bold; margin: 1rem 0"
+                ></div>
+                <div
+                    id="modal-congrats"
+                    style="
+                        color: #2ecc71;
+                        font-weight: bold;
+                        margin-bottom: 1rem;
+                    "
+                ></div>
+                <button id="restart-game">Neue Runde</button>
+            </div>
+        </div>
+
+        <script type="module" src="script.js"></script>
+    </body>
+</html>
