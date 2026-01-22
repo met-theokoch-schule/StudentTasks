@@ -204,7 +204,9 @@ public class StudentTaskApiController {
     }
 
     @PostMapping("/{taskId}/submit")
-    public ResponseEntity<Void> submitTask(@PathVariable Long taskId, Authentication authentication) {
+    public ResponseEntity<Void> submitTask(@PathVariable Long taskId,
+            @RequestBody(required = false) Map<String, String> request,
+            Authentication authentication) {
         try {
             // Get current user
             var user = userService.findByOpenIdSubject(authentication.getName());
@@ -212,19 +214,26 @@ public class StudentTaskApiController {
                 return ResponseEntity.status(401).build();
             }
 
-            // Find UserTask for this user and task
-            Optional<UserTask> userTaskOpt = userTaskService.findByUserIdAndTaskId(user.get().getId(), taskId);
-            if (userTaskOpt.isEmpty()) {
+            // Find task
+            Task task = taskService.findById(taskId).orElse(null);
+            if (task == null) {
                 return ResponseEntity.notFound().build();
             }
 
-            UserTask userTask = userTaskOpt.get();
+            // Find or create UserTask for this user and task
+            UserTask userTask = userTaskService.findOrCreateUserTask(user.get(), task);
 
-            // Get latest content to submit
-            Optional<TaskContent> latestContentOpt = taskContentService.getLatestContent(userTask);
-            if (latestContentOpt.isPresent()) {
-                // Create submitted version from latest content
-                taskContentService.submitContent(userTask, latestContentOpt.get().getContent());
+            String content = request != null ? request.get("content") : null;
+
+            if (content != null) {
+                // Create submitted version from provided content
+                taskContentService.submitContent(userTask, content);
+            } else {
+                // Fall back to latest content to submit
+                Optional<TaskContent> latestContentOpt = taskContentService.getLatestContent(userTask);
+                if (latestContentOpt.isPresent()) {
+                    taskContentService.submitContent(userTask, latestContentOpt.get().getContent());
+                }
             }
 
             userTaskService.updateStatus(userTask, resolveSubmittedStatusName(userTask));
