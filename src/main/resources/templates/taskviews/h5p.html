@@ -4,7 +4,12 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>H5P Task View</title>
-        <link th:href="@{/css/h5p-task-view.css}" href="../../static/css/h5p-task-view.css" rel="stylesheet" type="text/css" />
+        <link
+            th:href="@{/css/h5p-task-view.css}"
+            href="../../static/css/h5p-task-view.css"
+            rel="stylesheet"
+            type="text/css"
+        />
     </head>
     <body>
         <div id="h5p-task-root">
@@ -17,8 +22,19 @@
             ></iframe>
         </div>
 
-        <div id="description" style="display: none" th:text="${task.description}"></div>
+        <div
+            id="description"
+            style="display: none"
+            th:text="${task.description}"
+        >
+            { "url": "https://theokoch.schule/informatik/h5p/bubblesort/",
+            "allowedOrigins": ["https://theokoch.schule"], "matchVerbId":
+            "http://adlnet.gov/expapi/verbs/completed", "passScoreScaled": 0.8 }
+        </div>
 
-        <script th:src="@{/js/h5p-task-view.js}" src="../../static/js/h5p-task-view.js"></script>
+        <script
+            th:src="@{/js/h5p-task-view.js}"
+            src="../../static/js/h5p-task-view.js"
+        ></script>
     </body>
 </html>
