@@ -5,8 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>H5P Task View</title>
         <link
-            th:href="@{/css/h5p-task-view.css}"
-            href="../../static/css/h5p-task-view.css"
+            th:href="@{/css/h5p.css}"
+            href="../../static/css/h5p.css"
             rel="stylesheet"
             type="text/css"
         />
@@ -23,6 +23,18 @@
         </div>
 
         <div
+            id="task-save-url"
+            style="display: none"
+            th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? 'api/tasks/usertasks/' + userTaskId + '/content' : 'api/tasks/' + task.id + '/content'}"
+            data-url="/dev/save"
+        ></div>
+        <div
+            id="task-submit-url"
+            style="display: none"
+            th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? '' : 'api/tasks/' + task.id + '/submit'}"
+            data-url="/dev/submit"
+        ></div>
+        <div
             id="description"
             style="display: none"
             th:text="${task.description}"
@@ -32,9 +44,7 @@
             "http://adlnet.gov/expapi/verbs/completed", "passScoreScaled": 0.8 }
         </div>
 
-        <script
-            th:src="@{/js/h5p-task-view.js}"
-            src="../../static/js/h5p-task-view.js"
-        ></script>
+        <script th:src="@{/js/h5p.js}" src="../../static/js/h5p.js"></script>
+        <script th:src="@{/js/ping.js}"></script>
     </body>
 </html>

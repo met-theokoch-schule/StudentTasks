@@ -10,6 +10,7 @@
 - Registered the new task view in `DataInitializer`.
 - Added test config fields in `taskviews/h5p.html` for xAPI `verb.id` matching and a `passScoreScaled` threshold to treat completions as passed (currently logged only).
 - Added debug logging for `result.score.scaled` against `passScoreScaled` when a matching xAPI verb is received.
+- Limited debug output to xAPI statements that include a `result` field to make score-related logs easier to spot.
 
 ## External H5P Standalone Update (to apply on the embedded site)
 - Added a `postMessage` bridge for H5P xAPI events to notify the parent frame.
