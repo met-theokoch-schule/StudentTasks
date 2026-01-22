@@ -103,6 +103,11 @@ public class DataInitializer implements ApplicationRunner {
         createOrUpdateTaskView("Relationen Algebra Aufgaben", raTaskView,
                 "Interaktive RA Aufgaben stellen", false);
 
+        String h5pTaskView = "taskviews/h5p";
+
+        createOrUpdateTaskView("H5P Aufgaben", h5pTaskView,
+                "Einbetten von H5P-Inhalten per iframe", false);
+
         // Hier können weitere TaskViews hinzugefügt werden
         // Beispiel für weitere TaskViews:
         /*
