@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="de">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>H5P Task View</title>
+        <link th:href="@{/css/h5p-task-view.css}" href="../../static/css/h5p-task-view.css" rel="stylesheet" type="text/css" />
+    </head>
+    <body>
+        <div id="h5p-task-root">
+            <iframe
+                id="h5p-frame"
+                title="H5P Inhalt"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                allowfullscreen
+            ></iframe>
+        </div>
+
+        <div id="description" style="display: none" th:text="${task.description}"></div>
+
+        <script th:src="@{/js/h5p-task-view.js}" src="../../static/js/h5p-task-view.js"></script>
+    </body>
+</html>
