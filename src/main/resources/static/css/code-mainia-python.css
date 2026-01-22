@@ -29,6 +29,7 @@ body {
 
 header {
   margin-bottom: 2rem;
+  position: relative;
 }
 
 #timer-container {
@@ -39,6 +40,45 @@ header {
   border-radius: 20px;
   display: inline-block;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.task-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  gap: 8px;
+}
+
+.task-action-btn {
+  background: white;
+  color: var(--primary-color);
+  border: 2px solid var(--primary-color);
+  padding: 0.35rem 0.8rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 999px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s, transform 0.1s;
+}
+
+.task-action-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.task-action-btn:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
+.task-action-btn:active {
+  transform: scale(0.97);
 }
 
 #deck-area {
