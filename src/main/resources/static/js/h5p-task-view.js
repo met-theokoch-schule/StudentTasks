@@ -26,6 +26,11 @@
       return;
     }
 
+    console.log("H5P message (raw)", {
+      origin: event.origin,
+      data: event.data,
+    });
+
     const payload = event.data;
     if (!payload || payload.type !== "h5p-xapi") {
       return;
@@ -41,6 +46,20 @@
       const verbId = statement?.verb?.id;
       if (verbId === matchVerbId) {
         console.log("H5P xAPI Treffer", statement);
+        const passScoreScaled = config.passScoreScaled;
+        if (typeof passScoreScaled === "number") {
+          const scaledScore = statement?.result?.score?.scaled;
+          if (typeof scaledScore === "number") {
+            const passed = scaledScore >= passScoreScaled;
+            console.log("H5P xAPI Bewertung", {
+              scaledScore,
+              passScoreScaled,
+              passed,
+            });
+          } else {
+            console.log("H5P xAPI Bewertung fehlt: result.score.scaled");
+          }
+        }
       }
       return;
     }
