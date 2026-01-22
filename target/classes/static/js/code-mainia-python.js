@@ -1075,7 +1075,7 @@ async function saveContent(isSubmission = false) {
         await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ content: getContentFromView() }),
+            body: JSON.stringify({ content: JSON.stringify(getContentFromView()) }),
         });
     } catch (error) {
         console.error("Fehler beim Speichern der Bestzeit:", error);
