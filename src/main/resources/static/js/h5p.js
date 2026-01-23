@@ -1,9 +1,12 @@
 (() => {
   const description = document.getElementById("description");
   const iframe = document.getElementById("h5p-frame");
-  const saveUrl = document.getElementById("task-save-url")?.dataset.url || "";
+  const saveUrl =
+    document.getElementById("default-link") +
+      document.getElementById("ta")?.dataset.url || "";
   const submitUrl =
-    document.getElementById("task-submit-url")?.dataset.url || "";
+    document.getElementById("default-link") +
+      document.getElementById("task-submit-url")?.dataset.url || "";
   let isSubmitting = false;
   let hasSubmitted = false;
 
@@ -86,50 +89,42 @@
     }
     const hasResult = Boolean(statement.result);
 
+    console.log("H5P message (raw)", {
+      origin: event.origin,
+      data: event.data,
+    });
+    console.log("H5P xAPI Nachricht", statement);
+
     const matchVerbId = config.matchVerbId;
     if (matchVerbId) {
       const verbId = statement?.verb?.id;
       if (verbId === matchVerbId) {
         const scoreInfo = extractScore(statement);
-        if (hasResult) {
-          console.log("H5P message (raw)", {
-            origin: event.origin,
-            data: event.data,
-          });
-          console.log("H5P xAPI Treffer", statement);
-          const passScoreScaled = config.passScoreScaled;
-          if (typeof passScoreScaled === "number") {
-            if (scoreInfo && scoreInfo.source === "scaled") {
-              const passed = scoreInfo.value >= passScoreScaled;
-              console.log("H5P xAPI Bewertung", {
-                scaledScore: scoreInfo.value,
-                passScoreScaled,
-                passed,
-              });
-              if (passed) {
-                submitScore(scoreInfo);
-              }
-            } else {
-              console.log("H5P xAPI Bewertung fehlt: result.score.scaled");
-            }
-          } else {
-            console.log("H5P xAPI Bewertung uebersprungen", {
-              reason: "passScoreScaled fehlt",
-              matchVerbId: config.matchVerbId || null,
-              origin: event.origin,
+        console.log("H5P xAPI Treffer", statement);
+        const passScoreScaled = config.passScoreScaled;
+        if (typeof passScoreScaled === "number") {
+          if (scoreInfo && scoreInfo.source === "scaled") {
+            const passed = scoreInfo.value >= passScoreScaled;
+            console.log("H5P xAPI Bewertung", {
+              scaledScore: scoreInfo.value,
+              passScoreScaled,
+              passed,
             });
+            if (passed) {
+              submitScore(scoreInfo);
+            }
+          } else if (hasResult) {
+            console.log("H5P xAPI Bewertung fehlt: result.score.scaled");
           }
+        } else if (hasResult) {
+          console.log("H5P xAPI Bewertung uebersprungen", {
+            reason: "passScoreScaled fehlt",
+            matchVerbId: config.matchVerbId || null,
+            origin: event.origin,
+          });
         }
       }
       return;
-    }
-
-    if (hasResult) {
-      console.log("H5P message (raw)", {
-        origin: event.origin,
-        data: event.data,
-      });
-      console.log("H5P xAPI Nachricht", statement);
     }
   });
 })();

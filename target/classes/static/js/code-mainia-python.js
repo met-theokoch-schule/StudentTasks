@@ -482,7 +482,7 @@ const cards = [
         text: "*if* zahl % 2 == 1:\n   zahl = zahl + 1",
         category: "IfGanzzahlDivision",
         calculate: (v) => {
-            if (v % 2 == 1) {
+            if (mod(v, 2) == 1) {
                 return v + 1;
             } else {
                 return v;
@@ -494,7 +494,7 @@ const cards = [
         text: "*if* zahl % 2 == 0:\n   zahl = zahl + 1",
         category: "IfGanzzahlDivision",
         calculate: (v) => {
-            if (v % 2 == 0) {
+            if (mod(v, 2) == 0) {
                 return Math.trunc(v / 2);
             } else {
                 return v;
@@ -1075,7 +1075,9 @@ async function saveContent(isSubmission = false) {
         await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ content: JSON.stringify(getContentFromView()) }),
+            body: JSON.stringify({
+                content: JSON.stringify(getContentFromView()),
+            }),
         });
     } catch (error) {
         console.error("Fehler beim Speichern der Bestzeit:", error);
