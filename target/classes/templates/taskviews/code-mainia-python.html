@@ -5,6 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Code Mainia Python</title>
         <link th:href="@{/css/code-mainia-python.css}" href="../../static/css/code-mainia-python.css?v=20251212-v1" rel="stylesheet" type="text/css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+            crossorigin="anonymous" referrerpolicy="no-referrer" />
     </head>
     <body>
         <!-- Versteckte Content-Divs für JavaScript -->
@@ -21,6 +23,14 @@
                         Zeit zu schlagen:
                         <span id="best-time-value">0.00</span>s
                     </div>
+                </div>
+                <div class="task-actions">
+                    <button class="task-action-btn" type="button" onclick="window.location.reload()" aria-label="Neu laden" title="Neu laden">
+                        <i class="fas fa-rotate-right" aria-hidden="true"></i>
+                    </button>
+                    <a class="task-action-btn" th:href="@{/student/dashboard}" href="/student/dashboard" aria-label="Zum Dashboard" title="Zum Dashboard">
+                        <i class="fas fa-house" aria-hidden="true"></i>
+                    </a>
                 </div>
             </header>
 

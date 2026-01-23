@@ -551,7 +551,7 @@ input[type="checkbox"] {
 
 /* Console Output (halved height) */
 .console-output {
-    width: 100%;
+    flex: 1;
     background-color: #1e1e1e;
     color: #cccccc;
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
@@ -560,11 +560,60 @@ input[type="checkbox"] {
     overflow-y: auto;
     white-space: pre-wrap;
     word-wrap: break-word;
-    flex: 1;
 }
 
 .console-half-height {
     height: 50%;
+}
+
+/* Console Input Styling */
+.console-prompt-text {
+    color: #cccccc;
+}
+
+.console-input-container {
+    display: inline-block;
+}
+
+.console-input-field {
+    background-color: transparent;
+    border: none;
+    outline: none;
+    color: #4fc3f7;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: inherit;
+    width: 200px;
+    max-width: calc(100% - 20px);
+    caret-color: #4fc3f7;
+    padding: 0;
+    margin: 0;
+}
+
+.console-input-field:focus {
+    outline: none;
+}
+
+.console-input-field::placeholder {
+    color: #666666;
+}
+
+.console-input-text {
+    color: #4fc3f7;
+}
+
+/* Mobile-optimierte Eingabe */
+@media (max-width: 768px) {
+    .console-input-field {
+        width: 150px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .console-input-field {
+        width: 120px;
+        font-size: 12px;
+    }
 }
 
 /* HTML Output */
@@ -911,12 +960,15 @@ input[type="checkbox"] {
 }
 
 .console-output {
-    padding: 15px;
-    font-family: 'Consolas', 'Monaco', monospace;
+    flex: 1;
     background-color: #1e1e1e;
-    color: #ffffff;
+    color: #cccccc;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 14px;
+    padding: 15px;
     overflow-y: auto;
     white-space: pre-wrap;
+    word-wrap: break-word;
     border: none;
 }
 

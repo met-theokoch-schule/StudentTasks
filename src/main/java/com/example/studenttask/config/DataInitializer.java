@@ -106,7 +106,7 @@ public class DataInitializer implements ApplicationRunner {
         String h5pTaskView = "taskviews/h5p";
 
         createOrUpdateTaskView("H5P Aufgaben", h5pTaskView,
-                "Einbetten von H5P-Inhalten per iframe", false);
+                "Einbetten von H5P-Inhalten per iframe", true);
 
         // Hier können weitere TaskViews hinzugefügt werden
         // Beispiel für weitere TaskViews:

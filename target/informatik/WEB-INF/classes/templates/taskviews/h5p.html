@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="de">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>H5P Task View</title>
+        <link
+            th:href="@{/css/h5p.css}"
+            href="../../static/css/h5p.css"
+            rel="stylesheet"
+            type="text/css"
+        />
+    </head>
+    <body>
+        <div id="h5p-task-root">
+            <iframe
+                id="h5p-frame"
+                title="H5P Inhalt"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+                allowfullscreen
+            ></iframe>
+        </div>
+
+        <a
+            id="default-link"
+            style="display: none"
+            href="/static/"
+            th:href="@{/}"
+        ></a>
+        <div
+            id="task-save-url"
+            style="display: none"
+            th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? 'api/tasks/usertasks/' + userTaskId + '/content' : 'api/tasks/' + task.id + '/content'}"
+            data-url="/dev/save"
+        ></div>
+        <div
+            id="task-submit-url"
+            style="display: none"
+            th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? '' : 'api/tasks/' + task.id + '/submit'}"
+            data-url="/dev/submit"
+        ></div>
+        <div
+            id="description"
+            style="display: none"
+            th:text="${task.description}"
+        >
+            { "url": "https://theokoch.schule/informatik/h5p/bubblesort/",
+            "allowedOrigins": ["https://theokoch.schule"], "matchVerbId":
+            "http://adlnet.gov/expapi/verbs/answered", "passScoreScaled": 0.8 }
+        </div>
+
+        <script th:src="@{/js/h5p.js}" src="../../static/js/h5p.js"></script>
+        <script th:src="@{/js/ping.js}"></script>
+    </body>
+</html>

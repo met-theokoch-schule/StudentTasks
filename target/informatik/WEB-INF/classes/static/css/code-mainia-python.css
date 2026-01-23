@@ -1,0 +1,476 @@
+:root {
+  --card-width: 150px;
+  --card-height: 238px;
+  --primary-color: #422475;
+  --bg-color: #f4f7f6;
+  --game-scale: 1;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--bg-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+#game-container {
+  text-align: center;
+  width: 100%;
+  max-width: 800px;
+  transform: scale(var(--game-scale));
+  transform-origin: center center;
+  transition: transform 0.3s ease;
+}
+
+header {
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+#timer-container {
+  font-size: 1.5rem;
+  font-weight: bold;
+  background: white;
+  padding: 0.5rem 1.5rem;
+  border-radius: 20px;
+  display: inline-block;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.task-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  gap: 8px;
+}
+
+.task-action-btn {
+  background: white;
+  color: var(--primary-color);
+  border: 2px solid var(--primary-color);
+  padding: 0.35rem 0.8rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 999px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s, transform 0.1s;
+}
+
+.task-action-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.task-action-btn:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
+.task-action-btn:active {
+  transform: scale(0.97);
+}
+
+#deck-area {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  perspective: 1000px;
+  height: 300px;
+  align-items: center;
+}
+
+#discard-pile-bg {
+  width: var(--card-width);
+  height: var(--card-height);
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  box-sizing: border-box;
+  font-size: 0.9rem;
+  color: #888;
+  text-align: center;
+}
+
+.card-stack {
+  width: var(--card-width);
+  height: var(--card-height);
+  position: relative;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+  border: 2px dashed #ccc;
+}
+
+.draw-pile-stack {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  box-sizing: border-box;
+  font-size: 0.9rem;
+  color: #888;
+  text-align: center;
+}
+
+.discard-pile-stack {
+  /* Keep standard stack behavior */
+}
+
+#draw-pile .card {
+  z-index: 10;
+}
+
+#discard-pile .card {
+  z-index: 5;
+  transform: rotateY(180deg);
+}
+
+.card {
+  width: var(--card-width);
+  height: var(--card-height);
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: white;
+  font-size: 2rem;
+  user-select: none;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.card-back,
+.card-front {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+}
+
+.card-back {
+  background-image: url('../images/code-mainia-python/card-back.jpg');
+  background-size: cover;
+  background-position: center;
+  border: 5px solid white;
+  z-index: 2;
+}
+
+.card-front {
+  transform: rotateY(180deg);
+  background: white;
+  background-size: cover;
+  background-position: center;
+  border: 2px solid #ddd;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.card-text-box {
+  width: 80%;
+  height: 50%;
+  padding: 10px;
+  border-radius: 5px;
+  text-align: left;
+  font-size: 1.2rem;
+  box-sizing: border-box;
+  overflow: hidden;
+  white-space: pre;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.flipped-final {
+  position: relative !important;
+  transform: rotateY(180deg) !important;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+  margin-top: -236px;
+}
+
+#discard-pile .flipped-final {
+  margin-top: -236px;
+}
+
+#discard-pile .flipped-final:first-child {
+  margin-top: 0;
+}
+
+.card.moving {
+  z-index: 100;
+  transform: translate(var(--move-x), var(--move-y)) rotateY(180deg);
+}
+
+.card.flipped {
+  transform: rotateY(180deg);
+}
+
+.stack-count {
+  position: absolute;
+  bottom: -30px;
+  left: 0;
+  right: 0;
+  font-weight: bold;
+}
+
+#instruction {
+  margin-top: 3rem;
+  font-size: 1.2rem;
+  color: #666;
+}
+
+/* Modal Styling */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal.hidden {
+  display: none !important;
+}
+
+.modal-content {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 15px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h2 {
+  margin-top: 0;
+}
+
+input[type="number"] {
+  width: 100%;
+  padding: 0.8rem;
+  font-size: 1.2rem;
+  margin: 1.5rem 0;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  text-align: center;
+}
+
+button {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.8rem 2rem;
+  font-size: 1.1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+button:hover {
+  background: #0051ad;
+}
+
+#feedback {
+  margin: 1rem 0;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+#feedback.correct {
+  color: #2ecc71;
+}
+
+#feedback.wrong {
+  color: #e74c3c;
+}
+
+.hidden {
+  display: none !important;
+}
+
+#game-area {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 100px;
+}
+
+#numpad-container {
+  background: white;
+  padding: 15px;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  user-select: none;
+  touch-action: manipulation;
+  width: 200px;
+}
+
+.numpad-display {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+#last-number-value {
+  font-weight: bold;
+  color: #333;
+}
+
+#input-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.numpad-input {
+  background: #f0f0f0;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-align: center;
+  min-height: 24px;
+}
+
+#numpad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.numpad-btn {
+  width: 100%;
+  min-height: 50px;
+  font-size: 1.4rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  background: #e8e8e8;
+  color: #333;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  padding: 0;
+}
+
+.numpad-btn:hover {
+  background: #d0d0d0;
+}
+
+.numpad-btn:active {
+  transform: scale(0.95);
+  background: #c0c0c0;
+}
+
+.numpad-btn.special-btn {
+  background: var(--primary-color);
+  color: white;
+}
+
+.numpad-btn.special-btn:hover {
+  background: #0051ad;
+}
+
+#numpad-feedback {
+  margin-top: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  font-weight: bold;
+  text-align: center;
+}
+
+#numpad-feedback.correct {
+  background: #d4edda;
+  color: #155724;
+}
+
+#numpad-feedback.wrong {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+#numpad-restart {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  font-size: 1rem;
+}
+
+#penalty-display {
+  color: #e74c3c;
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-left: 10px;
+  animation: penalty-fade 1.5s ease-out forwards;
+}
+
+@keyframes penalty-fade {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scale(1.5);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(2);
+  }
+}
+
+#modal-time {
+  color: var(--primary-color);
+}
+
+.numpad-input.wrong {
+  border-color: #e74c3c;
+  animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-5px);
+  }
+
+  75% {
+    transform: translateX(5px);
+  }
+}

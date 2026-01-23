@@ -22,6 +22,12 @@
             ></iframe>
         </div>
 
+        <a
+            id="default-link"
+            style="display: none"
+            href="/static/"
+            th:href="@{/}"
+        ></a>
         <div
             id="task-save-url"
             style="display: none"
@@ -41,7 +47,7 @@
         >
             { "url": "https://theokoch.schule/informatik/h5p/bubblesort/",
             "allowedOrigins": ["https://theokoch.schule"], "matchVerbId":
-            "http://adlnet.gov/expapi/verbs/completed", "passScoreScaled": 0.8 }
+            "http://adlnet.gov/expapi/verbs/answered", "passScoreScaled": 0.8 }
         </div>
 
         <script th:src="@{/js/h5p.js}" src="../../static/js/h5p.js"></script>
