@@ -40,7 +40,7 @@
         data-url="/dev/submit"></div>
     
     <div id="currentContent" style="display: none" th:text="${currentContent}">
-        {"version":"1.0","tasks":[{"id":"ta","code":"T","status":"incorrect","lastExecuted":"2026-01-25T22:21:18.796Z","attempts":26},{"id":"task-2","code":"","status":"correct","lastExecuted":"2026-01-25T22:19:55.032Z","attempts":4},{"id":"task-3","code":"","status":"correct","lastExecuted":"2026-01-25T22:20:23.930Z","attempts":2},{"id":"task-4","code":"","status":"correct","lastExecuted":"2026-01-25T22:20:57.874Z","attempts":8},{"id":"task-5","code":"","status":"not_attempted","lastExecuted":null,"attempts":0},{"id":"task-6","code":"","status":"not_attempted","lastExecuted":null,"attempts":0}],"currentTutorialIndex":0,"metadata":{"totalTasks":6,"completedTasks":3,"lastSaved":"2026-01-25T22:21:19.979Z","taskOrder":["task-1","task-2","task-3","task-4","task-5","task-6"]}}
+        {"version":"1.0","tasks":[{"id":"task-1","code":"T","status":"incorrect","lastExecuted":"2026-01-25T22:21:18.796Z","attempts":26},{"id":"task-2","code":"","status":"correct","lastExecuted":"2026-01-25T22:19:55.032Z","attempts":4},{"id":"task-3","code":"","status":"correct","lastExecuted":"2026-01-25T22:20:23.930Z","attempts":2},{"id":"task-4","code":"","status":"correct","lastExecuted":"2026-01-25T22:20:57.874Z","attempts":8},{"id":"task-5","code":"","status":"not_attempted","lastExecuted":null,"attempts":0},{"id":"task-6","code":"","status":"not_attempted","lastExecuted":null,"attempts":0}],"currentTutorialIndex":0,"metadata":{"totalTasks":6,"completedTasks":3,"lastSaved":"2026-01-25T22:21:19.979Z","taskOrder":["task-1","task-2","task-3","task-4","task-5","task-6"]}}
     </div>
     <div id="defaultSubmission" style="display: none" th:text="${task.defaultSubmission}"></div>
     <div id="description" style="display: none" th:text="${task.description}">
@@ -294,8 +294,8 @@
     </div>
 
     <!-- JavaScript -->
-    <script th:src="@{/js/ra-task-renderer.js}" src="../../static/js/ra-task-renderer.js?v=20260125-v1"></script>
-    <script th:src="@{/js/ra-task-view.js}" src="../../static/js/ra-task-view.js?v=20260125-v1"></script>
+    <script th:src="@{/js/ra-task-renderer.js}" src="../../static/js/ra-task-renderer.js"></script>
+    <script th:src="@{/js/ra-task-view.js}" src="../../static/js/ra-task-view.js"></script>
 </body>
 
 </html>
