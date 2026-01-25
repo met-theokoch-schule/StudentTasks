@@ -16,3 +16,54 @@ body {
   border: 0;
   display: block;
 }
+
+#h5p-home-btn {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #1a73d9;
+  color: #fff;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+#h5p-home-btn:hover {
+  background: #196bc9;
+  transform: translateY(-1px);
+  box-shadow: 0 14px 24px rgba(0, 0, 0, 0.35);
+}
+
+#h5p-home-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.28);
+}
+
+#h5p-home-btn:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
+}
+
+#h5p-home-btn i {
+  font-size: 22px;
+}
+
+@media (max-width: 640px) {
+  #h5p-home-btn {
+    right: 16px;
+    bottom: 16px;
+    width: 48px;
+    height: 48px;
+  }
+
+  #h5p-home-btn i {
+    font-size: 18px;
+  }
+}
