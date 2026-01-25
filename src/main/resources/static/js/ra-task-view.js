@@ -78,9 +78,8 @@ function initializeFromDOM() {
         submitUrl = submitUrlDiv?.dataset.url || "/dev/submit";
 
         // Content-Daten
-        currentContent =
-            document.getElementById("currentContent")?.textContent?.trim() ||
-            "";
+        const currentContentElem = document.getElementById("currentContent");
+        currentContent = currentContentElem ? currentContentElem.textContent.trim() : "";
         const description =
             document.getElementById("description")?.textContent?.trim() || "";
         tutorial =

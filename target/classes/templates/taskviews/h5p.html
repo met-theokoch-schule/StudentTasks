@@ -10,6 +10,12 @@
             rel="stylesheet"
             type="text/css"
         />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+        />
     </head>
     <body>
         <div id="h5p-task-root">
@@ -21,6 +27,15 @@
                 allowfullscreen
             ></iframe>
         </div>
+        <a
+            id="h5p-home-btn"
+            th:href="@{/student/dashboard}"
+            href="/student/dashboard"
+            aria-label="Zum Dashboard"
+            title="Zum Dashboard"
+        >
+            <i class="fas fa-house" aria-hidden="true"></i>
+        </a>
 
         <a
             id="default-link"

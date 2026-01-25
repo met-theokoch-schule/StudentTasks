@@ -153,6 +153,11 @@ public class DataInitializer implements ApplicationRunner {
                 "Klassen und Objekte",
                 40);
 
+        unitTitleService.createOrUpdate("datenbanken",
+                    "Datenbanken",
+                    "Relationenalgebra, ER-Diagramme und SQL",
+                    40);
+
         // unitTitleService.createOrUpdate("datenbanken",
         // "Datenbanken",
         // "Grundlagen von Datenbanken und SQL",
