@@ -29,7 +29,13 @@ function processSpoilersMarkdown(markdown) {
 
 // Initialisierung beim Laden
 document.addEventListener("DOMContentLoaded", async () => {
-    console.log("🚀 RA Task View initializing...");
+    console.log("🚀 RA Task View initializing... (v20260125-v1)");
+
+    const debugContent = document.getElementById("currentContent");
+    console.log("🧪 DEBUG: currentContent element exists:", !!debugContent);
+    if (debugContent) {
+        console.log("🧪 DEBUG: currentContent text:", debugContent.textContent.trim());
+    }
 
     if (initializeFromDOM()) {
         console.log("✅ DOM data loaded");
