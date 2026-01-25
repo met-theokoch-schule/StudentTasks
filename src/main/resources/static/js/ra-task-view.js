@@ -516,14 +516,18 @@ function loadContentToView(contentString) {
                 statusEntry.attempts = savedTask.attempts || 0;
                 statusEntry.code = savedTask.code || ""; // Code für späteren Zugriff speichern
             } else {
-                taskStatus.tasks.push({
+                statusEntry = {
                     id: savedTask.id,
                     status: savedTask.status || "not_attempted",
                     lastExecuted: savedTask.lastExecuted || null,
                     attempts: savedTask.attempts || 0,
                     code: savedTask.code || ""
-                });
+                };
+                taskStatus.tasks.push(statusEntry);
             }
+
+            // UI-Status sofort aktualisieren, falls DOM-Elemente schon da sind
+            updateTaskUIStatus(savedTask.id, statusEntry.status);
 
             // Sofort in Editor setzen, falls dieser schon existiert
             const editor = editors[savedTask.id];
@@ -652,6 +656,12 @@ function updateTaskStatus(taskId, status) {
     }
 
     // UI aktualisieren
+    updateTaskUIStatus(taskId, status);
+    updateProgressInfo();
+}
+
+// Hilfsfunktion für UI-Status-Update
+function updateTaskUIStatus(taskId, status) {
     const statusIcon = document.getElementById(`task-icon-${taskId}`);
     const taskCard = document.getElementById(`task-card-${taskId}`);
     
@@ -674,8 +684,6 @@ function updateTaskStatus(taskId, status) {
                 statusIcon.className = "task-status-icon status-not-attempted";
         }
     }
-
-    updateProgressInfo();
 }
 
 // Fortschritt aktualisieren

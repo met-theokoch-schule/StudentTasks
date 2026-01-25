@@ -118,9 +118,16 @@ function createTaskCard(task, index) {
         // Prüfen, ob für diesen Task bereits gespeicherter Content vorliegt
         if (typeof taskStatus !== 'undefined' && taskStatus.tasks) {
             const savedTask = taskStatus.tasks.find(t => t.id === task.id);
-            if (savedTask && savedTask.code !== undefined && savedTask.code !== null) {
-                console.log(`✨ Setting saved code for editor ${task.id}: "${savedTask.code}"`);
-                editor.setValue(savedTask.code);
+            if (savedTask) {
+                if (savedTask.code !== undefined && savedTask.code !== null) {
+                    console.log(`✨ Setting saved code for editor ${task.id}: "${savedTask.code}"`);
+                    editor.setValue(savedTask.code);
+                }
+                
+                // Status UI auch hier nochmal sicherheitshalber triggern
+                if (savedTask.status && typeof updateTaskUIStatus === 'function') {
+                    updateTaskUIStatus(task.id, savedTask.status);
+                }
             } else {
                 console.log(`ℹ️ No saved code for editor ${task.id}`);
             }
