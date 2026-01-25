@@ -82,6 +82,7 @@ function initializeFromDOM() {
         // Content-Daten
         const currentContentElem = document.getElementById("currentContent");
         currentContent = currentContentElem ? currentContentElem.textContent.trim() : "";
+        console.log("🔍 Raw currentContent from DOM:", currentContent);
         const description =
             document.getElementById("description")?.textContent?.trim() || "";
         tutorial =
@@ -473,8 +474,9 @@ function getContentFromView() {
 
 // Content in View laden
 function loadContentToView(contentString) {
+    console.log("📥 loadContentToView called with length:", contentString?.length);
     if (!contentString || contentString.trim() === "" || contentString.trim() === "[[${currentContent}]]") {
-        console.log("No saved content to load");
+        console.log("⚠️ No valid saved content to load");
         return;
     }
 
@@ -482,6 +484,7 @@ function loadContentToView(contentString) {
         // Falls der String noch Thymeleaf-Platzhalter enthält oder falsch formatiert ist
         let cleanContent = contentString.trim();
         const content = JSON.parse(cleanContent);
+        console.log("📦 Parsed content object:", content);
 
         if (content.version !== "1.0") {
             console.warn("Unknown content version:", content.version);
