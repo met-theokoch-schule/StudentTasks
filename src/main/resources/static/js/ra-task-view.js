@@ -50,8 +50,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             renderTasks(taskData);
         }
 
-        // Gespeicherten Content laden
-        loadContentToView(currentContent);
+        // Content laden und an Editoren verteilen
+        if (currentContent) {
+            loadContentToView(currentContent);
+        }
 
         // Event-Listener einrichten
         setupEventListeners();
@@ -471,13 +473,15 @@ function getContentFromView() {
 
 // Content in View laden
 function loadContentToView(contentString) {
-    if (!contentString || contentString.trim() === "") {
+    if (!contentString || contentString.trim() === "" || contentString.trim() === "[[${currentContent}]]") {
         console.log("No saved content to load");
         return;
     }
 
     try {
-        const content = JSON.parse(contentString);
+        // Falls der String noch Thymeleaf-Platzhalter enthält oder falsch formatiert ist
+        let cleanContent = contentString.trim();
+        const content = JSON.parse(cleanContent);
 
         if (content.version !== "1.0") {
             console.warn("Unknown content version:", content.version);
@@ -488,30 +492,42 @@ function loadContentToView(contentString) {
             return;
         }
 
+        // Status-Array initialisieren falls leer
+        if (!taskStatus.tasks) taskStatus.tasks = [];
+
         // Editoren und Status laden
         content.tasks.forEach((savedTask) => {
-            const editor = editors[savedTask.id];
-            if (editor) {
-                editor.setValue(savedTask.code || "");
-            }
-
-            // Status vollständig wiederherstellen
-            const statusEntry = taskStatus.tasks.find(
+            // Status im globalen Objekt speichern
+            let statusEntry = taskStatus.tasks.find(
                 (t) => t.id === savedTask.id,
             );
             if (statusEntry) {
                 statusEntry.status = savedTask.status || "not_attempted";
                 statusEntry.lastExecuted = savedTask.lastExecuted || null;
                 statusEntry.attempts = savedTask.attempts || 0;
+                statusEntry.code = savedTask.code || ""; // Code für späteren Zugriff speichern
             } else {
                 taskStatus.tasks.push({
                     id: savedTask.id,
                     status: savedTask.status || "not_attempted",
                     lastExecuted: savedTask.lastExecuted || null,
                     attempts: savedTask.attempts || 0,
+                    code: savedTask.code || ""
                 });
             }
+
+            // Sofort in Editor setzen, falls dieser schon existiert
+            const editor = editors[savedTask.id];
+            if (editor) {
+                editor.setValue(savedTask.code || "");
+            }
         });
+
+        // Tutorial Index wiederherstellen
+        if (content.currentTutorialIndex !== undefined) {
+            currentTutorialIndex = content.currentTutorialIndex;
+            updateTutorialDisplay();
+        }
 
         console.log("✅ Content loaded successfully");
         updateSaveStatus("saved");
