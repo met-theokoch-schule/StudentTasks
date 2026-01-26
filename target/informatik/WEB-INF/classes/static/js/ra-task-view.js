@@ -29,7 +29,13 @@ function processSpoilersMarkdown(markdown) {
 
 // Initialisierung beim Laden
 document.addEventListener("DOMContentLoaded", async () => {
-    console.log("🚀 RA Task View initializing...");
+    console.log("🚀 RA Task View initializing... (v20260125-v1)");
+
+    const debugContent = document.getElementById("currentContent");
+    console.log("🧪 DEBUG: currentContent element exists:", !!debugContent);
+    if (debugContent) {
+        console.log("🧪 DEBUG: currentContent text:", debugContent.textContent.trim());
+    }
 
     if (initializeFromDOM()) {
         console.log("✅ DOM data loaded");
@@ -50,8 +56,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             renderTasks(taskData);
         }
 
-        // Gespeicherten Content laden
-        loadContentToView(currentContent);
+        // Content laden und an Editoren verteilen
+        if (currentContent) {
+            loadContentToView(currentContent);
+        }
 
         // Event-Listener einrichten
         setupEventListeners();
@@ -78,9 +86,9 @@ function initializeFromDOM() {
         submitUrl = submitUrlDiv?.dataset.url || "/dev/submit";
 
         // Content-Daten
-        currentContent =
-            document.getElementById("currentContent")?.textContent?.trim() ||
-            "";
+        const currentContentElem = document.getElementById("currentContent");
+        currentContent = currentContentElem ? currentContentElem.textContent.trim() : "";
+        console.log("🔍 Raw currentContent from DOM:", currentContent);
         const description =
             document.getElementById("description")?.textContent?.trim() || "";
         tutorial =
@@ -472,13 +480,17 @@ function getContentFromView() {
 
 // Content in View laden
 function loadContentToView(contentString) {
-    if (!contentString || contentString.trim() === "") {
-        console.log("No saved content to load");
+    console.log("📥 loadContentToView called with length:", contentString?.length);
+    if (!contentString || contentString.trim() === "" || contentString.trim() === "[[${currentContent}]]") {
+        console.log("⚠️ No valid saved content to load");
         return;
     }
 
     try {
-        const content = JSON.parse(contentString);
+        // Falls der String noch Thymeleaf-Platzhalter enthält oder falsch formatiert ist
+        let cleanContent = contentString.trim();
+        const content = JSON.parse(cleanContent);
+        console.log("📦 Parsed content object:", content);
 
         if (content.version !== "1.0") {
             console.warn("Unknown content version:", content.version);
@@ -489,30 +501,46 @@ function loadContentToView(contentString) {
             return;
         }
 
+        // Status-Array initialisieren falls leer
+        if (!taskStatus.tasks) taskStatus.tasks = [];
+
         // Editoren und Status laden
         content.tasks.forEach((savedTask) => {
-            const editor = editors[savedTask.id];
-            if (editor) {
-                editor.setValue(savedTask.code || "");
-            }
-
-            // Status vollständig wiederherstellen
-            const statusEntry = taskStatus.tasks.find(
+            // Status im globalen Objekt speichern
+            let statusEntry = taskStatus.tasks.find(
                 (t) => t.id === savedTask.id,
             );
             if (statusEntry) {
                 statusEntry.status = savedTask.status || "not_attempted";
                 statusEntry.lastExecuted = savedTask.lastExecuted || null;
                 statusEntry.attempts = savedTask.attempts || 0;
+                statusEntry.code = savedTask.code || ""; // Code für späteren Zugriff speichern
             } else {
-                taskStatus.tasks.push({
+                statusEntry = {
                     id: savedTask.id,
                     status: savedTask.status || "not_attempted",
                     lastExecuted: savedTask.lastExecuted || null,
                     attempts: savedTask.attempts || 0,
-                });
+                    code: savedTask.code || ""
+                };
+                taskStatus.tasks.push(statusEntry);
+            }
+
+            // UI-Status sofort aktualisieren, falls DOM-Elemente schon da sind
+            updateTaskUIStatus(savedTask.id, statusEntry.status);
+
+            // Sofort in Editor setzen, falls dieser schon existiert
+            const editor = editors[savedTask.id];
+            if (editor) {
+                editor.setValue(savedTask.code || "");
             }
         });
+
+        // Tutorial Index wiederherstellen
+        if (content.currentTutorialIndex !== undefined) {
+            currentTutorialIndex = content.currentTutorialIndex;
+            updateTutorialDisplay();
+        }
 
         console.log("✅ Content loaded successfully");
         updateSaveStatus("saved");
@@ -628,6 +656,12 @@ function updateTaskStatus(taskId, status) {
     }
 
     // UI aktualisieren
+    updateTaskUIStatus(taskId, status);
+    updateProgressInfo();
+}
+
+// Hilfsfunktion für UI-Status-Update
+function updateTaskUIStatus(taskId, status) {
     const statusIcon = document.getElementById(`task-icon-${taskId}`);
     const taskCard = document.getElementById(`task-card-${taskId}`);
     
@@ -650,8 +684,6 @@ function updateTaskStatus(taskId, status) {
                 statusIcon.className = "task-status-icon status-not-attempted";
         }
     }
-
-    updateProgressInfo();
 }
 
 // Fortschritt aktualisieren

@@ -10,19 +10,19 @@
     <link rel="stylesheet" href="https://unpkg.com/treeflex/dist/css/treeflex.css">
 
     <!-- CSS -->
-    <link th:href="@{/css/ra-task-view.css}" href="ra-task-view.css" rel="stylesheet" type="text/css" />
+    <link th:href="@{/css/ra-task-view.css}" href="../../static/css/ra-task-view.css" rel="stylesheet" type="text/css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     
     <!-- CodeMirror -->
-    <link rel="stylesheet" th:href="@{/css/codemirror/codemirror.css}" href="codemirror/codemirror.css" />
+    <link rel="stylesheet" th:href="@{/css/codemirror/codemirror.css}" href="../../static/css/codemirror/codemirror.css" />
     
     
     <!-- JavaScript Libraries -->
-    <script th:src="@{/js/codemirror/codemirror.js}" src="codemirror/codemirror.js"></script>
+    <script th:src="@{/js/codemirror/codemirror.js}" src="../../static/js/codemirror/codemirror.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
-    <script th:src="@{/js/relax-engine.bundle.js}" src="relax-engine.bundle.js"></script>
+    <script th:src="@{/js/relax-engine.bundle.js}" src="../../static/js/relax-engine.bundle.js"></script>
 </head>
 
 <body>
@@ -39,65 +39,71 @@
           : @{/api/tasks/{id}/submit(id=${task.id})}"
         data-url="/dev/submit"></div>
     
-    <div id="currentContent" style="display: none" th:text="${currentContent}"></div>
+    <div id="currentContent" style="display: none" th:text="${currentContent}">
+        {"version":"1.0","tasks":[{"id":"task-1","code":"T","status":"incorrect","lastExecuted":"2026-01-25T22:21:18.796Z","attempts":26},{"id":"task-2","code":"","status":"correct","lastExecuted":"2026-01-25T22:19:55.032Z","attempts":4},{"id":"task-3","code":"","status":"correct","lastExecuted":"2026-01-25T22:20:23.930Z","attempts":2},{"id":"task-4","code":"","status":"correct","lastExecuted":"2026-01-25T22:20:57.874Z","attempts":8},{"id":"task-5","code":"","status":"not_attempted","lastExecuted":null,"attempts":0},{"id":"task-6","code":"","status":"not_attempted","lastExecuted":null,"attempts":0}],"currentTutorialIndex":0,"metadata":{"totalTasks":6,"completedTasks":3,"lastSaved":"2026-01-25T22:21:19.979Z","taskOrder":["task-1","task-2","task-3","task-4","task-5","task-6"]}}
+    </div>
     <div id="defaultSubmission" style="display: none" th:text="${task.defaultSubmission}"></div>
     <div id="description" style="display: none" th:text="${task.description}">
         {
             "version": "1.0",
             "tables": {
-                "S": {
+                "L": {
                     "columns": [
-                        { "name": "MatrNr", "type": "number" },
-                        { "name": "Name", "type": "string" },
-                        { "name": "Semester", "type": "number" }
+                        { "name": "LNr", "type": "string" },
+                        { "name": "LName", "type": "string" },
+                        { "name": "Stadt", "type": "string" },
+                        { "name": "km", "type": "number" }
                     ],
                     "rows": [
-                        [12345, "Alice Mueller", 4],
-                        [23456, "Bob Schmidt", 2],
-                        [34567, "Charlie Weber", 6],
-                        [45678, "Diana Becker", 3],
-                        [56789, "Eva Schulz", 5]
+                        ["S1", "Smith", "London", 20],
+                        ["S2", "Jones", "Paris", 10],
+                        ["S3", "Blake", "Paris", 30],
+                        ["S4", "Clark", "London", 20],
+                        ["S5", "Adams", "Athens", 30]
                     ]
                 },
-                "Noten": {
+                "T": {
                     "columns": [
-                        { "name": "MatrNr", "type": "number" },
-                        { "name": "Fach", "type": "string" },
-                        { "name": "Grade", "type": "number" }
+                        { "name": "TNr", "type": "string" },
+                        { "name": "TName", "type": "string" },
+                        { "name": "Farbe", "type": "string" },
+                        { "name": "Gewicht", "type": "number" },
+                        { "name": "Lagerort", "type": "string" }
                     ],
                     "rows": [
-                        [12345, "Datenbanken", 1.7],
-                        [12345, "Algorithmen", 2.3],
-                        [23456, "Datenbanken", 1.0],
-                        [23456, "Algorithmen", 1.3],
-                        [34567, "Datenbanken", 2.7],
-                        [45678, "Algorithmen", 1.0],
-                        [56789, "Datenbanken", 3.0],
-                        [56789, "Algorithmen", 2.0]
+                        ["P1", "Nut", "Red", 12, "London"],
+                        ["P2", "Bolt", "Green", 17, "Paris"],
+                        ["P3", "Screw", "Blue", 17, "Rome"],
+                        ["P4", "Screw", "Red", 14, "London"],
+                        ["P5", "Cam", "Bllue", 12, "Paris"],
+                        ["P6", "Cog", "Red", 19, "London"]
                     ]
                 },
-                "Vorlesungen": {
+                "Liefert": {
                     "columns": [
-                        { "name": "FachID", "type": "number" },
-                        { "name": "Fach", "type": "string" },
-                        { "name": "Dozent", "type": "string" },
-                        { "name": "Semester", "type": "number" }
+                        { "name": "LNr", "type": "string" },
+                        { "name": "Tor", "type": "string" },
+                        { "name": "Menge", "type": "number" }
                     ],
                     "rows": [
-                        [101, "Datenbanken", "Prof. Dr. Mueller", 4],
-                        [102, "Algorithmen", "Prof. Dr. Schmidt", 2],
-                        [103, "Webentwicklung", "Dr. Weber", 3]
+                        ["S1", "P1", 200],
+                        ["S1", "P2", 200],
+                        ["S2", "P3", 400],
+                        ["S3", "P3", 200],
+                        ["S3", "P4", 500],
+                        ["S4", "P6", 300],
+                        ["S5", "P2", 200]
                     ]
                 }
             },
             "tasks": [
                 {
                     "id": "task-1",
-                    "title": "Aufgabe 1: Projektion",
-                    "description": "# Projektion - Spalten auswählen\n\nProjiziere nur die **Spalten MatrNr und Name** aus der Tabelle `S`.\n\n**Hinweis:** Verwende den Operator π (pi) um Spalten auszuwählen.",
-                    "defaultCode": "S join Noten",
-                    "solutionCode": "S join Noten",
-                    "showLKOperations": true,
+                    "title": "Aufgabe 1",
+                    "description": "Bestimme die identifizierende Nummer und die Entfernung (in km) jedes Lieferanten aus Paris. \\**Hinweis:** Beim Vergleichen eines Attributs mit einem String muss der String in einfache Anführungszeichen.\nBeispiel: LName='Smith'",
+                    "defaultCode": "",
+                    "solutionCode": "pi LNr,km ( sigma Stadt='Paris' (L))",
+                    "showLKOperations": false,
                     "validation": {
                         "orderMatters": false,
                         "extraColumnsAllowed": false,
@@ -106,27 +112,14 @@
                 },
                 {
                     "id": "task-2",
-                    "title": "Aufgabe 2: Selektion und Projektion",
-                    "description": "# Selektion - Zeilen filtern\n\nSelektiere alle **Noten mit einer Note besser oder gleich 2.0** und projiziere dann die Spalten `MatrNr` und `Note`.\n\n**Hinweis:** Verwende σ (sigma) für Selektion und kombiniere mit π (pi).",
+                    "title": "Aufgabe 2",
+                    "description": "Zeige alle Teile!",
                     "defaultCode": "",
-                    "solutionCode": "pi MatrNr, Note (sigma Note &lt;= 2.0 (Noten))",
+                    "solutionCode": "pi TNr (T)",
                     "showLKOperations": false,
                     "validation": {
                         "orderMatters": false,
-                        "extraColumnsAllowed": false,
-                        "columnNamesMustMatch": false
-                    }
-                },
-                {
-                    "id": "task-3",
-                    "title": "Aufgabe 3: Join (Verbund)",
-                    "description": "# Natural Join - Tabellen verbinden\n\nVerbinde die Tabellen `S` und `Noten` über den **Natural Join**. Diese sollten automatisch über die gemeinsame Spalte `MatrNr` verbunden werden.\n\n**Hinweis:** Verwende die join Operator um zwei Tabellen zu verbinden.",
-                    "defaultCode": "",
-                    "solutionCode": "S join Noten",
-                    "showLKOperations": false,
-                    "validation": {
-                        "orderMatters": false,
-                        "extraColumnsAllowed": false,
+                        "extraColumnsAllowed": true,
                         "columnNamesMustMatch": false
                     }
                 }
@@ -249,8 +242,8 @@
     </div>
 
     <!-- JavaScript -->
-    <script th:src="@{/js/ra-task-renderer.js}" src="ra-task-renderer.js"></script>
-    <script th:src="@{/js/ra-task-view.js}" src="ra-task-view.js"></script>
+    <script th:src="@{/js/ra-task-renderer.js}" src="../../static/js/ra-task-renderer.js?v=20260125-v1"></script>
+    <script th:src="@{/js/ra-task-view.js}" src="../../static/js/ra-task-view.js?v=20260125-v1"></script>
 </body>
 
 </html>
