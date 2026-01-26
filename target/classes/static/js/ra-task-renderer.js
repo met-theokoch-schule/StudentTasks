@@ -112,7 +112,26 @@ function createTaskCard(task, index) {
 
     // CodeMirror initialisieren (nach DOM-Einfügen)
     setTimeout(() => {
-        initializeEditor(task.id, textarea);
+        console.log(`🏗️ Initializing editor for task ${task.id}`);
+        const editor = initializeEditor(task.id, textarea);
+        
+        // Prüfen, ob für diesen Task bereits gespeicherter Content vorliegt
+        if (typeof taskStatus !== 'undefined' && taskStatus.tasks) {
+            const savedTask = taskStatus.tasks.find(t => t.id === task.id);
+            if (savedTask) {
+                if (savedTask.code !== undefined && savedTask.code !== null) {
+                    console.log(`✨ Setting saved code for editor ${task.id}: "${savedTask.code}"`);
+                    editor.setValue(savedTask.code);
+                }
+                
+                // Status UI auch hier nochmal sicherheitshalber triggern
+                if (savedTask.status && typeof updateTaskUIStatus === 'function') {
+                    updateTaskUIStatus(task.id, savedTask.status);
+                }
+            } else {
+                console.log(`ℹ️ No saved code for editor ${task.id}`);
+            }
+        }
     }, 0);
 
     return card;
@@ -317,8 +336,10 @@ function initializeEditor(taskId, textarea) {
         setupEditorTracking(editor, taskId);
 
         console.log(`✅ Editor initialized for task ${taskId}`);
+        return editor;
     } catch (e) {
         console.error(`Failed to initialize editor for task ${taskId}:`, e);
+        return null;
     }
 }
 

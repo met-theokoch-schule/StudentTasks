@@ -122,58 +122,6 @@
                         "extraColumnsAllowed": true,
                         "columnNamesMustMatch": false
                     }
-                },
-                {
-                    "id": "task-3",
-                    "title": "Aufgabe 3",
-                    "description": "Bestimme die Nummer und die Farbe aller Teile mit einem Gewicht zwischen (einschließlich) 15 und 20 .",
-                    "defaultCode": "",
-                    "solutionCode": "pi TNr, Farbe (sigma Gewicht >= 15 and Gewicht <= 20 (T))",
-                    "showLKOperations": false,
-                    "validation": {
-                        "orderMatters": false,
-                        "extraColumnsAllowed": false,
-                        "columnNamesMustMatch": false
-                    }
-                },
-                {
-                    "id": "task-4",
-                    "title": "Aufgabe 4",
-                    "description": "Zeige Nummer und Lagerort aller ausgelieferter Teile.",
-                    "defaultCode": "",
-                    "solutionCode": "pi TNr, Lagerort (T join Liefert)",
-                    "showLKOperations": false,
-                    "validation": {
-                        "orderMatters": false,
-                        "extraColumnsAllowed": false,
-                        "columnNamesMustMatch": false
-                    }
-                },
-                {
-                    "id": "task-5",
-                    "title": "Aufgabe 5",
-                    "description": "Zeige die Nummer und die Menge aller Teile, die von einem Londoner Lieferanten geliefert werden.",
-                    "defaultCode": "",
-                    "solutionCode": "pi TNr,Menge (sigma Stadt='London'(L join Liefert))",
-                    "showLKOperations": false,
-                    "validation": {
-                        "orderMatters": false,
-                        "extraColumnsAllowed": false,
-                        "columnNamesMustMatch": false
-                    }
-                },
-                {
-                    "id": "task-6",
-                    "title": "Aufgabe 6",
-                    "description": "Zeige die Farbe und den Namen jeden Teils, welches ein Lieferant aus Paris liefert.",
-                    "defaultCode": "",
-                    "solutionCode": "pi Name, Farbe (sigma Stadt = Paris ((T join Liefert) join L))",
-                    "showLKOperations": false,
-                    "validation": {
-                        "orderMatters": false,
-                        "extraColumnsAllowed": false,
-                        "columnNamesMustMatch": false
-                    }
                 }
             ]
         }
