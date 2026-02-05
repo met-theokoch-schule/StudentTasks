@@ -185,6 +185,18 @@ async function initializeDatabase(taskData) {
             const bytes = base64ToBytes(taskData.database.content);
             db = new SQL.Database(bytes);
             console.log("✅ Database loaded from Base64");
+        } else if (taskData.database.type === "url") {
+            // SQLite-File via URL laden
+            const response = await fetch(taskData.database.content);
+            if (!response.ok) {
+                throw new Error(
+                    `Database download failed: ${response.status} ${response.statusText}`,
+                );
+            }
+            const buffer = await response.arrayBuffer();
+            const bytes = new Uint8Array(buffer);
+            db = new SQL.Database(bytes);
+            console.log("✅ Database loaded from URL");
         } else if (taskData.database.type === "sql") {
             // SQL-Init-Script
             db = new SQL.Database();

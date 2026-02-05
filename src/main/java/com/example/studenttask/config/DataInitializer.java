@@ -103,6 +103,9 @@ public class DataInitializer implements ApplicationRunner {
         createOrUpdateTaskView("Relationen Algebra Aufgaben", raTaskView,
                 "Interaktive RA Aufgaben stellen", false);
 
+        createOrUpdateTaskView("ER-Diagramm", "taskviews/erd",
+                "Interaktive ERD's erstellen", false);
+
         String h5pTaskView = "taskviews/h5p";
 
         createOrUpdateTaskView("H5P Aufgaben", h5pTaskView,
@@ -156,7 +159,7 @@ public class DataInitializer implements ApplicationRunner {
         unitTitleService.createOrUpdate("datenbanken",
                     "Datenbanken",
                     "Relationenalgebra, ER-Diagramme und SQL",
-                    40);
+                    50);
 
         // unitTitleService.createOrUpdate("datenbanken",
         // "Datenbanken",
