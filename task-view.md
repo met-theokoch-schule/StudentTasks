@@ -22,18 +22,55 @@ Ein TaskView muss folgende grundlegende Struktur haben:
 </html>
 ```
 
-### 2. Pflicht-Funktionalitäten
+### 2. Statische Auslieferung + Daten im HTML (Pflicht)
+
+Ausser dem HTML muss alles **statisch** ausgeliefert werden (CSS/JS/Assets). 
+Die TaskView-HTML enthaelt **alle dynamischen Daten** in versteckten `<div>`-Elementen, die das JavaScript ausliest.
+Siehe als Referenz **python-editor taskview** und **sql-task-view**.
+
+Pflicht-Pattern (vollstaendiges Beispiel, ohne externe Referenzen):
+
+```html
+<!-- Basis-URL fuer spaetere Deployments (nicht Root!) -->
+<a id="default-link" style="display: none;" href="/static/" th:href="@{/}"></a>
+
+<!-- API-Pfade als Daten-Attribute (werden in JS mit default-link kombiniert) -->
+<div id="task-save-url" style="display: none"
+     th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? @{/api/tasks/usertasks/{id}/content(id=${userTaskId})} : @{/api/tasks/{id}/content(id=${task.id})}}"
+     data-url="/dev/save"></div>
+<div id="task-submit-url" style="display: none"
+     th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? '' : @{/api/tasks/{id}/submit(id=${task.id})}}"
+     data-url="/dev/submit"></div>
+
+<!-- Task-Daten -->
+<div id="currentContent" style="display: none" th:text="${currentContent}"></div>
+<div id="defaultSubmission" style="display: none" th:text="${task.defaultSubmission}"></div>
+<div id="description" style="display: none" th:text="${task.description}"></div>
+<div id="tutorial" style="display: none" th:utext="${task.tutorial}"></div>
+```
+
+**Wichtig:** Die App laeuft spaeter **nicht im Root-Verzeichnis**. Deshalb muessen **alle** Pfade
+in JS immer mit dem `#default-link`-Prefix zusammengesetzt werden. 
+Keine hart kodierten `/api/...`-Pfade oder `/static/...`-Pfade verwenden.
+
+Kurz-Checkliste (Pflicht):
+1. **Alle** Daten, die das JS braucht, stehen als HTML-Elemente mit `id` im Template.
+2. **Save/Submit-URLs** werden per Thymeleaf als **relative Pfade** gerendert.
+3. **JS** setzt `default-link` + Pfad zusammen (kein hart kodiertes `/api/...`).
+4. **Submit-URL** darf im Lehrer-View leer sein; in dem Fall Submit-Button deaktivieren/ausblenden.
+
+### 3. Pflicht-Funktionalitäten
 
 Jeder TaskView **MUSS** folgende Funktionen implementieren:
 
 #### a) Content-Speicherung
 - JavaScript-Funktion `saveContent(isSubmission = false)`
-- Senden des Inhalts via POST an `/api/tasks/${taskId}/content`
+- Senden des Inhalts via POST an die **zusammengesetzte** URL aus `#default-link` + `#task-save-url[data-url]`
 - Explizite Speicherung durch Benutzeraktion
 
 #### b) Content-Abgabe
 - JavaScript-Funktion `submitTask()`
-- Senden des Inhalts via POST an `/api/tasks/${taskId}/submit`
+- Senden des Inhalts via POST an die **zusammengesetzte** URL aus `#default-link` + `#task-submit-url[data-url]`
 - Bestätigungsdialog vor Abgabe
 
 #### c) Status-Anzeige
@@ -42,6 +79,33 @@ Jeder TaskView **MUSS** folgende Funktionen implementieren:
 #### d) Responsive Design
 - Bootstrap 5 kompatibel
 - Mobile-first Ansatz
+
+### 4. UI/Design-Regeln fuer Save/Submit/Status (aus python-editor)
+
+Der Look-and-Feel soll konsistent mit `python-editor` sein:
+
+Pflicht-Snippet (Buttons + Status):
+
+```html
+<div class="controls">
+    <span id="save-status" class="fas fa-circle text-muted"
+          style="font-size: 0.8rem; cursor: help;"
+          data-title="Bereit zum Speichern"></span>
+    <button id="saveButton" class="btn btn-success btn-sm">
+        <i class="fas fa-save"></i> Speichern
+    </button>
+    <button id="submitButton" class="btn btn-primary btn-sm">
+        <i class="fas fa-paper-plane"></i> Abgeben
+    </button>
+</div>
+```
+
+Design-Regeln:
+1. **Status** ist ein kleiner FontAwesome-Kreis (`fas fa-circle`) mit `text-muted`, Tooltip via `data-title` oder `title`.
+2. **Speichern** nutzt `btn btn-success btn-sm` und Icon `fas fa-save`.
+3. **Abgeben** nutzt `btn btn-primary btn-sm` und Icon `fas fa-paper-plane`.
+4. Buttons/Status stehen nebeneinander in einer `.controls`-Leiste (Header).
+5. Wenn `task-submit-url` leer ist (Lehrer-View), Submit-Button deaktivieren oder ausblenden.
 
 ## Verfügbare Thymeleaf-Attribute
 
@@ -115,9 +179,12 @@ ${isSubmitted}               <!-- Boolean: Bereits abgegeben? -->
 function saveContent(isSubmission = false) {
     const content = getContentFromView(); // TaskView-spezifisch
 
-    const url = isSubmission ? 
-        `/api/tasks/${taskId}/submit` : 
-        `/api/tasks/${taskId}/content`;
+    const baseUrl = (document.getElementById('default-link')?.getAttribute('href') || '/').replace(/\/$/, '');
+    const rawSaveUrl = document.getElementById('task-save-url')?.dataset?.url || '';
+    const rawSubmitUrl = document.getElementById('task-submit-url')?.dataset?.url || '';
+    const saveUrl = rawSaveUrl.startsWith('/') ? baseUrl + rawSaveUrl : baseUrl + '/' + rawSaveUrl;
+    const submitUrl = rawSubmitUrl.startsWith('/') ? baseUrl + rawSubmitUrl : baseUrl + '/' + rawSubmitUrl;
+    const url = isSubmission ? submitUrl : saveUrl;
 
     fetch(url, {
         method: 'POST',
@@ -154,6 +221,48 @@ function updateSaveStatus(status) {
 }
 ```
 
+### Base-URL fuer statische Assets (JS)
+
+Falls JavaScript eigene Pfade zu statischen Dateien braucht (z.B. Worker, Images), nutze `#default-link`:
+
+```javascript
+const baseUrl = document.getElementById('default-link')?.getAttribute('href') || '/';
+const workerUrl = baseUrl + 'js/python-worker.js';
+```
+
+### Minimalbeispiel: kompletter TaskView-HTML-Start
+
+```html
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mein TaskView</title>
+    <link th:href="@{/css/mein-taskview.css}" href="../../static/css/mein-taskview.css" rel="stylesheet">
+    <script th:src="@{/js/mein-taskview.js}" src="../../static/js/mein-taskview.js" defer></script>
+</head>
+<body>
+    <!-- Daten-Container (Pflicht) -->
+    <a id="default-link" style="display: none;" href="/static/" th:href="@{/}"></a>
+    <div id="task-save-url" style="display: none"
+         th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? @{/api/tasks/usertasks/{id}/content(id=${userTaskId})} : @{/api/tasks/{id}/content(id=${task.id})}}"
+         data-url="/dev/save"></div>
+    <div id="task-submit-url" style="display: none"
+         th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? '' : @{/api/tasks/{id}/submit(id=${task.id})}}"
+         data-url="/dev/submit"></div>
+    <div id="currentContent" style="display: none" th:text="${currentContent}"></div>
+    <div id="defaultSubmission" style="display: none" th:text="${task.defaultSubmission}"></div>
+    <div id="description" style="display: none" th:text="${task.description}"></div>
+    <div id="tutorial" style="display: none" th:utext="${task.tutorial}"></div>
+
+    <!-- Sichtbarer UI-Bereich -->
+    <div class="mycontainer">
+        <!-- ... -->
+    </div>
+</body>
+</html>
+```
 ### TaskView-spezifische Funktionen
 
 ```javascript
@@ -244,14 +353,6 @@ const content = JSON.stringify({
 // Benachrichtigung an Parent-Window
 if (window.parent && window.parent !== window) {
     window.parent.postMessage('content-saved', '*');
-}
-
-// UserTask-spezifische Speicherung im Lehrer-Modus
-const isTeacherView = [[${isTeacherView ?: false}]];
-const userTaskId = [[${userTask.id}]];
-
-if (isTeacherView && userTaskId) {
-    saveUrl = `/api/usertasks/${userTaskId}/content`;
 }
 ```
 

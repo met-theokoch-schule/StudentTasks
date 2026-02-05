@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="Web site created using create-react-app"
+    />
+    <title>ERD TaskView</title>
+    <script type="text/javascript">
+      window.erddata =
+        '{"version":2,"www":"student.tasks","shapes":[],"connectors":[],"width":2000,"height":1000}';
+    </script>
+    <script
+      defer="defer"
+      src="../../static/js/erd.js"
+      th:src="@{/js/erd.js}"
+    ></script>
+    <link
+      th:href="@{/css/erd.css}"
+      href="../../static/css/erd.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript
+    ><a
+      id="default-link"
+      style="display: none"
+      href="/static/"
+      th:href="@{/}"
+    ></a>
+    <div
+      id="task-save-url"
+      style="display: none"
+      th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? 'api/tasks/usertasks/' + userTaskId + '/content' : 'api/tasks/' + task.id + '/content'}"
+      data-url="/dev/save"
+    ></div>
+    <div
+      id="task-submit-url"
+      style="display: none"
+      th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? '' : 'api/tasks/' + task.id + '/submit'}"
+      data-url="/dev/submit"
+    ></div>
+    <div
+      id="currentContent"
+      style="display: none"
+      th:text="${currentContent}"
+    ></div>
+    <div
+      id="defaultSubmission"
+      style="display: none"
+      th:text="${task.defaultSubmission}"
+    ></div>
+    <div id="description" style="display: none" th:text="${task.description}">
+      In der Schulbibliothek „Leseratte“ soll die Ausleihe künftig digital
+      verwaltet werden. Jede **Schülerin** und jeder **Schüler** erhält dazu
+      eine eindeutige **Schülernummer**; außerdem werden **Vorname**,
+      **Nachname**, **Klasse** und eine **E-Mail-Adresse** gespeichert. Die
+      Bibliothek besitzt **Bücher**, zu denen eine eindeutige **Buchnummer**,
+      der **Titel**, das **Erscheinungsjahr** und die **ISBN** erfasst werden.
+      Ein Buch kann von der Bibliothek in mehreren **Exemplaren** vorhanden
+      sein. Jedes Exemplar hat eine eigene eindeutige **Exemplarnummer**, ein
+      **Anschaffungsdatum** und einen **Zustand** (z. B. „neu“, „gut“,
+      „beschädigt“). Jedes Exemplar gehört genau zu einem Buch; ein Buch kann
+      entsprechend kein, ein oder mehrere Exemplare besitzen. Zu jedem Buch
+      werden außerdem die **Autorinnen und Autoren** dokumentiert. Für
+      Autorinnen/Autoren gibt es eine eindeutige **Autorennummer**, den
+      **Namen** sowie das **Geburtsjahr**. Ein Buch kann von **mehreren**
+      Autorinnen/Autoren geschrieben worden sein, und eine Autorin/ein Autor
+      kann **mehrere** Bücher verfasst haben. Wenn ein Exemplar ausgeliehen
+      wird, wird ein **Ausleihvorgang** gespeichert: Zu jeder Ausleihe werden
+      das **Ausleihdatum**, das **Fälligkeitsdatum** und – falls das Exemplar
+      zurückgegeben wurde – das **Rückgabedatum** erfasst. Eine Ausleihe bezieht
+      sich immer auf **genau ein Exemplar** und wird immer von **genau einer
+      Schülerin/einem Schüler** durchgeführt. Ein Exemplar kann im Laufe der
+      Zeit **oft** ausgeliehen werden, aber **nicht gleichzeitig** in zwei
+      laufenden Ausleihen stecken: Solange kein Rückgabedatum eingetragen ist,
+      gilt das Exemplar als „ausgeliehen“ und kann nicht erneut ausgeliehen
+      werden. Eine Schülerin/ein Schüler kann gleichzeitig mehrere Exemplare
+      ausleihen, jedoch höchstens **drei** zur gleichen Zeit. Zusätzlich
+      verwaltet die Bibliothek **Genres** (z. B. „Fantasy“, „Krimi“,
+      „Sachbuch“). Jedes Genre hat eine eindeutige **Genre-ID** und eine
+      **Bezeichnung**. Jedes Buch gehört **mindestens einem** Genre an, kann
+      aber auch **mehreren** Genres zugeordnet sein. **Arbeitsauftrag:**
+      Erstellt aus diesem Text ein **ER-Diagramm**. Achtet darauf,
+      **Primärschlüssel** zu kennzeichnen, **Beziehungen** mit sinnvollen Namen
+      zu versehen und **Kardinalitäten** (z. B. 1:1, 1:n, n:m) korrekt
+      anzugeben.
+    </div>
+    <div id="tutorial" style="display: none" th:utext="${task.tutorial}"></div>
+    <div id="root"></div>
+  </body>
+</html>
