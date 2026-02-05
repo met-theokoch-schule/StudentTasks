@@ -72,7 +72,7 @@
                                     <option th:each="view : ${taskViews}" 
                                             th:value="${view.id}" 
                                             th:text="${view.name}"
-                                            th:attr="data-description=${view.description}">
+                                            th:attr="data-description=${view.description},data-template-path=${view.templatePath}">
                                         TaskView Name
                                     </option>
                                 </select>
@@ -181,38 +181,41 @@
                         <h6 class="card-title mb-0">Hilfe</h6>
                     </div>
                     <div class="card-body">
-                        <h6>Aufgabentypen</h6>
-                        <p class="small text-muted">
-                            Verschiedene Aufgabentypen ermöglichen unterschiedliche Bearbeitungsformen:
-                        </p>
-                        <ul class="small">
-                            <li><strong>Einfacher Texteditor:</strong> Für reine Textabgaben</li>
-                            <li><strong>HTML Editor:</strong> Für formatierte Texte</li>
-                        </ul>
+                        <div id="taskHelpDefault">
+                            <h6>Aufgabentypen</h6>
+                            <p class="small text-muted">
+                                Verschiedene Aufgabentypen ermöglichen unterschiedliche Bearbeitungsformen:
+                            </p>
+                            <ul class="small">
+                                <li><strong>Einfacher Texteditor:</strong> Für reine Textabgaben</li>
+                                <li><strong>HTML Editor:</strong> Für formatierte Texte</li>
+                            </ul>
 
-                        <h6 class="mt-3">Markdown-Syntax</h6>
-                        <p class="small text-muted">
-                            Die Aufgabenbeschreibung unterstützt Markdown:
-                        </p>
-                        <ul class="small">
-                            <li><code>**fett**</code> für <strong>fett</strong></li>
-                            <li><code>*kursiv*</code> für <em>kursiv</em></li>
-                            <li><code># Überschrift</code> für Überschriften</li>
-                            <li><code>- Punkt</code> für Listen</li>
-                        </ul>
+                            <h6 class="mt-3">Markdown-Syntax</h6>
+                            <p class="small text-muted">
+                                Die Aufgabenbeschreibung unterstützt Markdown:
+                            </p>
+                            <ul class="small">
+                                <li><code>**fett**</code> für <strong>fett</strong></li>
+                                <li><code>*kursiv*</code> für <em>kursiv</em></li>
+                                <li><code># Überschrift</code> für Überschriften</li>
+                                <li><code>- Punkt</code> für Listen</li>
+                            </ul>
 
-                        <h6 class="mt-3">Standard-Vorlage</h6>
-                        <p class="small text-muted">
-                            Mit der Standard-Vorlage können Sie den Schülern eine Ausgangsbasis geben. 
-                            Das Format hängt vom gewählten Aufgabentyp ab.
-                        </p>
+                            <h6 class="mt-3">Standard-Vorlage</h6>
+                            <p class="small text-muted">
+                                Mit der Standard-Vorlage können Sie den Schülern eine Ausgangsbasis geben. 
+                                Das Format hängt vom gewählten Aufgabentyp ab.
+                            </p>
 
-                        <h6 class="mt-3">Tutorial</h6>
-                        <p class="small text-muted">
-                            Das Tutorial-Feld ermöglicht es, den Schülern zusätzliche Hilfestellungen 
-                            oder Schritt-für-Schritt-Anleitungen zu geben. Das Format hängt vom 
-                            gewählten Aufgabentyp ab.
-                        </p>
+                            <h6 class="mt-3">Tutorial</h6>
+                            <p class="small text-muted">
+                                Das Tutorial-Feld ermöglicht es, den Schülern zusätzliche Hilfestellungen 
+                                oder Schritt-für-Schritt-Anleitungen zu geben. Das Format hängt vom 
+                                gewählten Aufgabentyp ab.
+                            </p>
+                        </div>
+                        <div id="taskHelpDynamic" class="d-none"></div>
                     </div>
                 </div>
             </div>
@@ -222,6 +225,7 @@
     <!-- Select2 JavaScript -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
     <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
 
     <script>
@@ -243,7 +247,51 @@
                 } else {
                     $('#taskViewDescription').text('Wählen Sie den Typ der Aufgabe aus.');
                 }
+
+                updateTaskHelp();
             });
+
+            function showDefaultHelp() {
+                $('#taskHelpDynamic').addClass('d-none').empty();
+                $('#taskHelpDefault').removeClass('d-none');
+            }
+
+            function updateTaskHelp() {
+                const selectedOption = $('#taskViewId').find('option:selected');
+                const templatePath = selectedOption.data('template-path');
+                if (!templatePath) {
+                    showDefaultHelp();
+                    return;
+                }
+
+                const shortName = String(templatePath).split('/').pop();
+                if (!shortName) {
+                    showDefaultHelp();
+                    return;
+                }
+
+                fetch(`/taskview-help/${shortName}.md`)
+                    .then((response) => {
+                        if (!response.ok) {
+                            throw new Error('help-not-found');
+                        }
+                        return response.text();
+                    })
+                    .then((markdown) => {
+                        if (!markdown.trim() || typeof marked === 'undefined' || !marked.parse) {
+                            showDefaultHelp();
+                            return;
+                        }
+                        const html = marked.parse(markdown);
+                        $('#taskHelpDynamic').html(html).removeClass('d-none');
+                        $('#taskHelpDefault').addClass('d-none');
+                    })
+                    .catch(() => {
+                        showDefaultHelp();
+                    });
+            }
+
+            updateTaskHelp();
         });
     </script>
 </body>
