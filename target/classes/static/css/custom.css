@@ -17,6 +17,27 @@ pre {
     overflow-y: auto;
 }
 
+.help-code-block {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.help-code-block pre {
+    overflow-x: scroll;
+    scrollbar-gutter: stable;
+    padding-top: 2rem;
+    margin-bottom: 0;
+}
+
+.code-copy-button {
+    position: absolute;
+    top: 0.25rem;
+    right: 0.25rem;
+    z-index: 2;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+}
+
 .alert {
     margin-top: 1rem;
 }
