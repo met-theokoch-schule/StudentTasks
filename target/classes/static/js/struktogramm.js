@@ -2859,13 +2859,14 @@ class Structogram {
 
     // append a button for adding new parameters at the end of the param div
     const addParamBtn = document.createElement('button');
+    addParamBtn.type = 'button';
     addParamBtn.classList.add('addCaseIcon', 'hand', 'caseOptionsIcons', 'tooltip', 'tooltip-bottom');
     addParamBtn.style.marginTop = 'auto';
     addParamBtn.style.marginBottom = 'auto';
     addParamBtn.setAttribute('data-tooltip', 'Parameter hinzufügen');
     addParamBtn.addEventListener('click', () => {
       addParamBtn.remove();
-      const countParam = document.getElementsByClassName('function-elem').length - 1;
+      const countParam = paramDiv.getElementsByClassName('function-elem').length;
       this.renderParam(countParam, paramDiv, spacingSize, fpSize, uid);
     });
 
