@@ -256,6 +256,63 @@
                 $('#taskHelpDefault').removeClass('d-none');
             }
 
+            function enhanceTaskHelpCodeBlocks() {
+                const container = document.getElementById('taskHelpDynamic');
+                if (!container) {
+                    return;
+                }
+
+                const blocks = container.querySelectorAll('pre');
+                blocks.forEach((pre) => {
+                    if (pre.parentElement && pre.parentElement.classList.contains('help-code-block')) {
+                        return;
+                    }
+
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'help-code-block';
+
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'btn btn-light code-copy-button';
+                    button.innerHTML = '<i class="fas fa-copy"></i> Kopieren';
+
+                    button.addEventListener('click', () => {
+                        const code = pre.querySelector('code');
+                        const text = code ? code.textContent : pre.textContent;
+
+                        const setCopied = () => {
+                            button.innerHTML = '<i class="fas fa-check"></i> Kopiert';
+                            setTimeout(() => {
+                                button.innerHTML = '<i class="fas fa-copy"></i> Kopieren';
+                            }, 1200);
+                        };
+
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            navigator.clipboard.writeText(text).then(setCopied).catch(() => {});
+                        } else {
+                            const textarea = document.createElement('textarea');
+                            textarea.value = text;
+                            textarea.style.position = 'fixed';
+                            textarea.style.opacity = '0';
+                            document.body.appendChild(textarea);
+                            textarea.focus();
+                            textarea.select();
+                            try {
+                                document.execCommand('copy');
+                                setCopied();
+                            } catch (err) {
+                                // Ignore copy failures.
+                            }
+                            document.body.removeChild(textarea);
+                        }
+                    });
+
+                    pre.parentNode.insertBefore(wrapper, pre);
+                    wrapper.appendChild(button);
+                    wrapper.appendChild(pre);
+                });
+            }
+
             function updateTaskHelp() {
                 const selectedOption = $('#taskViewId').find('option:selected');
                 const templatePath = selectedOption.data('template-path');
@@ -284,6 +341,7 @@
                         }
                         const html = marked.parse(markdown);
                         $('#taskHelpDynamic').html(html).removeClass('d-none');
+                        enhanceTaskHelpCodeBlocks();
                         $('#taskHelpDefault').addClass('d-none');
                     })
                     .catch(() => {
