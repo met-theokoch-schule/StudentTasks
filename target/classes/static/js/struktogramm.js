@@ -2761,12 +2761,24 @@ class Structogram {
         this.presenter.renderAllViews();
         createTextNode();
       });
+      let editCancelled = false;
+      const cancelEdit = event => {
+        editCancelled = true;
+        event.preventDefault();
+        event.stopPropagation();
+        inputElement.removeEventListener('blur', listenerFunction);
+        this.presenter.renderAllViews();
+      };
       const inputClose = newElement('div', ['deleteIcon', 'hand'], inputDiv);
       inputClose.style.minWidth = '1.4em';
       inputClose.style.marginLeft = '0.2em';
-      inputClose.addEventListener('click', () => this.presenter.renderAllViews());
+      inputClose.addEventListener('pointerdown', cancelEdit);
+      inputClose.addEventListener('click', cancelEdit);
       divContainer.insertBefore(inputDiv, divContainer.childNodes[pos]);
       const listenerFunction = event => {
+        if (editCancelled) {
+          return;
+        }
         if (event.code === 'Enter' || event.type === 'blur') {
           // remove the blur event listener in case of pressing-enter-event to avoid DOM exceptions
           if (event.code === 'Enter') {
@@ -2864,11 +2876,14 @@ class Structogram {
     addParamBtn.style.marginTop = 'auto';
     addParamBtn.style.marginBottom = 'auto';
     addParamBtn.setAttribute('data-tooltip', 'Parameter hinzufügen');
-    addParamBtn.addEventListener('click', () => {
+    const addParam = event => {
+      event.preventDefault();
+      event.stopPropagation();
       addParamBtn.remove();
       const countParam = paramDiv.getElementsByClassName('function-elem').length;
       this.renderParam(countParam, paramDiv, spacingSize, fpSize, uid);
-    });
+    };
+    addParamBtn.addEventListener('pointerdown', addParam);
 
     // show adding-parameters-button when hovering
     functionBoxHeaderDiv.addEventListener('mouseover', () => {

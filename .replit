@@ -129,6 +129,15 @@ task = "shell.exec"
 args = "./gradlew bootRun"
 waitForPort = 8000
 
+[[workflows.workflow]]
+name = "Serve Static"
+mode = "sequential"
+author = 12297667
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd src/main/resources && python3 -m http.server 8080"
+
 [[ports]]
 localPort = 5000
 externalPort = 80
