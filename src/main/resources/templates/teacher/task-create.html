@@ -313,6 +313,25 @@
                 });
             }
 
+            function enhanceTaskHelpTables() {
+                const container = document.getElementById('taskHelpDynamic');
+                if (!container) {
+                    return;
+                }
+
+                const tables = container.querySelectorAll('table');
+                tables.forEach((table) => {
+                    if (table.parentElement && table.parentElement.classList.contains('task-help-table')) {
+                        return;
+                    }
+
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'task-help-table';
+                    table.parentNode.insertBefore(wrapper, table);
+                    wrapper.appendChild(table);
+                });
+            }
+
             function updateTaskHelp() {
                 const selectedOption = $('#taskViewId').find('option:selected');
                 const templatePath = selectedOption.data('template-path');
@@ -342,6 +361,7 @@
                         const html = marked.parse(markdown);
                         $('#taskHelpDynamic').html(html).removeClass('d-none');
                         enhanceTaskHelpCodeBlocks();
+                        enhanceTaskHelpTables();
                         $('#taskHelpDefault').addClass('d-none');
                     })
                     .catch(() => {

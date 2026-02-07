@@ -38,6 +38,29 @@ pre {
     padding: 0.2rem 0.5rem;
 }
 
+.task-help-table {
+    max-width: 100%;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+}
+
+.task-help-table table {
+    border-collapse: collapse;
+    min-width: 100%;
+    width: max-content;
+}
+
+.task-help-table th,
+.task-help-table td {
+    border: 1px solid #dee2e6;
+    padding: 0.4rem 0.6rem;
+    vertical-align: top;
+}
+
+.task-help-table thead th {
+    background: #f8f9fa;
+}
+
 .alert {
     margin-top: 1rem;
 }
