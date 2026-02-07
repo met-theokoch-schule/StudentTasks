@@ -1,4 +1,4 @@
-Der HTML-CSS-Editor erlaubt das erstellen von HTML + CSS + Bilder Seiten. Die Vorschau wird bei Änderungen automatisch aktualisiert. Bilder sind in dem abgespeicherten Content eingebettet und haben aus diesem Grund eine relativ kleine maximale Größe.
+Ermöglicht es einfach Struktogramme zu erstellen.
 
 #### Bsp. Aufgabenbeschreibung:
 Aufgabe als Markdown Text. Wird durch marked.js geparsed.
@@ -7,14 +7,44 @@ Aufgabe als Markdown Text. Wird durch marked.js geparsed.
 wird nicht unterstützt
 
 #### Bsp. Standard-Vorlage
-Direkt den Code aus /debug/content/{taskId} einfügen.
-
-Beispiel:
+Beispiel für ein leeres Struktogramm:
 ```
 {
-    "version":"1.4.0",
-    "config":"python",
-    
-    "tree":{}
-}
-``
+    "version": "1.4.0",
+    "config": "python",
+    "showCodeButton": false,
+    "tree": {
+      "id": "root-1",
+      "type": "InsertNode",
+      "followElement": {
+        "type": "Placeholder"
+      }
+    }
+  }
+```
+
+Den tree aus /debug/content/{taskId} extrahieren und einfügen für nicht leere Beispiele.<br>
+**config**: Mögliche Werte: 
+ - python
+ - python_simple
+ - python_if
+ - python_loop
+ - python_for
+ - python_while
+ - python_if_loop
+ - python_function
+
+#### Funktionsvergleichsmatrix
+
+| Funktion | default | python | python_simple | python_if | python_loop | python_for | python_while | python_if_loop | python_function | standard |
+|----------|---------|--------|---------------|-----------|-------------|------------|--------------|----------------|-----------------|----------|
+| **Eingabe-Knoten** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Ausgabe-Knoten** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Aufgaben-Knoten** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Zählerschleife** | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ |
+| **Kopfschleife** | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ |
+| **Fußschleife** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Verzweigungsknoten** | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
+| **Fallunterscheidung** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Funktionsknoten** | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| **Try-Catch-Knoten** | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |

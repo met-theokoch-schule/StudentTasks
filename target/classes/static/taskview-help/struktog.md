@@ -1,11 +1,50 @@
-Kurztest fuer Struktogramm Hilfe.
+Ermöglicht es einfach Struktogramme zu erstellen.
 
-Beispiel:
+#### Bsp. Aufgabenbeschreibung:
+Aufgabe als Markdown Text. Wird durch marked.js geparsed.
+
+#### Bsp. Tutorial
+wird nicht unterstützt
+
+#### Bsp. Standard-Vorlage
+Beispiel für ein leeres Struktogramm:
 ```
-START
-  i <- 0
-  WHILE i < 5
-    i <- i + 1
-  ENDWHILE
-STOP
+{
+    "version": "1.4.0",
+    "config": "python",
+    "showCodeButton": false,
+    "tree": {
+      "id": "root-1",
+      "type": "InsertNode",
+      "followElement": {
+        "type": "Placeholder"
+      }
+    }
+  }
 ```
+
+Den tree aus /debug/content/{taskId} extrahieren und einfügen für nicht leere Beispiele.<br>
+**config**: Mögliche Werte: 
+ - python
+ - python_simple
+ - python_if
+ - python_loop
+ - python_for
+ - python_while
+ - python_if_loop
+ - python_function
+
+#### Funktionsvergleichsmatrix
+
+| Funktion | default | python | python_simple | python_if | python_loop | python_for | python_while | python_if_loop | python_function | standard |
+|----------|---------|--------|---------------|-----------|-------------|------------|--------------|----------------|-----------------|----------|
+| **Eingabe-Knoten** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Ausgabe-Knoten** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Aufgaben-Knoten** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Zählerschleife** | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ |
+| **Kopfschleife** | ✅ | ✅ | ❌ | ❌ | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ |
+| **Fußschleife** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Verzweigungsknoten** | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
+| **Fallunterscheidung** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Funktionsknoten** | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| **Try-Catch-Knoten** | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |

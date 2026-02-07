@@ -20,7 +20,7 @@ Aufgabe als Markdown Text. Wird durch marked.js geparsed.
     }
 ]
 ```
-**title**: Wird momentan nicht benutzt.
+**title**: Wird momentan nicht benutzt.<br>
 **content**: Inhalt einer Tutorialseite als marked.js Text.
 
 #### Bsp. Standard-Vorlage

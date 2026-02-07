@@ -1684,9 +1684,16 @@ class Presenter {
     this.displaySourcecode = false;
     this.undoList = [];
     this.redoList = [];
+    this.defaultSubmission = null;
   }
   addView(view) {
     this.views.push(view);
+  }
+  setDefaultSubmission(data) {
+    this.defaultSubmission = data;
+  }
+  getDefaultSubmission() {
+    return this.defaultSubmission;
   }
   getInsertMode() {
     return this.insertMode;
@@ -2048,7 +2055,12 @@ class Presenter {
       this.resetButtons();
     }
   }
-  resetModel() {
+  async resetModel() {
+    if (this.defaultSubmission) {
+      await this.readUrl(this.defaultSubmission);
+      document.getElementById("IEModal").classList.remove("active");
+      return;
+    }
     this.updateUndo();
     this.model.reset();
     this.checkUndo();
@@ -6892,7 +6904,56 @@ class ImportExport {
 
 
 
+function parseJsonFromElement(elementId, label) {
+  const element = document.getElementById(elementId);
+  if (!element) {
+    return null;
+  }
+  const raw = element.textContent.trim();
+  if (!raw) {
+    return null;
+  }
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    console.error(`Error parsing ${label}:`, error);
+    return null;
+  }
+}
+
+function normalizeTaskData(data, configName, showCodeButton) {
+  if (!data) {
+    return null;
+  }
+  if (data.version && data.tree && data.config) {
+    const normalized = Object.assign({}, data);
+    if (configName) {
+      normalized.config = configName;
+    }
+    if (showCodeButton !== undefined) {
+      normalized.showCodeButton = showCodeButton;
+    }
+    return normalized;
+  }
+  if (configName) {
+    const normalized = {
+      version: "1.4.0",
+      config: configName,
+      tree: data
+    };
+    if (showCodeButton !== undefined) {
+      normalized.showCodeButton = showCodeButton;
+    }
+    return normalized;
+  }
+  return data;
+}
+
 window.onload = async function () {
+  const defaultData = parseJsonFromElement("defaultSubmission", "default submission");
+  const currentData = parseJsonFromElement("currentContent", "current content");
+  const defaultConfigName = defaultData && defaultData.config ? defaultData.config : null;
+  const defaultShowCodeButton = defaultData && defaultData.showCodeButton !== undefined ? defaultData.showCodeButton : undefined;
   // manipulate the localStorage before loading the presenter
   if (typeof Storage !== 'undefined') {
     const url = new URL(window.location.href);
@@ -6904,7 +6965,9 @@ window.onload = async function () {
       });
     }
     const configId = url.searchParams.get('config');
-    config.config.loadConfig(configId);
+    if (configId && !defaultConfigName) {
+      config.config.loadConfig(configId);
+    }
   }
   generateHtmltree();
   generateFooter();
@@ -6922,18 +6985,14 @@ window.onload = async function () {
   presenter.addView(importExport);
 
   // generateInfoButton(document.getElementById('optionButtons'))
-
-  // Load default submission if present
-  const defaultSubmissionElement = document.getElementById('defaultSubmission');
-  if (defaultSubmissionElement && defaultSubmissionElement.textContent.trim()) {
-    try {
-      const defaultData = JSON.parse(defaultSubmissionElement.textContent.trim());
-      console.log('Loading default submission:', defaultData);
-      await presenter.readUrl(defaultData);
-    } catch (error) {
-      console.error('Error parsing default submission:', error);
-      presenter.init();
-    }
+  const normalizedDefaultData = normalizeTaskData(defaultData, defaultConfigName, defaultShowCodeButton);
+  if (normalizedDefaultData) {
+    presenter.setDefaultSubmission(normalizedDefaultData);
+  }
+  const initialData = currentData ? normalizeTaskData(currentData, defaultConfigName, defaultShowCodeButton) : presenter.getDefaultSubmission();
+  if (initialData) {
+    console.log('Loading initial submission:', initialData);
+    await presenter.readUrl(initialData);
   } else {
     presenter.init();
   }
