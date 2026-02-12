@@ -1684,9 +1684,16 @@ class Presenter {
     this.displaySourcecode = false;
     this.undoList = [];
     this.redoList = [];
+    this.defaultSubmission = null;
   }
   addView(view) {
     this.views.push(view);
+  }
+  setDefaultSubmission(data) {
+    this.defaultSubmission = data;
+  }
+  getDefaultSubmission() {
+    return this.defaultSubmission;
   }
   getInsertMode() {
     return this.insertMode;
@@ -2048,7 +2055,12 @@ class Presenter {
       this.resetButtons();
     }
   }
-  resetModel() {
+  async resetModel() {
+    if (this.defaultSubmission) {
+      await this.readUrl(this.defaultSubmission);
+      document.getElementById("IEModal").classList.remove("active");
+      return;
+    }
     this.updateUndo();
     this.model.reset();
     this.checkUndo();
@@ -2761,12 +2773,24 @@ class Structogram {
         this.presenter.renderAllViews();
         createTextNode();
       });
+      let editCancelled = false;
+      const cancelEdit = event => {
+        editCancelled = true;
+        event.preventDefault();
+        event.stopPropagation();
+        inputElement.removeEventListener('blur', listenerFunction);
+        this.presenter.renderAllViews();
+      };
       const inputClose = newElement('div', ['deleteIcon', 'hand'], inputDiv);
       inputClose.style.minWidth = '1.4em';
       inputClose.style.marginLeft = '0.2em';
-      inputClose.addEventListener('click', () => this.presenter.renderAllViews());
+      inputClose.addEventListener('pointerdown', cancelEdit);
+      inputClose.addEventListener('click', cancelEdit);
       divContainer.insertBefore(inputDiv, divContainer.childNodes[pos]);
       const listenerFunction = event => {
+        if (editCancelled) {
+          return;
+        }
         if (event.code === 'Enter' || event.type === 'blur') {
           // remove the blur event listener in case of pressing-enter-event to avoid DOM exceptions
           if (event.code === 'Enter') {
@@ -2859,15 +2883,19 @@ class Structogram {
 
     // append a button for adding new parameters at the end of the param div
     const addParamBtn = document.createElement('button');
+    addParamBtn.type = 'button';
     addParamBtn.classList.add('addCaseIcon', 'hand', 'caseOptionsIcons', 'tooltip', 'tooltip-bottom');
     addParamBtn.style.marginTop = 'auto';
     addParamBtn.style.marginBottom = 'auto';
     addParamBtn.setAttribute('data-tooltip', 'Parameter hinzufügen');
-    addParamBtn.addEventListener('click', () => {
+    const addParam = event => {
+      event.preventDefault();
+      event.stopPropagation();
       addParamBtn.remove();
-      const countParam = document.getElementsByClassName('function-elem').length - 1;
+      const countParam = paramDiv.getElementsByClassName('function-elem').length;
       this.renderParam(countParam, paramDiv, spacingSize, fpSize, uid);
-    });
+    };
+    addParamBtn.addEventListener('pointerdown', addParam);
 
     // show adding-parameters-button when hovering
     functionBoxHeaderDiv.addEventListener('mouseover', () => {
@@ -6876,7 +6904,56 @@ class ImportExport {
 
 
 
+function parseJsonFromElement(elementId, label) {
+  const element = document.getElementById(elementId);
+  if (!element) {
+    return null;
+  }
+  const raw = element.textContent.trim();
+  if (!raw) {
+    return null;
+  }
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    console.error(`Error parsing ${label}:`, error);
+    return null;
+  }
+}
+
+function normalizeTaskData(data, configName, showCodeButton) {
+  if (!data) {
+    return null;
+  }
+  if (data.version && data.tree && data.config) {
+    const normalized = Object.assign({}, data);
+    if (configName) {
+      normalized.config = configName;
+    }
+    if (showCodeButton !== undefined) {
+      normalized.showCodeButton = showCodeButton;
+    }
+    return normalized;
+  }
+  if (configName) {
+    const normalized = {
+      version: "1.4.0",
+      config: configName,
+      tree: data
+    };
+    if (showCodeButton !== undefined) {
+      normalized.showCodeButton = showCodeButton;
+    }
+    return normalized;
+  }
+  return data;
+}
+
 window.onload = async function () {
+  const defaultData = parseJsonFromElement("defaultSubmission", "default submission");
+  const currentData = parseJsonFromElement("currentContent", "current content");
+  const defaultConfigName = defaultData && defaultData.config ? defaultData.config : null;
+  const defaultShowCodeButton = defaultData && defaultData.showCodeButton !== undefined ? defaultData.showCodeButton : undefined;
   // manipulate the localStorage before loading the presenter
   if (typeof Storage !== 'undefined') {
     const url = new URL(window.location.href);
@@ -6888,7 +6965,9 @@ window.onload = async function () {
       });
     }
     const configId = url.searchParams.get('config');
-    config.config.loadConfig(configId);
+    if (configId && !defaultConfigName) {
+      config.config.loadConfig(configId);
+    }
   }
   generateHtmltree();
   generateFooter();
@@ -6906,18 +6985,14 @@ window.onload = async function () {
   presenter.addView(importExport);
 
   // generateInfoButton(document.getElementById('optionButtons'))
-
-  // Load default submission if present
-  const defaultSubmissionElement = document.getElementById('defaultSubmission');
-  if (defaultSubmissionElement && defaultSubmissionElement.textContent.trim()) {
-    try {
-      const defaultData = JSON.parse(defaultSubmissionElement.textContent.trim());
-      console.log('Loading default submission:', defaultData);
-      await presenter.readUrl(defaultData);
-    } catch (error) {
-      console.error('Error parsing default submission:', error);
-      presenter.init();
-    }
+  const normalizedDefaultData = normalizeTaskData(defaultData, defaultConfigName, defaultShowCodeButton);
+  if (normalizedDefaultData) {
+    presenter.setDefaultSubmission(normalizedDefaultData);
+  }
+  const initialData = currentData ? normalizeTaskData(currentData, defaultConfigName, defaultShowCodeButton) : presenter.getDefaultSubmission();
+  if (initialData) {
+    console.log('Loading initial submission:', initialData);
+    await presenter.readUrl(initialData);
   } else {
     presenter.init();
   }

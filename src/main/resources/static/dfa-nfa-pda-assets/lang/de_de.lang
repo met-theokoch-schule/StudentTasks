@@ -1,0 +1,187 @@
+alert.graph.clear = Alle ungespeicherten Aenderungen gehen verloren. Moechtest du fortfahren?
+alert.window.exit = Alle ungespeicherten Aenderungen gehen verloren. Moechtest du die Seite verlassen?
+
+message.error.none = Hurra! Keine Fehler mehr!
+message.error.incomplete = Unvollstaendige Transition(en) gefunden
+message.error.empty = Leere Transition(en) gefunden
+message.error.dupe = Doppelte Transitionen gefunden
+message.error.missing = Fehlende Transition(en) für Zustand/Zustaende gefunden
+message.warning.unreachable = Unerreichbare Zustaende gefunden
+message.warning.cannotmodify = Leider kannst du im Loeschmodus keine neuen Zustaende oder Kanten erstellen oder aendern.
+message.warning.convertNFAToDFA = Achtung! Nach der Umwandlung in einen DFA kann es exponentiell viele Zustaende geben.
+
+message.action.locate = Wo ist es?
+message.action.deleteall = Alle loeschen.
+message.action.close = Aus dem Weg!
+message.action.convert = Trotzdem umwandeln
+message.action.next = Weiter
+message.workspace.empty = Doppeltippen, um einen Knoten zu erstellen
+message.offline.ready = Du bist bereits für den Offline-Modus bereit!
+message.offline.failed = Du bist nicht für den Offline-Modus bereit. Bitte die Seite neu laden!
+message.offline.nosupport = Leider unterstützt dein Browser keinen Offline-Modus.
+
+//message.intro.1 = Good Morning! Welcome to the Flap.js Workspace!
+message.intro.2 = Wenn du Hilfe brauchst, ist die '?' Taste oben rechts auf dem Bildschirm.
+message.tutorial.1 = ==== Kurzanleitung ==== \\n Neuer Zustand: \\n - Doppeltippen \\n Neue Transition / Verschieben: \\n - Ziehen \\n Symbol aendern / Akzeptieren: \\n - Tippen \\n\\n Interaktive Elemente werden beim Überfahren hervorgehoben.
+message.help.1 = Du brauchst Hilfe. Leider bin ich dafür nicht qualifiziert. Bitte wende dich an deinen Tutor oder Entwickler für weitere Informationen.
+message.help.2 = Ich sehe, dass du Hilfe willst. Ich bin mir nicht sicher, ob ich helfen will, nachdem du so grob alle anderen Nachrichten entfernt hast.
+message.help.3 = Danke, dass du so grossartig bist :3
+
+cursor.actionmode = Aktionsmodus
+cursor.movemode = Verschiebemodus
+
+component.untitled.title = Unbenannt
+component.testing.title = Tests
+component.overview.title = Beschreibung
+component.exporting.title = PNG
+component.options.title = Optionen
+component.analysis.title = Analyse
+component.task.title = Aufgabe
+component.language.title = Sprache
+
+component.toolbar.title = Werkzeugleiste
+component.workspace.title = Arbeitsbereich
+component.drawer.title = Seitenleiste
+component.notification.title = Benachrichtigung
+component.transitiontable.title = Übergangstabelle
+component.transitionchart.title = Übergangsfunktion
+component.stateslist.title = Zustände
+component.alphabetlist.title = Alphabet
+component.graph.title = Graph
+component.labeleditor.title = Beschriftungseditor
+
+options.category.colors = Farben
+options.category.shortcuts = Tastenkürzel
+options.category.general = Allgemein
+
+//New Colors
+options.--color-accent = Akzentfarbe
+options.--color-primary = Primaerfarbe
+options.--color-primary-text = Textfarbe
+options.--color-background = Hintergrundfarbe
+options.--color-error = Fehlerfarbe
+options.--color-success = Erfolgsfarbe
+options.--color-warning = Warnfarbe
+options.--color-surface = Hauptfarbe
+options.--color-surface-text = Textfarbe
+options.--color-surface-active = Aktivfarbe
+options.--color-surface-error = Fehlerfarbe
+options.--color-surface-success = Erfolgsfarbe
+options.--color-surface-warning = Warnfarbe
+options.--color-graph-node = Knotenfarbe
+options.--color-graph-text = Textfarbe
+options.--color-graph-select = Auswahlfarbe
+
+//Toolbar
+options.--color-toolbar-main = Hauptfarbe
+options.--color-toolbar-accent = Akzentfarbe
+options.--color-toolbar-text = Textfarbe
+
+//Drawer
+options.--color-drawer-main = Hauptfarbe
+options.--color-drawer-accent = Akzent
+options.--color-drawer-text = Text
+options.--color-drawer-error = Fehler
+
+//Testing
+options.--color-testing-success = Erfolg
+options.--color-testing-failure = Fehler
+options.--color-testing-working = In Arbeit
+options.--color-testing-text = Text
+
+//Notification
+options.--color-notification-text = Benachrichtigungstext
+options.--color-notification-info = Benachrichtigungsinfo
+options.--color-notification-error = Benachrichtigungsfehler
+options.--color-notification-warning = Benachrichtigungswarnung
+
+//Workspace
+options.--color-graph-node = Graph-Knoten
+options.--color-workspace-text = Arbeitsbereichstext
+options.--color-workspace-main = Hauptfarbe
+
+//Label editor
+options.--color-labeleditor-text = Beschriftungseditor-Text
+options.--color-labeleditor-main = Beschriftungseditor-Hauptfarbe
+
+//Viewport
+options.--color-viewport-error = Ansicht Loeschen
+options.--color-viewport-testing = Ansicht Tests
+options.--color-viewport-warning = Ansicht Warnung
+options.--color-highlight-select = Hervorhebung Auswahl
+
+//Color Groups
+options.colorgroup.general = Allgemeine Farben
+options.colorgroup.surface = Oberflaechenfarben
+options.colorgroup.graph = Graphfarben
+
+options.checkerrors = Fehlerprüfung
+options.checkerrors.mode.none = Keine
+options.checkerrors.mode.delayed = Verzoegert
+options.checkerrors.mode.immediate = Sofort
+
+options.autolabel = Zustandsbeschriftung
+options.autorename = Automatische Umbenennung
+options.skipwelcome = Startseite ueberspringen
+options.exitwarning = Verlassen-Warnung deaktivieren
+//options.swapinputs = Swap Input Controls
+
+options.testing.stepmode = Schritt-für-Schritt-Modus
+options.testing.step = Schrittweise testen
+options.testing.errorcheck = Fehlerüberprüfung
+//options.testing.closure = Transition By Closure
+
+file.untitled = Unbenannt
+file.export.machine = Maschine fuer Flap.js speichern
+file.export.jff = Maschine fuer JFLAP speichern
+file.export.png = Diagramm als PNG exportieren
+file.export.jpg = Diagramm als JPG exportieren
+file.export.svg = Diagramm als SVG exportieren
+file.export.bw = Diagramm in Graustufen exportieren
+file.export.convertfsa = Gleichwertigen FA für Flap.js speichern
+
+file.export.machine.hint = Maschine als .json speichern
+file.export.jff.hint = Maschine als .jff speichern
+file.export.png.hint = Diagramm als .png exportieren
+file.export.jpg.hint = Diagramm als .jpg exportieren
+file.export.svg.hint = Diagramm als .svg exportieren
+file.export.bw.hint = Diagramm in Graustufen exportieren
+
+//testing.placeholder = Test string
+
+//TODO: Actions should probably be labeled by context...
+
+action.testing.runall = Alle Tests ausführen
+action.testing.stoprun = Stopp
+action.testing.clear = Tests löschen
+action.testing.add = Test hinzufügen
+action.testing.import = Tests importieren
+action.testing.new = Neuer Test
+action.testing.save = Tests speichern
+
+action.overview.convertdfa = In DFA umwandeln
+action.overview.convertnfa = In NFA umwandeln
+action.overview.autolayout = Automatisches Layout
+
+action.options.changetheme = Design anpassen
+action.options.reset = Auf Standard zurücksetzen
+action.toolbar.savemachine = Maschinen-Datei speichern
+action.toolbar.saveimage = Als Bild exportieren
+
+action.toolbar.save = Speichern
+action.toolbar.bug = Fehler melden
+action.toolbar.help = Hilfe
+action.toolbar.newmachine = Neu
+action.toolbar.uploadmachine = Hochladen
+action.toolbar.undo = Rückgaengig
+action.toolbar.redo = Wiederholen
+action.toolbar.reset = Zuruecksetzen
+action.toolbar.lang = Sprache
+action.toolbar.changemodule = Modul wechseln
+action.workspace.submit = Senden
+action.workspace.cancel = Abbrechen
+
+action.toolbar.undo.label = Aktion rückgaengig
+action.toolbar.redo.label = Aktion wiederholen
+action.workspace.submit.label = Aenderung senden
+action.workspace.cancel.label = Aenderung abbrechen

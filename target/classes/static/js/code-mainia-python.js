@@ -772,7 +772,11 @@ const cards = [
         text: "*while* zahl > 0:\n   zahl = zahl - 1",
         category: "WhileSchleife",
         calculate: (v) => {
-            return 0;
+            if (v > 0) {
+                return 0;
+            } else {
+                return v;
+            }
         },
     },
     {

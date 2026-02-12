@@ -1,0 +1,396 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Registermaschine</title>
+
+    <script
+      th:src="@{/js/registermaschine.js}"
+      src="../../static/js/registermaschine.js"
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link
+      th:href="@{/css/registermaschine.css}"
+      href="../../static/css/registermaschine.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+
+    <script
+      id="MathJax-script"
+      async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+    ></script>
+  </head>
+
+  <body>
+    <a
+      id="default-link"
+      style="display: none"
+      href="/static/"
+      th:href="@{/}"
+    ></a>
+    <div
+      id="task-save-url"
+      style="display: none"
+      th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? 'api/tasks/usertasks/' + userTaskId + '/content' : 'api/tasks/' + task.id + '/content'}"
+      data-url="/dev/save"
+    ></div>
+    <div
+      id="task-submit-url"
+      style="display: none"
+      th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? '' : 'api/tasks/' + task.id + '/submit'}"
+      data-url="/dev/submit"
+    ></div>
+    <div
+      id="currentContent"
+      style="display: none"
+      th:text="${currentContent}"
+    ></div>
+    <div
+      id="defaultSubmission"
+      style="display: none"
+      th:text="${task.defaultSubmission}"
+    >
+      {"content":"{\"name\":\"\",\"inputText\":\"// TaskView Beispiel\\nread
+      1\\nadd #5\\nwrite
+      0\\nend\",\"inputTape\":[7]}","showComplexity":false,"showInputOutput":false}
+    </div>
+    <div
+      id="description"
+      style="display: none"
+      th:text="${task.description}"
+    ></div>
+    <div id="tutorial" style="display: none" th:utext="${task.tutorial}"></div>
+    <div id="myapp"></div>
+  </body>
+
+  <script>
+    function readHiddenText(id) {
+      var el = document.getElementById(id);
+      if (!el) {
+        return "";
+      }
+
+      return (el.textContent || "").trim();
+    }
+
+    function parseDefaultSubmission(rawDefaultSubmission) {
+      var defaults = {
+        content: "",
+        showComplexity: true,
+        showInputOutput: true,
+      };
+
+      if (!rawDefaultSubmission) {
+        return defaults;
+      }
+
+      try {
+        var parsed = JSON.parse(rawDefaultSubmission);
+        if (!parsed || typeof parsed !== "object") {
+          return defaults;
+        }
+
+        return {
+          content:
+            typeof parsed.content === "string"
+              ? parsed.content
+              : parsed.content && typeof parsed.content === "object"
+                ? JSON.stringify(parsed.content)
+                : "",
+          showComplexity:
+            typeof parsed.showComplexity === "boolean"
+              ? parsed.showComplexity
+              : true,
+          showInputOutput:
+            typeof parsed.showInputOutput === "boolean"
+              ? parsed.showInputOutput
+              : true,
+        };
+      } catch (error) {
+        console.warn("Could not parse defaultSubmission JSON.", error);
+        return defaults;
+      }
+    }
+
+    function buildElmFlags() {
+      var parsedDefaultSubmission = parseDefaultSubmission(
+        readHiddenText("defaultSubmission"),
+      );
+      var rawSubmitUrl = (
+        document.getElementById("task-submit-url")?.dataset?.url || ""
+      ).trim();
+
+      return {
+        currentContent: readHiddenText("currentContent"),
+        defaultContent: parsedDefaultSubmission.content,
+        description: readHiddenText("description"),
+        showComplexity: parsedDefaultSubmission.showComplexity,
+        showInputOutput: parsedDefaultSubmission.showInputOutput,
+        canSubmit: rawSubmitUrl !== "",
+      };
+    }
+
+    function getBaseUrl() {
+      return (
+        document.getElementById("default-link")?.getAttribute("href") || "/"
+      ).replace(/\/$/, "");
+    }
+
+    function buildApiUrl(rawPath) {
+      if (!rawPath) {
+        return "";
+      }
+
+      var baseUrl = getBaseUrl();
+      return rawPath.startsWith("/")
+        ? baseUrl + rawPath
+        : baseUrl + "/" + rawPath;
+    }
+
+    var app = Elm.Main.init({
+      node: document.getElementById("myapp"),
+      flags: buildElmFlags(),
+    });
+
+    function renderTaskDescriptionMarkdown() {
+      var element = document.getElementById("task-description-markdown");
+      if (!element) {
+        return;
+      }
+
+      var markdown =
+        typeof element.markdownSource === "string"
+          ? element.markdownSource
+          : element.textContent || "";
+
+      if (element.__renderedMarkdownSource === markdown) {
+        return;
+      }
+
+      if (window.marked && typeof window.marked.parse === "function") {
+        element.innerHTML = window.marked.parse(markdown, {
+          gfm: true,
+          breaks: true,
+        });
+        element.style.whiteSpace = "normal";
+      } else {
+        element.textContent = markdown;
+        element.style.whiteSpace = "pre-wrap";
+      }
+
+      element.__renderedMarkdownSource = markdown;
+    }
+
+    renderTaskDescriptionMarkdown();
+    var markdownRoot = document.getElementById("myapp") || document.body;
+    if (markdownRoot) {
+      var markdownObserver = new MutationObserver(function () {
+        renderTaskDescriptionMarkdown();
+      });
+      markdownObserver.observe(markdownRoot, {
+        childList: true,
+        subtree: true,
+      });
+    }
+
+    function notifyTaskPersistence(success, isSubmission, message) {
+      if (app.ports && app.ports.taskPersistenceResult) {
+        app.ports.taskPersistenceResult.send([success, isSubmission, message]);
+      }
+    }
+
+    function saveContent(content, isSubmission) {
+      var rawSaveUrl =
+        document.getElementById("task-save-url")?.dataset?.url || "";
+      var rawSubmitUrl =
+        document.getElementById("task-submit-url")?.dataset?.url || "";
+      var targetRawUrl = isSubmission ? rawSubmitUrl : rawSaveUrl;
+
+      if (
+        isSubmission &&
+        !window.confirm("Moechten Sie diese Aufgabe wirklich abgeben?")
+      ) {
+        notifyTaskPersistence(true, true, "Abgabe wurde abgebrochen.");
+        return;
+      }
+
+      if (!targetRawUrl) {
+        notifyTaskPersistence(
+          false,
+          isSubmission,
+          "Es ist kein API-Pfad fuer diese Aktion konfiguriert.",
+        );
+        return;
+      }
+
+      var url = buildApiUrl(targetRawUrl);
+
+      fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: content }),
+      })
+        .then(function (response) {
+          if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+          }
+
+          notifyTaskPersistence(
+            true,
+            isSubmission,
+            isSubmission
+              ? "Aufgabe wurde erfolgreich abgegeben."
+              : "Aufgabe wurde erfolgreich gespeichert.",
+          );
+        })
+        .catch(function (error) {
+          console.error("Failed to persist task content.", error);
+          notifyTaskPersistence(
+            false,
+            isSubmission,
+            isSubmission
+              ? "Abgeben ist fehlgeschlagen."
+              : "Speichern ist fehlgeschlagen.",
+          );
+        });
+    }
+
+    if (app.ports && app.ports.saveTaskContent) {
+      app.ports.saveTaskContent.subscribe(function ([content, isSubmission]) {
+        saveContent(content, isSubmission);
+      });
+    }
+
+    if (app.ports && app.ports.navigateHome) {
+      app.ports.navigateHome.subscribe(function () {
+        var baseUrl = getBaseUrl();
+        var homeUrl = (baseUrl || "") + "/student/dashboard";
+        window.location.href = homeUrl;
+      });
+    }
+
+    // Listening for MathJax typeset request
+    if (app.ports && app.ports.requestMathJaxTypeset) {
+      app.ports.requestMathJaxTypeset.subscribe(function () {
+        // Re-render math in the DOM
+        MathJax.typeset();
+      });
+    }
+
+    // Subscribing to the subToTextArea port and adding a tab key listener to the textarea, which inserts a tab character at the cursor position when the tab key is pressed
+    if (app.ports && app.ports.subToTextArea) {
+      app.ports.subToTextArea.subscribe(function () {
+        var textbox = document.getElementById("textbox");
+        if (textbox) {
+          textbox.addEventListener("keydown", function (e) {
+            if (e.key === "Tab") {
+              e.preventDefault();
+              var start = this.selectionStart;
+              var end = this.selectionEnd;
+
+              // Insert a tab character at the cursor position
+              this.value =
+                this.value.substring(0, start) +
+                "\t" +
+                this.value.substring(end);
+
+              // Move the cursor to the correct position after inserting the tab
+              this.selectionStart = this.selectionEnd = start + 1;
+            }
+          });
+        }
+      });
+    }
+
+    // Function to smoothly scroll to a target Y position within a parent element
+    function smoothScrollTo(parentEl, targetY, duration = 500) {
+      const startY = parentEl.scrollTop;
+      const diff = targetY - startY;
+      let startTime = null;
+
+      function animateScroll(timestamp) {
+        if (!startTime) startTime = timestamp;
+        const elapsed = timestamp - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        parentEl.scrollTop = startY + diff * progress;
+
+        if (progress < 1) {
+          requestAnimationFrame(animateScroll);
+        }
+      }
+
+      requestAnimationFrame(animateScroll);
+    }
+
+    // Subscribing to the scrollInstructionIntoView port and scrolling the element with the given ID into view
+    if (app.ports && app.ports.scrollInstructionIntoView) {
+      app.ports.scrollInstructionIntoView.subscribe(function ([
+        elementId,
+        duration,
+      ]) {
+        requestAnimationFrame(() => {
+          const el = document.getElementById(elementId);
+          if (el) {
+            const container = el.parentElement;
+
+            const elRect = el.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+
+            const elementCenter = elRect.top + elRect.height / 2;
+            const containerCenter =
+              containerRect.top + containerRect.height / 2;
+
+            const offset = elementCenter - containerCenter;
+            const targetScroll = container.scrollTop + offset;
+
+            // Clamp to prevent overscrolling
+            const maxScroll = container.scrollHeight - container.clientHeight;
+            const finalScroll = Math.max(0, Math.min(targetScroll, maxScroll));
+
+            smoothScrollTo(container, finalScroll, duration);
+          }
+        });
+      });
+    }
+
+    // Subscribing to the subToScrollToBottom port and scrolling to the bottom of the element with the given ID
+    if (app.ports && app.ports.scrollToBottom) {
+      app.ports.scrollToBottom.subscribe(function (elementId) {
+        requestAnimationFrame(() => {
+          const el = document.getElementById(elementId);
+          if (el) {
+            el.scrollTop = el.scrollHeight;
+          }
+        });
+      });
+    }
+
+    // Subscribing for the setItem port => write to localStorage
+    if (app.ports && app.ports.setItem) {
+      app.ports.setItem.subscribe(function ([key, value]) {
+        localStorage.setItem(key, value);
+      });
+    }
+
+    // Subscribing for the getItem port => read from localStorage
+    if (app.ports && app.ports.getItem && app.ports.gotItem) {
+      app.ports.getItem.subscribe(function (key) {
+        var value = localStorage.getItem(key);
+        if (value === null) {
+          app.ports.gotItem.send([key, null]);
+        } else {
+          app.ports.gotItem.send([key, value]);
+        }
+      });
+    }
+  </script>
+  <script th:src="@{/js/ping.js}"></script>
+</html>

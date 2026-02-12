@@ -364,10 +364,10 @@ const cards = [
         text: "*if* zahl > 7:\n   zahl = 6\n*else*:\n   zahl = zahl * (-1)",
         category: "BedingteAnweisung",
         calculate: (v) => {
-            if (v <= 4) {
-                return v + 2;
+            if (v > 7) {
+                return 6;
             } else {
-                return v;
+                return -v;
             }
         },
     },
@@ -772,7 +772,11 @@ const cards = [
         text: "*while* zahl > 0:\n   zahl = zahl - 1",
         category: "WhileSchleife",
         calculate: (v) => {
-            return 0;
+            if (v > 0) {
+                return 0;
+            } else {
+                return v;
+            }
         },
     },
     {

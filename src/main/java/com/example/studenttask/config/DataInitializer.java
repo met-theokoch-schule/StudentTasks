@@ -106,6 +106,18 @@ public class DataInitializer implements ApplicationRunner {
         createOrUpdateTaskView("ER-Diagramm", "taskviews/erd",
                 "Interaktive ERD's erstellen", false);
 
+        createOrUpdateTaskView("DFA, NFA und Kellerautomat", "taskviews/dfa-nfa-pda",
+                        "Endliche Automaten und Kellerautoamten mit FlapJS simulieren", false);
+
+            createOrUpdateTaskView("Grammatik Editor", "taskviews/flaci-grammatik",
+                    "Grammatiken und Syntaxdiagramme mit Flaci", false);
+            
+        createOrUpdateTaskView("Registermaschine", "taskviews/registermaschine",
+                    "Registermaschinen simulieren", false);
+
+        createOrUpdateTaskView("Turingmaschine", "taskviews/turingmaschine",
+                        "Turingmaschinen simulieren", false);
+
         String h5pTaskView = "taskviews/h5p";
 
         createOrUpdateTaskView("H5P Aufgaben", h5pTaskView,
