@@ -35,7 +35,7 @@ Die Aufgabenbeschreibung muss ein JSON-String sein:
 
 **tasks**: Array mit Aufgaben<br>
 - `id`, `title`: ID und angezeigter Titel der Aufgabe<br>
-- `description`: Enthält die Aufgabenbeschreibung in marked.js Notation. Mit `>!{Lösung anzeigen}` erzeugt man ein Spoiler Tag (versteckter aufklappbarer Inhalt), auf dem der Text in geschweiften Klammern steht (`>!` führt zu "Tipp"). Der Text bis zum Ende bzw. bis zum nächsten `>!` wird versteckt. Es ist möglich mehrere zu haben.
+- `description`: Enthält die Aufgabenbeschreibung in marked.js Notation. Mit `\n>!{Lösung anzeigen}` erzeugt man ein Spoiler Tag (versteckter aufklappbarer Inhalt), auf dem der Text in geschweiften Klammern steht (`\n>!` führt zu "Tipp"). Der Text bis zum Ende bzw. bis zum nächsten `\n` wird versteckt. Es ist möglich mehrere zu haben.
 - `defaultCode`: Ein vorgegebnener Code im Editor, z.B. um Fehler suchen zu lassen.<br>
 - `solutionCode`: Ein Code, der zur Lösung führt, wenn `extraColumnsAllowed` gesetzt ist, muss dieser die minimalste Lösung liefern. Es werden die berechneten Tabellen verglichen, nicht der String.<br>
 

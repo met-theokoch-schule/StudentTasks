@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Turingmaschinensimulator</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <!-- Basic SEO -->
+        <meta
+            name="description"
+            content="Interactive Turing Machine Simulator — Build and visualize customizable Turing machines with step-by-step control and full configuration options."
+        />
+        <meta
+            name="keywords"
+            content="Turing machine, Turing machine simulator, automata theory, computation theory, state diagram, tape simulation, finite automata, computer science education"
+        />
+        <meta name="robots" content="index, follow" />
+        <!-- Stylesheets -->
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/ace.min.css"
+        />
+      <script type="module" crossorigin th:src="@{/js/turingmaschine.js}" src="/assets/index-B61dtUax.js"></script>
+      <link rel="stylesheet" crossorigin th:href="@{/css/turingmaschine.css}" href="/assets/index-Dm-4Asnz.css">
+    </head>
+
+    <body>
+        <a
+            id="default-link"
+            style="display: none"
+            href="/"
+            th:href="@{/}"
+        ></a>
+        <a
+            id="student-dashboard-link"
+            style="display: none"
+            href=""
+            th:href="@{/student/dashboard}"
+        ></a>
+        <div
+            id="task-save-url"
+            style="display: none"
+            th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? 'api/tasks/usertasks/' + userTaskId + '/content' : 'api/tasks/' + task.id + '/content'}"
+            data-url="/dev/save"
+        ></div>
+        <div
+            id="task-submit-url"
+            style="display: none"
+            th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? '' : 'api/tasks/' + task.id + '/submit'}"
+            data-url="/dev/submit"
+        ></div>
+        <div
+            id="currentContent"
+            style="display: none"
+            th:text="${currentContent}"
+        ></div>
+        <div
+            id="defaultSubmission"
+            style="display: none"
+            th:text="${task.defaultSubmission}"
+        >
+            {"version":1,"modelName":"Busy Beaver 3","rulesText":"A _ B 1 R\nA 1 C 1 L\nB _ A 1 L\nB 1 B 1 R\nC _ B 1 L\nC 1 H 1 R","tape":["1100", "111110011"],"speed":300,"config":{"LEFT":"L","RIGHT":"R","BLANK":"_","INIT_STATE":"A","HALT_STATE":"H","COMMENT_PREFIX":"//","MAX_STATES":1024,"MAX_TAPE_LEN":1048576,"MAX_STATE_SIZE":32,"TRANSITION_SIZE":710000}}
+        </div>
+        <div
+            id="description"
+            style="display: none"
+            th:text="${task.description}"
+        >
+            Erstelle eine Turing Maschine, die nur gerade Binärzahlen
+            akzeptiert.
+        </div>
+        <div
+            id="tutorial"
+            style="display: none"
+            th:utext="${task.tutorial}"
+        ></div>
+        <div id="root"></div>
+        <div class="_center" id="loading">
+            <div class="_spinner">
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+        </div>
+        <!-- Page Header -->
+        <header class="app-header mt-0 mb-0">
+            <div
+                class="container-fluid d-flex justify-content-between align-items-center"
+            >
+                <div class="d-flex align-items-center gap-2">
+                    <div class="app-header-title">Turingmaschinensimulator</div>
+                </div>
+                <div class="controls d-flex align-items-center gap-2">
+                    <span
+                        id="save-status"
+                        class="fas fa-circle text-muted"
+                        style="font-size: 0.8rem; cursor: help"
+                        data-title="Bereit zum Speichern"
+                    ></span>
+                    <button id="saveButton" class="btn btn-success btn-sm">
+                        <i class="fas fa-save"></i> Speichern
+                    </button>
+                    <button id="submitButton" class="btn btn-primary btn-sm">
+                        <i class="fas fa-paper-plane"></i> Abgeben
+                    </button>
+                    <button
+                        id="resetDefaultButton"
+                        class="btn btn-warning btn-sm"
+                        type="button"
+                        title="Auf Basislösung zurücksetzen"
+                        aria-label="Auf Basislösung zurücksetzen"
+                    >
+                        <i class="fas fa-redo-alt"></i>
+                    </button>
+                    <button
+                        id="dashboardButton"
+                        class="btn btn-secondary btn-sm"
+                        type="button"
+                        title="Zum Dashboard"
+                        aria-label="Zum Dashboard"
+                    >
+                        <i class="fas fa-home"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Import Modal -->
+        <div id="importModal" class="tm-modal">
+            <div class="tm-modal-backdrop"></div>
+            <div class="tm-modal-container">
+                <div class="col md-4 tm-modal-content">
+                    <button
+                        class="tm-modal-close"
+                        data-dismiss="modal"
+                        id="closeImport"
+                    >
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+
+                    <div class="tm-modal-header">
+                        <h3>Import</h3>
+                    </div>
+
+                    <div class="tm-modal-body">
+                        <!-- File upload section -->
+                        <div class="tm-import-section">
+                            <h4>From Local Files</h4>
+                            <div class="tm-file-dropzone">
+                                <div class="tm-option-icon">
+                                    <i
+                                        class="bi bi-upload"
+                                        style="font-size: 2rem"
+                                    ></i>
+                                </div>
+                                <p>
+                                    Supported file types:
+                                    <strong>.json, .jsonl, .yaml, .txt</strong>
+                                </p>
+                                <p>
+                                    Click to select or drag &amp; drop files
+                                    here
+                                </p>
+                                <input
+                                    id="fileInput"
+                                    type="file"
+                                    name="files"
+                                    multiple
+                                    class="tm-file-input"
+                                    accept=".json,.jsonl,.yaml,.txt"
+                                    style="display: none"
+                                />
+                            </div>
+                        </div>
+                        <h6>Model Preview</h6>
+                        <textarea
+                            id="importPreview"
+                            class="tm-rules-editor"
+                            placeholder="View your model here..."
+                            readonly
+                        ></textarea>
+                    </div>
+                </div>
+
+                <!-- Preview section -->
+                <div class="tm-modal-preview">
+                    <div
+                        id="filePreviewContainer"
+                        class="tm-file-preview-container"
+                    ></div>
+                </div>
+
+                <div class="tm-modal-footer">
+                    <button
+                        id="importConfirmBtn"
+                        class="btn btn-upload w-100 action-btn"
+                        disabled
+                    >
+                        Load Model
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export Modal -->
+        <div id="exportModal" class="tm-modal">
+            <div class="tm-modal-backdrop"></div>
+            <div class="tm-modal-container">
+                <div class="tm-modal-content">
+                    <button class="tm-modal-close" id="closeExport">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+
+                    <div class="tm-modal-header">
+                        <h3>Export</h3>
+                    </div>
+
+                    <div class="tm-modal-body">
+                        <div class="tm-export-options grid-container">
+                            <div class="tm-export-option">
+                                <input
+                                    type="radio"
+                                    name="exportFormat"
+                                    value="json"
+                                    id="export-json"
+                                />
+                                <label for="export-json">
+                                    <div class="tm-option-content">
+                                        <div class="tm-option-icon">
+                                            <i class="bi bi-filetype-json"></i>
+                                        </div>
+                                        <div class="tm-option-details">
+                                            <div class="tm-option-title">
+                                                JSON
+                                            </div>
+                                            <div class="tm-option-description">
+                                                Basic and Structured data format
+                                            </div>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div class="tm-export-option">
+                                <input
+                                    type="radio"
+                                    name="exportFormat"
+                                    value="jsonl"
+                                    id="export-jsonl"
+                                />
+                                <label for="export-jsonl">
+                                    <div class="tm-option-content">
+                                        <div class="tm-option-icon">
+                                            <i class="bi bi-filetype-json"></i>
+                                        </div>
+                                        <div class="tm-option-details">
+                                            <div class="tm-option-title">
+                                                JSONLines
+                                            </div>
+                                            <div class="tm-option-description">
+                                                Structured state, Ideal for
+                                                storing large histories
+                                            </div>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div class="tm-export-option">
+                                <input
+                                    type="radio"
+                                    name="exportFormat"
+                                    value="yaml"
+                                    id="export-yaml"
+                                />
+                                <label for="export-yaml">
+                                    <div class="tm-option-content">
+                                        <div class="tm-option-icon">
+                                            <i class="bi bi-filetype-yml"></i>
+                                        </div>
+                                        <div class="tm-option-details">
+                                            <div class="tm-option-title">
+                                                YAML
+                                            </div>
+                                            <div class="tm-option-description">
+                                                Ideal for initial models, and
+                                                manual editing
+                                            </div>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div class="tm-export-option">
+                                <input
+                                    type="radio"
+                                    name="exportFormat"
+                                    value="txt"
+                                    id="export-txt"
+                                />
+                                <label for="export-txt">
+                                    <div class="tm-option-content">
+                                        <div class="tm-option-icon">
+                                            <i class="bi bi-filetype-txt"></i>
+                                        </div>
+                                        <div class="tm-option-details">
+                                            <div class="tm-option-title">
+                                                Plain Text
+                                            </div>
+                                            <div class="tm-option-description">
+                                                For Übergangsregeln ONLY
+                                            </div>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <h6>File Preview</h6>
+                        <textarea
+                            id="exportPreview"
+                            class="tm-rules-editor"
+                            placeholder="View your model here..."
+                            readonly
+                        ></textarea>
+                    </div>
+                </div>
+
+                <div class="tm-modal-footer">
+                    <button id="saveBtn" class="btn btn-save w-100 action-btn">
+                        Save File
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main GUI-->
+        <div class="container-fluid mt-3 mb-0">
+            <!-- Band Card -->
+            <div id="tapeCard" class="card mb-0 mt-0 shadow-sm">
+                <div
+                    class="card-header d-flex justify-content-between align-items-center"
+                >
+                    <span class="fw-bold">Band</span>
+
+                </div>
+
+                <div class="card-body">
+                    <!-- Tape Display -->
+                    <div
+                        class="tape-wrapper border rounded p-3 bg-light mb-2 mt-0"
+                    >
+                        <div id="tapeDisplay" class="tape-container"></div>
+                    </div>
+
+                    <!-- Machine Status -->
+                    <div
+                        id="machineStatus"
+                        class="machineStatus fw-bold text-center text-secondary mb-1"
+                    ></div>
+
+                    <!-- History Slider -->
+                    <div class="d-flex align-items-center gap-2 mb-0">
+                        <label
+                            for="historySlider"
+                            class="form-label mb-0 text-nowrap"
+                            >Verlauf:</label
+                        >
+                        <input
+                            type="range"
+                            class="slider-primary form-range flex-grow-1"
+                            id="historySlider"
+                            min="0"
+                            max="0"
+                            value="0"
+                        />
+                    </div>
+
+                    <!-- Step Info -->
+                    <div
+                        id="stepState"
+                        class="step-state text-center text-muted small"
+                    ></div>
+                </div>
+            </div>
+
+            <!-- Controls and Configuration -->
+            <div id="fullControls" class="row mt-0 mb-0 align-items-stretch">
+                <!-- Modell konfigurieren -->
+                <div class="col-md-8 mb-2" id="modelConfigure">
+                    <div class="card h-95">
+                        <div
+                            class="card-header mb-0 d-flex align-items-center justify-content-between"
+                        >
+                            <span>Modell konfigurieren</span>
+                            <input
+                                type="text"
+                                id="modelInputName"
+                                class="form-control form-control-sm ms-2 fst-italic"
+                                placeholder="turing_test..."
+                                style="max-width: 200px; font-style: italic"
+                            />
+                        </div>
+
+                        <div class="card-body">
+                            <!-- Übergangsregeln -->
+                            <div class="mb-1">
+                                <div class="row align-items-center g-2">
+                                    <div class="col-12 col-md-4">
+                                        <label
+                                            for="rulesEditor"
+                                            class="form-label"
+                                            >Übergangsregeln:</label
+                                        >
+                                    </div>
+                                    <div class="col text-end small">
+                                        <button
+                                            id="copyRulesBtn"
+                                            class="tm-icon-btn tm-icon-btn-success"
+                                            title="Regeln kopieren"
+                                        >
+                                            <i class="bi bi-clipboard-fill"></i>
+                                        </button>
+
+                                        <button
+                                            id="clearRulesBtn"
+                                            class="tm-icon-btn tm-icon-btn-danger"
+                                            title="Regeln löschen"
+                                        >
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div
+                                    id="rulesEditor"
+                                    class="form-control h-100"
+                                    style="
+                                        min-height: 232px;
+                                        white-space: pre-wrap;
+                                    "
+                                    title="Rules Editor"
+                                ></div>
+                            </div>
+
+                            <!-- Band zum Start -->
+                            <div class="mb-0">
+                                <div class="row align-items-center g-2">
+                                    <div class="col-12 col-md-4">
+                                        <label
+                                            for="tapeInput"
+                                            class="form-label mb-0"
+                                            >Band zum Start:</label
+                                        >
+                                    </div>
+                                    <div class="col text-end small">
+                                        <button
+                                            id="cycleDefaultTapeBtn"
+                                            class="tm-icon-btn tm-icon-btn-info d-none"
+                                            title="Standardband laden"
+                                            aria-label="Standardband laden"
+                                        >
+                                            <i class="bi bi-arrow-repeat"></i>
+                                        </button>
+
+                                        <button
+                                            id="copyTapeBtn"
+                                            class="tm-icon-btn tm-icon-btn-success"
+                                            title="Band kopieren"
+                                        >
+                                            <i class="bi bi-clipboard-fill"></i>
+                                        </button>
+
+                                        <button
+                                            id="clearTapeBtn"
+                                            class="tm-icon-btn tm-icon-btn-danger"
+                                            title="Band löschen"
+                                        >
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <input
+                                    type="text"
+                                    id="tapeInput"
+                                    class="form-control"
+                                    value="|||||||||"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kontrollzentrum -->
+                <div class="col-md-4 mb-2" id="machineControls">
+                    <div class="card h-95">
+                        <div class="card-header">Kontrollzentrum</div>
+                        <div class="card-body d-flex flex-column">
+                            <!-- Step Navigation -->
+                            <div class="mb-1 mt-1">
+                                <div class="row align-items-center g-2">
+                                    <div class="col-4">
+                                        <label
+                                            for="gotoStep"
+                                            class="form-label mb-0 w-100"
+                                        >Gehe zu:</label
+                                        >
+                                    </div>
+                                    <div class="col-4">
+                                        <input
+                                            type="number"
+                                            id="gotoStep"
+                                            class="form-control"
+                                            min="0"
+                                            title="Seek specific step in history"
+                                        />
+                                    </div>
+                                    <div class="col-4">
+                                        <button
+                                            class="btn btn-goto w-100 action-btn"
+                                            id="gotoBtn"
+                                        >
+                                            <i class="bi bi-signpost-fill"></i> Los
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Configuration Options -->
+                            <div class="mb-1 mt-1">
+                                <label for="delayEntry" class="form-label mb-0"
+                                    >Geschwindigkeit (ms):</label
+                                >
+                                <input
+                                    type="number"
+                                    id="delayEntry"
+                                    class="form-control"
+                                    value="300"
+                                    min="1"
+                                    title="Step delay (ms)"
+                                />
+                            </div>
+                            <!-- Control Buttons -->
+                            <div class="row mb-1 g-2 mt-auto">
+                                <div class="col-4">
+                                    <button
+                                        id="stepBtn"
+                                        class="btn btn-step w-100 action-btn bi bi-skip-forward-fill"
+                                    >
+                                        Schritt
+                                    </button>
+                                </div>
+                                <div class="col-4">
+                                    <button
+                                        id="RunPauseBtn"
+                                        class="btn btn-runpause w-100 action-btn bi bi-play-fill"
+                                    >
+                                        Start
+                                    </button>
+                                </div>
+                                <div class="col-4">
+                                    <button
+                                        id="resetBtn"
+                                        class="btn btn-reset w-100 action-btn bi bi-arrow-clockwise"
+                                    >
+                                        Reset
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card mt-2">
+                        <div class="card-header">Besondere Zustände</div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-semibold">Startzustand</span>
+                                <span id="startStateDisplay" class="badge text-bg-light">—</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-semibold">Haltezustand</span>
+                                <span id="haltStateDisplay" class="badge text-bg-light">—</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="taskDescriptionCard" class="card mt-3 mb-3 shadow-sm d-none">
+                <div class="card-header fw-bold">Aufgabe</div>
+                <div id="taskDescriptionContent" class="card-body"></div>
+            </div>
+        </div>
+
+        <!-- JavaScript Libraries -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/ace.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.6/ext-language_tools.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+        <!-- Main Application Script -->
+        <script th:src="@{/js/ping.js}"></script>
+    </body>
+</html>
