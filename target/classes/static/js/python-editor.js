@@ -24,10 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
     ObjectViewer.init();
 
     // Standardcode für Demo-Zwecke mit Object Viewer Beispiel
-    const exampleCode = `print("test")
-i = input("hallo")
-print(i)
-`;
+    const exampleCode = ``;
     pythonEditor.setValue(exampleCode);
 
     // Content laden und Cursor an den Anfang setzen
@@ -391,7 +388,9 @@ function initializePythonWorker() {
     try {
         // Web Worker erstellen - Pfad relativ zum aktuellen Dokument
         const defaultLink = document.getElementById("default-link");
-        const baseUrl = defaultLink ? defaultLink.getAttribute("href") || "/" : "/";
+        const baseUrl = defaultLink
+            ? defaultLink.getAttribute("href") || "/"
+            : "/";
         pythonWorker = new Worker(baseUrl + "js/python-worker.js");
 
         // Worker Message Handler
@@ -510,7 +509,7 @@ function terminateAndRecreateWorker() {
 // Input-Anfrage vom Worker behandeln
 function handleInputRequest(promptText) {
     const consoleOutput = document.getElementById("consoleOutput");
-    
+
     // Prompt-Text inline anzeigen (ohne Zeilenumbruch am Ende)
     if (promptText) {
         const promptSpan = document.createElement("span");
@@ -518,11 +517,11 @@ function handleInputRequest(promptText) {
         promptSpan.textContent = promptText;
         consoleOutput.appendChild(promptSpan);
     }
-    
+
     // Inline-Eingabefeld erstellen
     const inputContainer = document.createElement("span");
     inputContainer.className = "console-input-container";
-    
+
     const inputField = document.createElement("input");
     inputField.type = "text";
     inputField.className = "console-input-field";
@@ -530,31 +529,31 @@ function handleInputRequest(promptText) {
     inputField.setAttribute("autocorrect", "off");
     inputField.setAttribute("autocapitalize", "off");
     inputField.setAttribute("spellcheck", "false");
-    
+
     inputContainer.appendChild(inputField);
     consoleOutput.appendChild(inputContainer);
-    
+
     // Scroll zum Eingabefeld
     consoleOutput.scrollTop = consoleOutput.scrollHeight;
-    
+
     // Fokus auf Eingabefeld setzen
     inputField.focus();
-    
+
     // Event Handler für Enter-Taste
     function handleSubmit(e) {
         if (e.key === "Enter") {
             e.preventDefault();
             const userInput = inputField.value;
-            
+
             // Eingabefeld durch statischen Text ersetzen
             const inputText = document.createElement("span");
             inputText.className = "console-input-text";
             inputText.textContent = userInput;
             inputContainer.replaceWith(inputText);
-            
+
             // Zeilenumbruch hinzufügen
             consoleOutput.appendChild(document.createElement("br"));
-            
+
             // Antwort an Worker senden
             pythonWorker.postMessage({
                 type: "input_response",
@@ -562,9 +561,9 @@ function handleInputRequest(promptText) {
             });
         }
     }
-    
+
     inputField.addEventListener("keydown", handleSubmit);
-    
+
     // Klick auf Console soll Fokus auf Input setzen
     function focusInput(e) {
         if (e.target !== inputField) {
@@ -572,7 +571,7 @@ function handleInputRequest(promptText) {
         }
     }
     consoleOutput.addEventListener("click", focusInput);
-    
+
     // Aufräumen wenn Input fertig ist
     const observer = new MutationObserver((mutations) => {
         if (!document.contains(inputField)) {

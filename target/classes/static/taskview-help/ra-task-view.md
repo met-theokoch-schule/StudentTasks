@@ -61,7 +61,7 @@ Die Aufgaben wie folgt codiert:
         {
             "id": "task-1",
             "title": "Aufgabe 1",
-            "description": "Bestimme die identifizierende Nummer und die Entfernung (in km) jedes Lieferanten aus Paris. \\**Hinweis:** Beim Vergleichen eines Attributs mit einem String muss der String in einfache Anführungszeichen.\nBeispiel: LName='Smith'",
+            "description": "Bestimme die identifizierende Nummer und die Entfernung (in km) jedes Lieferanten aus Paris. \n>!{Hinweis} Beim Vergleichen eines Attributs mit einem String muss der String in einfache Anführungszeichen. Beispiel: LName='Smith'",
             "defaultCode": "",
             "solutionCode": "pi LNr,km ( sigma Stadt='Paris' (L))",
             "showLKOperations": false,
@@ -90,7 +90,7 @@ Die Aufgaben wie folgt codiert:
 **tables**: Die Tabellen, auf denen die Aufgaben basieren.<br>
 **tasks**: Array mit Aufgaben<br>
 **id**, **title**: ID und angezeigter Titel der Aufgabe<br>
-**description**: Enthält die Aufgabenbeschreibung in marked.js Notation. Mit `>!{Lösung anzeigen}` erzeugt man ein Spoiler Tag (versteckter aufklappbarer Inhalt), auf dem der Text in geschweiften Klammern steht (`>!` führt zu "Tipp"). Der Text bis zum Ende bzw. bis zum nächsten `>!` wird versteckt. Es ist möglich mehrere zu haben.<br>
+**description**: Enthält die Aufgabenbeschreibung in marked.js Notation. Mit `>!{Lösung anzeigen}` erzeugt man ein Spoiler Tag (versteckter aufklappbarer Inhalt), auf dem der Text in geschweiften Klammern steht (`\n>!` führt zu "Tipp"). Der Text bis zum Ende bzw. bis zum nächsten `\n` wird versteckt. Es ist möglich mehrere zu haben.<br>
 **defaultCode**: Ein vorgegebnener Code im Editor, z.B. um Fehler suchen zu lassen.<br>
 **solutionCode**: Ein Code, der zur Lösung führt, wenn **extraColumnsAllowed** gesetzt ist, muss dieser die minimalste Lösung liefern. Es werden die berechneten Tabellen verglichen, nicht der String.<br>
 **showLXOperations**: Zeigt die nur im Leistungskurs zu behandelnden Operationen als anklickbare Felder über dem Editor an. Benutzbar sind diese immer.<br>

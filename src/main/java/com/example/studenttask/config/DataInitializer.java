@@ -83,6 +83,9 @@ public class DataInitializer implements ApplicationRunner {
         createOrUpdateTaskView("Python Hamster Editor", pythonHamsterEditor,
                 "Erstellen von Python-Hamster-Programmen!", false);
 
+            createOrUpdateTaskView("Python Turtle Editor", "taskviews/python-turtle-editor",
+                    "Erstellen von Python-Turtle-Programmen!", false);
+
         String pythonSortingEditor = "taskviews/python-sorting-editor";
 
         createOrUpdateTaskView("Python Sortier-Editor", pythonSortingEditor,
