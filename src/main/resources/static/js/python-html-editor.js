@@ -236,11 +236,28 @@ function initializeEditors() {
             behavioursEnabled: true,
             wrapBehavioursEnabled: true
         });
+        setEditorsBottomPadding(10);
 
         console.log("Editoren erfolgreich initialisiert");
     } catch (error) {
         console.error("Fehler bei der Editor-Initialisierung:", error);
     }
+}
+
+function setEditorBottomPadding(editor, lines) {
+    if (!editor || !editor.renderer) {
+        return;
+    }
+
+    const lineHeight = editor.renderer.lineHeight || 0;
+    const bottomPadding = Math.max(0, Math.round(lineHeight * lines));
+    editor.renderer.setScrollMargin(0, bottomPadding, 0, 0);
+}
+
+function setEditorsBottomPadding(lines) {
+    setEditorBottomPadding(pythonEditor, lines);
+    setEditorBottomPadding(htmlEditor, lines);
+    setEditorBottomPadding(cssEditor, lines);
 }
 
 // Tab-Navigation initialisieren
@@ -412,6 +429,7 @@ function initializeControls() {
         pythonEditor.setFontSize(fontSize);
         htmlEditor.setFontSize(fontSize);
         cssEditor.setFontSize(fontSize);
+        setEditorsBottomPadding(10);
 
         // Speichere Einstellung in localStorage
         localStorage.setItem('editorFontSize', fontSize);
@@ -425,6 +443,7 @@ function initializeControls() {
         pythonEditor.setFontSize(fontSize);
         htmlEditor.setFontSize(fontSize);
         cssEditor.setFontSize(fontSize);
+        setEditorsBottomPadding(10);
 
         // Gespeicherte Schriftgröße auf Editoren anwenden
     }
