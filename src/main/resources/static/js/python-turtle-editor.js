@@ -326,12 +326,23 @@ function initializeEditors() {
             behavioursEnabled: true,
             wrapBehavioursEnabled: true,
         });
+        setEditorBottomPadding(10);
         registerTurtleCompleter();
 
         console.log("Editor initialized");
     } catch (error) {
         console.error("Editor init error:", error);
     }
+}
+
+function setEditorBottomPadding(lines) {
+    if (!pythonEditor || !pythonEditor.renderer) {
+        return;
+    }
+
+    const lineHeight = pythonEditor.renderer.lineHeight || 0;
+    const bottomPadding = Math.max(0, Math.round(lineHeight * lines));
+    pythonEditor.renderer.setScrollMargin(0, bottomPadding, 0, 0);
 }
 
 function registerTurtleCompleter() {
@@ -620,6 +631,7 @@ function initializeControls() {
         const fontSize = parseInt(this.value, 10);
 
         pythonEditor.setFontSize(fontSize);
+        setEditorBottomPadding(10);
 
         const consoleOutput = document.getElementById("consoleOutput");
         if (consoleOutput) {
@@ -634,6 +646,7 @@ function initializeControls() {
         fontSizeSelect.value = savedFontSize;
         const fontSize = parseInt(savedFontSize, 10);
         pythonEditor.setFontSize(fontSize);
+        setEditorBottomPadding(10);
 
         const consoleOutput = document.getElementById("consoleOutput");
         if (consoleOutput) {
