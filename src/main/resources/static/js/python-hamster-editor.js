@@ -1441,7 +1441,8 @@ function parseHamsterConfig(config) {
         hamsterStart: {
             x: config.hamsterX || 0,
             y: config.hamsterY || 0,
-            direction: config.hamsterDirection || 'east'
+            direction: config.hamsterDirection || 'east',
+            grainCount: config.hamsterGrains || 0
         }
     };
 
@@ -1483,7 +1484,7 @@ function loadConfiguration(index) {
             size: { x: 3, y: 3 },
             walls: [],
             grains: [],
-            hamsterStart: { x: 0, y: 0, direction: 'east' }
+            hamsterStart: { x: 0, y: 0, direction: 'east', grainCount: 0 }
         });
     }
 
@@ -1495,7 +1496,7 @@ function loadConfiguration(index) {
     };
     hamsterState.position = { ...config.hamsterStart };
     hamsterState.direction = config.hamsterStart.direction;
-    hamsterState.grains = 0;
+    hamsterState.grains = config.hamsterStart.grainCount || 0;
     hamsterState.running = false;
 
     // Aktualisiere den aktuellen Index
@@ -1536,7 +1537,7 @@ function resetConfigurationData(index) {
     };
     hamsterState.position = { ...config.hamsterStart };
     hamsterState.direction = config.hamsterStart.direction;
-    hamsterState.grains = 0;
+    hamsterState.grains = config.hamsterStart.grainCount || 0;
     hamsterState.running = false;
 
     // Aktualisiere den aktuellen Index
