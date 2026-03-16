@@ -283,6 +283,7 @@ input[type="checkbox"] {
     background-color: #404040;
     cursor: col-resize;
     position: relative;
+    z-index: 10;
     transition: background-color 0.2s;
 }
 
@@ -360,6 +361,64 @@ input[type="checkbox"] {
 
 .output-content.active {
     display: block;
+}
+
+/* Output Split (Preview + Console) */
+.output-split {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.preview-pane,
+.console-pane {
+    position: relative;
+    width: 100%;
+}
+
+.preview-pane {
+    height: 70%;
+}
+
+.console-pane {
+    height: 30%;
+    background-color: #1e1e1e;
+    border-top: 1px solid #404040;
+}
+
+.output-splitter {
+    height: 6px;
+    background-color: #404040;
+    cursor: row-resize;
+    position: relative;
+    z-index: 10;
+    transition: background-color 0.2s;
+}
+
+.drag-shield {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: transparent;
+    z-index: 9999;
+}
+
+.output-splitter:hover {
+    background-color: #007acc;
+}
+
+.output-splitter::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 30px;
+    height: 3px;
+    background-color: #666;
+    border-radius: 2px;
 }
 
 /* Markdown-Styling für Task-Output */
@@ -462,6 +521,19 @@ input[type="checkbox"] {
     overflow-y: auto;
     white-space: pre-wrap;
     word-wrap: break-word;
+}
+
+.console-line {
+    padding: 2px 0;
+}
+
+.console-stdout {
+    color: #cccccc;
+}
+
+.console-stderr,
+.console-error {
+    color: #ff6b6b;
 }
 
 /* HTML Output */
@@ -875,6 +947,10 @@ input[type="checkbox"] {
         width: 100%;
         height: 5px;
         cursor: row-resize;
+    }
+
+    .output-splitter {
+        height: 8px;
     }
 }
 

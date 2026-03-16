@@ -15,10 +15,12 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeTabs();
     initializeOutputTabs();
     initializeResizer();
+    initializeOutputSplitter();
     initializeControls();
     initializePyodide();
     initializeTaskContent();
     initializeTutorialNavigation();
+    initializeConsoleBridge();
 
     // Standardcode für Demo-Zwecke
     pythonEditor.setValue(`# Willkommen im Python-Editor
@@ -236,11 +238,28 @@ function initializeEditors() {
             behavioursEnabled: true,
             wrapBehavioursEnabled: true
         });
+        setEditorsBottomPadding(10);
 
         console.log("Editoren erfolgreich initialisiert");
     } catch (error) {
         console.error("Fehler bei der Editor-Initialisierung:", error);
     }
+}
+
+function setEditorBottomPadding(editor, lines) {
+    if (!editor || !editor.renderer) {
+        return;
+    }
+
+    const lineHeight = editor.renderer.lineHeight || 0;
+    const bottomPadding = Math.max(0, Math.round(lineHeight * lines));
+    editor.renderer.setScrollMargin(0, bottomPadding, 0, 0);
+}
+
+function setEditorsBottomPadding(lines) {
+    setEditorBottomPadding(pythonEditor, lines);
+    setEditorBottomPadding(htmlEditor, lines);
+    setEditorBottomPadding(cssEditor, lines);
 }
 
 // Tab-Navigation initialisieren
@@ -315,6 +334,8 @@ function initializeResizer() {
     function startResize(e) {
         e.preventDefault();
         isResizing = true;
+        const isVertical = window.innerWidth <= 768;
+        showDragShield(isVertical ? 'row-resize' : 'col-resize');
 
         if (e.type === 'mousedown') {
             document.addEventListener('mousemove', handleMouseMove);
@@ -389,6 +410,7 @@ function initializeResizer() {
 
         document.body.style.userSelect = '';
         splitter.style.backgroundColor = '';
+        hideDragShield();
     }
 
     // Window resize Handler für responsive Verhalten
@@ -412,6 +434,7 @@ function initializeControls() {
         pythonEditor.setFontSize(fontSize);
         htmlEditor.setFontSize(fontSize);
         cssEditor.setFontSize(fontSize);
+        setEditorsBottomPadding(10);
 
         // Speichere Einstellung in localStorage
         localStorage.setItem('editorFontSize', fontSize);
@@ -425,6 +448,7 @@ function initializeControls() {
         pythonEditor.setFontSize(fontSize);
         htmlEditor.setFontSize(fontSize);
         cssEditor.setFontSize(fontSize);
+        setEditorsBottomPadding(10);
 
         // Gespeicherte Schriftgröße auf Editoren anwenden
     }
@@ -434,6 +458,7 @@ function initializeControls() {
     // Ausführen-Button
     document.getElementById('runBtn').addEventListener('click', function() {
         // Immer HTML-Modus: Kombinierter HTML + Python Code
+        clearConsoleOutput();
         runHTMLWithBrython();
     });
 
@@ -444,6 +469,121 @@ function initializeControls() {
     document.getElementById('submitButton').addEventListener('click', function() {
         submitTask();
     });
+
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    if (fullscreenBtn) {
+        const container = document.querySelector('.mycontainer') || document.documentElement;
+        const icon = fullscreenBtn.querySelector('i');
+
+        function updateFullscreenIcon() {
+            if (!icon) return;
+            if (document.fullscreenElement) {
+                icon.classList.remove('fa-expand');
+                icon.classList.add('fa-compress');
+            } else {
+                icon.classList.remove('fa-compress');
+                icon.classList.add('fa-expand');
+            }
+        }
+
+        fullscreenBtn.addEventListener('click', async function() {
+            try {
+                if (!document.fullscreenElement) {
+                    await container.requestFullscreen();
+                } else {
+                    await document.exitFullscreen();
+                }
+            } catch (e) {
+                console.error('Vollbild fehlgeschlagen:', e);
+            }
+        });
+
+        document.addEventListener('fullscreenchange', updateFullscreenIcon);
+        updateFullscreenIcon();
+    }
+
+    const iframeFullscreenBtn = document.getElementById('iframeFullscreenBtn');
+    if (iframeFullscreenBtn) {
+        const iframe = document.getElementById('htmlOutput');
+
+        iframeFullscreenBtn.addEventListener('click', async function() {
+            if (!iframe) return;
+            try {
+                await iframe.requestFullscreen();
+            } catch (e) {
+                console.error('Vorschau-Vollbild fehlgeschlagen:', e);
+            }
+        });
+    }
+
+    const downloadBtn = document.getElementById('downloadBtn');
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', function() {
+            const compiledHTML = buildCompiledHTML('download');
+            if (!compiledHTML) return;
+
+            const blob = new Blob([compiledHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'brython_app.html';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+        });
+    }
+}
+
+// Console Bridge initialisieren (Nachrichten aus dem iframe)
+function initializeConsoleBridge() {
+    const dedupeWindowMs = 2000;
+    if (!window.__consoleRecentMessages) {
+        window.__consoleRecentMessages = new Map();
+    }
+
+    window.addEventListener('message', function(event) {
+        const data = event.data;
+        if (!data || data.source !== 'brython-console') {
+            return;
+        }
+        if (window.__currentRunId && data.runId && data.runId !== window.__currentRunId) {
+            return;
+        }
+
+        const type = data.type || 'stdout';
+        let message = typeof data.message === 'string' ? data.message : String(data.message || '');
+        message = message.replace(/\r?\n$/, '');
+        const now = Date.now();
+        const key = `${type}:${message}`;
+        const lastSeen = window.__consoleRecentMessages.get(key);
+        if (lastSeen && (now - lastSeen) < dedupeWindowMs) {
+            return;
+        }
+        window.__consoleRecentMessages.set(key, now);
+        appendConsoleOutput(message, type);
+    });
+}
+
+function appendConsoleOutput(text, type = 'stdout') {
+    const consoleOutput = document.getElementById('consoleOutput');
+    if (!consoleOutput) return;
+
+    const line = document.createElement('div');
+    line.className = `console-line console-${type}`;
+    line.textContent = text.replace(/\r?\n$/, '');
+    consoleOutput.appendChild(line);
+    consoleOutput.scrollTop = consoleOutput.scrollHeight;
+}
+
+function clearConsoleOutput() {
+    const consoleOutput = document.getElementById('consoleOutput');
+    if (consoleOutput) {
+        consoleOutput.innerHTML = '';
+    }
+    if (window.__consoleRecentMessages) {
+        window.__consoleRecentMessages.clear();
+    }
 }
 
 
@@ -451,6 +591,23 @@ function initializeControls() {
 // Utility-Funktionen
 function getCurrentEditor() {
     return currentTab === 'python' ? pythonEditor : htmlEditor;
+}
+
+let __dragShieldEl = null;
+function showDragShield(cursor) {
+    if (!__dragShieldEl) {
+        __dragShieldEl = document.createElement('div');
+        __dragShieldEl.className = 'drag-shield';
+        document.body.appendChild(__dragShieldEl);
+    }
+    __dragShieldEl.style.cursor = cursor || 'default';
+    __dragShieldEl.style.display = 'block';
+}
+
+function hideDragShield() {
+    if (__dragShieldEl) {
+        __dragShieldEl.style.display = 'none';
+    }
 }
 
 function addToConsole(text, type = 'info') {
@@ -461,6 +618,129 @@ function addToConsole(text, type = 'info') {
 function addToConsoleWithoutTimestamp(text) {
     // Logging für Pyodide-Ausgabe, aber nicht in UI angezeigt
     console.log(text);
+}
+
+function buildCompiledHTML(runIdOverride) {
+    const htmlCode = htmlEditor.getValue();
+    const pythonCode = pythonEditor.getValue();
+    const cssCode = cssEditor.getValue();
+    const runId = runIdOverride || `run_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
+    if (!htmlCode.trim()) {
+        addToConsole('Kein HTML-Code vorhanden', 'error');
+        return null;
+    }
+
+    let modifiedHTML = htmlCode;
+
+    const cssToInsert = cssCode.trim() ? 
+        `    <style>
+${cssCode}
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/brython@3/brython.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/brython@3/brython_stdlib.js"></script>` :
+        `    <script src="https://cdn.jsdelivr.net/npm/brython@3/brython.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/brython@3/brython_stdlib.js"></script>`;
+
+    if (modifiedHTML.includes('<head>')) {
+        modifiedHTML = modifiedHTML.replace('<head>', `<head>
+${cssToInsert}`);
+    } else {
+        modifiedHTML = `<head>
+${cssToInsert}
+</head>
+` + modifiedHTML;
+    }
+
+    const jsBridgeScript = `    <script>
+    (function() {
+        function post(type, message) {
+            try {
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ source: 'brython-console', runId: "${runId}", type: type, message: message }, '*');
+                } else {
+                    console.log(message);
+                }
+            } catch (e) {}
+        }
+        window.__brythonPost = post;
+    })();
+    </script>
+`;
+
+    const bridgePython = `
+from browser import window
+import sys
+
+def _post(kind, message):
+    try:
+        if hasattr(window, "__brythonPost"):
+            window.__brythonPost(kind, message)
+        else:
+            window.console.log(message)
+    except Exception:
+        window.console.log(message)
+
+class _ConsoleWriter:
+    def __init__(self, kind):
+        self.kind = kind
+        self.buffer = ""
+
+    def write(self, data):
+        if data:
+            self.buffer += str(data)
+            while "\\n" in self.buffer:
+                line, self.buffer = self.buffer.split("\\n", 1)
+                _post(self.kind, line)
+
+    def flush(self):
+        if self.buffer:
+            _post(self.kind, self.buffer)
+            self.buffer = ""
+
+sys.stdout = _ConsoleWriter("stdout")
+sys.stderr = _ConsoleWriter("stderr")
+`;
+
+    if (pythonCode.trim()) {
+        if (modifiedHTML.includes('</body>')) {
+            modifiedHTML = modifiedHTML.replace(
+                '</body>',
+                `${jsBridgeScript}    <script type="text/python">
+${bridgePython}
+${pythonCode}
+    </script>
+    <script>if (!window.__brythonStarted) { window.__brythonStarted = true; brython(); }</script>
+</body>`
+            );
+        } else {
+            modifiedHTML += `
+${jsBridgeScript}<script type="text/python">
+${bridgePython}
+${pythonCode}
+</script>
+<script>if (!window.__brythonStarted) { window.__brythonStarted = true; brython(); }</script>`;
+        }
+    } else {
+        if (modifiedHTML.includes('</body>')) {
+            modifiedHTML = modifiedHTML.replace(
+                '</body>',
+                `${jsBridgeScript}    <script type="text/python">
+${bridgePython}
+    </script>
+    <script>if (!window.__brythonStarted) { window.__brythonStarted = true; brython(); }</script>
+</body>`
+            );
+        } else {
+            modifiedHTML += `
+${jsBridgeScript}<script type="text/python">
+${bridgePython}
+</script>
+<script>if (!window.__brythonStarted) { window.__brythonStarted = true; brython(); }</script>`;
+        }
+    }
+
+    return modifiedHTML;
 }
 
 // Pyodide initialisieren
@@ -577,73 +857,10 @@ stdout, stderr = output_capture.get_output()
 
 // HTML mit Brython ausführen
 function runHTMLWithBrython() {
-    const htmlCode = htmlEditor.getValue();
-    const pythonCode = pythonEditor.getValue();
-    const cssCode = cssEditor.getValue();
-
-    if (!htmlCode.trim()) {
-        addToConsole('Kein HTML-Code vorhanden', 'error');
-        return;
-    }
-
-    // Brython-Skripte automatisch in head einfügen
-    let modifiedHTML = htmlCode;
-
-    // CSS-Code in head einfügen (falls vorhanden)
-    const cssToInsert = cssCode.trim() ? 
-        `    <style>
-${cssCode}
-    </style>
-    <script src="https://cdn.jsdelivr.net/npm/brython@3/brython.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/brython@3/brython_stdlib.js"></script>` :
-        `    <script src="https://cdn.jsdelivr.net/npm/brython@3/brython.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/brython@3/brython_stdlib.js"></script>`;
-
-    // Prüfen ob head-Tag existiert
-    if (modifiedHTML.includes('<head>')) {
-        // CSS und Brython-Skripte nach dem öffnenden head-Tag einfügen
-        modifiedHTML = modifiedHTML.replace('<head>', `<head>
-${cssToInsert}`);
-    } else {
-        // Falls kein head-Tag vorhanden, am Anfang einfügen
-        modifiedHTML = `<head>
-${cssToInsert}
-</head>
-` + modifiedHTML;
-    }
-
-    // Python-Code vor </body> einfügen (falls vorhanden)
-    if (pythonCode.trim()) {
-        if (modifiedHTML.includes('</body>')) {
-            modifiedHTML = modifiedHTML.replace(
-                '</body>',
-                `    <script type="text/python">
-${pythonCode}
-    </script>
-    <script>brython()</script>
-</body>`
-            );
-        } else {
-            // Falls kein body-Tag vorhanden, am Ende anhängen
-            modifiedHTML += `
-<script type="text/python">
-${pythonCode}
-</script>
-<script>brython()</script>`;
-        }
-    } else {
-        // Auch ohne Python-Code brython() initialisieren
-        if (modifiedHTML.includes('</body>')) {
-            modifiedHTML = modifiedHTML.replace(
-                '</body>',
-                `    <script>brython()</script>
-</body>`
-            );
-        } else {
-            modifiedHTML += `
-<script>brython()</script>`;
-        }
-    }
+    const runId = `run_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    window.__currentRunId = runId;
+    const modifiedHTML = buildCompiledHTML(runId);
+    if (!modifiedHTML) return;
 
     // HTML in iframe laden
     const htmlOutput = document.getElementById('htmlOutput');
@@ -658,6 +875,78 @@ ${pythonCode}
     };
 
     console.log('HTML mit Brython ausgeführt');
+}
+
+// Output Splitter zwischen Preview und Konsole
+function initializeOutputSplitter() {
+    const splitter = document.getElementById('outputSplitter');
+    const previewPane = document.querySelector('.preview-pane');
+    const consolePane = document.querySelector('.console-pane');
+    const container = document.querySelector('#resultOutput .output-split');
+
+    if (!splitter || !previewPane || !consolePane || !container) {
+        return;
+    }
+
+    let isDragging = false;
+
+    splitter.addEventListener('mousedown', startDrag);
+    splitter.addEventListener('touchstart', startDrag);
+
+    function startDrag(e) {
+        e.preventDefault();
+        isDragging = true;
+        showDragShield('row-resize');
+
+        if (e.type === 'mousedown') {
+            document.addEventListener('mousemove', handleMove);
+            document.addEventListener('mouseup', stopDrag);
+        } else {
+            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+            document.addEventListener('touchend', stopDrag);
+        }
+
+        document.body.style.userSelect = 'none';
+        splitter.style.backgroundColor = '#007acc';
+    }
+
+    function handleMove(e) {
+        if (!isDragging) return;
+        resize(e.clientY);
+    }
+
+    function handleTouchMove(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+        const touch = e.touches[0];
+        resize(touch.clientY);
+    }
+
+    function resize(clientY) {
+        const rect = container.getBoundingClientRect();
+        const offsetY = clientY - rect.top;
+        const minHeight = 120;
+        const maxHeight = rect.height - 120;
+
+        const newTop = Math.max(minHeight, Math.min(maxHeight, offsetY));
+        const topPercent = (newTop / rect.height) * 100;
+        const bottomPercent = 100 - topPercent;
+
+        previewPane.style.height = topPercent + '%';
+        consolePane.style.height = bottomPercent + '%';
+    }
+
+    function stopDrag() {
+        isDragging = false;
+        document.removeEventListener('mousemove', handleMove);
+        document.removeEventListener('mouseup', stopDrag);
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchend', stopDrag);
+
+        document.body.style.userSelect = '';
+        splitter.style.backgroundColor = '';
+        hideDragShield();
+    }
 }
 
 // MyPy initialisieren

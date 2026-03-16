@@ -91,6 +91,9 @@ public class DataInitializer implements ApplicationRunner {
         createOrUpdateTaskView("Python Sortier-Editor", pythonSortingEditor,
                 "Visualisierung von Sortieralgorithmen", false);
 
+            createOrUpdateTaskView("Python Lückentext-Editor", "taskviews/python-fillgap-editor",
+                    "Programmcode Lückentexte, die ausführbar sind", false);
+
             String codemainia = "taskviews/code-mainia-python";
 
             createOrUpdateTaskView("Code Mainia Python", codemainia,

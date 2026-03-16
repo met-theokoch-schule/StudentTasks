@@ -64,11 +64,22 @@ function initializeEditors() {
             behavioursEnabled: true,
             wrapBehavioursEnabled: true,
         });
+        setEditorBottomPadding(10);
 
         console.log("Editor erfolgreich initialisiert");
     } catch (error) {
         console.error("Fehler bei der Editor-Initialisierung:", error);
     }
+}
+
+function setEditorBottomPadding(lines) {
+    if (!pythonEditor || !pythonEditor.renderer) {
+        return;
+    }
+
+    const lineHeight = pythonEditor.renderer.lineHeight || 0;
+    const bottomPadding = Math.max(0, Math.round(lineHeight * lines));
+    pythonEditor.renderer.setScrollMargin(0, bottomPadding, 0, 0);
 }
 
 // Tab-Navigation initialisieren (vereinfacht für nur Python)
@@ -219,6 +230,7 @@ function initializeControls() {
 
         // Editor Schriftgröße anpassen
         pythonEditor.setFontSize(fontSize);
+        setEditorBottomPadding(10);
 
         // Ausgabe-Bereich Schriftgröße programmatisch setzen
         const consoleOutput = document.getElementById("consoleOutput");
@@ -241,6 +253,7 @@ function initializeControls() {
         fontSizeSelect.value = savedFontSize;
         const fontSize = parseInt(savedFontSize);
         pythonEditor.setFontSize(fontSize);
+        setEditorBottomPadding(10);
 
         const consoleOutput = document.getElementById("consoleOutput");
         const htmlOutput = document.getElementById("htmlOutput");
