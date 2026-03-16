@@ -93,7 +93,7 @@
             </div>
         </main>
     </div>
-
+    <a id="default-link" style="display: none;" href="/" th:href="@{/}"></a>
     <div id="task-save-url" style="display: none"
         th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? '/api/tasks/usertasks/' + userTaskId + '/content' : '/api/tasks/' + task.id + '/content'}"
         data-url="/dev/save"></div>

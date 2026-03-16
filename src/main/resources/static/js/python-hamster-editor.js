@@ -1884,12 +1884,15 @@ function saveContent(isSubmission = false) {
 
     const content = getContentFromView();
     const urlElement = document.getElementById(isSubmission ? 'task-submit-url' : 'task-save-url');
-    const url = urlElement ? urlElement.getAttribute('data-url') : '';
+    let url = urlElement ? urlElement.getAttribute('data-url') : '';
 
+    // Default URLs verwenden, falls URL leer ist
+    const defaultSaveUrl = '/dev/save';
+    const defaultSubmitUrl = '/dev/submit';
+    
     if (!url) {
-        console.error('Keine URL für Speicherung gefunden');
-        updateSaveStatus('error');
-        return;
+        url = isSubmission ? defaultSubmitUrl : defaultSaveUrl;
+        console.log('Verwende Default-URL:', url);
     }
 
     fetch(url, {
