@@ -1894,6 +1894,17 @@ function saveContent(isSubmission = false) {
         url = isSubmission ? defaultSubmitUrl : defaultSaveUrl;
         console.log('Verwende Default-URL:', url);
     }
+    
+    // Default-Link Context voranstellen (Production-URL)
+    const defaultLink = document.getElementById('default-link');
+    if (defaultLink && defaultLink.href) {
+        const contextUrl = defaultLink.href;
+        // Sicherstellen, dass die URL mit / endet und url nicht mit / anfängt
+        const baseUrl = contextUrl.endsWith('/') ? contextUrl.slice(0, -1) : contextUrl;
+        const relativePath = url.startsWith('/') ? url : '/' + url;
+        url = baseUrl + relativePath;
+        console.log('Vollständige URL mit Context:', url);
+    }
 
     fetch(url, {
         method: 'POST',
