@@ -76,8 +76,8 @@ runButton = "Run Spring Boot App"
 
 [[workflows.workflow]]
 name = "Run Spring Boot App"
-author = 12297667
 mode = "sequential"
+author = 12297667
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
@@ -85,12 +85,16 @@ args = "mvn spring-boot:run -Dspring-boot.run.arguments='--spring.config.additio
 
 [[workflows.workflow]]
 name = "Build WAR (External Tomcat)"
-author = 12297667
 mode = "sequential"
+author = 12297667
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "mvn clean package -Pwar"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "curl -u REMOVED -T target/informatik.war \"https://services-new.theokoch.schule/manager/text/deploy?path=/informatik&update=true\""
 
 [[workflows.workflow]]
 name = "Project"
@@ -121,13 +125,13 @@ outputType = "console"
 name = "Start Spring Boot Server"
 author = "agent"
 
-[workflows.workflow.metadata]
-outputType = "console"
-
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "./gradlew bootRun"
 waitForPort = 8000
+
+[workflows.workflow.metadata]
+outputType = "console"
 
 [[workflows.workflow]]
 name = "Serve Static"

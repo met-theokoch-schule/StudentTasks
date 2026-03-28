@@ -36,8 +36,8 @@
     <div id="task-submit-url" style="display: none"
         th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? '' : 'api/tasks/' + task.id + '/submit'}"
         data-url="/dev/submit"></div>
-    <div id="currentContent" style="display: none" th:text="${currentContent}"></div>
-    <div id="description" style="display: none" th:text="${task.description}">
+    <div id="currentContent" style="display: none" th:utext="${currentContent}"></div>
+    <div id="description" style="display: none" th:utext="${task.description}">
 {
   "version": "1.0",
   "database": {

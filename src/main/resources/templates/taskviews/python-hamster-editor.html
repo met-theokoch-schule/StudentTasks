@@ -45,6 +45,8 @@
                     <option value="24">24pt</option>
                     <option value="30">30pt</option>
                 </select>
+                <button id="resetBtn" class="btn btn-outline-secondary btn-sm" title="Auf Standardwert zurücksetzen"><i
+                        class='fas fa-undo'></i></button>
                 <a th:href="@{/student/dashboard}" href="/student/dashboard" class="btn btn-outline-secondary btn-sm"><i class='fas fa-house'></i></a>
             </div>
         </header>
@@ -101,6 +103,7 @@
         th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? '' : '/api/tasks/' + task.id + '/submit'}"
         data-url="/dev/submit"></div>
     <div id="currentContent" style="display: none" th:text="${currentContent}">{"version":"1.0","type":"python-code-editor","pythonCode":"# Test 2","currentTutorialIndex":0,"currentConfigIndex":1,"animationSpeed":0,"metadata":{"lastModified":"2025-08-11T04:27:40.336Z","codeLength":8}}</div>
+    <div id="defaultSubmission" style="display: none" th:text="${task.defaultSubmission} "></div>
     <div id="description" style="display: none" th:text="${task.description}">*Test*</div>
     <div id="tutorial" style="display: none" th:utext="${task.tutorial}">[
         {

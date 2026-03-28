@@ -157,21 +157,22 @@ function validateColumns(result, studentColumns, solutionColumns, validation) {
 }
 
 function validateRows(result, studentValues, solutionValues, validation) {
-    // Finde Indizes der Student-Spalten in der Solution
-    const studentColumnSet = new Set(result.studentColumns);
-    const solutionRelevantIndices = result.solutionColumns
-        .map((col, idx) => studentColumnSet.has(col) ? idx : -1)
-        .filter(idx => idx !== -1);
-    
-    // Extrahiere aus Student: nur Spalten, die auch in Solution existieren
+    const sharedColumns = result.solutionColumns.filter((col) =>
+        result.studentColumns.includes(col)
+    );
+    const studentRelevantIndices = sharedColumns.map((col) =>
+        result.studentColumns.indexOf(col)
+    );
+    const solutionRelevantIndices = sharedColumns.map((col) =>
+        result.solutionColumns.indexOf(col)
+    );
+
+    // Beide Seiten werden in dieselbe Spaltenreihenfolge gebracht,
+    // damit vertauschte SELECT-Spalten keinen Fehlvergleich auslösen.
     const extractStudentRelevant = (studentRow) => {
-        return result.studentColumns
-            .map((col, idx) => studentColumnSet.has(col) && result.solutionColumns.includes(col) ? idx : -1)
-            .filter(idx => idx !== -1)
-            .map(idx => studentRow[idx]);
+        return studentRelevantIndices.map(idx => studentRow[idx]);
     };
-    
-    // Extrahiere aus Solution: nur Spalten, die der Student hat
+
     const extractSolutionRelevant = (solutionRow) => {
         return solutionRelevantIndices.map(idx => solutionRow[idx]);
     };
@@ -181,25 +182,27 @@ function validateRows(result, studentValues, solutionValues, validation) {
         sortError = checkSortingOrder(studentValues, solutionValues, extractStudentRelevant, extractSolutionRelevant);
     }
     
+    const serializeRow = (row) => JSON.stringify(row);
+    const remainingSolutionCounts = new Map();
+
+    for (const solutionRow of solutionValues) {
+        const key = serializeRow(extractSolutionRelevant(solutionRow));
+        remainingSolutionCounts.set(key, (remainingSolutionCounts.get(key) || 0) + 1);
+    }
+
     // Zähler für zusammengefasste Fehlermeldungen
     let extraRowsCount = 0;
     let missingRowsCount = 0;
     
-    // Jede Schüler-Zeile markieren
+    // Jede Schüler-Zeile darf nur so oft matchen, wie sie in der Musterlösung vorkommt.
     for (let stuIdx = 0; stuIdx < studentValues.length; stuIdx++) {
         const stuRow = studentValues[stuIdx];
         const stuRelevant = extractStudentRelevant(stuRow);
-        
-        let found = false;
-        for (let solIdx = 0; solIdx < solutionValues.length; solIdx++) {
-            const solRelevant = extractSolutionRelevant(solutionValues[solIdx]);
-            if (arraysEqual(stuRelevant, solRelevant)) {
-                found = true;
-                break;
-            }
-        }
-        
-        if (found) {
+        const rowKey = serializeRow(stuRelevant);
+        const remainingMatches = remainingSolutionCounts.get(rowKey) || 0;
+
+        if (remainingMatches > 0) {
+            remainingSolutionCounts.set(rowKey, remainingMatches - 1);
             result.rowComparisons.push({
                 rowIndex: stuIdx,
                 isCorrect: true,
@@ -217,21 +220,9 @@ function validateRows(result, studentValues, solutionValues, validation) {
         }
     }
     
-    // Prüfe fehlende Zeilen
-    for (let solIdx = 0; solIdx < solutionValues.length; solIdx++) {
-        const solRelevant = extractSolutionRelevant(solutionValues[solIdx]);
-        let found = false;
-        
-        for (let stuIdx = 0; stuIdx < studentValues.length; stuIdx++) {
-            const stuRelevant = extractStudentRelevant(studentValues[stuIdx]);
-            if (arraysEqual(stuRelevant, solRelevant)) {
-                found = true;
-                break;
-            }
-        }
-        
-        if (!found) {
-            missingRowsCount++;
+    for (const remainingMatches of remainingSolutionCounts.values()) {
+        if (remainingMatches > 0) {
+            missingRowsCount += remainingMatches;
         }
     }
     

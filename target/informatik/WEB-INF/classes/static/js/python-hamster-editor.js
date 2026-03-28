@@ -299,6 +299,13 @@ function initializeControls() {
         submitTask();
     });
 
+    const resetBtn = document.getElementById('resetBtn');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+            resetToDefault();
+        });
+    }
+
     // Weltkonfiguration auswählen
     const configSelect = document.getElementById('worldConfigSelect');
     if (configSelect && worldConfigurations.length > 0) {
@@ -1213,6 +1220,37 @@ function loadSavedContent() {
     }
 }
 
+// Auf Standardwert zurücksetzen
+function resetToDefault() {
+    const defaultElement = document.getElementById('defaultSubmission');
+    if (!defaultElement) {
+        console.warn('defaultSubmission nicht gefunden');
+        return;
+    }
+
+    const defaultContent = defaultElement.textContent.trim();
+    if (!defaultContent) {
+        console.warn('Kein Standardcode vorhanden');
+        return;
+    }
+
+    if (
+        confirm(
+            'Möchten Sie den Code wirklich auf den Standardwert zurücksetzen?',
+        )
+    ) {
+        try {
+            const data = JSON.parse(defaultContent);
+            const codeToLoad = data.pythonCode || data.defaultContent || defaultContent;
+            pythonEditor.setValue(codeToLoad);
+        } catch (e) {
+            pythonEditor.setValue(defaultContent);
+        }
+        updateSaveStatus('ready');
+        console.log('Code auf Standardwert zurückgesetzt');
+    }
+}
+
 // Markdown-zu-HTML Parser
 function renderMarkdown(markdownText) {
     if (typeof marked !== 'undefined') {
@@ -1884,12 +1922,26 @@ function saveContent(isSubmission = false) {
 
     const content = getContentFromView();
     const urlElement = document.getElementById(isSubmission ? 'task-submit-url' : 'task-save-url');
-    const url = urlElement ? urlElement.getAttribute('data-url') : '';
+    let url = urlElement ? urlElement.getAttribute('data-url') : '';
 
+    // Default URLs verwenden, falls URL leer ist
+    const defaultSaveUrl = '/dev/save';
+    const defaultSubmitUrl = '/dev/submit';
+    
     if (!url) {
-        console.error('Keine URL für Speicherung gefunden');
-        updateSaveStatus('error');
-        return;
+        url = isSubmission ? defaultSubmitUrl : defaultSaveUrl;
+        console.log('Verwende Default-URL:', url);
+    }
+    
+    // Default-Link Context voranstellen (Production-URL)
+    const defaultLink = document.getElementById('default-link');
+    if (defaultLink && defaultLink.href) {
+        const contextUrl = defaultLink.href;
+        // Sicherstellen, dass die URL mit / endet und url nicht mit / anfängt
+        const baseUrl = contextUrl.endsWith('/') ? contextUrl.slice(0, -1) : contextUrl;
+        const relativePath = url.startsWith('/') ? url : '/' + url;
+        url = baseUrl + relativePath;
+        console.log('Vollständige URL mit Context:', url);
     }
 
     fetch(url, {

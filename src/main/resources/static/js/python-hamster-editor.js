@@ -299,6 +299,13 @@ function initializeControls() {
         submitTask();
     });
 
+    const resetBtn = document.getElementById('resetBtn');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+            resetToDefault();
+        });
+    }
+
     // Weltkonfiguration auswählen
     const configSelect = document.getElementById('worldConfigSelect');
     if (configSelect && worldConfigurations.length > 0) {
@@ -1210,6 +1217,37 @@ function loadSavedContent() {
     if (contentElement) {
         const savedContent = contentElement.textContent.trim();
         loadContentToView(savedContent);
+    }
+}
+
+// Auf Standardwert zurücksetzen
+function resetToDefault() {
+    const defaultElement = document.getElementById('defaultSubmission');
+    if (!defaultElement) {
+        console.warn('defaultSubmission nicht gefunden');
+        return;
+    }
+
+    const defaultContent = defaultElement.textContent.trim();
+    if (!defaultContent) {
+        console.warn('Kein Standardcode vorhanden');
+        return;
+    }
+
+    if (
+        confirm(
+            'Möchten Sie den Code wirklich auf den Standardwert zurücksetzen?',
+        )
+    ) {
+        try {
+            const data = JSON.parse(defaultContent);
+            const codeToLoad = data.pythonCode || data.defaultContent || defaultContent;
+            pythonEditor.setValue(codeToLoad);
+        } catch (e) {
+            pythonEditor.setValue(defaultContent);
+        }
+        updateSaveStatus('ready');
+        console.log('Code auf Standardwert zurückgesetzt');
     }
 }
 

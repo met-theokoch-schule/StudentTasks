@@ -313,6 +313,7 @@ function updateTutorialDisplay() {
 
     // Content aktualisieren
     const tutorialFrame = document.getElementById("tutorialFrame");
+    if (!tutorialFrame) return;
     const currentContent = tutorialContents[currentTutorialIndex].content;
 
     // Markdown in HTML umwandeln
@@ -363,6 +364,7 @@ function updateTutorialDisplay() {
                 table { border-collapse: collapse; width: 100%; margin: 10px 0; }
                 th, td { border: 1px solid #404040; padding: 8px; text-align: left; }
                 th { background-color: #2d2d2d; }
+                img { display: block; width: 100%; max-width: 100%; height: auto; margin: 15px 0; }
                 a { color: #6dbfff; text-decoration: none; cursor: pointer; }
                 a:hover { text-decoration: underline; color: #7fd3ff; }
             </style>
@@ -411,6 +413,7 @@ function updateTutorialDisplay() {
                 table { border-collapse: collapse; width: 100%; margin: 10px 0; }
                 th, td { border: 1px solid #404040; padding: 8px; text-align: left; }
                 th { background-color: #2d2d2d; }
+                img { display: block; width: 100%; max-width: 100%; height: auto; margin: 15px 0; }
                 a { color: #6dbfff; text-decoration: none; cursor: pointer; }
                 a:hover { text-decoration: underline; color: #7fd3ff; }
             </style>
@@ -422,6 +425,8 @@ function updateTutorialDisplay() {
     `;
 
     tutorialFrame.innerHTML = wrapper.innerHTML;
+    tutorialFrame.scrollTop = 0;
+    tutorialFrame.scrollLeft = 0;
 }
 
 // ERD Display aktualisieren
