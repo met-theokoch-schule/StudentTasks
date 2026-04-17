@@ -112,8 +112,11 @@ public class DataInitializer implements ApplicationRunner {
         createOrUpdateTaskView("ER-Diagramm", "taskviews/erd",
                 "Interaktive ERD's erstellen", false);
 
-        createOrUpdateTaskView("DFA, NFA und Kellerautomat", "taskviews/dfa-nfa-pda",
-                        "Endliche Automaten und Kellerautoamten mit FlapJS simulieren", false);
+        createOrUpdateTaskView("Automaten (FlapJS)", "taskviews/dfa-nfa-pda",
+                        "DFA, NFA und Kellerautomat mit FlapJS simulieren", false);
+            
+            createOrUpdateTaskView("Automaten (Flaci)", "taskviews/flaci-automaten",
+                        "DEA, NEA, MEALY, MOORE, DKA, NKA, TM mit Flaci", false);
 
             createOrUpdateTaskView("Grammatik Editor", "taskviews/flaci-grammatik",
                     "Grammatiken und Syntaxdiagramme mit Flaci", false);
