@@ -1,22 +1,25 @@
 package com.example.studenttask.service;
 
 import com.example.studenttask.model.TaskReview;
+import com.example.studenttask.model.TaskStatus;
 import com.example.studenttask.model.User;
 import com.example.studenttask.model.UserTask;
-import com.example.studenttask.model.TaskStatus;
-import com.example.studenttask.model.Submission;
 import com.example.studenttask.repository.TaskReviewRepository;
 import com.example.studenttask.repository.UserTaskRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.ArrayList;
 
 @Service
 public class TaskReviewService {
+
+    private static final Logger log = LoggerFactory.getLogger(TaskReviewService.class);
 
     private final TaskReviewRepository taskReviewRepository;
     private final UserTaskRepository userTaskRepository;
@@ -80,12 +83,8 @@ public class TaskReviewService {
      */
     @Transactional
     public TaskReview createReview(UserTask userTask, User reviewer, Long statusId, String comment, Long submissionId, Integer currentVersion) {
-        System.out.println("=== DEBUG createReview ===");
-        System.out.println("UserTask ID: " + userTask.getId());
-        System.out.println("Reviewer: " + reviewer.getName());
-        System.out.println("Status ID: " + statusId);
-        System.out.println("Comment: " + comment);
-        System.out.println("Current Version: " + currentVersion);
+        log.debug("Creating review for userTask {} by reviewer {} with status {} and version {}",
+                userTask.getId(), reviewer.getId(), statusId, currentVersion);
 
         TaskReview review = new TaskReview();
         review.setUserTask(userTask);
@@ -94,30 +93,26 @@ public class TaskReviewService {
         TaskStatus status = taskStatusService.findById(statusId)
             .orElseThrow(() -> new RuntimeException("Status not found"));
         review.setStatus(status);
-        System.out.println("Status gefunden: " + status.getName());
+        log.debug("Resolved review status {}", status.getName());
 
         review.setComment(comment);
         review.setReviewedAt(LocalDateTime.now());
 
-        // Set version directly in review
         if (currentVersion != null && currentVersion > 0) {
             review.setVersion(currentVersion);
-            System.out.println("Version direkt gesetzt: " + currentVersion);
+            log.debug("Assigned review version {}", currentVersion);
         } else {
-            System.out.println("Keine Version angegeben - Review ohne spezifische Version");
+            log.debug("No review version provided");
         }
 
-        // Update the user task status as well
         userTask.setStatus(status);
         userTask.setLastModified(LocalDateTime.now());
-
-        // Save UserTask explicitly to ensure status change is persisted
         userTaskRepository.save(userTask);
-        System.out.println("UserTask Status aktualisiert auf: " + status.getName());
+        log.debug("Updated UserTask {} to status {}", userTask.getId(), status.getName());
 
         TaskReview savedReview = save(review);
-        System.out.println("Review gespeichert mit ID: " + savedReview.getId() + ", Version: " + savedReview.getVersion());
-        System.out.println("=== END DEBUG createReview ===");
+        log.info("Created review {} for userTask {} with status {}",
+                savedReview.getId(), userTask.getId(), status.getName());
 
         return savedReview;
     }
@@ -128,7 +123,6 @@ public class TaskReviewService {
     public List<TaskStatus> getTeacherReviewStatuses() {
         List<TaskStatus> teacherStatuses = new ArrayList<>();
 
-        // Nur diese beiden Status sind für Lehrer-Reviews sinnvoll
         taskStatusService.findByName("VOLLSTÄNDIG").ifPresent(teacherStatuses::add);
         taskStatusService.findByName("ÜBERARBEITUNG_NÖTIG").ifPresent(teacherStatuses::add);
 

@@ -1,10 +1,12 @@
 package com.example.studenttask.controller;
 
-import com.example.studenttask.model.User;
-import com.example.studenttask.model.Role;
 import com.example.studenttask.model.Group;
-import com.example.studenttask.service.UserService;
+import com.example.studenttask.model.Role;
+import com.example.studenttask.model.User;
 import com.example.studenttask.service.GroupService;
+import com.example.studenttask.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -13,50 +15,27 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
-import java.util.Map;
-
 import java.util.List;
-import java.util.Set;
 
 @Controller
 public class DashboardController {
+
+    private static final Logger log = LoggerFactory.getLogger(DashboardController.class);
 
     @Autowired
     private UserService userService;
 
     @Autowired
-    private GroupService groupService; // Add this line for GroupService injection
+    private GroupService groupService;
 
     @GetMapping("/dashboard")
     public String dashboard(Authentication authentication, Model model) {
-        System.out.println("==========================================");
-        System.out.println("🔐 AUTHENTICATION OBJECT DUMP (Line 37):");
-        System.out.println("==========================================");
-        System.out.println("   Authentication object: " + authentication);
-        System.out.println("   Class: " + (authentication != null ? authentication.getClass().getName() : "NULL"));
-
-        if (authentication != null) {
-            System.out.println("   Name: " + authentication.getName());
-            System.out.println("   Principal: " + authentication.getPrincipal());
-            System.out.println("   Principal Class: " + (authentication.getPrincipal() != null ? authentication.getPrincipal().getClass().getName() : "NULL"));
-            System.out.println("   Credentials: " + authentication.getCredentials());
-            System.out.println("   Authorities: " + authentication.getAuthorities());
-            System.out.println("   Details: " + authentication.getDetails());
-            System.out.println("   Is Authenticated: " + authentication.isAuthenticated());
-
-            if (authentication.getPrincipal() instanceof OAuth2User) {
-                OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
-                System.out.println("   OAuth2User Attributes: " + oauth2User.getAttributes());
-                System.out.println("   OAuth2User Name: " + oauth2User.getName());
-            }
-        }
-        System.out.println("==========================================");
-
-        System.out.println("🌐 === DEBUG: Dashboard Controller START ===");
+        logAuthenticationDetails(authentication);
+        log.debug("Dashboard request started");
 
         // Benutzer aus der Datenbank laden oder aktualisieren
         String openIdSubject = authentication.getName();
-        System.out.println("🔍 Looking for user with OpenID Subject: " + openIdSubject);
+        log.debug("Looking for user with OpenID subject {}", openIdSubject);
 
         User user = userService.findUserByOpenIdSubject(openIdSubject);
 
@@ -66,41 +45,37 @@ public class DashboardController {
             OAuth2User oauth2User = oauth2Token.getPrincipal();
 
             if (user == null) {
-                System.out.println("❌ User not found, creating new user from OAuth2 data");
+                log.info("User with subject {} not found, creating from OAuth2 data", openIdSubject);
                 user = userService.createOrUpdateUserFromOAuth2(oauth2User);
-                System.out.println("✅ User created with ID: " + (user != null ? user.getId() : "NULL"));
+                log.debug("User created with id {}", user != null ? user.getId() : null);
             } else {
-                System.out.println("✅ User found: " + user.getName() + " (ID: " + user.getId() + ")");
-                System.out.println("🔄 Updating user data and syncing groups from OAuth2");
+                log.debug("Synchronizing existing user {} from OAuth2", user.getId());
                 user = userService.createOrUpdateUserFromOAuth2(oauth2User);
-                System.out.println("✅ User updated with ID: " + user.getId());
+                log.debug("User updated with id {}", user.getId());
             }
         } else {
-            System.out.println("❌ Authentication is not OAuth2AuthenticationToken");
+            log.warn("Authentication is not an OAuth2AuthenticationToken: {}",
+                    authentication != null ? authentication.getClass().getName() : "null");
         }
 
         if (user == null) {
-            System.out.println("❌ User creation/update failed, redirecting to login");
+            log.warn("User creation or update failed, redirecting to login");
             return "redirect:/login";
         }
 
-        System.out.println("✅ User processed: " + user.getName() + " (ID: " + user.getId() + ")");
+        log.debug("User processed: id={}, name={}", user.getId(), user.getName());
 
         // Role-based flags
-        System.out.println("🎭 Role evaluation started...");
-        System.out.println("   - User roles count: " + (user.getRoles() != null ? user.getRoles().size() : 0));
-
-        if (user.getRoles() != null) {
+        if (log.isDebugEnabled() && user.getRoles() != null) {
+            log.debug("Evaluating {} role(s) for user {}", user.getRoles().size(), user.getId());
             for (Role role : user.getRoles()) {
-                System.out.println("   - Found role: '" + role.getName() + "'");
+                log.debug("Found role '{}'", role.getName());
             }
         }
 
         boolean isTeacher = user.getRoles() != null && user.getRoles().stream()
                 .anyMatch(role -> {
                     String roleName = role.getName();
-                    System.out.println("   - Checking role: '" + roleName + "' for teacher match");
-                    // Check various teacher role patterns
                     return "ROLE_TEACHER".equals(roleName) ||
                             "teacher".equals(roleName) ||
                             "lehrer".equals(roleName) ||
@@ -111,8 +86,6 @@ public class DashboardController {
         boolean isStudent = user.getRoles() != null && user.getRoles().stream()
                 .anyMatch(role -> {
                     String roleName = role.getName();
-                    System.out.println("   - Checking role: '" + roleName + "' for student match");
-                    // Check various student role patterns
                     return "ROLE_STUDENT".equals(roleName) ||
                             "student".equals(roleName) ||
                             "schueler".equals(roleName) ||
@@ -122,35 +95,23 @@ public class DashboardController {
                             roleName.toLowerCase().contains("schüler");
                 });
 
-        System.out.println("🎭 Role evaluation results:");
-        System.out.println("   - Is Teacher: " + isTeacher);
-        System.out.println("   - Is Student: " + isStudent);
+        log.debug("Role evaluation results for user {}: isTeacher={}, isStudent={}",
+                user.getId(), isTeacher, isStudent);
 
-        // Gruppen laden und ausgeben
-        System.out.println("==========================================");
-        System.out
-                .println("🔍 DEBUG: About to fetch groups for user ID: " + user.getId() + ", Name: " + user.getName());
-
-        List<Group> groups = null;
         try {
-            groups = groupService.getGroupsForUser(user);
-            System.out.println("🔍 DEBUG: Groups fetched successfully!");
-            System.out.println("🔍 DEBUG: Groups result: " + (groups == null ? "NULL" : groups.size() + " groups"));
+            List<Group> groups = groupService.getGroupsForUser(user);
+            log.debug("Fetched {} group(s) for user {}",
+                    groups == null ? 0 : groups.size(), user.getId());
 
-            System.out.println("👥 Groups assigned to user:");
-            if (groups != null && !groups.isEmpty()) {
+            if (log.isDebugEnabled() && groups != null) {
                 for (Group group : groups) {
-                    System.out.println("   - Group ID: " + group.getId() + ", Name: '" + group.getName() + "'");
+                    log.debug("Group assigned to user {}: id={}, name='{}'",
+                            user.getId(), group.getId(), group.getName());
                 }
-            } else {
-                System.out.println("   - No groups assigned (or NULL)");
             }
         } catch (Exception e) {
-            System.out.println("❌ ERROR: Exception while fetching groups!");
-            System.out.println("❌ Exception message: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Exception while fetching groups for user {}", user.getId(), e);
         }
-        System.out.println("==========================================");
 
         model.addAttribute("isTeacher", isTeacher);
         model.addAttribute("isStudent", isStudent);
@@ -162,6 +123,37 @@ public class DashboardController {
         } else {
             // Für alle anderen zeige das allgemeine Dashboard
             return "dashboard";
+        }
+    }
+
+    private void logAuthenticationDetails(Authentication authentication) {
+        if (!log.isDebugEnabled()) {
+            return;
+        }
+
+        log.debug("Authentication object: {}", authentication);
+        log.debug("Authentication class: {}",
+                authentication != null ? authentication.getClass().getName() : "null");
+
+        if (authentication == null) {
+            return;
+        }
+
+        log.debug("Authentication name: {}", authentication.getName());
+        log.debug("Authentication principal: {}", authentication.getPrincipal());
+        log.debug("Authentication principal class: {}",
+                authentication.getPrincipal() != null
+                        ? authentication.getPrincipal().getClass().getName()
+                        : "null");
+        log.debug("Authentication credentials: {}", authentication.getCredentials());
+        log.debug("Authentication authorities: {}", authentication.getAuthorities());
+        log.debug("Authentication details: {}", authentication.getDetails());
+        log.debug("Authentication authenticated flag: {}", authentication.isAuthenticated());
+
+        if (authentication.getPrincipal() instanceof OAuth2User) {
+            OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
+            log.debug("OAuth2 user attributes: {}", oauth2User.getAttributes());
+            log.debug("OAuth2 user name: {}", oauth2User.getName());
         }
     }
 }

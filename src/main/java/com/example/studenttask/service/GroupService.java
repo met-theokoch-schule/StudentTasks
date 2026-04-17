@@ -3,6 +3,8 @@ package com.example.studenttask.service;
 import com.example.studenttask.model.*;
 import com.example.studenttask.repository.*;
 import com.example.studenttask.controller.TeacherGroupController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +16,8 @@ import java.util.HashMap;
 
 @Service
 public class GroupService {
+
+    private static final Logger log = LoggerFactory.getLogger(GroupService.class);
 
     @Autowired
     private GroupRepository groupRepository;
@@ -313,16 +317,16 @@ public class GroupService {
         matrix.put("tasks", activeTasks);
         matrix.put("statusMap", statusMap);
 
-        // Debug-Ausgabe
-        System.out.println("Matrix Debug - Group: " + group.getName() + " (ID: " + group.getId() + ")");
-        System.out.println("All users in group: " + students.size());
-        System.out.println("Tasks found: " + activeTasks.size());
-        System.out.println("StatusMap size: " + statusMap.size());
+        log.debug("Built matrix for group {} (id={}) with {} user(s), {} task(s) and {} status entries",
+                group.getName(), group.getId(), students.size(), activeTasks.size(), statusMap.size());
 
-        // Debug: Liste der Benutzer
-        for (User student : students) {
-            System.out.println("User: " + student.getName() + " (ID: " + student.getId() + "), Roles: " + 
-                student.getRoles().stream().map(role -> role.getName()).collect(Collectors.joining(", ")));
+        if (log.isDebugEnabled()) {
+            for (User student : students) {
+                log.debug("Matrix user {} (id={}) roles={}",
+                        student.getName(),
+                        student.getId(),
+                        student.getRoles().stream().map(role -> role.getName()).collect(Collectors.joining(", ")));
+            }
         }
 
         return matrix;
@@ -398,12 +402,14 @@ public class GroupService {
     }
 
     public List<Group> getGroupsForUser(User user) {
-        System.out.println("📊 GroupService.getGroupsForUser called for user: " + user.getName() + " (ID: " + user.getId() + ")");
+        log.debug("Loading groups for user {} ({})", user.getId(), user.getName());
         List<Group> groups = groupRepository.findByUsersContaining(user);
-        System.out.println("📊 GroupRepository returned " + (groups != null ? groups.size() : "null") + " groups");
-        if (groups != null && !groups.isEmpty()) {
+        log.debug("Group repository returned {} group(s) for user {}",
+                groups != null ? groups.size() : null, user.getId());
+        if (log.isDebugEnabled() && groups != null) {
             for (Group group : groups) {
-                System.out.println("   📊 Found group: ID=" + group.getId() + ", Name='" + group.getName() + "'");
+                log.debug("Found group for user {}: id={}, name='{}'",
+                        user.getId(), group.getId(), group.getName());
             }
         }
         return groups;

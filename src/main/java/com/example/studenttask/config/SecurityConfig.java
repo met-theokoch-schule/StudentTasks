@@ -1,6 +1,8 @@
 package com.example.studenttask.config;
 
 import com.example.studenttask.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +21,8 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity(securedEnabled = true, prePostEnabled = true)
 public class SecurityConfig {
 
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
+
     @Autowired
     private UserService userService;
 
@@ -33,7 +37,7 @@ public class SecurityConfig {
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(oauth2UserService()))
                         .successHandler((request, response, authentication) -> {
-                            System.out.println("🔄 OAuth2 Success Handler called");
+                            log.debug("OAuth2 success handler called for {}", authentication.getName());
                             String contextPath = request.getContextPath();
                             response.sendRedirect(contextPath + "/dashboard");
                         })
@@ -66,7 +70,6 @@ public class SecurityConfig {
             public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
                 OAuth2User oauth2User = delegate.loadUser(userRequest);
 
-                // User in Datenbank speichern/aktualisieren
                 userService.findOrCreateUserFromOAuth2(oauth2User);
 
                 return oauth2User;

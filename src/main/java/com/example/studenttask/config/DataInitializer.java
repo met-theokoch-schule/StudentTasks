@@ -6,14 +6,18 @@ import com.example.studenttask.model.TaskView;
 import com.example.studenttask.repository.RoleRepository;
 import com.example.studenttask.repository.TaskStatusRepository;
 import com.example.studenttask.repository.TaskViewRepository;
+import com.example.studenttask.service.UnitTitleService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
-import com.example.studenttask.service.UnitTitleService;
 
 @Component
 public class DataInitializer implements ApplicationRunner {
+
+    private static final Logger log = LoggerFactory.getLogger(DataInitializer.class);
 
     @Autowired
     private RoleRepository roleRepository;
@@ -40,7 +44,7 @@ public class DataInitializer implements ApplicationRunner {
             roleRepository.save(new Role("ROLE_STUDENT", "Schüler - kann Aufgaben bearbeiten und abgeben"));
             roleRepository.save(new Role("ROLE_TEACHER", "Lehrer - kann Aufgaben erstellen und bewerten"));
             roleRepository.save(new Role("ROLE_ADMIN", "Administrator - kann System verwalten"));
-            System.out.println("Default roles initialized");
+            log.info("Initialized default roles");
         }
     }
 
@@ -51,7 +55,7 @@ public class DataInitializer implements ApplicationRunner {
             taskStatusRepository.save(new TaskStatus("ABGEGEBEN", "Aufgabe wurde abgegeben", 3));
             taskStatusRepository.save(new TaskStatus("ÜBERARBEITUNG_NÖTIG", "Aufgabe muss überarbeitet werden", 4));
             taskStatusRepository.save(new TaskStatus("VOLLSTÄNDIG", "Aufgabe ist vollständig abgeschlossen", 5));
-            System.out.println("Default task statuses initialized");
+            log.info("Initialized default task statuses");
         }
     }
 
@@ -83,21 +87,21 @@ public class DataInitializer implements ApplicationRunner {
         createOrUpdateTaskView("Python Hamster Editor", pythonHamsterEditor,
                 "Erstellen von Python-Hamster-Programmen!", false);
 
-            createOrUpdateTaskView("Python Turtle Editor", "taskviews/python-turtle-editor",
-                    "Erstellen von Python-Turtle-Programmen!", false);
+        createOrUpdateTaskView("Python Turtle Editor", "taskviews/python-turtle-editor",
+                "Erstellen von Python-Turtle-Programmen!", false);
 
         String pythonSortingEditor = "taskviews/python-sorting-editor";
 
         createOrUpdateTaskView("Python Sortier-Editor", pythonSortingEditor,
                 "Visualisierung von Sortieralgorithmen", false);
 
-            createOrUpdateTaskView("Python Lückentext-Editor", "taskviews/python-fillgap-editor",
-                    "Programmcode Lückentexte, die ausführbar sind", false);
+        createOrUpdateTaskView("Python Lückentext-Editor", "taskviews/python-fillgap-editor",
+                "Programmcode Lückentexte, die ausführbar sind", false);
 
-            String codemainia = "taskviews/code-mainia-python";
+        String codemainia = "taskviews/code-mainia-python";
 
-            createOrUpdateTaskView("Code Mainia Python", codemainia,
-                    "Single Player Version des Hopp Foundations Spiels", true);
+        createOrUpdateTaskView("Code Mainia Python", codemainia,
+                "Single Player Version des Hopp Foundations Spiels", true);
 
         String sqlTaskView = "taskviews/sql-task-view";
 
@@ -113,10 +117,11 @@ public class DataInitializer implements ApplicationRunner {
                 "Interaktive ERD's erstellen", false);
 
         createOrUpdateTaskView("Automaten (FlapJS)", "taskviews/dfa-nfa-pda",
-                        "DFA, NFA und Kellerautomat mit FlapJS simulieren", false);
-            
-            createOrUpdateTaskView("Automaten (Flaci)", "taskviews/flaci-automaten",
-                        "DEA, NEA, MEALY, MOORE, DKA, NKA, TM mit Flaci", false);
+                "DFA, NFA und Kellerautomat mit FlapJS simulieren", false);
+
+        createOrUpdateTaskView("Automaten (Flaci)", "taskviews/flaci-automaten",
+                "DEA, NEA, MEALY, MOORE, DKA, NKA, TM mit Flaci", false);
+
 
             createOrUpdateTaskView("Grammatik Editor", "taskviews/flaci-grammatik",
                     "Grammatiken und Syntaxdiagramme mit Flaci", false);

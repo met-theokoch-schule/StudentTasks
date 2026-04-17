@@ -1,24 +1,26 @@
 package com.example.studenttask.controller;
 
+import com.example.studenttask.model.Group;
+import com.example.studenttask.model.Role;
 import com.example.studenttask.model.User;
+import com.example.studenttask.service.GroupService;
 import com.example.studenttask.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import com.example.studenttask.model.Role;
-import java.util.Set;
-import com.example.studenttask.model.Group;
-import java.util.List;
-import com.example.studenttask.service.GroupService;
 
+import java.util.List;
+import java.util.Set;
 
 @Controller
 public class HomeController {
+
+    private static final Logger log = LoggerFactory.getLogger(HomeController.class);
 
     @Autowired
     private UserService userService;
@@ -38,63 +40,44 @@ public class HomeController {
 
     @GetMapping("/debug")
     public String debug(Model model, OAuth2AuthenticationToken token) {
-        System.out.println("🔧 === DEBUG: Debug Controller START ===");
+        log.debug("Debug controller invoked");
 
         if (token == null) {
-            System.out.println("❌ No OAuth2 token found");
+            log.warn("Debug page called without OAuth2 token");
             return "redirect:/login";
         }
 
         OAuth2User principal = token.getPrincipal();
-
-        // Benutzerinformationen aus OAuth2
         String name = principal.getAttribute("name");
         String email = principal.getAttribute("email");
 
-        System.out.println("📧 OAuth2 User: " + name + " (" + email + ")");
+        log.debug("OAuth2 user loaded for debug page: name={}, email={}", name, email);
 
-        // User aus Datenbank laden
         String openIdSubject = principal.getAttribute("sub");
         User user = userService.findUserByOpenIdSubject(openIdSubject);
 
         if (user != null) {
-            System.out.println("✅ UUser found in database: " + user.getName());
+            log.debug("User {} found in database for debug page", user.getId());
 
-            // Rollen und Gruppen laden
             Set<Role> roles = user.getRoles();
-            
-            System.out.println("==========================================");
-            System.out.println("🔍 DEBUG: About to fetch groups for user ID: " + user.getId() + ", Name: " + user.getName());
-            System.out.println("🔍 DEBUG: GroupService instance: " + (groupService != null ? "NOT NULL" : "NULL"));
-            System.out.println("==========================================");
-            
             List<Group> groups = null;
             try {
                 groups = groupService.getGroupsForUser(user);
-                System.out.println("==========================================");
-                System.out.println("🔍 DEBUG: Groups fetched successfully!");
-                System.out.println("🔍 DEBUG: Groups result: " + (groups == null ? "NULL" : groups.size() + " groups"));
-                System.out.println("==========================================");
+                log.debug("Fetched {} group(s) for debug page", groups == null ? 0 : groups.size());
             } catch (Exception e) {
-                System.out.println("==========================================");
-                System.out.println("❌ ERROR: Exception while fetching groups!");
-                System.out.println("❌ Exception message: " + e.getMessage());
-                e.printStackTrace();
-                System.out.println("==========================================");
+                log.error("Failed to load groups for debug page and user {}", user.getId(), e);
             }
-            
-            // Detaillierte Gruppen-Ausgabe
-            System.out.println("👥 Groups assigned to user:");
-            if (groups != null && !groups.isEmpty()) {
-                for (Group group : groups) {
-                    System.out.println("   - Group ID: " + group.getId() + ", Name: '" + group.getName() + "'");
-                }
-            } else {
-                System.out.println("   - No groups assigned (or NULL)");
-            }
-            System.out.println("==========================================");
 
-            // Role-basierte Flags setzen
+            if (log.isDebugEnabled()) {
+                if (groups != null && !groups.isEmpty()) {
+                    for (Group group : groups) {
+                        log.debug("Group for user {}: id={}, name='{}'", user.getId(), group.getId(), group.getName());
+                    }
+                } else {
+                    log.debug("No groups assigned to user {}", user.getId());
+                }
+            }
+
             boolean isTeacher = roles.stream().anyMatch(role -> role.getName().equals("ROLE_TEACHER"));
             boolean isStudent = roles.stream().anyMatch(role -> role.getName().equals("ROLE_STUDENT"));
 
@@ -103,17 +86,9 @@ public class HomeController {
             model.addAttribute("isTeacher", isTeacher);
             model.addAttribute("isStudent", isStudent);
 
-            System.out.println("🎭 Role evaluation: isTeacher=" + isTeacher + ", isStudent=" + isStudent);
-            System.out.println("👥 Groups assigned to user:");
-            if (groups != null && !groups.isEmpty()) {
-                for (Group group : groups) {
-                    System.out.println(" - Group ID: " + group.getId() + ", Name: '" + group.getName() + "'");
-                }
-            } else {
-                System.out.println(" - No groups assigned");
-            }
+            log.debug("Role evaluation for user {}: isTeacher={}, isStudent={}", user.getId(), isTeacher, isStudent);
         } else {
-            System.out.println("❌ User not found in database");
+            log.warn("User with subject {} not found in database for debug page", openIdSubject);
             model.addAttribute("user", null);
         }
 
@@ -121,7 +96,7 @@ public class HomeController {
         model.addAttribute("email", email);
         model.addAttribute("attributes", principal.getAttributes());
 
-        System.out.println("🔧 === DEBUG: Debug Controller END ===");
+        log.debug("Debug controller finished");
         return "debug";
     }
 }

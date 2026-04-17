@@ -3,6 +3,8 @@ package com.example.studenttask.controller;
 import com.example.studenttask.model.*;
 import com.example.studenttask.service.*;
 import com.example.studenttask.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -25,6 +27,8 @@ import java.util.Objects;
 @Controller
 @RequestMapping("/student")
 public class StudentController {
+
+    private static final Logger log = LoggerFactory.getLogger(StudentController.class);
 
     @Autowired
     private UserService userService;
@@ -87,19 +91,23 @@ public class StudentController {
         TaskView taskView = taskViewService.findById(task.getTaskView().getId())
             .orElseThrow(() -> new RuntimeException("TaskView nicht gefunden"));
 
-        // Debug-Ausgaben für Content-Laden
-        System.out.println("🔍 === DEBUG: StudentController.viewTask Content Loading ===");
-        System.out.println("   - UserTask ID: " + userTask.getId());
-        System.out.println("   - Task ID: " + task.getId());
-        System.out.println("   - Latest content present: " + latestContent.isPresent());
+        log.debug("Loading task content for userTask {} and task {}", userTask.getId(), task.getId());
+        log.debug("Latest content present: {}", latestContent.isPresent());
         if (latestContent.isPresent()) {
             TaskContent content = latestContent.get();
-            System.out.println("   - Content ID: " + content.getId());
-            System.out.println("   - Content version: " + content.getVersion());
-            System.out.println("   - Content length: " + (content.getContent() != null ? content.getContent().length() : "null"));
-            System.out.println("   - Content preview: " + (content.getContent() != null && content.getContent().length() > 50 ? content.getContent().substring(0, 50) + "..." : content.getContent()));
+            log.debug("Content id={}, version={}, length={}",
+                    content.getId(),
+                    content.getVersion(),
+                    content.getContent() != null ? content.getContent().length() : null);
+            log.debug("Content preview: {}",
+                    content.getContent() != null && content.getContent().length() > 50
+                            ? content.getContent().substring(0, 50) + "..."
+                            : content.getContent());
         }
-        System.out.println("   - Default submission: " + (task.getDefaultSubmission() != null ? task.getDefaultSubmission().substring(0, Math.min(50, task.getDefaultSubmission().length())) : "null"));
+        log.debug("Default submission preview: {}",
+                task.getDefaultSubmission() != null
+                        ? task.getDefaultSubmission().substring(0, Math.min(50, task.getDefaultSubmission().length()))
+                        : "null");
 
         model.addAttribute("task", task);
         model.addAttribute("userTask", userTask);
@@ -109,14 +117,15 @@ public class StudentController {
         String contentToShow;
         if (latestContent.isPresent() && latestContent.get().getContent() != null && !latestContent.get().getContent().trim().isEmpty()) {
             contentToShow = latestContent.get().getContent();
-            System.out.println("   - Using saved content: " + contentToShow.substring(0, Math.min(50, contentToShow.length())) + "...");
+            log.debug("Using saved content: {}",
+                    contentToShow.substring(0, Math.min(50, contentToShow.length())) + "...");
         } else {
             contentToShow = task.getDefaultSubmission() != null ? task.getDefaultSubmission() : "";
-            System.out.println("   - Using default content: " + contentToShow);
+            log.debug("Using default content: {}", contentToShow);
         }
 
         model.addAttribute("currentContent", contentToShow);
-        System.out.println("🔍 === DEBUG: StudentController.viewTask Content Loading END ===");
+        log.debug("Completed task content loading for userTask {}", userTask.getId());
 
         // Direkt das TaskView-Template zurückgeben
         return task.getTaskView().getTemplatePath();

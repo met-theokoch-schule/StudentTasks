@@ -3,6 +3,8 @@ package com.example.studenttask.controller;
 import com.example.studenttask.dto.VersionWithSubmissionStatus;
 import com.example.studenttask.model.*;
 import com.example.studenttask.service.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -49,6 +51,8 @@ import java.util.stream.Collectors;
 @RequestMapping("/teacher")
 @PreAuthorize("hasAnyAuthority('ROLE_TEACHER', 'ROLE_ADMIN') or @userService.hasTeacherRole(authentication.name)")
 public class TeacherTaskController {
+
+    private static final Logger log = LoggerFactory.getLogger(TeacherTaskController.class);
 
     @Autowired
     private TaskService taskService;
@@ -293,7 +297,7 @@ public class TeacherTaskController {
             }
 
         } catch (NumberFormatException e) {
-            System.err.println("Invalid unitTitleId format: " + unitTitleId);
+            log.warn("Invalid unitTitleId format: {}", unitTitleId);
         }
 
         // Set unit title
@@ -364,7 +368,7 @@ public class TeacherTaskController {
                 existingTask.setTaskView(taskViewOpt.get());
             }
         } catch (NumberFormatException e) {
-            System.err.println("Invalid unitTitleId format: " + unitTitleId);
+            log.warn("Invalid unitTitleId format: {}", unitTitleId);
             existingTask.setUnitTitle(null);
         }
 

@@ -1,0 +1,6 @@
+/home/runner/workspace/src/test/java/com/example/studenttask/controller/StudentTaskApiControllerTest.java
+/home/runner/workspace/src/test/java/com/example/studenttask/service/TaskStatusServiceTest.java
+/home/runner/workspace/src/test/java/com/example/studenttask/controller/StudentControllerTest.java
+/home/runner/workspace/src/test/java/com/example/studenttask/service/UserTaskServiceTest.java
+/home/runner/workspace/src/test/java/com/example/studenttask/controller/TeacherControllerTest.java
+/home/runner/workspace/src/test/java/com/example/studenttask/service/TaskContentServiceTest.java
