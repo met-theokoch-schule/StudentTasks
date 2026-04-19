@@ -3,7 +3,6 @@ package com.example.studenttask.service;
 import com.example.studenttask.dto.TaskIframeViewDataDto;
 import com.example.studenttask.dto.TaskIframeViewResultDto;
 import com.example.studenttask.model.Task;
-import com.example.studenttask.model.TaskContent;
 import com.example.studenttask.model.TaskView;
 import com.example.studenttask.model.User;
 import com.example.studenttask.model.UserTask;
@@ -16,26 +15,17 @@ import java.util.Optional;
 public class TaskIframeQueryService {
 
     @Autowired
-    private TaskService taskService;
-
-    @Autowired
-    private UserTaskService userTaskService;
-
-    @Autowired
-    private TaskContentService taskContentService;
+    private StudentTaskViewSupportService studentTaskViewSupportService;
 
     @Autowired
     private UserService userService;
-
-    @Autowired
-    private TaskViewService taskViewService;
 
     public TaskIframeViewResultDto getTaskIframeViewData(
             Long taskId,
             String authenticationName,
             boolean teacherView,
             Integer version) {
-        Optional<Task> taskOpt = taskService.findById(taskId);
+        Optional<Task> taskOpt = studentTaskViewSupportService.findTask(taskId);
         if (taskOpt.isEmpty()) {
             return TaskIframeViewResultDto.redirect("redirect:/student/dashboard");
         }
@@ -48,10 +38,14 @@ public class TaskIframeQueryService {
             );
         }
 
-        UserTask userTask = userTaskService.findOrCreateUserTask(targetUserOpt.get(), task);
-        String currentContent = resolveCurrentContent(task, userTask, version);
-        TaskView taskView = resolveTaskView(task);
-        if (taskView == null || taskView.getTemplatePath() == null || taskView.getTemplatePath().isBlank()) {
+        UserTask userTask = studentTaskViewSupportService.findOrCreateUserTask(targetUserOpt.get(), task);
+        String currentContent = studentTaskViewSupportService.resolveCurrentContent(
+            task,
+            studentTaskViewSupportService.getRequestedContent(userTask, version),
+            false
+        );
+        TaskView taskView = studentTaskViewSupportService.resolveTaskView(task);
+        if (!studentTaskViewSupportService.hasRenderableTemplate(taskView)) {
             return TaskIframeViewResultDto.redirect(
                 teacherView ? "redirect:/teacher/dashboard" : "redirect:/student/dashboard"
             );
@@ -65,34 +59,5 @@ public class TaskIframeQueryService {
             task.getDescription(),
             teacherView
         ));
-    }
-
-    private String resolveCurrentContent(Task task, UserTask userTask, Integer version) {
-        TaskContent content = null;
-        if (version != null) {
-            content = taskContentService.getContentByVersion(userTask, version);
-        } else {
-            content = taskContentService.getLatestContent(userTask).orElse(null);
-        }
-
-        if (content != null && content.getContent() != null) {
-            return content.getContent();
-        }
-
-        return task.getDefaultSubmission() != null ? task.getDefaultSubmission() : "";
-    }
-
-    private TaskView resolveTaskView(Task task) {
-        TaskView taskView = task.getTaskView();
-        if (taskView == null) {
-            return null;
-        }
-
-        Long taskViewId = taskView.getId();
-        if (taskViewId == null) {
-            return taskView;
-        }
-
-        return taskViewService.findById(taskViewId).orElse(taskView);
     }
 }

@@ -1,7 +1,7 @@
 package com.example.studenttask.service;
 
-import com.example.studenttask.dto.ApiOperationStatus;
-import com.example.studenttask.dto.TaskContentCommandResultDto;
+import com.example.studenttask.exception.ApiNotFoundException;
+import com.example.studenttask.exception.ApiUnauthorizedException;
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskContent;
 import com.example.studenttask.model.User;
@@ -15,7 +15,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -24,142 +26,132 @@ import static org.mockito.Mockito.when;
 class StudentTaskApiCommandServiceTest {
 
     @Mock
-    private UserTaskService userTaskService;
+    private StudentTaskApiAccessService studentTaskApiAccessService;
 
     @Mock
     private TaskContentService taskContentService;
-
-    @Mock
-    private UserService userService;
-
-    @Mock
-    private TaskService taskService;
 
     @InjectMocks
     private StudentTaskApiCommandService studentTaskApiCommandService;
 
     @Test
-    void saveTeacherTaskContent_returnsNotFoundWhenUserTaskDoesNotExist() {
-        when(userTaskService.findById(100L)).thenReturn(Optional.empty());
+    void saveTeacherTaskContent_throwsNotFoundWhenUserTaskDoesNotExist() {
+        when(studentTaskApiAccessService.requireUserTask(100L))
+            .thenThrow(new ApiNotFoundException("UserTask nicht gefunden"));
 
-        TaskContentCommandResultDto result =
-            studentTaskApiCommandService.saveTeacherTaskContent(100L, "answer", "oidc-teacher");
-
-        assertThat(result.getStatus()).isEqualTo(ApiOperationStatus.NOT_FOUND);
+        assertThatThrownBy(() -> studentTaskApiCommandService.saveTeacherTaskContent(100L, "answer", "oidc-teacher"))
+            .isInstanceOf(ApiNotFoundException.class)
+            .hasMessage("UserTask nicht gefunden");
     }
 
     @Test
-    void saveTaskContent_returnsUnauthorizedWhenUserCannotBeResolved() {
-        when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.empty());
+    void saveTeacherTaskContent_savesDraftContentForExistingUserTask() {
+        UserTask userTask = userTask(100L, 1L, 7L);
+        TaskContent savedContent = new TaskContent();
+        savedContent.setId(55L);
+        savedContent.setVersion(4);
 
-        TaskContentCommandResultDto result =
-            studentTaskApiCommandService.saveTaskContent(7L, "oidc-subject", "print('ok')");
+        when(studentTaskApiAccessService.requireUserTask(100L)).thenReturn(userTask);
+        when(taskContentService.saveContent(userTask, "answer", false)).thenReturn(savedContent);
 
-        assertThat(result.getStatus()).isEqualTo(ApiOperationStatus.UNAUTHORIZED);
+        TaskContent result = studentTaskApiCommandService.saveTeacherTaskContent(100L, "answer", "oidc-teacher");
+
+        assertThat(result).isSameAs(savedContent);
+        verify(taskContentService).saveContent(userTask, "answer", false);
+    }
+
+    @Test
+    void saveTaskContent_throwsUnauthorizedWhenUserCannotBeResolved() {
+        when(studentTaskApiAccessService.findOrCreateUserTask(7L, "oidc-subject"))
+            .thenThrow(new ApiUnauthorizedException("Benutzer nicht gefunden"));
+
+        assertThatThrownBy(() -> studentTaskApiCommandService.saveTaskContent(7L, "oidc-subject", "print('ok')"))
+            .isInstanceOf(ApiUnauthorizedException.class)
+            .hasMessage("Benutzer nicht gefunden");
+    }
+
+    @Test
+    void saveTaskContent_throwsNotFoundWhenTaskDoesNotExist() {
+        when(studentTaskApiAccessService.findOrCreateUserTask(7L, "oidc-subject"))
+            .thenThrow(new ApiNotFoundException("Aufgabe nicht gefunden"));
+
+        assertThatThrownBy(() -> studentTaskApiCommandService.saveTaskContent(7L, "oidc-subject", "print('ok')"))
+            .isInstanceOf(ApiNotFoundException.class)
+            .hasMessage("Aufgabe nicht gefunden");
     }
 
     @Test
     void saveTaskContent_usesFindOrCreateAndPersistsDraftContent() {
-        User user = user(1L, "Student One");
-        Task task = task(7L, "Task 7");
-        UserTask userTask = userTask(100L, user, task);
+        UserTask userTask = userTask(100L, 1L, 7L);
         TaskContent savedContent = new TaskContent();
         savedContent.setId(55L);
         savedContent.setVersion(4);
         savedContent.setContent("print('ok')");
 
-        when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.of(user));
-        when(taskService.findById(7L)).thenReturn(Optional.of(task));
-        when(userTaskService.findOrCreateUserTask(user, task)).thenReturn(userTask);
+        when(studentTaskApiAccessService.findOrCreateUserTask(7L, "oidc-subject")).thenReturn(userTask);
         when(taskContentService.saveContent(userTask, "print('ok')", false)).thenReturn(savedContent);
 
-        TaskContentCommandResultDto result =
-            studentTaskApiCommandService.saveTaskContent(7L, "oidc-subject", "print('ok')");
+        TaskContent result = studentTaskApiCommandService.saveTaskContent(7L, "oidc-subject", "print('ok')");
 
-        assertThat(result.getStatus()).isEqualTo(ApiOperationStatus.SUCCESS);
-        assertThat(result.getTaskContent()).isSameAs(savedContent);
+        assertThat(result).isSameAs(savedContent);
         verify(taskContentService).saveContent(userTask, "print('ok')", false);
     }
 
     @Test
+    void submitTask_throwsUnauthorizedWhenUserCannotBeResolved() {
+        when(studentTaskApiAccessService.findOrCreateUserTask(7L, "oidc-subject"))
+            .thenThrow(new ApiUnauthorizedException("Benutzer nicht gefunden"));
+
+        assertThatThrownBy(() -> studentTaskApiCommandService.submitTask(7L, "oidc-subject", "submitted-solution"))
+            .isInstanceOf(ApiUnauthorizedException.class)
+            .hasMessage("Benutzer nicht gefunden");
+    }
+
+    @Test
     void submitTask_submitsProvidedContent() {
-        User user = user(1L, "Student One");
-        Task task = task(7L, "Task 7");
-        UserTask userTask = userTask(100L, user, task);
-        TaskContent submittedContent = new TaskContent();
-        submittedContent.setVersion(5);
+        UserTask userTask = userTask(100L, 1L, 7L);
 
-        when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.of(user));
-        when(taskService.findById(7L)).thenReturn(Optional.of(task));
-        when(userTaskService.findOrCreateUserTask(user, task)).thenReturn(userTask);
-        when(taskContentService.submitContent(userTask, "submitted-solution")).thenReturn(submittedContent);
+        when(studentTaskApiAccessService.findOrCreateUserTask(7L, "oidc-subject")).thenReturn(userTask);
 
-        TaskContentCommandResultDto result =
-            studentTaskApiCommandService.submitTask(7L, "oidc-subject", "submitted-solution");
+        studentTaskApiCommandService.submitTask(7L, "oidc-subject", "submitted-solution");
 
-        assertThat(result.getStatus()).isEqualTo(ApiOperationStatus.SUCCESS);
-        assertThat(result.getTaskContent()).isSameAs(submittedContent);
         verify(taskContentService).submitContent(userTask, "submitted-solution");
+        verify(taskContentService, never()).getLatestContent(userTask);
     }
 
     @Test
     void submitTask_submitsLatestSavedContentWhenRequestBodyIsMissing() {
-        User user = user(1L, "Student One");
-        Task task = task(7L, "Task 7");
-        UserTask userTask = userTask(100L, user, task);
+        UserTask userTask = userTask(100L, 1L, 7L);
         TaskContent latestContent = new TaskContent();
         latestContent.setContent("latest-solution");
-        TaskContent submittedContent = new TaskContent();
-        submittedContent.setVersion(6);
 
-        when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.of(user));
-        when(taskService.findById(7L)).thenReturn(Optional.of(task));
-        when(userTaskService.findOrCreateUserTask(user, task)).thenReturn(userTask);
+        when(studentTaskApiAccessService.findOrCreateUserTask(7L, "oidc-subject")).thenReturn(userTask);
         when(taskContentService.getLatestContent(userTask)).thenReturn(Optional.of(latestContent));
-        when(taskContentService.submitContent(userTask, "latest-solution")).thenReturn(submittedContent);
 
-        TaskContentCommandResultDto result =
-            studentTaskApiCommandService.submitTask(7L, "oidc-subject", null);
+        studentTaskApiCommandService.submitTask(7L, "oidc-subject", null);
 
-        assertThat(result.getStatus()).isEqualTo(ApiOperationStatus.SUCCESS);
-        assertThat(result.getTaskContent()).isSameAs(submittedContent);
         verify(taskContentService).submitContent(userTask, "latest-solution");
     }
 
     @Test
-    void submitTask_returnsSuccessWithoutPersistingWhenNoContentExists() {
-        User user = user(1L, "Student One");
-        Task task = task(7L, "Task 7");
-        UserTask userTask = userTask(100L, user, task);
+    void submitTask_doesNothingWhenNoContentExists() {
+        UserTask userTask = userTask(100L, 1L, 7L);
 
-        when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.of(user));
-        when(taskService.findById(7L)).thenReturn(Optional.of(task));
-        when(userTaskService.findOrCreateUserTask(user, task)).thenReturn(userTask);
+        when(studentTaskApiAccessService.findOrCreateUserTask(7L, "oidc-subject")).thenReturn(userTask);
         when(taskContentService.getLatestContent(userTask)).thenReturn(Optional.empty());
 
-        TaskContentCommandResultDto result =
-            studentTaskApiCommandService.submitTask(7L, "oidc-subject", null);
+        studentTaskApiCommandService.submitTask(7L, "oidc-subject", null);
 
-        assertThat(result.getStatus()).isEqualTo(ApiOperationStatus.SUCCESS);
-        assertThat(result.getTaskContent()).isNull();
-        verify(taskContentService, never()).submitContent(any(UserTask.class), any(String.class));
+        verify(taskContentService, never()).submitContent(any(UserTask.class), anyString());
     }
 
-    private User user(Long id, String name) {
+    private UserTask userTask(Long id, Long userId, Long taskId) {
         User user = new User();
-        user.setId(id);
-        user.setName(name);
-        return user;
-    }
+        user.setId(userId);
 
-    private Task task(Long id, String title) {
         Task task = new Task();
-        task.setId(id);
-        task.setTitle(title);
-        return task;
-    }
+        task.setId(taskId);
 
-    private UserTask userTask(Long id, User user, Task task) {
         UserTask userTask = new UserTask();
         userTask.setId(id);
         userTask.setUser(user);

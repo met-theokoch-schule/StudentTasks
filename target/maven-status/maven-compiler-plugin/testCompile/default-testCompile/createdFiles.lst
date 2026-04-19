@@ -1,10 +1,11 @@
 com/example/studenttask/controller/TaskControllerTest.class
+com/example/studenttask/service/StudentTaskViewSupportServiceTest.class
 com/example/studenttask/controller/StudentTaskApiControllerTest.class
 com/example/studenttask/service/TeacherTaskCommandServiceTest.class
 com/example/studenttask/controller/TeacherGroupControllerTest.class
 com/example/studenttask/controller/StudentControllerTest.class
-com/example/studenttask/service/TaskIframeQueryServiceTest.class
 com/example/studenttask/service/StudentTaskApiQueryServiceTest.class
+com/example/studenttask/service/TaskIframeQueryServiceTest.class
 com/example/studenttask/service/TeacherDashboardQueryServiceTest.class
 com/example/studenttask/controller/DashboardControllerTest$1.class
 com/example/studenttask/service/IdentitySyncServiceTest.class
@@ -22,4 +23,6 @@ com/example/studenttask/service/StudentTaskQueryServiceTest.class
 com/example/studenttask/model/TaskTest.class
 com/example/studenttask/service/TaskStatusServiceTest.class
 com/example/studenttask/service/TaskStatusSupportTest.class
+com/example/studenttask/controller/StudentTaskApiExceptionHandlerTest.class
 com/example/studenttask/service/UserTaskServiceTest.class
+com/example/studenttask/service/StudentTaskApiAccessServiceTest.class

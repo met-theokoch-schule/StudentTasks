@@ -28,9 +28,6 @@ public class StudentTaskQueryService {
     private TaskService taskService;
 
     @Autowired
-    private UserTaskService userTaskService;
-
-    @Autowired
     private TaskContentService taskContentService;
 
     @Autowired
@@ -42,40 +39,40 @@ public class StudentTaskQueryService {
     @Autowired
     private TaskReviewService taskReviewService;
 
+    @Autowired
+    private StudentTaskViewSupportService studentTaskViewSupportService;
+
     public StudentTaskViewDataDto getTaskViewData(User student, Long taskId) {
-        Task task = taskService.findById(taskId)
+        Task task = studentTaskViewSupportService.findTask(taskId)
             .orElseThrow(() -> new RuntimeException("Aufgabe nicht gefunden"));
 
-        UserTask userTask = userTaskService.findByUserIdAndTaskId(student.getId(), task.getId())
+        UserTask userTask = studentTaskViewSupportService.findExistingUserTask(student, task)
             .orElseThrow(() -> new RuntimeException("Keine Berechtigung für diese Aufgabe"));
 
-        Optional<TaskContent> latestContent = taskContentService.getLatestContent(userTask);
-        TaskView taskView = task.getTaskView();
-        if (taskView == null
-                || taskView.getTemplatePath() == null
-                || taskView.getTemplatePath().isBlank()) {
+        TaskContent latestContent = studentTaskViewSupportService.getRequestedContent(userTask, null);
+        TaskView taskView = studentTaskViewSupportService.resolveTaskView(task);
+        if (!studentTaskViewSupportService.hasRenderableTemplate(taskView)) {
             throw new RuntimeException("TaskView nicht gefunden");
         }
 
         log.debug("Loading task content for userTask {} and task {}", userTask.getId(), task.getId());
-        log.debug("Latest content present: {}", latestContent.isPresent());
-        if (latestContent.isPresent()) {
-            TaskContent content = latestContent.get();
+        log.debug("Latest content present: {}", latestContent != null);
+        if (latestContent != null) {
             log.debug("Content id={}, version={}, length={}",
-                content.getId(),
-                content.getVersion(),
-                content.getContent() != null ? content.getContent().length() : null);
+                latestContent.getId(),
+                latestContent.getVersion(),
+                latestContent.getContent() != null ? latestContent.getContent().length() : null);
             log.debug("Content preview: {}",
-                content.getContent() != null && content.getContent().length() > 50
-                    ? content.getContent().substring(0, 50) + "..."
-                    : content.getContent());
+                latestContent.getContent() != null && latestContent.getContent().length() > 50
+                    ? latestContent.getContent().substring(0, 50) + "..."
+                    : latestContent.getContent());
         }
         log.debug("Default submission preview: {}",
             task.getDefaultSubmission() != null
                 ? task.getDefaultSubmission().substring(0, Math.min(50, task.getDefaultSubmission().length()))
                 : "null");
 
-        String currentContent = resolveCurrentContent(task, latestContent.orElse(null));
+        String currentContent = studentTaskViewSupportService.resolveCurrentContent(task, latestContent, true);
         if (!currentContent.isEmpty()) {
             log.debug("Using current content: {}",
                 currentContent.substring(0, Math.min(50, currentContent.length())) + "...");
@@ -157,13 +154,4 @@ public class StudentTaskQueryService {
         return userTaskRepository.save(userTask);
     }
 
-    private String resolveCurrentContent(Task task, TaskContent content) {
-        if (content != null
-                && content.getContent() != null
-                && !content.getContent().trim().isEmpty()) {
-            return content.getContent();
-        }
-
-        return task.getDefaultSubmission() != null ? task.getDefaultSubmission() : "";
-    }
 }

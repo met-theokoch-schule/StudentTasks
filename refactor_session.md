@@ -1258,3 +1258,202 @@ Zusaetzlich zu dem in dieser Runde umgesetzten Student-Task-API-Slice lagen im a
 ### Technische Notiz zum Worktree
 - Zusaetzlich liegen generierte Build-/Testartefakte unter `target/` im Worktree.
 - Diese Artefakte sind keine eigene fachliche Refactoring-Massnahme, sondern Folge der Testlaeufe in dieser und frueheren Runden.
+
+## REST-Fehlervertraege der Student-Task-API standardisiert
+Stand: 2026-04-19
+
+Im naechsten API-Slice wurde die Fehlerbehandlung der Student-Task-API auf typisierte Exceptions und eine zentrale REST-Advice-Schicht umgestellt. Damit ist das zuvor eingefuehrte Query-/Command-Splitting jetzt auch im Fehlerpfad konsequent weitergezogen.
+
+### Ziel
+- Controller von Status- und Fehler-Mapping entlasten
+- API-Fehler zentral und einheitlich als JSON-Fehlerobjekte ausgeben
+- die zuvor nur als Zwischenstufe eingefuehrten Result-Status-DTOs wieder entfernen
+- Erfolgs- und Fehlerpfade der API klarer trennen
+
+### Umgesetzt
+- neues Fehler-DTO `src/main/java/com/example/studenttask/dto/ApiErrorResponseDto.java`
+- neue API-spezifische Runtime-Exceptions:
+  - `src/main/java/com/example/studenttask/exception/ApiUnauthorizedException.java`
+  - `src/main/java/com/example/studenttask/exception/ApiNotFoundException.java`
+  - `src/main/java/com/example/studenttask/exception/ApiInvalidStateException.java`
+- neue zentrale Fehlerbehandlung `src/main/java/com/example/studenttask/controller/StudentTaskApiExceptionHandler.java`
+  - gilt gezielt fuer `StudentTaskApiController`
+  - mappt Fehler auf standardisierte API-Antworten:
+    - `401 unauthorized`
+    - `404 not_found`
+    - `409 invalid_state`
+    - `500 internal_error`
+- `StudentTaskApiQueryService` liefert jetzt direkt den fachlichen Inhalt als `String` und wirft bei Fehlern API-Exceptions statt Status-Resultaten
+- `StudentTaskApiCommandService` liefert bei Erfolgsfaellen direkt `TaskContent` bzw. `void` und wirft bei Fehlern API-Exceptions
+- `StudentTaskApiController` behandelt nur noch Erfolgspfade und delegiert Fehler komplett an das Advice
+- entfernte Zwischen-DTOs:
+  - `src/main/java/com/example/studenttask/dto/ApiOperationStatus.java`
+  - `src/main/java/com/example/studenttask/dto/TaskContentLoadResultDto.java`
+  - `src/main/java/com/example/studenttask/dto/TaskContentCommandResultDto.java`
+
+### Verhalten / Abgrenzung
+- Erfolgsantworten der API bleiben bewusst schlank:
+  - Content-Lesen liefert weiter nur den Content-String
+  - Save-/Submit-Erfolg bleibt bei `200 OK`
+- Fehlerantworten der API sind fuer `StudentTaskApiController` jetzt zentral vereinheitlicht und nicht mehr ueber verstreute Controller-Branches implementiert
+- das Advice ist bewusst nur auf diesen API-Controller begrenzt und noch kein globaler Fehlerstandard fuer alle MVC-/REST-Pfade des Projekts
+
+### Testanpassungen
+- `src/test/java/com/example/studenttask/controller/StudentTaskApiControllerTest.java`
+  - auf reine Erfolgs-Delegation des Controllers umgestellt
+- `src/test/java/com/example/studenttask/service/StudentTaskApiQueryServiceTest.java`
+  - auf Exception-basierte Fehlerassertions umgestellt
+- `src/test/java/com/example/studenttask/service/StudentTaskApiCommandServiceTest.java`
+  - auf direkte Rueckgabewerte und Exception-Pfade umgestellt
+- neuer Test `src/test/java/com/example/studenttask/controller/StudentTaskApiExceptionHandlerTest.java`
+  - prueft die standardisierten Fehlercodes und Messages des Advice
+
+### Teststatus
+Gezielter API-Testlauf:
+- Befehl: `mvn -Dmaven.repo.local=/tmp/m2 -Dtest=StudentTaskApiControllerTest,StudentTaskApiExceptionHandlerTest,StudentTaskApiQueryServiceTest,StudentTaskApiCommandServiceTest test`
+- Zeitpunkt: `2026-04-19T21:37:37Z`
+- Ergebnis:
+  - Tests: `22`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-19T21:37:57Z`
+- Ergebnis:
+  - Tests: `105`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+## Student-Task-API-Zugriffsaufloesung zentralisiert
+Stand: 2026-04-19
+
+Im naechsten API-Refactor wurde die doppelte Aufloesung von Benutzer, Aufgabe und `UserTask` aus den Student-Task-API-Services herausgezogen. Query- und Command-Service verwenden jetzt denselben kleinen Zugriffs-Resolver und enthalten nur noch Content-spezifische Logik.
+
+### Ziel
+- doppelte User-/Task-/UserTask-Aufloesung in den API-Services entfernen
+- Fehlermeldungen und Aufloesungsregeln an genau einer Stelle halten
+- den vorherigen Error-Handling-Slice intern konsequent zu Ende ziehen
+- spaetere API-Erweiterungen auf denselben Resolverpfad aufsetzen koennen
+
+### Umgesetzt
+- neuer `src/main/java/com/example/studenttask/service/StudentTaskApiAccessService.java`
+  - kapselt:
+    - Benutzerauflosung ueber `openIdSubject`
+    - Task-Aufloesung ueber `taskId`
+    - bestehende `UserTask`-Aufloesung
+    - `findOrCreateUserTask(...)` fuer Schreibpfade
+  - wirft dabei weiterhin die bereits eingefuehrten API-Exceptions:
+    - `ApiUnauthorizedException`
+    - `ApiNotFoundException`
+- `src/main/java/com/example/studenttask/service/StudentTaskApiQueryService.java`
+  - delegiert die Zugriffsauflosung jetzt an den neuen Access-Service
+  - enthaelt nur noch den Content-Lese- und Fallback-Pfad
+- `src/main/java/com/example/studenttask/service/StudentTaskApiCommandService.java`
+  - delegiert `UserTask`-/Task-/Benutzer-Aufloesung ebenfalls an den Access-Service
+  - enthaelt nur noch Draft-Save- und Submit-Logik
+
+### Verhalten / Abgrenzung
+- kein geaendertes HTTP-Verhalten
+- keine neuen Endpunkte
+- keine Aenderung an den standardisierten API-Fehlercodes oder -Messages
+- Fokus nur auf interner Entdopplung und klarerer Service-Verantwortung
+
+### Testanpassungen
+- neuer Test `src/test/java/com/example/studenttask/service/StudentTaskApiAccessServiceTest.java`
+  - prueft zentrale Unauthorized-/NotFound-Faelle sowie `findOrCreateUserTask(...)`
+- `src/test/java/com/example/studenttask/service/StudentTaskApiQueryServiceTest.java`
+  - testet jetzt die Content-Logik gegen den neuen Access-Service
+- `src/test/java/com/example/studenttask/service/StudentTaskApiCommandServiceTest.java`
+  - testet jetzt Save-/Submit-Logik gegen den neuen Access-Service
+
+### Teststatus
+Gezielter API-Testlauf:
+- Befehl: `mvn -Dmaven.repo.local=/tmp/m2 -Dtest=StudentTaskApiAccessServiceTest,StudentTaskApiControllerTest,StudentTaskApiExceptionHandlerTest,StudentTaskApiQueryServiceTest,StudentTaskApiCommandServiceTest test`
+- Zeitpunkt: `2026-04-19T21:49:09Z`
+- Ergebnis:
+  - Tests: `26`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-19T21:48:11Z`
+- Ergebnis:
+  - Tests: `109`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+## Student-Task-Read-Support fuer MVC-Pfade zentralisiert
+Stand: 2026-04-19
+
+Im naechsten MVC-Slice wurde die doppelte Read-Logik zwischen `StudentTaskQueryService` und `TaskIframeQueryService` zusammengezogen. Beide Pfade verwenden jetzt denselben kleinen Support-Service fuer Task-, `UserTask`-, Content- und `TaskView`-Aufloesung.
+
+### Ziel
+- doppelte Read-Logik in Student-Task-Ansicht und iframe-Pfad entfernen
+- Content-Fallbacks und `TaskView`-Aufloesung an einer Stelle halten
+- bestehende Redirect- und Fehlerpfade der beiden MVC-Services unveraendert lassen
+- die zuletzt eingefuehrte API-seitige Entdopplung sinngemaess in die Web-Schicht weiterziehen
+
+### Umgesetzt
+- neuer `src/main/java/com/example/studenttask/service/StudentTaskViewSupportService.java`
+  - kapselt:
+    - Task-Lookup
+    - bestehende `UserTask`-Aufloesung
+    - `findOrCreateUserTask(...)`
+    - Auswahl von Latest- oder Versions-Content
+    - Content-Fallback auf Default-Submission
+    - `TaskView`-Aufloesung ueber `taskViewId` inklusive Fallback
+    - Pruefung, ob ein renderbarer Template-Pfad vorliegt
+- `src/main/java/com/example/studenttask/service/StudentTaskQueryService.java`
+  - nutzt den neuen Support-Service jetzt fuer `getTaskViewData(...)`
+  - enthaelt fuer diesen Pfad keine eigene doppelte Task-/UserTask-/Content-/TaskView-Aufloesung mehr
+- `src/main/java/com/example/studenttask/service/TaskIframeQueryService.java`
+  - nutzt denselben Support-Service fuer Task-Lookup, `findOrCreateUserTask(...)`, Content-Auswahl und `TaskView`-Aufloesung
+  - Redirect-Verhalten fuer fehlende Nutzer, fehlende Tasks und ungueltige Templates bleibt erhalten
+
+### Verhalten / Abgrenzung
+- kein geaendertes Controller-Routing
+- keine geaenderten Redirect-Ziele
+- keine Vereinheitlichung aller Student-Task-Lesewege in diesem Slice
+- History- und Version-Pfade bleiben bewusst separat und nur der ueberschneidende View-/iframe-Read-Pfad wurde zusammengezogen
+- die unterschiedliche Blank-Content-Semantik bleibt erhalten:
+  - Student-Task-Ansicht faellt bei leerem gespeicherten Inhalt weiter auf die Default-Submission zurueck
+  - iframe-Pfad kann leeren gespeicherten Inhalt weiterhin direkt rendern
+
+### Testanpassungen
+- neuer Test `src/test/java/com/example/studenttask/service/StudentTaskViewSupportServiceTest.java`
+  - prueft:
+    - Task- und `UserTask`-Lookup
+    - `findOrCreateUserTask(...)`
+    - Latest-/Versions-Content-Auswahl
+    - Blank-Content-Fallback
+    - `TaskView`-Aufloesung und Renderbarkeit
+- `src/test/java/com/example/studenttask/service/StudentTaskQueryServiceTest.java`
+  - auf den neuen Support-Service umgestellt
+  - erweitert um Fehlerfaelle fuer fehlende Aufgabe und fehlende Berechtigung
+- `src/test/java/com/example/studenttask/service/TaskIframeQueryServiceTest.java`
+  - auf den neuen Support-Service umgestellt
+- bestehende Controller-Tests fuer Student- und iframe-Pfad bleiben gruen und bestaetigen unveraenderte Aussenschnittstellen:
+  - `src/test/java/com/example/studenttask/controller/StudentControllerTest.java`
+  - `src/test/java/com/example/studenttask/controller/TaskControllerTest.java`
+
+### Teststatus
+Gezielter MVC-Testlauf:
+- Befehl: `mvn -Dmaven.repo.local=/tmp/m2 -Dtest=StudentTaskViewSupportServiceTest,StudentTaskQueryServiceTest,TaskIframeQueryServiceTest,StudentControllerTest,TaskControllerTest test`
+- Zeitpunkt: `2026-04-19T21:55:41Z`
+- Ergebnis:
+  - Tests: `31`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-19T21:56:01Z`
+- Ergebnis:
+  - Tests: `120`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`

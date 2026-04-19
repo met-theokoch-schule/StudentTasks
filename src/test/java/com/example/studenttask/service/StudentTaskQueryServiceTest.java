@@ -36,7 +36,7 @@ class StudentTaskQueryServiceTest {
     private TaskService taskService;
 
     @Mock
-    private UserTaskService userTaskService;
+    private StudentTaskViewSupportService studentTaskViewSupportService;
 
     @Mock
     private TaskContentService taskContentService;
@@ -69,9 +69,12 @@ class StudentTaskQueryServiceTest {
         savedContent.setVersion(3);
         savedContent.setContent("Saved content");
 
-        when(taskService.findById(101L)).thenReturn(Optional.of(task));
-        when(userTaskService.findByUserIdAndTaskId(student.getId(), 101L)).thenReturn(Optional.of(userTask));
-        when(taskContentService.getLatestContent(userTask)).thenReturn(Optional.of(savedContent));
+        when(studentTaskViewSupportService.findTask(101L)).thenReturn(Optional.of(task));
+        when(studentTaskViewSupportService.findExistingUserTask(student, task)).thenReturn(Optional.of(userTask));
+        when(studentTaskViewSupportService.getRequestedContent(userTask, null)).thenReturn(savedContent);
+        when(studentTaskViewSupportService.resolveTaskView(task)).thenReturn(taskView);
+        when(studentTaskViewSupportService.hasRenderableTemplate(taskView)).thenReturn(true);
+        when(studentTaskViewSupportService.resolveCurrentContent(task, savedContent, true)).thenReturn("Saved content");
 
         StudentTaskViewDataDto viewData = studentTaskQueryService.getTaskViewData(student, 101L);
 
@@ -87,7 +90,8 @@ class StudentTaskQueryServiceTest {
         User student = user(1L, "Student One");
         Task task = task(102L, "Worksheet", group(11L, "10A"));
         task.setDefaultSubmission("Default content");
-        task.setTaskView(taskView(5L, "taskviews/worksheet"));
+        TaskView taskView = taskView(5L, "taskviews/worksheet");
+        task.setTaskView(taskView);
 
         UserTask userTask = userTask(student, task, status("IN_BEARBEITUNG"));
         userTask.setId(302L);
@@ -95,9 +99,13 @@ class StudentTaskQueryServiceTest {
         TaskContent savedContent = new TaskContent();
         savedContent.setContent("   ");
 
-        when(taskService.findById(102L)).thenReturn(Optional.of(task));
-        when(userTaskService.findByUserIdAndTaskId(student.getId(), 102L)).thenReturn(Optional.of(userTask));
-        when(taskContentService.getLatestContent(userTask)).thenReturn(Optional.of(savedContent));
+        when(studentTaskViewSupportService.findTask(102L)).thenReturn(Optional.of(task));
+        when(studentTaskViewSupportService.findExistingUserTask(student, task)).thenReturn(Optional.of(userTask));
+        when(studentTaskViewSupportService.getRequestedContent(userTask, null)).thenReturn(savedContent);
+        when(studentTaskViewSupportService.resolveTaskView(task)).thenReturn(taskView);
+        when(studentTaskViewSupportService.hasRenderableTemplate(taskView)).thenReturn(true);
+        when(studentTaskViewSupportService.resolveCurrentContent(task, savedContent, true))
+            .thenReturn("Default content");
 
         StudentTaskViewDataDto viewData = studentTaskQueryService.getTaskViewData(student, 102L);
 
@@ -105,18 +113,44 @@ class StudentTaskQueryServiceTest {
     }
 
     @Test
-    void getTaskViewData_throwsWhenTaskViewTemplateIsMissing() {
+    void getTaskViewData_throwsWhenTaskDoesNotExist() {
+        User student = user(1L, "Student One");
+
+        when(studentTaskViewSupportService.findTask(103L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> studentTaskQueryService.getTaskViewData(student, 103L))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessage("Aufgabe nicht gefunden");
+    }
+
+    @Test
+    void getTaskViewData_throwsWhenStudentHasNoUserTask() {
         User student = user(1L, "Student One");
         Task task = task(103L, "Worksheet", group(11L, "10A"));
-        task.setTaskView(taskView(5L, " "));
+        when(studentTaskViewSupportService.findTask(103L)).thenReturn(Optional.of(task));
+        when(studentTaskViewSupportService.findExistingUserTask(student, task)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> studentTaskQueryService.getTaskViewData(student, 103L))
+            .isInstanceOf(RuntimeException.class)
+            .hasMessage("Keine Berechtigung für diese Aufgabe");
+    }
+
+    @Test
+    void getTaskViewData_throwsWhenTaskViewTemplateIsMissing() {
+        User student = user(1L, "Student One");
+        Task task = task(104L, "Worksheet", group(11L, "10A"));
+        TaskView taskView = taskView(5L, " ");
+        task.setTaskView(taskView);
 
         UserTask userTask = userTask(student, task, status("IN_BEARBEITUNG"));
 
-        when(taskService.findById(103L)).thenReturn(Optional.of(task));
-        when(userTaskService.findByUserIdAndTaskId(student.getId(), 103L)).thenReturn(Optional.of(userTask));
-        when(taskContentService.getLatestContent(userTask)).thenReturn(Optional.empty());
+        when(studentTaskViewSupportService.findTask(104L)).thenReturn(Optional.of(task));
+        when(studentTaskViewSupportService.findExistingUserTask(student, task)).thenReturn(Optional.of(userTask));
+        when(studentTaskViewSupportService.getRequestedContent(userTask, null)).thenReturn(null);
+        when(studentTaskViewSupportService.resolveTaskView(task)).thenReturn(taskView);
+        when(studentTaskViewSupportService.hasRenderableTemplate(taskView)).thenReturn(false);
 
-        assertThatThrownBy(() -> studentTaskQueryService.getTaskViewData(student, 103L))
+        assertThatThrownBy(() -> studentTaskQueryService.getTaskViewData(student, 104L))
             .isInstanceOf(RuntimeException.class)
             .hasMessage("TaskView nicht gefunden");
     }
