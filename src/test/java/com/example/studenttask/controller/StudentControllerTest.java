@@ -8,12 +8,12 @@ import com.example.studenttask.model.User;
 import com.example.studenttask.model.UserTask;
 import com.example.studenttask.repository.TaskContentRepository;
 import com.example.studenttask.repository.TaskRepository;
-import com.example.studenttask.repository.TaskStatusRepository;
 import com.example.studenttask.repository.UserTaskRepository;
 import com.example.studenttask.service.GroupService;
 import com.example.studenttask.service.TaskContentService;
 import com.example.studenttask.service.TaskReviewService;
 import com.example.studenttask.service.TaskService;
+import com.example.studenttask.service.TaskStatusService;
 import com.example.studenttask.service.TaskViewService;
 import com.example.studenttask.service.UserService;
 import com.example.studenttask.service.UserTaskService;
@@ -35,7 +35,9 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -63,7 +65,7 @@ class StudentControllerTest {
     private UserTaskRepository userTaskRepository;
 
     @Mock
-    private TaskStatusRepository taskStatusRepository;
+    private TaskStatusService taskStatusService;
 
     @Mock
     private TaskReviewService taskReviewService;
@@ -144,6 +146,32 @@ class StudentControllerTest {
         assertThat(tasksByUnitTitle.get(basics)).containsExactly(userTaskIntro);
         assertThat(tasksByUnitTitle.get(advanced)).containsExactly(userTaskA, userTaskB);
         assertThat(model.getAttribute("userTasks")).isEqualTo(List.of(userTaskB, userTaskA, userTaskIntro));
+    }
+
+    @Test
+    void taskHistory_createsMissingUserTaskWithDefaultStatusFromService() {
+        User student = user(1L, "Student One");
+        Group group = group(11L, "10A");
+        student.setGroups(Set.of(group));
+
+        Task task = task(301L, "History Task", group, null);
+        TaskStatus defaultStatus = status("NICHT_BEGONNEN");
+
+        when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.of(student));
+        when(taskService.findById(301L)).thenReturn(Optional.of(task));
+        when(userTaskRepository.findByUserAndTask(student, task)).thenReturn(Optional.empty());
+        when(taskStatusService.getDefaultStatus()).thenReturn(defaultStatus);
+        when(userTaskRepository.save(any(UserTask.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(taskContentService.getAllContentVersions(any(UserTask.class))).thenReturn(List.of());
+        when(taskReviewService.findByUserTaskOrderByReviewedAtDesc(any(UserTask.class))).thenReturn(List.of());
+
+        Model model = new ExtendedModelMap();
+        String view = controller.taskHistory(301L, model, principal("oidc-subject"));
+
+        assertThat(view).isEqualTo("student/task-history");
+        UserTask userTask = (UserTask) model.getAttribute("userTask");
+        assertThat(userTask.getStatus()).isSameAs(defaultStatus);
+        verify(taskStatusService).getDefaultStatus();
     }
 
     private void stubStudentTaskAggregation(User student, Group group, List<Task> tasks, List<UserTask> userTasks) {

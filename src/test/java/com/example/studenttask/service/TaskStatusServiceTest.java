@@ -1,5 +1,6 @@
 package com.example.studenttask.service;
 
+import com.example.studenttask.model.TaskStatusCode;
 import com.example.studenttask.model.TaskStatus;
 import com.example.studenttask.repository.TaskStatusRepository;
 import org.junit.jupiter.api.Test;
@@ -37,13 +38,15 @@ class TaskStatusServiceTest {
     }
 
     @Test
-    void isTransitionAllowed_reflectsCurrentWorkflowRules() {
+    void isTransitionAllowed_reflectsCurrentWorkflowRulesIncludingDirectSubmitPaths() {
         TaskStatus notStarted = new TaskStatus("NICHT_BEGONNEN", "not started", 1);
         TaskStatus inProgress = new TaskStatus("IN_BEARBEITUNG", "in progress", 2);
+        TaskStatus submitted = new TaskStatus("ABGEGEBEN", "submitted", 3);
         TaskStatus complete = new TaskStatus("VOLLST\u00c4NDIG", "complete", 5);
 
         assertThat(taskStatusService.isTransitionAllowed(notStarted, inProgress)).isTrue();
-        assertThat(taskStatusService.isTransitionAllowed(notStarted, complete)).isFalse();
+        assertThat(taskStatusService.isTransitionAllowed(notStarted, submitted)).isTrue();
+        assertThat(taskStatusService.isTransitionAllowed(notStarted, complete)).isTrue();
     }
 
     @Test
@@ -61,5 +64,15 @@ class TaskStatusServiceTest {
         assertThat(result).containsExactly(inProgress, needsRework, complete);
         verify(taskStatusRepository).findByNameInAndIsActiveTrue(
                 Set.of("IN_BEARBEITUNG", "\u00dcBERARBEITUNG_N\u00d6TIG", "VOLLST\u00c4NDIG"));
+    }
+
+    @Test
+    void findByName_supportsEnumStyleAndPersistedNames() {
+        TaskStatus needsRework = new TaskStatus("\u00dcBERARBEITUNG_N\u00d6TIG", "rework", 4);
+        when(taskStatusRepository.findByName("\u00dcBERARBEITUNG_N\u00d6TIG")).thenReturn(Optional.of(needsRework));
+
+        Optional<TaskStatus> result = taskStatusService.findByName(TaskStatusCode.UEBERARBEITUNG_NOETIG.name());
+
+        assertThat(result).containsSame(needsRework);
     }
 }

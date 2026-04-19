@@ -1,11 +1,10 @@
 package com.example.studenttask.service;
 
-import com.example.studenttask.model.TaskContent;
-import com.example.studenttask.model.UserTask;
-import com.example.studenttask.model.TaskStatus;
-import com.example.studenttask.model.Submission;
 import com.example.studenttask.model.Task;
+import com.example.studenttask.model.TaskContent;
+import com.example.studenttask.model.TaskStatusCode;
 import com.example.studenttask.model.TaskView;
+import com.example.studenttask.model.UserTask;
 import com.example.studenttask.dto.VersionWithSubmissionStatus;
 import com.example.studenttask.repository.TaskContentRepository;
 import com.example.studenttask.repository.UserTaskRepository;
@@ -37,6 +36,8 @@ public class TaskContentService {
     @Autowired
     private TaskReviewService taskReviewService;
 
+    @Autowired
+    private UserTaskService userTaskService;
 
     /**
      * Save task content (creates new version)
@@ -62,23 +63,21 @@ public class TaskContentService {
 
         // Update status based on action
         if (isSubmitted) {
-            String submittedStatusName = resolveSubmittedStatusName(userTask);
-            TaskStatus submittedStatus = taskStatusService.findByName(submittedStatusName)
-                    .orElseThrow(() -> new RuntimeException("Status " + submittedStatusName + " not found"));
-            userTask.setStatus(submittedStatus);
-
-            // Create submission record
+            TaskStatusCode submittedStatusCode = resolveSubmittedStatusCode(userTask);
+            if (!userTaskService.updateStatus(userTask, submittedStatusCode)) {
+                throw new IllegalStateException("Status transition to " + submittedStatusCode + " is not allowed");
+            }
             submissionService.createSubmission(userTask, saved);
         } else {
-            // If just saving (not submitting) and status is still NICHT_BEGONNEN, change to IN_BEARBEITUNG
-            if (userTask.getStatus() != null && "NICHT_BEGONNEN".equals(userTask.getStatus().getName())) {
-                TaskStatus inProgressStatus = taskStatusService.findByName("IN_BEARBEITUNG")
-                        .orElseThrow(() -> new RuntimeException("Status IN_BEARBEITUNG not found"));
-                userTask.setStatus(inProgressStatus);
+            if (userTask.getStatus() == null
+                    || taskStatusService.isStatus(userTask.getStatus(), TaskStatusCode.NICHT_BEGONNEN)) {
+                if (!userTaskService.updateStatus(userTask, TaskStatusCode.IN_BEARBEITUNG)) {
+                    throw new IllegalStateException("Status transition to IN_BEARBEITUNG is not allowed");
+                }
+            } else {
+                userTaskRepository.save(userTask);
             }
         }
-
-        userTaskRepository.save(userTask);
 
         return saved;
     }
@@ -233,7 +232,7 @@ public class TaskContentService {
         taskContentRepository.save(taskContent);
     }
 
-    private String resolveSubmittedStatusName(UserTask userTask) {
+    private TaskStatusCode resolveSubmittedStatusCode(UserTask userTask) {
         TaskView taskView = null;
         Task task = userTask.getTask();
         if (task != null) {
@@ -244,6 +243,6 @@ public class TaskContentService {
             }
         }
         boolean markComplete = taskView != null && Boolean.TRUE.equals(taskView.getSubmitMarksComplete());
-        return markComplete ? "VOLLSTÄNDIG" : "ABGEGEBEN";
+        return markComplete ? TaskStatusCode.VOLLSTAENDIG : TaskStatusCode.ABGEGEBEN;
     }
 }

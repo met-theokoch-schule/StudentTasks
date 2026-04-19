@@ -2,6 +2,7 @@ package com.example.studenttask.controller;
 
 import com.example.studenttask.model.*;
 import com.example.studenttask.service.GroupService;
+import com.example.studenttask.service.TaskStatusSupport;
 import com.example.studenttask.service.TaskService;
 import com.example.studenttask.service.TaskViewService;
 import com.example.studenttask.service.UserService;
@@ -97,7 +98,7 @@ public class TeacherController {
                 for (Group assignedGroup : assignedGroups) {
                     if (teacherGroups.contains(assignedGroup) && studentGroups.contains(assignedGroup)) {
                         // Prüfe Status ABGEGEBEN
-                        if (userTask.getStatus() != null && "ABGEGEBEN".equals(userTask.getStatus().getName())) {
+                        if (TaskStatusSupport.hasCode(userTask.getStatus(), TaskStatusCode.ABGEGEBEN)) {
                             pendingUserTasks.add(userTask);
                             break; // Pro UserTask nur einmal zählen
                         }
@@ -129,10 +130,7 @@ public class TeacherController {
             // Alle UserTasks für diese Aufgabe mit Status ABGEGEBEN
             List<UserTask> submittedUserTasks = userTaskService.findByTask(task)
                 .stream()
-                .filter(userTask -> {
-                    TaskStatus status = userTask.getStatus();
-                    return status != null && "ABGEGEBEN".equals(status.getName());
-                })
+                .filter(userTask -> TaskStatusSupport.hasCode(userTask.getStatus(), TaskStatusCode.ABGEGEBEN))
                 .collect(Collectors.toList());
 
             for (UserTask userTask : submittedUserTasks) {

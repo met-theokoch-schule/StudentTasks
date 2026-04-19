@@ -52,7 +52,7 @@ public class StudentController {
     private UserTaskRepository userTaskRepository;
 
     @Autowired
-    private TaskStatusRepository taskStatusRepository;
+    private TaskStatusService taskStatusService;
 
     @Autowired
     private TaskReviewService taskReviewService;
@@ -163,8 +163,7 @@ public class StudentController {
             userTask.setUser(student);
             userTask.setTask(task);
             userTask.setStartedAt(LocalDateTime.now());
-            TaskStatus notStartedStatus = taskStatusRepository.findById(1L).orElse(null);
-            userTask.setStatus(notStartedStatus);
+            userTask.setStatus(taskStatusService.getDefaultStatus());
             userTask = userTaskRepository.save(userTask);
         } else {
             userTask = userTaskOpt.get();
@@ -266,17 +265,12 @@ public class StudentController {
         model.addAttribute("totalTaskCount", allUserTasks.size());
 
         // Dashboard-Statistiken berechnen
-        Map<String, Long> statusCounts = allUserTasks.stream()
-            .filter(ut -> ut.getStatus() != null)
-            .collect(Collectors.groupingBy(
-                ut -> ut.getStatus().getName(),
-                Collectors.counting()
-            ));
+        Map<TaskStatusCode, Long> statusCounts = TaskStatusSupport.countByCode(allUserTasks);
 
-        model.addAttribute("inProgress", statusCounts.getOrDefault("IN_BEARBEITUNG", 0L));
-        model.addAttribute("pendingReview", statusCounts.getOrDefault("ABGEGEBEN", 0L));
-        model.addAttribute("needsRework", statusCounts.getOrDefault("ÜBERARBEITUNG_NÖTIG", 0L));
-        model.addAttribute("completed", statusCounts.getOrDefault("VOLLSTÄNDIG", 0L));
+        model.addAttribute("inProgress", statusCounts.getOrDefault(TaskStatusCode.IN_BEARBEITUNG, 0L));
+        model.addAttribute("pendingReview", statusCounts.getOrDefault(TaskStatusCode.ABGEGEBEN, 0L));
+        model.addAttribute("needsRework", statusCounts.getOrDefault(TaskStatusCode.UEBERARBEITUNG_NOETIG, 0L));
+        model.addAttribute("completed", statusCounts.getOrDefault(TaskStatusCode.VOLLSTAENDIG, 0L));
 
         return "student/dashboard";
     }
@@ -328,8 +322,8 @@ public class StudentController {
                     boolean hasReallyStarted = false;
 
                     // Prüfen ob Status nicht "NICHT_BEGONNEN" ist
-                    if (existingUserTask.getStatus() != null && 
-                        !"NICHT_BEGONNEN".equals(existingUserTask.getStatus().getName())) {
+                    if (existingUserTask.getStatus() != null
+                            && !TaskStatusSupport.hasCode(existingUserTask.getStatus(), TaskStatusCode.NICHT_BEGONNEN)) {
                         hasReallyStarted = true;
                     }
 
@@ -362,11 +356,7 @@ public class StudentController {
                 UserTask userTask = new UserTask();
                 userTask.setUser(student);
                 userTask.setTask(task);
-                //userTask.setStatus(getDefaultStatus()); // getDefaultStatus() nicht vorhanden, daher entfernt
-                //userTask.setCreatedAt(LocalDateTime.now()); // createdAt nicht vorhanden, daher entfernt
-                //userTask.setLastModified(LocalDateTime.now()); // lastModified nicht vorhanden, daher entfernt
-                TaskStatus notStartedStatus = taskStatusRepository.findById(1L).orElse(null);
-                userTask.setStatus(notStartedStatus);
+                userTask.setStatus(taskStatusService.getDefaultStatus());
                 userTask.setStartedAt(LocalDateTime.now());
 
                 UserTask savedUserTask = userTaskRepository.save(userTask);

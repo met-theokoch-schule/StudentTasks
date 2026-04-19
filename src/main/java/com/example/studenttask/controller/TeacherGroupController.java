@@ -1,10 +1,11 @@
 package com.example.studenttask.controller;
 
+import com.example.studenttask.dto.GroupOverviewDto;
+import com.example.studenttask.dto.GroupStatisticsDto;
+import com.example.studenttask.dto.StudentTaskMatrixDto;
 import com.example.studenttask.model.Group;
-import com.example.studenttask.model.Task;
-import com.example.studenttask.model.TaskStatus;
-import com.example.studenttask.model.UnitTitle;
 import com.example.studenttask.model.User;
+import com.example.studenttask.service.GroupQueryService;
 import com.example.studenttask.service.GroupService;
 import com.example.studenttask.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,10 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.security.Principal;
 import java.util.List;
-import java.util.Map;
-import java.time.LocalDateTime;
-import java.util.stream.Collectors;
-
 
 @Controller
 @RequestMapping("/teacher/groups")
@@ -29,6 +26,9 @@ public class TeacherGroupController {
 
     @Autowired
     private GroupService groupService;
+
+    @Autowired
+    private GroupQueryService groupQueryService;
 
     @Autowired
     private UserService userService;
@@ -42,7 +42,7 @@ public class TeacherGroupController {
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
         // Lade Gruppen mit aktiven Aufgaben des Lehrers
-        List<GroupInfo> groups = groupService.getGroupsWithActiveTasksByTeacher(teacher);
+        List<GroupOverviewDto> groups = groupQueryService.getGroupsWithActiveTasksByTeacher(teacher);
 
         model.addAttribute("groups", groups);
         model.addAttribute("teacher", teacher);
@@ -66,257 +66,15 @@ public class TeacherGroupController {
         }
 
         // Lade Statistiken für die Gruppe
-        GroupStatistics statistics = groupService.getGroupStatistics(group, teacher);
+        GroupStatisticsDto statistics = groupQueryService.getGroupStatistics(group, teacher);
 
         // Matrix-Daten erstellen
-        Map<String, Object> matrixData = groupService.getStudentTaskMatrix(group, teacher);
-        StudentTaskMatrix matrix = (StudentTaskMatrix) matrixData.get("matrix");
-
-        // Aufgaben nach UnitTitle-Gewicht und Aufgabennamen sortieren
-        if (matrix != null && matrix.getTasks() != null && !matrix.getTasks().isEmpty()) {
-            List<Task> sortedTasks = matrix.getTasks().stream()
-                .sorted((t1, t2) -> {
-                    UnitTitle ut1 = t1.getUnitTitle();
-                    UnitTitle ut2 = t2.getUnitTitle();
-
-                    // null-Werte (Aufgaben ohne Thema) kommen zuletzt
-                    if (ut1 == null && ut2 == null) {
-                        return t1.getTitle().compareTo(t2.getTitle());
-                    }
-                    if (ut1 == null) return 1;
-                    if (ut2 == null) return -1;
-
-                    // Sortierung nach weight (aufsteigend: kleinere weights zuerst)
-                    int weightComparison = Integer.compare(ut1.getWeight(), ut2.getWeight());
-                    if (weightComparison != 0) {
-                        return weightComparison;
-                    }
-
-                    // Bei gleichem weight: alphabetisch nach Aufgabennamen (A-Z)
-                    return t1.getTitle().compareTo(t2.getTitle());
-                })
-                .collect(Collectors.toList());
-
-            matrix.setTasks(sortedTasks);
-        }
+        StudentTaskMatrixDto matrix = groupQueryService.getStudentTaskMatrix(group);
 
         model.addAttribute("group", group);
         model.addAttribute("statistics", statistics);
-        model.addAttribute("matrix", matrixData);
+        model.addAttribute("matrix", matrix);
 
         return "teacher/group-detail";
-    }
-
-    // Helper Classes für Template-Daten
-
-    public static class StudentTaskMatrix {
-        private List<User> students;
-        private List<Task> tasks;
-        private Map<String, UserTaskStatus> statusMap;
-
-        public StudentTaskMatrix() {}
-
-        public StudentTaskMatrix(List<User> students, List<Task> tasks, Map<String, UserTaskStatus> statusMap) {
-            this.students = students;
-            this.tasks = tasks;
-            this.statusMap = statusMap;
-        }
-
-        // Getters and Setters
-        public List<User> getStudents() { return students; }
-        public void setStudents(List<User> students) { this.students = students; }
-
-        public List<Task> getTasks() { return tasks; }
-        public void setTasks(List<Task> tasks) { this.tasks = tasks; }
-
-        public Map<String, UserTaskStatus> getStatusMap() { return statusMap; }
-        public void setStatusMap(Map<String, UserTaskStatus> statusMap) { this.statusMap = statusMap; }
-
-        public UserTaskStatus getStatus(Long studentId, Long taskId) {
-            return statusMap.get(studentId + "_" + taskId);
-        }
-
-        public String getStatusIcon(Long studentId, Long taskId) {
-            UserTaskStatus status = getStatus(studentId, taskId);
-            if (status == null || status.getStatus() == null) {
-                return "fas fa-circle text-secondary";
-            }
-
-            switch (status.getStatus().getName()) {
-                case "NICHT_BEGONNEN": return "fas fa-circle text-secondary";
-                case "IN_BEARBEITUNG": return "fas fa-edit text-primary";
-                case "ABGEGEBEN": return "fas fa-hourglass-half text-warning";
-                case "ÜBERARBEITUNG_NÖTIG": return "fas fa-redo text-danger";
-                case "VOLLSTÄNDIG": return "fas fa-check-circle text-success";
-                default: return "fas fa-question text-muted";
-            }
-        }
-    }
-
-    public static class UserTaskStatus {
-        private TaskStatus status;
-        private boolean hasSubmissions;
-        private Long userTaskId;
-
-        public UserTaskStatus() {}
-
-        public UserTaskStatus(TaskStatus status, boolean hasSubmissions, Long userTaskId) {
-            this.status = status;
-            this.hasSubmissions = hasSubmissions;
-            this.userTaskId = userTaskId;
-        }
-
-        // Getters and Setters
-        public TaskStatus getStatus() { return status; }
-        public void setStatus(TaskStatus status) { this.status = status; }
-
-        public boolean isHasSubmissions() { return hasSubmissions; }
-        public void setHasSubmissions(boolean hasSubmissions) { this.hasSubmissions = hasSubmissions; }
-
-        public Long getUserTaskId() { return userTaskId; }
-        public void setUserTaskId(Long userTaskId) { this.userTaskId = userTaskId; }
-    }
-
-    public static class GroupInfo {
-        private Group group;
-        private int studentCount;
-        private int activeTaskCount;
-        private int pendingSubmissions;
-        private LocalDateTime lastActivity;
-
-        // Constructors
-        public GroupInfo() {}
-
-        public GroupInfo(Group group, int studentCount, int activeTaskCount, int pendingSubmissions, LocalDateTime lastActivity) {
-            this.group = group;
-            this.studentCount = studentCount;
-            this.activeTaskCount = activeTaskCount;
-            this.pendingSubmissions = pendingSubmissions;
-            this.lastActivity = lastActivity;
-        }
-
-        // Getters and Setters
-        public Group getGroup() { return group; }
-        public void setGroup(Group group) { this.group = group; }
-
-        public int getStudentCount() { return studentCount; }
-        public void setStudentCount(int studentCount) { this.studentCount = studentCount; }
-
-        public int getActiveTaskCount() { return activeTaskCount; }
-        public void setActiveTaskCount(int activeTaskCount) { this.activeTaskCount = activeTaskCount; }
-
-        public int getPendingSubmissions() { return pendingSubmissions; }
-        public void setPendingSubmissions(int pendingSubmissions) { this.pendingSubmissions = pendingSubmissions; }
-
-        public LocalDateTime getLastActivity() { return lastActivity; }
-        public void setLastActivity(LocalDateTime lastActivity) { this.lastActivity = lastActivity; }
-    }
-
-    public static class GroupStatistics {
-        private int totalStudents;
-        private int submittedTasks;
-        private int needsRevisionTasks;
-        private int completedTasks;
-
-        // Constructors
-        public GroupStatistics() {}
-
-        public GroupStatistics(int totalStudents, int submittedTasks, int needsRevisionTasks, int completedTasks) {
-            this.totalStudents = totalStudents;
-            this.submittedTasks = submittedTasks;
-            this.needsRevisionTasks = needsRevisionTasks;
-            this.completedTasks = completedTasks;
-        }
-
-        // Getters and Setters
-        public int getTotalStudents() { return totalStudents; }
-        public void setTotalStudents(int totalStudents) { this.totalStudents = totalStudents; }
-
-        public int getSubmittedTasks() { return submittedTasks; }
-        public void setSubmittedTasks(int submittedTasks) { this.submittedTasks = submittedTasks; }
-
-        public int getNeedsRevisionTasks() { return needsRevisionTasks; }
-        public void setNeedsRevisionTasks(int needsRevisionTasks) { this.needsRevisionTasks = needsRevisionTasks; }
-
-        public int getCompletedTasks() { return completedTasks; }
-        public void setCompletedTasks(int completedTasks) { this.completedTasks = completedTasks; }
-    }
-
-    public static class StudentTaskInfo {
-        private User student;
-        private List<TaskInfo> tasks;
-
-        // Constructors
-        public StudentTaskInfo() {}
-
-        public StudentTaskInfo(User student, List<TaskInfo> tasks) {
-            this.student = student;
-            this.tasks = tasks;
-        }
-
-        // Getters and Setters
-        public User getStudent() { return student; }
-        public void setStudent(User student) { this.student = student; }
-
-        public List<TaskInfo> getTasks() { return tasks; }
-        public void setTasks(List<TaskInfo> tasks) { this.tasks = tasks; }
-    }
-
-    public static class TaskInfo {
-        private Long userTaskId;
-        private com.example.studenttask.model.Task task;
-        private com.example.studenttask.model.TaskStatus status;
-        private boolean hasSubmissions;
-        private String statusBadgeClass;
-
-        // Constructors
-        public TaskInfo() {}
-
-        public TaskInfo(Long userTaskId, com.example.studenttask.model.Task task,
-                       com.example.studenttask.model.TaskStatus status, boolean hasSubmissions) {
-            this.userTaskId = userTaskId;
-            this.task = task;
-            this.status = status;
-            this.hasSubmissions = hasSubmissions;
-            this.statusBadgeClass = determineStatusBadgeClass(status);
-        }
-
-        private String determineStatusBadgeClass(com.example.studenttask.model.TaskStatus status) {
-            if (status == null) return "bg-secondary";
-
-            switch (status.getName().toUpperCase()) {
-                case "NICHT_BEGONNEN":
-                    return "bg-secondary";
-                case "IN_BEARBEITUNG":
-                    return "bg-warning";
-                case "ABGEGEBEN":
-                    return "bg-info";
-                case "ÜBERARBEITUNG_NÖTIG":
-                    return "bg-danger";
-                case "VOLLSTÄNDIG":
-                    return "bg-success";
-                default:
-                    return "bg-secondary";
-            }
-        }
-
-        // Getters and Setters
-        public Long getUserTaskId() { return userTaskId; }
-        public void setUserTaskId(Long userTaskId) { this.userTaskId = userTaskId; }
-
-        public com.example.studenttask.model.Task getTask() { return task; }
-        public void setTask(com.example.studenttask.model.Task task) { this.task = task; }
-
-        public com.example.studenttask.model.TaskStatus getStatus() { return status; }
-        public void setStatus(com.example.studenttask.model.TaskStatus status) {
-            this.status = status;
-            this.statusBadgeClass = determineStatusBadgeClass(status);
-        }
-
-        public boolean isHasSubmissions() { return hasSubmissions; }
-        public void setHasSubmissions(boolean hasSubmissions) { this.hasSubmissions = hasSubmissions; }
-
-        public String getStatusBadgeClass() { return statusBadgeClass; }
-        public void setStatusBadgeClass(String statusBadgeClass) { this.statusBadgeClass = statusBadgeClass; }
     }
 }

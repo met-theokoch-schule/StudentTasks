@@ -2,7 +2,6 @@ package com.example.studenttask.controller;
 
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskContent;
-import com.example.studenttask.model.TaskView;
 import com.example.studenttask.model.User;
 import com.example.studenttask.model.UserTask;
 import com.example.studenttask.service.TaskContentService;
@@ -213,29 +212,13 @@ public class StudentTaskApiController {
                 }
             }
 
-            String submittedStatusName = resolveSubmittedStatusName(userTask);
-            userTaskService.updateStatus(userTask, submittedStatusName);
-            log.debug("Updated UserTask {} to status {}", userTask.getId(), submittedStatusName);
+            log.debug("Submitted UserTask {}", userTask.getId());
 
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             log.error("Error submitting task {}", taskId, e);
             return ResponseEntity.status(500).build();
         }
-    }
-
-    private String resolveSubmittedStatusName(UserTask userTask) {
-        TaskView taskView = null;
-        Task task = userTask.getTask();
-        if (task != null) {
-            if (task.getTaskView() != null) {
-                taskView = task.getTaskView();
-            } else {
-                taskView = task.getViewType();
-            }
-        }
-        boolean markComplete = taskView != null && Boolean.TRUE.equals(taskView.getSubmitMarksComplete());
-        return markComplete ? "VOLLSTÄNDIG" : "ABGEGEBEN";
     }
 
     private String preview(String content, int maxLength) {

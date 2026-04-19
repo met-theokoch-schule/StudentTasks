@@ -3,6 +3,7 @@ package com.example.studenttask.service;
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskContent;
 import com.example.studenttask.model.TaskStatus;
+import com.example.studenttask.model.TaskStatusCode;
 import com.example.studenttask.model.TaskView;
 import com.example.studenttask.model.UserTask;
 import com.example.studenttask.repository.TaskContentRepository;
@@ -14,7 +15,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -40,22 +40,27 @@ class TaskContentServiceTest {
     @Mock
     private TaskReviewService taskReviewService;
 
+    @Mock
+    private UserTaskService userTaskService;
+
     @InjectMocks
     private TaskContentService taskContentService;
 
     @Test
     void saveContentDraft_advancesVersionAndMovesNotStartedTaskToInProgress() {
         UserTask userTask = new UserTask();
-        TaskStatus notStarted = taskStatus("NICHT_BEGONNEN");
-        TaskStatus inProgress = taskStatus("IN_BEARBEITUNG");
-        userTask.setStatus(notStarted);
+        userTask.setStatus(taskStatus("NICHT_BEGONNEN"));
         userTask.setStartedAt(null);
 
         TaskContent existingContent = new TaskContent();
         existingContent.setVersion(2);
 
         when(taskContentRepository.findByUserTaskOrderByVersionDesc(userTask)).thenReturn(List.of(existingContent));
-        when(taskStatusService.findByName("IN_BEARBEITUNG")).thenReturn(Optional.of(inProgress));
+        when(taskStatusService.isStatus(userTask.getStatus(), TaskStatusCode.NICHT_BEGONNEN)).thenReturn(true);
+        when(userTaskService.updateStatus(userTask, TaskStatusCode.IN_BEARBEITUNG)).thenAnswer(invocation -> {
+            userTask.setStartedAt(java.time.LocalDateTime.now());
+            return true;
+        });
         when(taskContentRepository.save(any(TaskContent.class))).thenAnswer(invocation -> {
             TaskContent savedContent = invocation.getArgument(0);
             savedContent.setId(42L);
@@ -68,10 +73,10 @@ class TaskContentServiceTest {
         assertThat(saved.getVersion()).isEqualTo(3);
         assertThat(saved.isSubmitted()).isFalse();
         assertThat(saved.getContent()).isEqualTo("draft-content");
-        assertThat(userTask.getStatus()).isSameAs(inProgress);
         assertThat(userTask.getStartedAt()).isNotNull();
+        verify(userTaskService).updateStatus(userTask, TaskStatusCode.IN_BEARBEITUNG);
         verify(submissionService, never()).createSubmission(any(UserTask.class), any(TaskContent.class));
-        verify(userTaskRepository).save(userTask);
+        verify(userTaskRepository, never()).save(userTask);
     }
 
     @Test
@@ -86,10 +91,8 @@ class TaskContentServiceTest {
         userTask.setTask(task);
         userTask.setStatus(taskStatus("IN_BEARBEITUNG"));
 
-        TaskStatus completed = taskStatus("VOLLST\u00c4NDIG");
-
         when(taskContentRepository.findByUserTaskOrderByVersionDesc(userTask)).thenReturn(List.of());
-        when(taskStatusService.findByName("VOLLST\u00c4NDIG")).thenReturn(Optional.of(completed));
+        when(userTaskService.updateStatus(userTask, TaskStatusCode.VOLLSTAENDIG)).thenReturn(true);
         when(taskContentRepository.save(any(TaskContent.class))).thenAnswer(invocation -> {
             TaskContent savedContent = invocation.getArgument(0);
             savedContent.setId(99L);
@@ -102,9 +105,9 @@ class TaskContentServiceTest {
         assertThat(saved.getVersion()).isEqualTo(1);
         assertThat(saved.isSubmitted()).isTrue();
         assertThat(saved.getContent()).isEqualTo("final-answer");
-        assertThat(userTask.getStatus()).isSameAs(completed);
+        verify(userTaskService).updateStatus(userTask, TaskStatusCode.VOLLSTAENDIG);
         verify(submissionService).createSubmission(userTask, saved);
-        verify(userTaskRepository).save(userTask);
+        verify(userTaskRepository, never()).save(userTask);
     }
 
     private TaskStatus taskStatus(String name) {

@@ -38,9 +38,7 @@ public class UserTaskService {
             userTask.setTask(task);
             userTask.setStartedAt(LocalDateTime.now());
             userTask.setLastModified(LocalDateTime.now());
-
-            // Set initial status (assuming NICHT_BEGONNEN exists)
-            // This should be improved to get the actual initial status
+            userTask.setStatus(taskStatusService.getDefaultStatus());
             return userTaskRepository.save(userTask);
         }
     }
@@ -49,7 +47,19 @@ public class UserTaskService {
      * Status einer UserTask ändern (mit Validierung)
      */
     public boolean updateStatus(UserTask userTask, TaskStatus newStatus) {
-        if (!taskStatusService.canTransitionTo(userTask.getStatus(), newStatus)) {
+        TaskStatus currentStatus = userTask.getStatus();
+        if (currentStatus == null) {
+            currentStatus = taskStatusService.getDefaultStatus();
+            userTask.setStatus(currentStatus);
+        }
+
+        if (currentStatus.equals(newStatus)) {
+            userTask.setLastModified(LocalDateTime.now());
+            userTaskRepository.save(userTask);
+            return true;
+        }
+
+        if (!taskStatusService.canTransitionTo(currentStatus, newStatus)) {
             return false; // Übergang nicht erlaubt
         }
 
@@ -57,12 +67,16 @@ public class UserTaskService {
         userTask.setLastModified(LocalDateTime.now());
 
         // Wenn zum ersten Mal begonnen wird
-        if ("IN_BEARBEITUNG".equals(newStatus.getName()) && userTask.getStartedAt() == null) {
+        if (taskStatusService.isStatus(newStatus, TaskStatusCode.IN_BEARBEITUNG) && userTask.getStartedAt() == null) {
             userTask.setStartedAt(LocalDateTime.now());
         }
 
         userTaskRepository.save(userTask);
         return true;
+    }
+
+    public boolean updateStatus(UserTask userTask, TaskStatusCode statusCode) {
+        return updateStatus(userTask, taskStatusService.requireStatus(statusCode));
     }
 
     /**
@@ -109,11 +123,4 @@ public class UserTaskService {
         return userTaskRepository.findByUserIdAndTaskId(userId, taskId);
     }
 
-    public void updateStatus(UserTask userTask, String statusName) {
-        Optional<TaskStatus> status = taskStatusService.findByName(statusName);
-        if (status.isPresent()) {
-            userTask.setStatus(status.get());
-            userTaskRepository.save(userTask);
-        }
-    }
 }

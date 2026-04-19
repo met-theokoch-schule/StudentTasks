@@ -1,6 +1,9 @@
 com/example/studenttask/service/TaskStatusServiceTest.class
 com/example/studenttask/controller/StudentTaskApiControllerTest.class
+com/example/studenttask/service/TaskStatusSupportTest.class
+com/example/studenttask/controller/TeacherGroupControllerTest.class
 com/example/studenttask/controller/StudentControllerTest.class
 com/example/studenttask/service/UserTaskServiceTest.class
 com/example/studenttask/controller/TeacherControllerTest.class
 com/example/studenttask/service/TaskContentServiceTest.class
+com/example/studenttask/service/GroupQueryServiceTest.class

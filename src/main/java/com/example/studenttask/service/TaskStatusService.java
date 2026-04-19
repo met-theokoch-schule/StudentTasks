@@ -1,16 +1,43 @@
 package com.example.studenttask.service;
 
 import com.example.studenttask.model.TaskStatus;
+import com.example.studenttask.model.TaskStatusCode;
 import com.example.studenttask.repository.TaskStatusRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class TaskStatusService {
+
+    private static final Map<TaskStatusCode, Set<TaskStatusCode>> ALLOWED_TRANSITIONS = Map.of(
+            TaskStatusCode.NICHT_BEGONNEN, Set.of(
+                    TaskStatusCode.IN_BEARBEITUNG,
+                    TaskStatusCode.ABGEGEBEN,
+                    TaskStatusCode.VOLLSTAENDIG
+            ),
+            TaskStatusCode.IN_BEARBEITUNG, Set.of(
+                    TaskStatusCode.NICHT_BEGONNEN,
+                    TaskStatusCode.ABGEGEBEN,
+                    TaskStatusCode.VOLLSTAENDIG
+            ),
+            TaskStatusCode.ABGEGEBEN, Set.of(
+                    TaskStatusCode.IN_BEARBEITUNG,
+                    TaskStatusCode.UEBERARBEITUNG_NOETIG,
+                    TaskStatusCode.VOLLSTAENDIG
+            ),
+            TaskStatusCode.UEBERARBEITUNG_NOETIG, Set.of(
+                    TaskStatusCode.IN_BEARBEITUNG,
+                    TaskStatusCode.ABGEGEBEN,
+                    TaskStatusCode.VOLLSTAENDIG
+            ),
+            TaskStatusCode.VOLLSTAENDIG, Set.of(TaskStatusCode.UEBERARBEITUNG_NOETIG)
+    );
 
     @Autowired
     private TaskStatusRepository taskStatusRepository;
@@ -26,15 +53,25 @@ public class TaskStatusService {
      * Status nach Name finden
      */
     public Optional<TaskStatus> findByName(String name) {
-        return taskStatusRepository.findByName(name);
+        return TaskStatusCode.fromName(name)
+                .flatMap(this::findByCode)
+                .or(() -> taskStatusRepository.findByName(name));
+    }
+
+    public Optional<TaskStatus> findByCode(TaskStatusCode code) {
+        return taskStatusRepository.findByName(code.getDatabaseName());
+    }
+
+    public TaskStatus requireStatus(TaskStatusCode code) {
+        return findByCode(code)
+                .orElseThrow(() -> new RuntimeException("Status " + code.getDatabaseName() + " not found"));
     }
 
     /**
      * Standard-Status abrufen (NICHT_BEGONNEN)
      */
     public TaskStatus getDefaultStatus() {
-        return findByName("NICHT_BEGONNEN")
-                .orElseThrow(() -> new RuntimeException("Default status NICHT_BEGONNEN not found"));
+        return requireStatus(TaskStatusCode.NICHT_BEGONNEN);
     }
 
     /**
@@ -45,28 +82,25 @@ public class TaskStatusService {
             return false;
         }
 
-        // Definiere erlaubte Übergänge basierend auf dem Status-Namen
-        Set<String> allowedTransitions = getAllowedTransitions(fromStatus.getName());
-        return allowedTransitions.contains(toStatus.getName());
+        Optional<TaskStatusCode> fromCode = getCode(fromStatus);
+        Optional<TaskStatusCode> toCode = getCode(toStatus);
+        if (fromCode.isEmpty() || toCode.isEmpty()) {
+            return false;
+        }
+
+        return getAllowedTransitions(fromCode.get()).contains(toCode.get());
     }
 
-    /**
-     * Definiert erlaubte Status-Übergänge
-     */
-    private Set<String> getAllowedTransitions(String fromStatusName) {
-        return switch (fromStatusName) {
-            case "NICHT_BEGONNEN" -> Set.of("IN_BEARBEITUNG");
+    public Optional<TaskStatusCode> getCode(TaskStatus status) {
+        return TaskStatusSupport.getCode(status);
+    }
 
-            case "IN_BEARBEITUNG" -> Set.of("ABGEGEBEN", "NICHT_BEGONNEN");
+    public boolean isStatus(TaskStatus status, TaskStatusCode expectedCode) {
+        return TaskStatusSupport.hasCode(status, expectedCode);
+    }
 
-            case "ABGEGEBEN" -> Set.of("IN_BEARBEITUNG", "ÜBERARBEITUNG_NÖTIG", "VOLLSTÄNDIG");
-
-            case "ÜBERARBEITUNG_NÖTIG" -> Set.of("IN_BEARBEITUNG");
-
-            case "VOLLSTÄNDIG" -> Set.of("ÜBERARBEITUNG_NÖTIG");
-
-            default -> Set.of(); // Keine Übergänge erlaubt für unbekannte Status
-        };
+    public Set<TaskStatusCode> getAllowedTransitions(TaskStatusCode fromStatusCode) {
+        return ALLOWED_TRANSITIONS.getOrDefault(fromStatusCode, Set.of());
     }
 
     /**
@@ -77,7 +111,12 @@ public class TaskStatusService {
             return List.of(getDefaultStatus());
         }
 
-        Set<String> allowedNames = getAllowedTransitions(currentStatus.getName());
+        Set<String> allowedNames = getCode(currentStatus)
+                .map(this::getAllowedTransitions)
+                .orElse(Set.of())
+                .stream()
+                .map(TaskStatusCode::getDatabaseName)
+                .collect(Collectors.toSet());
         return taskStatusRepository.findByNameInAndIsActiveTrue(allowedNames);
     }
 

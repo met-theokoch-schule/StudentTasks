@@ -2,6 +2,7 @@ package com.example.studenttask.service;
 
 import com.example.studenttask.model.TaskReview;
 import com.example.studenttask.model.TaskStatus;
+import com.example.studenttask.model.TaskStatusCode;
 import com.example.studenttask.model.User;
 import com.example.studenttask.model.UserTask;
 import com.example.studenttask.repository.TaskReviewRepository;
@@ -123,8 +124,8 @@ public class TaskReviewService {
     public List<TaskStatus> getTeacherReviewStatuses() {
         List<TaskStatus> teacherStatuses = new ArrayList<>();
 
-        taskStatusService.findByName("VOLLSTÄNDIG").ifPresent(teacherStatuses::add);
-        taskStatusService.findByName("ÜBERARBEITUNG_NÖTIG").ifPresent(teacherStatuses::add);
+        taskStatusService.findByCode(TaskStatusCode.VOLLSTAENDIG).ifPresent(teacherStatuses::add);
+        taskStatusService.findByCode(TaskStatusCode.UEBERARBEITUNG_NOETIG).ifPresent(teacherStatuses::add);
 
         return teacherStatuses;
     }

@@ -110,18 +110,13 @@
                                             </td>
                                             <td th:each="task : ${matrix.tasks}" 
                                                 class="status-cell"
+                                                th:with="statusInfo=${matrix.getStatus(student.id, task.id)}"
                                                 th:data-student-id="${student.id}"
                                                 th:data-task-id="${task.id}"
-                                                th:data-user-task-id="${matrix.statusMap.get(student.id + '_' + task.id)?.userTaskId}"
-                                                th:onclick="'handleStatusClick(' + ${student.id} + ', ' + ${task.id} + ', ' + ${matrix.statusMap.get(student.id + '_' + task.id)?.userTaskId} + ')'"
-                                                th:title="${student.name + ' - ' + task.title + ': ' + (matrix.statusMap.get(student.id + '_' + task.id)?.status?.name ?: 'Nicht begonnen')}">
-                                                <i th:class="${matrix.statusMap.get(student.id + '_' + task.id)?.status != null ? 
-                                                             (matrix.statusMap.get(student.id + '_' + task.id).status.name == 'NICHT_BEGONNEN' ? 'fas fa-circle text-secondary' :
-                                                             (matrix.statusMap.get(student.id + '_' + task.id).status.name == 'IN_BEARBEITUNG' ? 'fas fa-edit text-primary' :
-                                                             (matrix.statusMap.get(student.id + '_' + task.id).status.name == 'ABGEGEBEN' ? 'fas fa-hourglass-half text-warning' :
-                                                             (matrix.statusMap.get(student.id + '_' + task.id).status.name == 'ÜBERARBEITUNG_NÖTIG' ? 'fas fa-redo text-danger' :
-                                                             (matrix.statusMap.get(student.id + '_' + task.id).status.name == 'VOLLSTÄNDIG' ? 'fas fa-check-circle text-success' : 'fas fa-question text-muted'))))) :
-                                                             'fas fa-circle text-secondary'}"
+                                                th:data-user-task-id="${statusInfo?.userTaskId}"
+                                                th:onclick="'handleStatusClick(' + ${student.id} + ', ' + ${task.id} + ', ' + ${statusInfo?.userTaskId} + ')'"
+                                                th:title="${student.name + ' - ' + task.title + ': ' + (statusInfo?.status?.name ?: 'Nicht begonnen')}">
+                                                <i th:class="${statusInfo?.statusIcon ?: 'fas fa-circle text-secondary'}"
                                                    class="status-icon">
                                                 </i>
                                             </td>

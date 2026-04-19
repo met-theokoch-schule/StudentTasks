@@ -2,7 +2,6 @@ package com.example.studenttask.controller;
 
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskContent;
-import com.example.studenttask.model.TaskView;
 import com.example.studenttask.model.User;
 import com.example.studenttask.model.UserTask;
 import com.example.studenttask.service.TaskContentService;
@@ -106,13 +105,10 @@ class StudentTaskApiControllerTest {
     }
 
     @Test
-    void submitTask_submitsProvidedContentAndUpdatesSubmittedStatus() {
+    void submitTask_submitsProvidedContentWithoutControllerLevelStatusMutation() {
         Authentication authentication = authentication("oidc-subject");
         User user = user(1L, "Student One");
         Task task = task(7L, "Task 7");
-        TaskView taskView = new TaskView();
-        taskView.setSubmitMarksComplete(false);
-        task.setTaskView(taskView);
         UserTask userTask = userTask(100L, user, task);
 
         when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.of(user));
@@ -126,7 +122,6 @@ class StudentTaskApiControllerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         verify(taskContentService).submitContent(userTask, "submitted-solution");
-        verify(userTaskService).updateStatus(userTask, "ABGEGEBEN");
     }
 
     private Authentication authentication(String subject) {

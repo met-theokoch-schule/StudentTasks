@@ -2,6 +2,7 @@ package com.example.studenttask.service;
 
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskStatus;
+import com.example.studenttask.model.TaskStatusCode;
 import com.example.studenttask.model.User;
 import com.example.studenttask.model.UserTask;
 import com.example.studenttask.repository.UserTaskRepository;
@@ -50,14 +51,17 @@ class UserTaskServiceTest {
     void findOrCreateUserTask_createsAndPersistsANewUserTask() {
         User user = new User();
         Task task = new Task();
+        TaskStatus defaultStatus = new TaskStatus("NICHT_BEGONNEN", "not started", 1);
 
         when(userTaskRepository.findByUserAndTask(user, task)).thenReturn(Optional.empty());
+        when(taskStatusService.getDefaultStatus()).thenReturn(defaultStatus);
         when(userTaskRepository.save(any(UserTask.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         UserTask created = userTaskService.findOrCreateUserTask(user, task);
 
         assertThat(created.getUser()).isSameAs(user);
         assertThat(created.getTask()).isSameAs(task);
+        assertThat(created.getStatus()).isSameAs(defaultStatus);
         assertThat(created.getStartedAt()).isNotNull();
         assertThat(created.getLastModified()).isNotNull();
         verify(userTaskRepository).save(created);
@@ -90,6 +94,27 @@ class UserTaskServiceTest {
         userTask.setStartedAt(null);
 
         when(taskStatusService.canTransitionTo(fromStatus, toStatus)).thenReturn(true);
+        when(taskStatusService.isStatus(toStatus, TaskStatusCode.IN_BEARBEITUNG)).thenReturn(true);
+
+        boolean updated = userTaskService.updateStatus(userTask, toStatus);
+
+        assertThat(updated).isTrue();
+        assertThat(userTask.getStatus()).isSameAs(toStatus);
+        assertThat(userTask.getStartedAt()).isNotNull();
+        verify(userTaskRepository).save(userTask);
+    }
+
+    @Test
+    void updateStatus_treatsMissingLegacyStatusAsDefaultForValidation() {
+        UserTask userTask = new UserTask();
+        TaskStatus defaultStatus = new TaskStatus("NICHT_BEGONNEN", "not started", 1);
+        TaskStatus toStatus = new TaskStatus("IN_BEARBEITUNG", "in progress", 2);
+        userTask.setStatus(null);
+        userTask.setStartedAt(null);
+
+        when(taskStatusService.getDefaultStatus()).thenReturn(defaultStatus);
+        when(taskStatusService.canTransitionTo(defaultStatus, toStatus)).thenReturn(true);
+        when(taskStatusService.isStatus(toStatus, TaskStatusCode.IN_BEARBEITUNG)).thenReturn(true);
 
         boolean updated = userTaskService.updateStatus(userTask, toStatus);
 
