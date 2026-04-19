@@ -8,7 +8,6 @@
 /home/runner/workspace/src/test/java/com/example/studenttask/service/TaskStatusSupportTest.java
 /home/runner/workspace/src/test/java/com/example/studenttask/service/TaskContentServiceTest.java
 /home/runner/workspace/src/test/java/com/example/studenttask/controller/TeacherLegacyRouteControllerTest.java
-/home/runner/workspace/src/test/java/com/example/studenttask/config/TaskViewRelationBackfillRunnerTest.java
 /home/runner/workspace/src/test/java/com/example/studenttask/controller/StudentTaskApiControllerTest.java
 /home/runner/workspace/src/test/java/com/example/studenttask/service/TaskStatusServiceTest.java
 /home/runner/workspace/src/test/java/com/example/studenttask/service/TeacherDashboardQueryServiceTest.java

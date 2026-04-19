@@ -176,13 +176,13 @@ class TeacherTaskQueryServiceTest {
     }
 
     @Test
-    void getSubmissionContentViewData_fallsBackToLegacyViewTypeTemplate() {
+    void getSubmissionContentViewData_usesTaskViewTemplateWhenNoContentExists() {
         Group group = group(10L, "10A");
         User teacher = teacher(1L, "Teacher", group);
         Task task = task(20L, "Worksheet", teacher, group, null);
-        TaskView legacyViewType = new TaskView();
-        legacyViewType.setTemplatePath("taskviews/legacy-template");
-        task.setViewType(legacyViewType);
+        TaskView taskView = new TaskView();
+        taskView.setTemplatePath("taskviews/task-template");
+        task.setTaskView(taskView);
         UserTask userTask = userTask(student(2L, "Student", group), task, status("ABGEGEBEN"));
 
         when(userTaskService.findById(30L)).thenReturn(Optional.of(userTask));
@@ -192,7 +192,7 @@ class TeacherTaskQueryServiceTest {
             teacherTaskQueryService.getSubmissionContentViewData(30L, null);
 
         assertThat(contentViewOpt).isPresent();
-        assertThat(contentViewOpt.get().getTemplatePath()).isEqualTo("taskviews/legacy-template");
+        assertThat(contentViewOpt.get().getTemplatePath()).isEqualTo("taskviews/task-template");
     }
 
     @Test

@@ -46,14 +46,14 @@ class TaskControllerTest {
     private TaskController controller;
 
     @Test
-    void viewTaskIframe_usesLegacyViewTypeFallbackWhenTaskViewIsMissing() {
-        TaskView legacyViewType = new TaskView();
-        legacyViewType.setId(7L);
-        legacyViewType.setTemplatePath("taskviews/legacy-view");
+    void viewTaskIframe_usesTaskViewTemplateWhenPresent() {
+        TaskView taskView = new TaskView();
+        taskView.setId(7L);
+        taskView.setTemplatePath("taskviews/task-view");
 
         Task task = new Task();
         task.setId(40L);
-        task.setViewType(legacyViewType);
+        task.setTaskView(taskView);
 
         User student = new User();
         student.setId(1L);
@@ -67,14 +67,14 @@ class TaskControllerTest {
         when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.of(student));
         when(userTaskService.findOrCreateUserTask(student, task)).thenReturn(userTask);
         when(taskContentService.getLatestContent(userTask)).thenReturn(Optional.empty());
-        when(taskViewService.findById(7L)).thenReturn(Optional.of(legacyViewType));
+        when(taskViewService.findById(7L)).thenReturn(Optional.of(taskView));
 
         Model model = new ExtendedModelMap();
         String view = controller.viewTaskIframe(40L, null, null, authentication("oidc-subject"), model);
 
-        assertThat(view).isEqualTo("taskviews/legacy-view");
+        assertThat(view).isEqualTo("taskviews/task-view");
         assertThat(model.getAttribute("task")).isSameAs(task);
-        assertThat(model.getAttribute("taskView")).isSameAs(legacyViewType);
+        assertThat(model.getAttribute("taskView")).isSameAs(taskView);
         assertThat(model.getAttribute("userTask")).isSameAs(userTask);
         assertThat(model.getAttribute("userTaskId")).isEqualTo(99L);
         assertThat(model.getAttribute("currentContent")).isEqualTo("");

@@ -69,7 +69,6 @@ class TeacherTaskCommandServiceTest {
         assertThat(task.getCreatedBy()).isSameAs(teacher);
         assertThat(task.getAssignedGroups()).containsExactly(group);
         assertThat(task.getTaskView()).isSameAs(taskView);
-        assertThat(task.getViewType()).isSameAs(taskView);
         assertThat(task.getUnitTitle()).isSameAs(unitTitle);
     }
 
@@ -106,7 +105,6 @@ class TeacherTaskCommandServiceTest {
         assertThat(existingTask.getIsActive()).isFalse();
         assertThat(existingTask.getAssignedGroups()).containsExactly(newGroup);
         assertThat(existingTask.getTaskView()).isSameAs(taskView);
-        assertThat(existingTask.getViewType()).isSameAs(taskView);
         assertThat(existingTask.getUnitTitle()).isNull();
     }
 
@@ -130,7 +128,6 @@ class TeacherTaskCommandServiceTest {
         teacherTaskCommandService.updateTask(20L, updates, "not-a-number", null, null, null);
 
         assertThat(existingTask.getTaskView()).isSameAs(existingTaskView);
-        assertThat(existingTask.getViewType()).isSameAs(existingTaskView);
     }
 
     @Test

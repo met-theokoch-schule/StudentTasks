@@ -15,7 +15,6 @@ com/example/studenttask/controller/DashboardControllerTest$1.class
 com/example/studenttask/service/TaskStatusServiceTest.class
 com/example/studenttask/service/IdentitySyncServiceTest.class
 com/example/studenttask/service/TaskStatusSupportTest.class
-com/example/studenttask/config/TaskViewRelationBackfillRunnerTest.class
 com/example/studenttask/controller/TeacherTaskControllerTest.class
 com/example/studenttask/service/UserTaskServiceTest.class
 com/example/studenttask/service/TaskServiceTest.class

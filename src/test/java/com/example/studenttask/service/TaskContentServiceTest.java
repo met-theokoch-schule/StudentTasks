@@ -111,12 +111,12 @@ class TaskContentServiceTest {
     }
 
     @Test
-    void saveContentSubmit_usesLegacyViewTypeWhenTaskViewMissing() {
-        TaskView legacyViewType = new TaskView();
-        legacyViewType.setSubmitMarksComplete(true);
+    void saveContentSubmit_usesTaskViewWhenPresent() {
+        TaskView taskView = new TaskView();
+        taskView.setSubmitMarksComplete(true);
 
         Task task = new Task();
-        task.setViewType(legacyViewType);
+        task.setTaskView(taskView);
 
         UserTask userTask = new UserTask();
         userTask.setTask(task);
@@ -126,7 +126,7 @@ class TaskContentServiceTest {
         when(userTaskService.updateStatus(userTask, TaskStatusCode.VOLLSTAENDIG)).thenReturn(true);
         when(taskContentRepository.save(any(TaskContent.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        TaskContent saved = taskContentService.saveContent(userTask, "legacy-answer", true);
+        TaskContent saved = taskContentService.saveContent(userTask, "final-answer", true);
 
         assertThat(saved.isSubmitted()).isTrue();
         verify(userTaskService).updateStatus(userTask, TaskStatusCode.VOLLSTAENDIG);

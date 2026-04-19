@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class TaskTest {
 
     @Test
-    void constructor_keepsTaskViewAndLegacyViewTypeInSync() {
+    void constructor_assignsTaskView() {
         User teacher = new User();
         TaskView taskView = new TaskView();
         taskView.setId(7L);
@@ -15,28 +15,16 @@ class TaskTest {
         Task task = new Task("Title", "Description", teacher, taskView);
 
         assertThat(task.getTaskView()).isSameAs(taskView);
-        assertThat(task.getViewType()).isSameAs(taskView);
     }
 
     @Test
-    void getTaskView_fallsBackToLegacyViewType() {
-        TaskView legacyViewType = new TaskView();
-        legacyViewType.setId(9L);
+    void setTaskView_updatesTaskViewReference() {
+        TaskView taskView = new TaskView();
+        taskView.setId(9L);
 
         Task task = new Task();
-        setField(task, "taskView", null);
-        setField(task, "viewType", legacyViewType);
+        task.setTaskView(taskView);
 
-        assertThat(task.getTaskView()).isSameAs(legacyViewType);
-    }
-
-    private void setField(Task task, String fieldName, Object value) {
-        try {
-            var field = Task.class.getDeclaredField(fieldName);
-            field.setAccessible(true);
-            field.set(task, value);
-        } catch (ReflectiveOperationException e) {
-            throw new RuntimeException(e);
-        }
+        assertThat(task.getTaskView()).isSameAs(taskView);
     }
 }

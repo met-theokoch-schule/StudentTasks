@@ -24,7 +24,6 @@
 /home/runner/workspace/src/main/java/com/example/studenttask/service/IdentitySyncService.java
 /home/runner/workspace/src/main/java/com/example/studenttask/service/TaskService.java
 /home/runner/workspace/src/main/java/com/example/studenttask/controller/DashboardController.java
-/home/runner/workspace/src/main/java/com/example/studenttask/config/TaskViewRelationBackfillRunner.java
 /home/runner/workspace/src/main/java/com/example/studenttask/model/Submission.java
 /home/runner/workspace/src/main/java/com/example/studenttask/service/SubmissionService.java
 /home/runner/workspace/src/main/java/com/example/studenttask/StudentTaskApplication.java

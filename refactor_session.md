@@ -910,6 +910,30 @@ Letzter erfolgreicher vollständiger Testlauf:
   - Errors: `0`
   - Skipped: `0`
 
+## TaskView-Rueckbau abgeschlossen
+Stand: 2026-04-19
+
+Die zwischenzeitlichen Migrations- und Diagnosebausteine fuer `view_type_id` sind nach dem erfolgreichen Rollout auf allen produktiven Datenbanken wieder entfernt worden. Damit ist die Umstellung fachlich und technisch abgeschlossen.
+
+### Finaler Zustand
+- `task_view_id` ist die einzige verbleibende TaskView-Zuordnung
+- im Produktivcode gibt es keinen Legacy-Fallback und keinen Startup-Cleanup mehr fuer `view_type_id`
+- das Lehrer-Dashboard enthaelt keinen Migrations- oder Diagnoseblock mehr
+
+### Wirkung
+- das Modell ist wieder auf eine einzige kanonische Relation reduziert
+- der zwischenzeitlich benoetigte Migrationscode ist vollstaendig aus dem normalen Runtime-Pfad verschwunden
+- die TaskView-Refactorings sind damit nicht nur vorbereitet oder migriert, sondern abgeschlossen
+
+### Teststatus
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-19T18:45:45Z`
+- Ergebnis:
+  - Tests: `74`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
 ## Pausepunkt / Wiederanlauf
 Stand: 2026-04-19
 
@@ -917,8 +941,8 @@ Die aktuelle Refactoring-Runde ist bis hierhin dokumentiert und mit vollständig
 
 ### Letzter stabiler Stand
 - letzter vollständiger grüner Lauf: `mvn -Dmaven.repo.local=/tmp/m2 test`
-- Zeitpunkt: `2026-04-19T15:27:16Z`
-- Ergebnis: `76` Tests, `0` Failures, `0` Errors, `0` Skipped
+- Zeitpunkt: `2026-04-19T18:45:45Z`
+- Ergebnis: `74` Tests, `0` Failures, `0` Errors, `0` Skipped
 
 ### Inhaltlich abgeschlossene Blöcke in dieser Serie
 - Teacher-Dashboard-Lesewege in `TeacherDashboardQueryService`
@@ -935,16 +959,18 @@ Die aktuelle Refactoring-Runde ist bis hierhin dokumentiert und mit vollständig
 - Startup-Backfill für inkonsistente `TaskView`-/`viewType`-Daten ergänzt
 - `view_type_id` als Legacy-Lesefallback auf read-only reduziert, `task_view_id` ist alleiniger Schreibpfad
 - `taskView` als normaler Fachzugriff etabliert, `resolvedTaskView`-Alias entfernt
+- TaskView-Rueckbau inklusive aller Migrations- und Diagnosebausteine abgeschlossen
 
 ### Sinnvoller erster Wiedereinstieg nach dem Limit-Reset
-- verbleibende reine Kompatibilitätsrouten in `TeacherController` bewerten und falls möglich stilllegen oder vereinheitlichen
-- danach den größeren, nun vorbereiteten Modell-Refactor `Task.viewType` vs. `Task.taskView` auf Datenmigration und Feldabbau ausweiten
+- verbleibende reine Kompatibilitaetsrouten in `TeacherController` bewerten und falls moeglich stilllegen oder vereinheitlichen
+- danach wieder die naechsten groesseren Punkte aus `refactor.md` unter Testschutz angehen
 
 ### Relevante Dateien für den Wiedereinstieg
 - `refactor.md`
 - `refactor_session.md`
 - `src/main/java/com/example/studenttask/controller/TeacherController.java`
 - `src/main/java/com/example/studenttask/controller/TeacherTaskController.java`
+- `src/main/java/com/example/studenttask/model/Task.java`
 - `src/main/java/com/example/studenttask/service/TeacherTaskCommandService.java`
 - `src/main/java/com/example/studenttask/service/TeacherTaskQueryService.java`
 - `src/test/java/com/example/studenttask/controller/TeacherControllerTest.java`

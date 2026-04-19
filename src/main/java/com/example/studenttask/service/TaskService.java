@@ -226,17 +226,6 @@ public class TaskService {
         return persist(task);
     }
 
-    public int backfillTaskViewRelations() {
-        List<Task> tasksToNormalize = taskRepository.findTasksWithMismatchedTaskViewRelation();
-        if (tasksToNormalize.isEmpty()) {
-            return 0;
-        }
-
-        tasksToNormalize.forEach(Task::normalizeTaskViewRelation);
-        taskRepository.saveAll(tasksToNormalize);
-        return tasksToNormalize.size();
-    }
-
     /**
      * Find all active tasks
      */
@@ -274,7 +263,6 @@ public class TaskService {
     }
 
     private Task persist(Task task) {
-        task.normalizeTaskViewRelation();
         return taskRepository.save(task);
     }
 

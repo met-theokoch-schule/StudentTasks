@@ -172,15 +172,15 @@ class StudentControllerTest {
     }
 
     @Test
-    void viewTask_usesLegacyViewTypeFallbackWhenTaskViewIsMissing() {
+    void viewTask_usesTaskViewTemplateWhenPresent() {
         User student = user(1L, "Student One");
         Group group = group(11L, "10A");
-        TaskView legacyViewType = new TaskView();
-        legacyViewType.setId(7L);
-        legacyViewType.setTemplatePath("taskviews/legacy-view");
+        TaskView taskView = new TaskView();
+        taskView.setId(7L);
+        taskView.setTemplatePath("taskviews/task-view");
 
         Task task = task(401L, "Legacy Task", group, null);
-        task.setViewType(legacyViewType);
+        task.setTaskView(taskView);
 
         UserTask userTask = userTask(student, task, status("IN_BEARBEITUNG"), LocalDateTime.now());
 
@@ -192,8 +192,8 @@ class StudentControllerTest {
         Model model = new ExtendedModelMap();
         String view = controller.viewTask(401L, model, principal("oidc-subject"));
 
-        assertThat(view).isEqualTo("taskviews/legacy-view");
-        assertThat(model.getAttribute("taskView")).isSameAs(legacyViewType);
+        assertThat(view).isEqualTo("taskviews/task-view");
+        assertThat(model.getAttribute("taskView")).isSameAs(taskView);
     }
 
     private void stubStudentTaskAggregation(User student, Group group, List<Task> tasks, List<UserTask> userTasks) {

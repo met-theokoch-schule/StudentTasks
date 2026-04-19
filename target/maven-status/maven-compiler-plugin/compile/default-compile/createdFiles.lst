@@ -11,14 +11,13 @@ com/example/studenttask/controller/StudentController.class
 com/example/studenttask/service/GroupQueryService.class
 com/example/studenttask/controller/TeacherController.class
 com/example/studenttask/config/DataInitializer.class
-com/example/studenttask/config/TaskViewRelationBackfillRunner.class
 com/example/studenttask/controller/TeacherGroupController.class
 com/example/studenttask/service/TeacherTaskCommandService.class
 com/example/studenttask/service/UnitTitleService.class
 com/example/studenttask/config/SecurityConfig$1.class
 com/example/studenttask/repository/SubmissionRepository.class
-com/example/studenttask/controller/DashboardController.class
 com/example/studenttask/service/TaskStatusSupport$1.class
+com/example/studenttask/controller/DashboardController.class
 com/example/studenttask/service/TaskStatusSupport.class
 com/example/studenttask/model/Submission.class
 com/example/studenttask/model/Task.class
@@ -41,8 +40,8 @@ com/example/studenttask/service/AuthenticationService.class
 com/example/studenttask/model/TaskReview.class
 com/example/studenttask/dto/StudentTaskStatusDto.class
 com/example/studenttask/controller/PythonRendererController.class
-com/example/studenttask/repository/UserRepository.class
 com/example/studenttask/dto/TeacherDashboardDataDto.class
+com/example/studenttask/repository/UserRepository.class
 com/example/studenttask/controller/TeacherTaskController.class
 com/example/studenttask/service/TaskContentService.class
 com/example/studenttask/controller/HomeController.class
