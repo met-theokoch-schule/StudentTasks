@@ -1,85 +1,46 @@
 package com.example.studenttask.controller;
 
-import com.example.studenttask.dto.VersionWithSubmissionStatus;
-import com.example.studenttask.model.*;
-import com.example.studenttask.service.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.example.studenttask.dto.TeacherSubmissionContentViewDto;
+import com.example.studenttask.dto.TeacherTaskFormDataDto;
+import com.example.studenttask.dto.TeacherSubmissionReviewDataDto;
+import com.example.studenttask.dto.TeacherTaskListDataDto;
+import com.example.studenttask.dto.TeacherTaskSubmissionsDataDto;
+import com.example.studenttask.model.Task;
+import com.example.studenttask.model.User;
+import com.example.studenttask.service.TeacherTaskCommandService;
+import com.example.studenttask.service.TeacherTaskQueryService;
+import com.example.studenttask.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
-import jakarta.servlet.http.HttpServletRequest;
-import java.time.format.DateTimeFormatter;
-
-import java.util.ArrayList;
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
-import com.example.studenttask.model.Task;
-import com.example.studenttask.model.TaskContent;
-import com.example.studenttask.model.TaskReview;
-import com.example.studenttask.model.TaskStatus;
-import com.example.studenttask.model.User;
-import com.example.studenttask.model.UserTask;
-import com.example.studenttask.service.TaskContentService;
-import com.example.studenttask.service.TaskReviewService;
-import com.example.studenttask.service.TaskService;
-import com.example.studenttask.service.TaskStatusService;
-import com.example.studenttask.service.TaskViewService;
-import com.example.studenttask.service.UserService;
-import com.example.studenttask.service.UserTaskService;
-import com.example.studenttask.service.GroupService;
-import com.example.studenttask.service.UnitTitleService;
-import com.example.studenttask.model.TaskView;
-import com.example.studenttask.model.Group;
-import com.example.studenttask.model.UnitTitle;
-import java.security.Principal;
-import java.util.Set;
-import jakarta.servlet.http.HttpServletRequest;
-import java.util.HashSet;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import jakarta.servlet.http.HttpServletRequest;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/teacher")
 @PreAuthorize("hasAnyAuthority('ROLE_TEACHER', 'ROLE_ADMIN') or @userService.hasTeacherRole(authentication.name)")
 public class TeacherTaskController {
 
-    private static final Logger log = LoggerFactory.getLogger(TeacherTaskController.class);
-
-    @Autowired
-    private TaskService taskService;
-
     @Autowired
     private UserService userService;
 
     @Autowired
-    private UserTaskService userTaskService;
+    private TeacherTaskQueryService teacherTaskQueryService;
 
     @Autowired
-    private TaskViewService taskViewService;
-
-    @Autowired
-    private TaskContentService taskContentService;
-
-    @Autowired
-    private TaskReviewService taskReviewService;
-
-    @Autowired
-    private TaskStatusService taskStatusService;
-
-    @Autowired
-    private GroupService groupService;
-
-    @Autowired
-    private UnitTitleService unitTitleService;
+    private TeacherTaskCommandService teacherTaskCommandService;
 
     /**
      * Zeigt alle Aufgaben des eingeloggten Lehrers oder alle Aufgaben im System
@@ -90,36 +51,11 @@ public class TeacherTaskController {
         User teacher = userService.findByOpenIdSubject(principal.getName())
                 .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
-        List<Task> allTasks;
-        if ("all".equals(filter)) {
-            // Alle Aufgaben im System anzeigen
-            allTasks = taskService.findAllOrderByCreatedAtDesc();
-        } else {
-            // Nur eigene Aufgaben anzeigen (Standard)
-            allTasks = taskService.findByCreatedByOrderByCreatedAtDesc(teacher);
-        }
-
-        Map<UnitTitle, List<Task>> tasksByUnitTitle = new LinkedHashMap<>();
-
-        // Erstelle einen Dummy-UnitTitle für Aufgaben ohne UnitTitle
-        UnitTitle noUnitTitle = null;
-
-        for (Task task : allTasks) {
-            UnitTitle key = task.getUnitTitle();
-            if (key == null) {
-                if (noUnitTitle == null) {
-                    noUnitTitle = new UnitTitle();
-                    noUnitTitle.setName("Aufgaben ohne Thema");
-                    noUnitTitle.setDescription("Aufgaben die keinem Thema zugeordnet sind");
-                }
-                key = noUnitTitle;
-            }
-            tasksByUnitTitle.computeIfAbsent(key, k -> new ArrayList<>()).add(task);
-        }
+        TeacherTaskListDataDto taskListData = teacherTaskQueryService.getTaskListData(teacher, filter);
 
         model.addAttribute("teacher", teacher);
-        model.addAttribute("tasksByUnitTitle", tasksByUnitTitle);
-        model.addAttribute("tasks", allTasks); // Für Rückwärtskompatibilität
+        model.addAttribute("tasksByUnitTitle", taskListData.getTasksByUnitTitle());
+        model.addAttribute("tasks", taskListData.getTasks());
         model.addAttribute("currentFilter", filter);
         return "teacher/tasks-list";
     }
@@ -131,45 +67,43 @@ public class TeacherTaskController {
     public String viewTaskSubmissions(@PathVariable Long taskId, Model model, Principal principal, HttpServletRequest request) {
         User teacher = userService.findByOpenIdSubject(principal.getName())
                 .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-        Optional<Task> taskOpt = taskService.findById(taskId);
 
-        // Sicherheit: Prüfen ob Aufgabe existiert
-        if (taskOpt.isEmpty()) {
+        Optional<TeacherTaskSubmissionsDataDto> submissionsDataOpt =
+            teacherTaskQueryService.getTaskSubmissionsData(taskId, teacher);
+        if (submissionsDataOpt.isEmpty()) {
             return "redirect:/teacher/tasks";
         }
 
-        Task task = taskOpt.get();
-
-        List<UserTask> userTasks = userTaskService.findByTask(task);
-
-        // Current URL für returnUrl
-        String currentUrl = request.getRequestURL().toString();
-        if (request.getQueryString() != null) {
-            currentUrl += "?" + request.getQueryString();
-        }
+        TeacherTaskSubmissionsDataDto submissionsData = submissionsDataOpt.get();
 
         model.addAttribute("teacher", teacher);
-        model.addAttribute("task", task);
-        model.addAttribute("userTasks", userTasks);
-        model.addAttribute("currentUrl", currentUrl);
-        model.addAttribute("isOwnTask", task.getCreatedBy().equals(teacher));
+        model.addAttribute("task", submissionsData.getTask());
+        model.addAttribute("userTasks", submissionsData.getUserTasks());
+        model.addAttribute("currentUrl", buildCurrentUrl(request));
+        model.addAttribute("isOwnTask", submissionsData.isOwnTask());
 
         return "teacher/task-submissions";
     }
 
     @GetMapping("/tasks/{id}")
-    public String taskDetail(@PathVariable Long id, Model model, Authentication authentication) {
-        Optional<Task> taskOpt = taskService.findById(id);
-        if (taskOpt.isEmpty()) {
+    public String taskDetail(@PathVariable Long id, Model model, Authentication authentication, HttpServletRequest request) {
+        User teacher = userService.findByOpenIdSubject(authentication.getName()).orElse(null);
+        if (teacher == null) {
             return "redirect:/teacher/tasks";
         }
 
-        Task task = taskOpt.get();
-        model.addAttribute("task", task);
+        Optional<TeacherTaskSubmissionsDataDto> submissionsDataOpt =
+            teacherTaskQueryService.getTaskSubmissionsData(id, teacher);
+        if (submissionsDataOpt.isEmpty()) {
+            return "redirect:/teacher/tasks";
+        }
 
-        // Get all user tasks for this task with submissions
-        List<UserTask> userTasks = userTaskService.findByTask(task);
-        model.addAttribute("userTasks", userTasks);
+        TeacherTaskSubmissionsDataDto submissionsData = submissionsDataOpt.get();
+        model.addAttribute("teacher", teacher);
+        model.addAttribute("task", submissionsData.getTask());
+        model.addAttribute("userTasks", submissionsData.getUserTasks());
+        model.addAttribute("currentUrl", buildCurrentUrl(request));
+        model.addAttribute("isOwnTask", submissionsData.isOwnTask());
 
         return "teacher/task-submissions";
     }
@@ -184,33 +118,17 @@ public class TeacherTaskController {
                              @RequestParam(required = false) String returnUrl,
                              Authentication authentication,
                              HttpServletRequest request) {
-
-        Optional<UserTask> userTaskOpt = userTaskService.findById(userTaskId);
-        if (userTaskOpt.isEmpty()) {
+        boolean submitted = teacherTaskCommandService.submitReview(
+            userTaskId,
+            authentication.getName(),
+            statusId,
+            comment,
+            submissionIdStr,
+            request.getParameter("currentVersion")
+        );
+        if (!submitted) {
             return "redirect:/teacher/tasks";
         }
-        UserTask userTask = userTaskOpt.get();
-        User reviewer = userService.findByOpenIdSubject(authentication.getName()).orElse(null);
-
-        if (reviewer == null) {
-            return "redirect:/teacher/tasks";
-        }
-
-        Long submissionId = null;
-        if (submissionIdStr != null && !submissionIdStr.isEmpty()) {
-            submissionId = Long.parseLong(submissionIdStr);
-        }
-
-        // Create review with version information
-        Integer currentVersion = null;
-        if (request.getParameter("currentVersion") != null && !request.getParameter("currentVersion").isEmpty()) {
-            currentVersion = Integer.parseInt(request.getParameter("currentVersion"));
-        }
-
-        taskReviewService.createReview(userTask, reviewer, statusId, comment, submissionId, currentVersion);
-
-        // Explicitly save the UserTask to ensure status change is persisted
-        userTaskService.save(userTask);
 
         // Redirect back to the original page if returnUrl is provided
         if (returnUrl != null && !returnUrl.trim().isEmpty()) {
@@ -223,51 +141,31 @@ public class TeacherTaskController {
     @GetMapping("/submissions/{userTaskId}/view")
     public String viewSubmissionInTaskView(@PathVariable Long userTaskId,
             @RequestParam(required = false) Integer version,
-            Model model,
-            Authentication authentication) {
-        Optional<UserTask> userTaskOpt = userTaskService.findById(userTaskId);
-        if (userTaskOpt.isEmpty()) {
+            Model model) {
+        Optional<TeacherSubmissionContentViewDto> contentViewDataOpt =
+            teacherTaskQueryService.getSubmissionContentViewData(userTaskId, version);
+        if (contentViewDataOpt.isEmpty()) {
             return "error/404";
         }
-        UserTask userTask = userTaskOpt.get();
-        Task task = userTask.getTask();
 
-        // Get the specific version or latest version
-        TaskContent content;
-        if (version != null) {
-            content = taskContentService.getContentByVersion(userTask, version);
-        } else {
-            List<TaskContent> contents = taskContentService.getAllContentVersions(userTask);
-            content = contents.isEmpty() ? null : contents.get(0);
-        }
+        TeacherSubmissionContentViewDto contentViewData = contentViewDataOpt.get();
 
-        // If no content found, create default content
-        if (content == null) {
-            content = new TaskContent();
-            content.setContent(task.getDefaultSubmission() != null ? task.getDefaultSubmission() : "");
-            content.setVersion(1);
-        }
-
-        // Add model attributes for task view
-        model.addAttribute("task", task);
-        model.addAttribute("userTask", userTask);
-        model.addAttribute("currentContent", content.getContent());
+        model.addAttribute("task", contentViewData.getTask());
+        model.addAttribute("userTask", contentViewData.getUserTask());
+        model.addAttribute("currentContent", contentViewData.getCurrentContent());
         model.addAttribute("isTeacherView", true);
-        model.addAttribute("version", content.getVersion());
+        model.addAttribute("version", contentViewData.getVersion());
 
-        // Determine the template path
-        String templatePath = task.getTaskView() != null ? task.getTaskView().getTemplatePath()
-                : "taskviews/simple-text.html";
-
-        return templatePath;
+        return contentViewData.getTemplatePath();
     }
 
     @GetMapping("/tasks/create")
     public String showCreateTaskForm(Model model) {
-        model.addAttribute("task", new Task());
-        model.addAttribute("taskViews", taskViewService.findAllActive());
-        model.addAttribute("groups", groupService.findAll());
-        model.addAttribute("unitTitles", unitTitleService.findAllActive());
+        TeacherTaskFormDataDto formData = teacherTaskQueryService.getCreateTaskFormData();
+        model.addAttribute("task", formData.getTask());
+        model.addAttribute("taskViews", formData.getTaskViews());
+        model.addAttribute("groups", formData.getGroups());
+        model.addAttribute("unitTitles", formData.getUnitTitles());
         return "teacher/task-create";
     }
 
@@ -280,56 +178,23 @@ public class TeacherTaskController {
 
         User teacher = userService.findByOpenIdSubject(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-        task.setCreatedBy(teacher);
-
-        // Assign selected groups to the task
-        List<Group> groups = new ArrayList<>();
-        if (selectedGroups != null && !selectedGroups.isEmpty()) {
-            groups = groupService.findAllById(selectedGroups);
-        }
-        task.setAssignedGroups(new HashSet<>(groups));
-
-        // Set task view
-        try {
-            Optional<TaskView> taskViewOpt = taskViewService.findById(Long.parseLong(taskViewId));
-            if (taskViewOpt.isPresent()) {
-                task.setTaskView(taskViewOpt.get());
-            }
-
-        } catch (NumberFormatException e) {
-            log.warn("Invalid unitTitleId format: {}", unitTitleId);
-        }
-
-        // Set unit title
-        UnitTitle unitTitle = null;
-        if (unitTitleId != null && !unitTitleId.trim().isEmpty()) {
-
-            unitTitle = unitTitleService.findById(unitTitleId);
-
-        }
-
-        taskService.save(task);
+        teacherTaskCommandService.createTask(task, teacher, taskViewId, unitTitleId, selectedGroups);
 
         return "redirect:/teacher/tasks";
     }
 
     @GetMapping("/tasks/{id}/edit")
-    public String showEditTaskForm(@PathVariable Long id, Model model, Principal principal) {
-        User teacher = userService.findByOpenIdSubject(principal.getName())
-                .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+    public String showEditTaskForm(@PathVariable Long id, Model model) {
+        Optional<TeacherTaskFormDataDto> formDataOpt = teacherTaskQueryService.getEditTaskFormData(id);
+        if (formDataOpt.isEmpty()) {
+            return "redirect:/teacher/tasks";
+        }
 
-        Task task = taskService.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid task Id:" + id));
-
-        List<TaskView> taskViews = taskViewService.findActiveTaskViews();
-        List<Group> allGroups = groupService.findAll();
-        List<UnitTitle> unitTitles = unitTitleService.findAllActive();
-
-        model.addAttribute("task", task);
-        model.addAttribute("taskViews", taskViews != null ? taskViews : new ArrayList<>());
-        model.addAttribute("groups", allGroups);
-        model.addAttribute("unitTitles", unitTitles);
-        model.addAttribute("teacher", teacher);
+        TeacherTaskFormDataDto formData = formDataOpt.get();
+        model.addAttribute("task", formData.getTask());
+        model.addAttribute("taskViews", formData.getTaskViews());
+        model.addAttribute("groups", formData.getGroups());
+        model.addAttribute("unitTitles", formData.getUnitTitles());
 
         return "teacher/task-edit";
     }
@@ -340,73 +205,41 @@ public class TeacherTaskController {
             @RequestParam(required = false) List<Long> selectedGroups,
             @RequestParam String taskViewId,
             @RequestParam String unitTitleId,
-            @RequestParam(required = false) String tutorial,
-            RedirectAttributes redirectAttributes,
-            Principal principal) {
-        Task existingTask = taskService.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid task Id:" + id));
-
-        // Update basic task information
-        existingTask.setTitle(task.getTitle());
-        existingTask.setDescription(task.getDescription());
-        existingTask.setDefaultSubmission(task.getDefaultSubmission());
-        existingTask.setTutorial(tutorial);
-        existingTask.setIsActive(task.getIsActive());
-
-        // Update assigned groups
-        if (selectedGroups != null && !selectedGroups.isEmpty()) {
-            List<Group> groups = groupService.findAllById(selectedGroups);
-            existingTask.setAssignedGroups(new HashSet<>(groups));
-        } else {
-            existingTask.setAssignedGroups(new HashSet<>());
-        }
-
-        // Update task view
-        try {
-            Optional<TaskView> taskViewOpt = taskViewService.findById(Long.parseLong(taskViewId));
-            if (taskViewOpt.isPresent()) {
-                existingTask.setTaskView(taskViewOpt.get());
-            }
-        } catch (NumberFormatException e) {
-            log.warn("Invalid unitTitleId format: {}", unitTitleId);
-            existingTask.setUnitTitle(null);
-        }
-
-        // Update unit title
-        if (unitTitleId != null && !unitTitleId.trim().isEmpty()) {
-
-            UnitTitle unitTitle = unitTitleService.findById(unitTitleId);
-            existingTask.setUnitTitle(unitTitle);
-
-        } else {
-            existingTask.setUnitTitle(null);
-        }
-
-        taskService.save(existingTask);
+            @RequestParam(required = false) String tutorial) {
+        teacherTaskCommandService.updateTask(id, task, taskViewId, unitTitleId, selectedGroups, tutorial);
         return "redirect:/teacher/tasks";
     }
 
     @DeleteMapping("/tasks/{id}")
-    public String deleteTask(@PathVariable Long id) {
-        Task task = taskService.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid task Id:" + id));
-        taskService.delete(task);
+    public String deleteTask(@PathVariable Long id, Authentication authentication) {
+        User teacher = userService.findByOpenIdSubject(authentication.getName()).orElse(null);
+        if (teacher == null) {
+            return "redirect:/teacher/tasks";
+        }
+
+        try {
+            teacherTaskCommandService.deleteTask(id, teacher);
+        } catch (RuntimeException e) {
+            return "redirect:/teacher/tasks";
+        }
+
         return "redirect:/teacher/tasks";
     }
 
 
-@GetMapping("/submissions/{userTaskId}")
+    @GetMapping("/submissions/{userTaskId}")
     public String reviewSubmission(@PathVariable Long userTaskId,
                                  @RequestParam(required = false) String returnUrl,
-                                 Model model, Authentication authentication,
+                                 Model model,
                                  HttpServletRequest request) {
-        Optional<UserTask> userTaskOpt = userTaskService.findById(userTaskId);
-        if (userTaskOpt.isEmpty()) {
+        Optional<TeacherSubmissionReviewDataDto> reviewDataOpt =
+            teacherTaskQueryService.getSubmissionReviewData(userTaskId);
+        if (reviewDataOpt.isEmpty()) {
             return "redirect:/teacher/tasks";
         }
 
-        UserTask userTask = userTaskOpt.get();
-        model.addAttribute("userTask", userTask);
+        TeacherSubmissionReviewDataDto reviewData = reviewDataOpt.get();
+        model.addAttribute("userTask", reviewData.getUserTask());
 
         // If no returnUrl is provided as parameter, get it from the HTTP Referer header
         String finalReturnUrl = returnUrl;
@@ -417,40 +250,18 @@ public class TeacherTaskController {
             }
         }
         model.addAttribute("returnUrl", finalReturnUrl);
-
-        // Get all reviews for this user task
-        List<TaskReview> reviews = taskReviewService.findByUserTaskOrderByReviewedAtDesc(userTask);
-        model.addAttribute("reviews", reviews);
-
-        // Get available statuses for teacher reviews
-        List<TaskStatus> statuses = taskReviewService.getTeacherReviewStatuses();
-        model.addAttribute("statuses", statuses);
-
-        // Get all task contents with submission status
-        List<TaskContent> taskContents = taskContentService.getAllContentVersions(userTask);
-        List<VersionWithSubmissionStatus> versionsWithStatus = new ArrayList<>();
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yy HH:mm");
-
-        for (TaskContent content : taskContents) {
-            LocalDateTime submissionDateTime = content.getSavedAt();
-            String formattedDateTime = submissionDateTime != null ? submissionDateTime.format(formatter) : "Unbekanntes Datum";
-            String displayText = "v" + content.getVersion() + " " + formattedDateTime;
-
-            if (content.isSubmitted()) {
-                long reviewCount = taskReviewService.countReviewsForVersion(userTask, content.getVersion());
-                String statusIcon = reviewCount > 0 ? "\uD83D\uDC41" : "\u23F3"; // Auge : Sanduhr
-                displayText += " " + statusIcon;
-            } else {
-                LocalDateTime updateDateTime = content.getSavedAt();
-                String formattedUpdateDateTime = updateDateTime != null ? updateDateTime.format(formatter) : "Unbekanntes Datum";
-                displayText = "v" + content.getVersion() + " " + formattedUpdateDateTime;
-            }
-            versionsWithStatus.add(new VersionWithSubmissionStatus(content.getVersion(), content.isSubmitted(), displayText));
-        }
-
-        model.addAttribute("versionsWithStatus", versionsWithStatus);
+        model.addAttribute("reviews", reviewData.getReviews());
+        model.addAttribute("statuses", reviewData.getStatuses());
+        model.addAttribute("versionsWithStatus", reviewData.getVersionsWithStatus());
 
         return "teacher/submission-review";
+    }
+
+    private String buildCurrentUrl(HttpServletRequest request) {
+        String currentUrl = request.getRequestURL().toString();
+        if (request.getQueryString() != null) {
+            currentUrl += "?" + request.getQueryString();
+        }
+        return currentUrl;
     }
 }

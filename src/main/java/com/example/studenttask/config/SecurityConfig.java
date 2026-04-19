@@ -1,6 +1,6 @@
 package com.example.studenttask.config;
 
-import com.example.studenttask.service.UserService;
+import com.example.studenttask.service.IdentitySyncService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ public class SecurityConfig {
     private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
     @Autowired
-    private UserService userService;
+    private IdentitySyncService identitySyncService;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -70,7 +70,7 @@ public class SecurityConfig {
             public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
                 OAuth2User oauth2User = delegate.loadUser(userRequest);
 
-                userService.findOrCreateUserFromOAuth2(oauth2User);
+                identitySyncService.syncFromOAuth2User(oauth2User);
 
                 return oauth2User;
             }

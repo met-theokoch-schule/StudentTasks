@@ -2,7 +2,9 @@ com/example/studenttask/config/SecurityConfig.class
 com/example/studenttask/repository/TaskStatusRepository.class
 com/example/studenttask/service/TaskService.class
 com/example/studenttask/repository/TaskContentRepository.class
+com/example/studenttask/dto/TeacherTaskSubmissionsDataDto.class
 com/example/studenttask/service/GroupService.class
+com/example/studenttask/service/TeacherDashboardQueryService.class
 com/example/studenttask/controller/TaskController.class
 com/example/studenttask/service/SubmissionService.class
 com/example/studenttask/controller/StudentController.class
@@ -10,6 +12,7 @@ com/example/studenttask/service/GroupQueryService.class
 com/example/studenttask/controller/TeacherController.class
 com/example/studenttask/config/DataInitializer.class
 com/example/studenttask/controller/TeacherGroupController.class
+com/example/studenttask/service/TeacherTaskCommandService.class
 com/example/studenttask/service/UnitTitleService.class
 com/example/studenttask/config/SecurityConfig$1.class
 com/example/studenttask/repository/SubmissionRepository.class
@@ -18,7 +21,9 @@ com/example/studenttask/service/TaskStatusSupport$1.class
 com/example/studenttask/service/TaskStatusSupport.class
 com/example/studenttask/model/Submission.class
 com/example/studenttask/model/Task.class
+com/example/studenttask/dto/TeacherSubmissionContentViewDto.class
 com/example/studenttask/dto/StudentTaskMatrixDto.class
+com/example/studenttask/service/IdentitySyncService.class
 com/example/studenttask/model/Group.class
 com/example/studenttask/StudentTaskApplication.class
 com/example/studenttask/model/TaskView.class
@@ -27,6 +32,7 @@ com/example/studenttask/dto/VersionWithSubmissionStatus.class
 com/example/studenttask/repository/TaskReviewRepository.class
 com/example/studenttask/service/TaskService$TaskStatistics.class
 com/example/studenttask/controller/StudentTaskApiController.class
+com/example/studenttask/service/TeacherTaskQueryService.class
 com/example/studenttask/model/UnitTitle.class
 com/example/studenttask/service/TaskReviewService.class
 com/example/studenttask/service/AuthenticationService.class
@@ -34,11 +40,13 @@ com/example/studenttask/model/TaskReview.class
 com/example/studenttask/dto/StudentTaskStatusDto.class
 com/example/studenttask/controller/PythonRendererController.class
 com/example/studenttask/repository/UserRepository.class
+com/example/studenttask/dto/TeacherDashboardDataDto.class
 com/example/studenttask/controller/TeacherTaskController.class
 com/example/studenttask/service/TaskContentService.class
 com/example/studenttask/controller/HomeController.class
 com/example/studenttask/repository/UnitTitleRepository.class
 com/example/studenttask/repository/TaskRepository.class
+com/example/studenttask/dto/TeacherTaskFormDataDto.class
 com/example/studenttask/model/TaskContent.class
 com/example/studenttask/ServletInitializer.class
 com/example/studenttask/repository/GroupRepository.class
@@ -48,6 +56,8 @@ com/example/studenttask/dto/GroupOverviewDto.class
 com/example/studenttask/dto/GroupStatisticsDto.class
 com/example/studenttask/repository/RoleRepository.class
 com/example/studenttask/model/TaskStatusCode.class
+com/example/studenttask/dto/TeacherSubmissionReviewDataDto.class
+com/example/studenttask/dto/TeacherTaskListDataDto.class
 com/example/studenttask/model/User.class
 com/example/studenttask/service/TaskStatusService.class
 com/example/studenttask/controller/DebugController.class

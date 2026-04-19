@@ -1,0 +1,149 @@
+package com.example.studenttask.service;
+
+import com.example.studenttask.dto.TeacherSubmissionContentViewDto;
+import com.example.studenttask.dto.TeacherTaskFormDataDto;
+import com.example.studenttask.dto.TeacherSubmissionReviewDataDto;
+import com.example.studenttask.dto.TeacherTaskListDataDto;
+import com.example.studenttask.dto.TeacherTaskSubmissionsDataDto;
+import com.example.studenttask.model.Group;
+import com.example.studenttask.model.Task;
+import com.example.studenttask.model.TaskContent;
+import com.example.studenttask.model.TaskView;
+import com.example.studenttask.model.UnitTitle;
+import com.example.studenttask.model.User;
+import com.example.studenttask.model.UserTask;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+@Service
+public class TeacherTaskQueryService {
+
+    @Autowired
+    private TaskService taskService;
+
+    @Autowired
+    private UserTaskService userTaskService;
+
+    @Autowired
+    private TaskReviewService taskReviewService;
+
+    @Autowired
+    private TaskContentService taskContentService;
+
+    @Autowired
+    private TaskViewService taskViewService;
+
+    @Autowired
+    private GroupService groupService;
+
+    @Autowired
+    private UnitTitleService unitTitleService;
+
+    public TeacherTaskListDataDto getTaskListData(User teacher, String filter) {
+        List<Task> tasks = "all".equals(filter)
+            ? taskService.findAllOrderByCreatedAtDesc()
+            : taskService.findByCreatedByOrderByCreatedAtDesc(teacher);
+
+        return new TeacherTaskListDataDto(tasks, groupTasksByUnitTitle(tasks));
+    }
+
+    public Optional<TeacherTaskSubmissionsDataDto> getTaskSubmissionsData(Long taskId, User teacher) {
+        return taskService.findById(taskId)
+            .map(task -> new TeacherTaskSubmissionsDataDto(
+                task,
+                userTaskService.findByTask(task),
+                teacher != null && task.getCreatedBy().equals(teacher)
+            ));
+    }
+
+    public Optional<TeacherSubmissionReviewDataDto> getSubmissionReviewData(Long userTaskId) {
+        return userTaskService.findById(userTaskId)
+            .map(userTask -> new TeacherSubmissionReviewDataDto(
+                userTask,
+                taskReviewService.findByUserTaskOrderByReviewedAtDesc(userTask),
+                taskReviewService.getTeacherReviewStatuses(),
+                taskContentService.getVersionsWithSubmissionStatus(userTaskId)
+            ));
+    }
+
+    public Optional<TeacherSubmissionContentViewDto> getSubmissionContentViewData(Long userTaskId, Integer version) {
+        return userTaskService.findById(userTaskId)
+            .map(userTask -> {
+                Task task = userTask.getTask();
+                TaskContent content = resolveContent(userTask, version);
+
+                String currentContent = content != null
+                    ? content.getContent()
+                    : task.getDefaultSubmission() != null ? task.getDefaultSubmission() : "";
+                Integer resolvedVersion = content != null ? content.getVersion() : 1;
+
+                return new TeacherSubmissionContentViewDto(
+                    task,
+                    userTask,
+                    currentContent,
+                    resolvedVersion,
+                    resolveTemplatePath(task)
+                );
+            });
+    }
+
+    public TeacherTaskFormDataDto getCreateTaskFormData() {
+        return buildTaskFormData(new Task());
+    }
+
+    public Optional<TeacherTaskFormDataDto> getEditTaskFormData(Long taskId) {
+        return taskService.findById(taskId)
+            .map(this::buildTaskFormData);
+    }
+
+    private Map<UnitTitle, List<Task>> groupTasksByUnitTitle(List<Task> tasks) {
+        Map<UnitTitle, List<Task>> tasksByUnitTitle = new LinkedHashMap<>();
+        UnitTitle noUnitTitle = null;
+
+        for (Task task : tasks) {
+            UnitTitle key = task.getUnitTitle();
+            if (key == null) {
+                if (noUnitTitle == null) {
+                    noUnitTitle = new UnitTitle();
+                    noUnitTitle.setName("Aufgaben ohne Thema");
+                    noUnitTitle.setDescription("Aufgaben die keinem Thema zugeordnet sind");
+                }
+                key = noUnitTitle;
+            }
+            tasksByUnitTitle.computeIfAbsent(key, ignored -> new ArrayList<>()).add(task);
+        }
+
+        return tasksByUnitTitle;
+    }
+
+    private TaskContent resolveContent(UserTask userTask, Integer version) {
+        if (version != null) {
+            TaskContent versionContent = taskContentService.getContentByVersion(userTask, version);
+            if (versionContent != null) {
+                return versionContent;
+            }
+        }
+
+        return taskContentService.getLatestContent(userTask).orElse(null);
+    }
+
+    private String resolveTemplatePath(Task task) {
+        TaskView taskView = task.getTaskView();
+        return taskView != null ? taskView.getTemplatePath() : "taskviews/simple-text.html";
+    }
+
+    private TeacherTaskFormDataDto buildTaskFormData(Task task) {
+        return new TeacherTaskFormDataDto(
+            task,
+            taskViewService.findAllActive(),
+            groupService.findAll(),
+            unitTitleService.findAllActive()
+        );
+    }
+}

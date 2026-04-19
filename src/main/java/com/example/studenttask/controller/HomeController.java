@@ -54,7 +54,7 @@ public class HomeController {
         log.debug("OAuth2 user loaded for debug page: name={}, email={}", name, email);
 
         String openIdSubject = principal.getAttribute("sub");
-        User user = userService.findUserByOpenIdSubject(openIdSubject);
+        User user = userService.findByOpenIdSubject(openIdSubject).orElse(null);
 
         if (user != null) {
             log.debug("User {} found in database for debug page", user.getId());
@@ -78,8 +78,8 @@ public class HomeController {
                 }
             }
 
-            boolean isTeacher = roles.stream().anyMatch(role -> role.getName().equals("ROLE_TEACHER"));
-            boolean isStudent = roles.stream().anyMatch(role -> role.getName().equals("ROLE_STUDENT"));
+            boolean isTeacher = userService.hasTeacherRole(user);
+            boolean isStudent = userService.hasStudentRole(user);
 
             model.addAttribute("user", user);
             model.addAttribute("roles", roles);

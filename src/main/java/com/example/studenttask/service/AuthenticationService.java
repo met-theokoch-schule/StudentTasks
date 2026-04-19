@@ -67,14 +67,16 @@ public class AuthenticationService {
      * Check if current user is a teacher
      */
     public boolean isTeacher() {
-        return hasRole("TEACHER");
+        Optional<User> userOpt = getCurrentUser();
+        return userOpt.map(userService::hasTeacherRole).orElse(false);
     }
 
     /**
      * Check if current user is a student
      */
     public boolean isStudent() {
-        return hasRole("STUDENT");
+        Optional<User> userOpt = getCurrentUser();
+        return userOpt.map(userService::hasStudentRole).orElse(false);
     }
 
     /**
