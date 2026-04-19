@@ -11,6 +11,7 @@ com/example/studenttask/controller/StudentController.class
 com/example/studenttask/service/GroupQueryService.class
 com/example/studenttask/controller/TeacherController.class
 com/example/studenttask/config/DataInitializer.class
+com/example/studenttask/config/TaskViewRelationBackfillRunner.class
 com/example/studenttask/controller/TeacherGroupController.class
 com/example/studenttask/service/TeacherTaskCommandService.class
 com/example/studenttask/service/UnitTitleService.class
@@ -24,6 +25,7 @@ com/example/studenttask/model/Task.class
 com/example/studenttask/dto/TeacherSubmissionContentViewDto.class
 com/example/studenttask/dto/StudentTaskMatrixDto.class
 com/example/studenttask/service/IdentitySyncService.class
+com/example/studenttask/controller/TeacherLegacyRouteController.class
 com/example/studenttask/model/Group.class
 com/example/studenttask/StudentTaskApplication.class
 com/example/studenttask/model/TaskView.class

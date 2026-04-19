@@ -5,7 +5,6 @@ import com.example.studenttask.model.TaskView;
 import com.example.studenttask.model.User;
 import com.example.studenttask.model.Group;
 import com.example.studenttask.repository.TaskRepository;
-import com.example.studenttask.repository.TaskViewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,14 +21,11 @@ public class TaskService {
     @Autowired
     private TaskRepository taskRepository;
 
-    @Autowired
-    private TaskViewRepository taskViewRepository;
-
     /**
      * Create a new task
      */
     public Task createTask(String title, String description, String defaultSubmission, 
-                          User createdBy, LocalDateTime dueDate, TaskView viewType, 
+                          User createdBy, LocalDateTime dueDate, TaskView taskView, 
                           Set<Group> assignedGroups) {
         Task task = new Task();
         task.setTitle(title);
@@ -38,11 +34,11 @@ public class TaskService {
         task.setCreatedBy(createdBy);
         task.setCreatedAt(LocalDateTime.now());
         task.setDueDate(dueDate);
-        task.setViewType(viewType);
+        task.setTaskView(taskView);
         task.setAssignedGroups(assignedGroups);
         task.setIsActive(true);
 
-        return taskRepository.save(task);
+        return persist(task);
     }
 
     /**
@@ -50,7 +46,7 @@ public class TaskService {
      */
     public Task updateTask(Long taskId, String title, String description, 
                           String defaultSubmission, LocalDateTime dueDate, 
-                          TaskView viewType, Set<Group> assignedGroups) {
+                          TaskView taskView, Set<Group> assignedGroups) {
         Optional<Task> taskOpt = taskRepository.findById(taskId);
         if (taskOpt.isPresent()) {
             Task task = taskOpt.get();
@@ -58,10 +54,10 @@ public class TaskService {
             task.setDescription(description);
             task.setDefaultSubmission(defaultSubmission);
             task.setDueDate(dueDate);
-            task.setViewType(viewType);
+            task.setTaskView(taskView);
             task.setAssignedGroups(assignedGroups);
 
-            return taskRepository.save(task);
+            return persist(task);
         }
         throw new RuntimeException("Task not found with ID: " + taskId);
     }
@@ -139,7 +135,7 @@ public class TaskService {
         if (taskOpt.isPresent()) {
             Task task = taskOpt.get();
             task.setIsActive(false);
-            taskRepository.save(task);
+            persist(task);
         }
     }
 
@@ -151,7 +147,7 @@ public class TaskService {
         if (taskOpt.isPresent()) {
             Task task = taskOpt.get();
             task.setIsActive(true);
-            taskRepository.save(task);
+            persist(task);
         }
     }
 
@@ -215,7 +211,7 @@ public class TaskService {
 
     public Task createTask(Task task, List<Long> groupIds) {
         // Erst die Task speichern
-        Task savedTask = taskRepository.save(task);
+        Task savedTask = persist(task);
 
         // Dann die Gruppen zuweisen (wird später implementiert)
         // TODO: Implement group assignment
@@ -227,7 +223,18 @@ public class TaskService {
      * Save a task
      */
     public Task save(Task task) {
-        return taskRepository.save(task);
+        return persist(task);
+    }
+
+    public int backfillTaskViewRelations() {
+        List<Task> tasksToNormalize = taskRepository.findTasksWithMismatchedTaskViewRelation();
+        if (tasksToNormalize.isEmpty()) {
+            return 0;
+        }
+
+        tasksToNormalize.forEach(Task::normalizeTaskViewRelation);
+        taskRepository.saveAll(tasksToNormalize);
+        return tasksToNormalize.size();
     }
 
     /**
@@ -264,6 +271,11 @@ public class TaskService {
      */
     public void deleteById(Long id) {
         taskRepository.deleteById(id);
+    }
+
+    private Task persist(Task task) {
+        task.normalizeTaskViewRelation();
+        return taskRepository.save(task);
     }
 
     /**

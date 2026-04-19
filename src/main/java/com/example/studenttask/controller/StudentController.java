@@ -43,9 +43,6 @@ public class StudentController {
     private TaskContentService taskContentService;
 
     @Autowired
-    private TaskViewService taskViewService;
-
-    @Autowired
     private TaskRepository taskRepository;
 
     @Autowired
@@ -87,9 +84,12 @@ public class StudentController {
         // Neuesten Content laden
         Optional<TaskContent> latestContent = taskContentService.getLatestContent(userTask);
 
-        // TaskView laden
-        TaskView taskView = taskViewService.findById(task.getTaskView().getId())
-            .orElseThrow(() -> new RuntimeException("TaskView nicht gefunden"));
+        TaskView taskView = task.getTaskView();
+        if (taskView == null
+                || taskView.getTemplatePath() == null
+                || taskView.getTemplatePath().isBlank()) {
+            throw new RuntimeException("TaskView nicht gefunden");
+        }
 
         log.debug("Loading task content for userTask {} and task {}", userTask.getId(), task.getId());
         log.debug("Latest content present: {}", latestContent.isPresent());
@@ -128,7 +128,7 @@ public class StudentController {
         log.debug("Completed task content loading for userTask {}", userTask.getId());
 
         // Direkt das TaskView-Template zurückgeben
-        return task.getTaskView().getTemplatePath();
+        return taskView.getTemplatePath();
     }
 
     /**
@@ -216,6 +216,9 @@ public class StudentController {
 
         UserTask userTask = userTaskOpt.get();
         TaskView taskView = task.getTaskView();
+        if (taskView == null) {
+            return "redirect:/student/tasks/" + taskId + "/history";
+        }
 
         // Get specific version content
         TaskContent versionContent = taskContentService.getContentByVersion(userTask, version);
@@ -232,7 +235,7 @@ public class StudentController {
         model.addAttribute("isHistoryView", true);
 
         // Return the appropriate task view template
-        return task.getTaskView().getTemplatePath();
+        return taskView.getTemplatePath();
     }
 
     /**

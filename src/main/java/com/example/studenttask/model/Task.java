@@ -40,8 +40,8 @@ public class Task {
     private Boolean isActive = true;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "view_type_id", referencedColumnName = "id")
-    private TaskView viewType; // References to available task views
+    @JoinColumn(name = "view_type_id", referencedColumnName = "id", insertable = false, updatable = false)
+    private TaskView viewType; // Legacy fallback while task_view_id becomes canonical
 
     @Column(columnDefinition = "TEXT")
     private String defaultSubmission; // Default content for submissions in the format expected by the task view
@@ -65,12 +65,12 @@ public class Task {
         this.createdAt = LocalDateTime.now();
     }
 
-    public Task(String title, String description, User createdBy, TaskView viewType) {
+    public Task(String title, String description, User createdBy, TaskView taskView) {
         this();
         this.title = title;
         this.description = description;
         this.createdBy = createdBy;
-        this.viewType = viewType;
+        setTaskView(taskView);
     }
 
     // Getters and Setters
@@ -108,6 +108,7 @@ public class Task {
 
     public void setTaskView(TaskView taskView) {
         this.taskView = taskView;
+        this.viewType = taskView;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -152,6 +153,7 @@ public class Task {
 
     public void setViewType(TaskView viewType) {
         this.viewType = viewType;
+        this.taskView = viewType;
     }
 
     public String getDefaultSubmission() {
@@ -171,7 +173,13 @@ public class Task {
     }
 
     public TaskView getTaskView() {
-        return taskView;
+        return taskView != null ? taskView : viewType;
+    }
+
+    public void normalizeTaskViewRelation() {
+        TaskView resolvedTaskView = getTaskView();
+        this.taskView = resolvedTaskView;
+        this.viewType = resolvedTaskView;
     }
 
     public Set<UserTask> getUserTasks() {

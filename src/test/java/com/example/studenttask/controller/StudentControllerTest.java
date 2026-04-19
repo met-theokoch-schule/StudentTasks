@@ -3,6 +3,7 @@ package com.example.studenttask.controller;
 import com.example.studenttask.model.Group;
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskStatus;
+import com.example.studenttask.model.TaskView;
 import com.example.studenttask.model.UnitTitle;
 import com.example.studenttask.model.User;
 import com.example.studenttask.model.UserTask;
@@ -14,7 +15,6 @@ import com.example.studenttask.service.TaskContentService;
 import com.example.studenttask.service.TaskReviewService;
 import com.example.studenttask.service.TaskService;
 import com.example.studenttask.service.TaskStatusService;
-import com.example.studenttask.service.TaskViewService;
 import com.example.studenttask.service.UserService;
 import com.example.studenttask.service.UserTaskService;
 import org.junit.jupiter.api.Test;
@@ -54,9 +54,6 @@ class StudentControllerTest {
 
     @Mock
     private TaskContentService taskContentService;
-
-    @Mock
-    private TaskViewService taskViewService;
 
     @Mock
     private TaskRepository taskRepository;
@@ -172,6 +169,31 @@ class StudentControllerTest {
         UserTask userTask = (UserTask) model.getAttribute("userTask");
         assertThat(userTask.getStatus()).isSameAs(defaultStatus);
         verify(taskStatusService).getDefaultStatus();
+    }
+
+    @Test
+    void viewTask_usesLegacyViewTypeFallbackWhenTaskViewIsMissing() {
+        User student = user(1L, "Student One");
+        Group group = group(11L, "10A");
+        TaskView legacyViewType = new TaskView();
+        legacyViewType.setId(7L);
+        legacyViewType.setTemplatePath("taskviews/legacy-view");
+
+        Task task = task(401L, "Legacy Task", group, null);
+        task.setViewType(legacyViewType);
+
+        UserTask userTask = userTask(student, task, status("IN_BEARBEITUNG"), LocalDateTime.now());
+
+        when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.of(student));
+        when(taskService.findById(401L)).thenReturn(Optional.of(task));
+        when(userTaskService.findByUserIdAndTaskId(student.getId(), 401L)).thenReturn(Optional.of(userTask));
+        when(taskContentService.getLatestContent(userTask)).thenReturn(Optional.empty());
+
+        Model model = new ExtendedModelMap();
+        String view = controller.viewTask(401L, model, principal("oidc-subject"));
+
+        assertThat(view).isEqualTo("taskviews/legacy-view");
+        assertThat(model.getAttribute("taskView")).isSameAs(legacyViewType);
     }
 
     private void stubStudentTaskAggregation(User student, Group group, List<Task> tasks, List<UserTask> userTasks) {

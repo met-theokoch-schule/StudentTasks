@@ -533,15 +533,392 @@ Letzter erfolgreicher vollständiger Testlauf:
   - Errors: `0`
   - Skipped: `0`
 
+## TaskView-Fallback für Legacy-Daten vereinheitlicht
+Stand: 2026-04-19
+
+Als erster kontrollierter Schritt in Richtung `Task.viewType` vs. `Task.taskView` wurde zunächst der Lese-Fallback vereinheitlicht, ohne das Persistenzschema zu ändern.
+
+### Ziel
+- Legacy-Datensätze unterstützen, bei denen nur `viewType` gesetzt ist
+- die View-Auflösung nicht mehr ad hoc in einzelnen Services und Controllern duplizieren
+- die eigentliche Modellkonsolidierung in kleinere, testbare Zwischenschritte zerlegen
+
+### Umgesetzt
+- `Task` enthält jetzt eine zentrale Auflösung über `getResolvedTaskView()`
+- die wichtigsten Lese- und Renderpfade nutzen jetzt diesen zentralen Fallback:
+  - `TeacherTaskQueryService`
+  - `TaskContentService`
+  - `StudentController`
+  - `TaskController`
+- Lehrer-Templates für Task-Liste und Task-Edit verwenden für die Anzeige/Preselection jetzt ebenfalls die aufgelöste View
+- es wurde bewusst noch keine Datenmigration und keine Entfernung des Feldes `viewType` vorgenommen
+
+### Wirkung
+- alte Aufgaben mit gesetztem `viewType`, aber leerem `taskView`, lassen sich robuster lesen und rendern
+- die View-Fallback-Logik liegt jetzt an einer zentralen Stelle im Modell statt verteilt in mehreren Klassen
+- der größere Strukturumbau am `Task`/`TaskView`-Modell ist damit fachlich vorbereitet, aber noch nicht abgeschlossen
+
+### Testanpassungen
+- `TeacherTaskQueryServiceTest` erweitert um Template-Fallback über Legacy-`viewType`
+- `TaskContentServiceTest` erweitert um Submit-Status-Fallback über Legacy-`viewType`
+- `StudentControllerTest` erweitert um Task-Ansicht mit Legacy-`viewType`
+- neuer `TaskControllerTest` für den `iframe`-Pfad mit Legacy-`viewType`
+
+### Teststatus
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-19T13:39:07Z`
+- Ergebnis:
+  - Tests: `70`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+## TaskView-Schreibpfade und Persistenzkonsistenz synchronisiert
+Stand: 2026-04-19
+
+Im nächsten Zwischenschritt wurde die View-Zuordnung nicht nur beim Lesen, sondern auch beim Schreiben zentral konsistent gehalten.
+
+### Ziel
+- neue und aktualisierte `Task`-Objekte nicht mehr mit auseinanderlaufenden Werten in `taskView` und `viewType` persistieren
+- Legacy-Datensätze bei normalen Save-Pfaden schrittweise auf konsistente Werte ziehen
+- den späteren Schema-/Migrationsschritt vorbereiten, ohne ihn in diesem Slice schon zu erzwingen
+
+### Umgesetzt
+- `Task.setTaskView(...)` und `Task.setViewType(...)` synchronisieren jetzt beide Felder gemeinsam
+- `Task` enthält zusätzlich eine explizite Normalisierung über `normalizeTaskViewRelation()`
+- `TaskService` verwendet vor allen relevanten Persistenzpfaden jetzt eine zentrale `persist(...)`-Methode
+- dadurch werden konsistente Werte jetzt bei folgenden Save-Pfaden sichergestellt:
+  - `createTask(...)`
+  - `updateTask(...)`
+  - `save(...)`
+  - Aktivieren/Deaktivieren einer Aufgabe
+  - der generische `createTask(Task, List<Long>)`-Pfad
+
+### Wirkung
+- Schreibpfade über `taskView` und alte Schreibpfade über `viewType` landen jetzt auf demselben Zustand
+- bereits vorhandene Legacy-Tasks mit nur einem gesetzten Feld werden bei normalen Persistenzvorgängen schrittweise angeglichen
+- die spätere Entscheidung, welches Feld endgültig entfernt wird, bleibt weiterhin offen und kann separat erfolgen
+
+### Testanpassungen
+- neuer Test `src/test/java/com/example/studenttask/service/TaskServiceTest.java`
+- `TeacherTaskCommandServiceTest` um Konsistenz-Asserts für beide Felder erweitert
+- abgesichert:
+  - Save-Pfad normalisiert geladene Legacy-Tasks mit nur `viewType`
+  - Save-Pfad hält neue Tasks mit `taskView` und `viewType` konsistent
+  - Teacher-Task-Create/Update behalten beide Felder synchron
+
+### Teststatus
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-19T13:43:51Z`
+- Ergebnis:
+  - Tests: `72`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+## TaskView-Renderpfade auf templatePath und View-Kontext vereinheitlicht
+Stand: 2026-04-19
+
+Im nächsten kleinen Schritt wurde ein verbliebener inkonsistenter Renderpfad bereinigt, der noch direkt auf numerische `TaskView`-IDs statt auf den eigentlichen Template-Pfad zurückfiel.
+
+### Ziel
+- `TaskController` an die übrigen Task-View-Renderpfade angleichen
+- TaskViews nicht mehr über `"taskviews/" + id` auflösen
+- die für TaskView-Templates erwarteten Model-Attribute konsistenter bereitstellen
+- Lehrer-Submission-Views denselben `userTaskId`-Kontext mitgeben wie die übrigen TaskView-Pfade
+
+### Umgesetzt
+- `TaskController` löst die anzuzeigende View jetzt zentral über `Task.getResolvedTaskView()` plus `TaskViewService` auf
+- der `iframe`-Pfad gibt jetzt den tatsächlichen `templatePath` zurück statt eines numerischen Fallback-Viewnamens
+- `TaskController` stellt für TaskView-Templates jetzt konsistent bereit:
+  - `taskView`
+  - `userTask`
+  - `userTaskId`
+  - `currentContent`
+- `TeacherTaskController.viewSubmissionInTaskView(...)` ergänzt ebenfalls `userTaskId` im Model
+- dabei wurde im `TaskController` ungenutzte Altverkabelung aufgeräumt
+
+### Wirkung
+- der `iframe`-Renderpfad folgt jetzt derselben Template-Auflösung wie die übrigen Student-/Teacher-Ansichten
+- TaskView-Templates erhalten im Controller-Kontext die gleichen Kernattribute wie in den anderen Renderpfaden
+- ein weiterer Claude-/Halbrefactor-Artefaktblock im TaskView-Pfad ist damit entfernt, ohne das Persistenzschema anzufassen
+
+### Testanpassungen
+- `TaskControllerTest` prüft jetzt:
+  - Legacy-`viewType`-Fallback über `templatePath`
+  - Bereitstellung von `taskView`, `userTaskId` und `currentContent`
+- `TeacherTaskControllerTest` prüft jetzt zusätzlich `userTaskId` im Submission-TaskView-Modell
+
+### Teststatus
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-19T14:01:15Z`
+- Ergebnis:
+  - Tests: `72`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+## TaskView-Kanonisierung im Modell weitergezogen
+Stand: 2026-04-19
+
+Im nächsten reinen Konsistenz-Slice wurde die kanonische Code-Sicht weiter auf `taskView` ausgerichtet, ohne die Legacy-Spalte `view_type_id` bereits zu entfernen.
+
+### Ziel
+- `taskView` auch in Modell- und Service-Signaturen als primären Begriff etablieren
+- die Rückreferenz in `TaskView` auf das kanonische Feld umhängen
+- verbliebene produktive `viewType`-Benennung außerhalb der Kompatibilitätsaccessoren reduzieren
+
+### Umgesetzt
+- der `Task`-Konstruktor verwendet intern jetzt `setTaskView(...)` statt nur das Legacy-Feld direkt zu setzen
+- `TaskView.tasks` mappt jetzt über `taskView` statt über `viewType`
+- `TaskService.createTask(...)` und `TaskService.updateTask(...)` verwenden intern jetzt `taskView` und schreiben über `setTaskView(...)`
+- ungenutzte Legacy-Verkabelung in `TaskService` wurde entfernt
+
+### Wirkung
+- die produktive Codebasis spricht an mehr Stellen bereits das spätere Zielmodell statt der Legacy-Benennung
+- neue Objekte und Rückreferenzen orientieren sich jetzt konsequenter am kanonischen Feld
+- die Kompatibilität für bestehende Daten bleibt erhalten, weil `viewType` weiterhin vorhanden und synchronisiert bleibt
+
+### Testanpassungen
+- neuer Test `src/test/java/com/example/studenttask/model/TaskTest.java`
+- abgesichert:
+  - `Task`-Konstruktor hält `taskView`, `viewType` und `resolvedTaskView` konsistent
+
+### Teststatus
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-19T14:03:20Z`
+- Ergebnis:
+  - Tests: `73`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+## TeacherController von Legacy-Task-Routen getrennt
+Stand: 2026-04-19
+
+Im nächsten Web-Slice wurden die verbliebenen Kompatibilitätsrouten aus `TeacherController` ausgelagert, damit der Controller wieder klar auf Dashboard- und Pending-Review-Lesewege begrenzt ist.
+
+### Ziel
+- `TeacherController` fachlich auf Lehrer-Dashboard und Pending-Reviews zurückführen
+- alte Task-Kompatibilitätsrouten weiter unterstützen, aber nicht mehr im Dashboard-Controller mitführen
+- die Restkopplung zwischen Dashboard-Logik und Task-Altpfaden sichtbar abbauen
+
+### Umgesetzt
+- neuer `src/main/java/com/example/studenttask/controller/TeacherLegacyRouteController.java`
+- dorthin verschoben:
+  - `POST /teacher/tasks/create`
+  - `POST /teacher/tasks/draft`
+  - `POST /teacher/tasks/{taskId}/delete`
+  - `GET /teacher/teacher/submissions/{userTaskId}/view`
+- `TeacherController` enthält danach nur noch:
+  - `GET /teacher/dashboard`
+  - `GET /teacher/reviews/pending`
+- die Altpfade behalten bewusst ihr bisheriges Verhalten bei:
+  - Delegation an `TeacherTaskCommandService`
+  - Flash-Messages/Response-Bodies
+  - Redirect des alten Submission-View-Pfads auf die kanonische Route
+
+### Wirkung
+- `TeacherController` ist wieder klar ein Dashboard-/Review-Controller statt ein Mischcontroller
+- die reine Legacy-Kompatibilität ist jetzt lokalisiert und kann später gezielt stillgelegt werden
+- weitere Refactors an Lehrer-Dashboard und Lehrer-Task-Flows können unabhängiger erfolgen
+
+### Testanpassungen
+- neuer Test `src/test/java/com/example/studenttask/controller/TeacherLegacyRouteControllerTest.java`
+- `TeacherControllerTest` auf die verbliebene Kernverantwortung reduziert
+- abgesichert:
+  - Legacy-Create/Draft/Delete delegieren weiterhin korrekt
+  - alter Submission-View-Pfad bleibt Redirect-Bridge
+  - Dashboard- und Pending-Review-Pfade bleiben unverändert
+
+### Teststatus
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-19T15:08:48Z`
+- Ergebnis:
+  - Tests: `73`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+## Student-TaskView-Renderpfad weiter vereinfacht
+Stand: 2026-04-19
+
+Im nächsten kleinen Anschluss-Slice wurde auch im Schüler-Task-Renderpfad das verbliebene explizite Nachladen der `TaskView` entfernt.
+
+### Ziel
+- `StudentController` an die bereits vereinheitlichten Renderpfade angleichen
+- unnötiges `TaskViewService.findById(...)` im Task-View-Pfad entfernen
+- die View-Auflösung auch für Schüler direkt auf `Task.getResolvedTaskView()` stützen
+
+### Umgesetzt
+- `StudentController.viewTask(...)` verwendet jetzt direkt die aufgelöste `TaskView`
+- der Controller validiert nur noch, dass die aufgelöste View samt `templatePath` vorhanden ist
+- die direkte `TaskViewService`-Abhängigkeit wurde aus `StudentController` entfernt
+
+### Wirkung
+- der Schüler-Renderpfad folgt jetzt demselben Modell wie die übrigen Task-View-Routen
+- weniger unnötige Service-Verkabelung im Controller
+- der `TaskView`-Refactor wird damit auch im Student-Flow konsequenter
+
+### Testanpassungen
+- `StudentControllerTest` auf den direkten `resolvedTaskView`-Pfad umgestellt
+- abgesichert:
+  - Legacy-`viewType`-Fallback im Schüler-View funktioniert weiterhin ohne separates Nachladen
+
+### Teststatus
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-19T15:10:16Z`
+- Ergebnis:
+  - Tests: `73`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+## TaskView-Datenmigration als Startup-Backfill ergänzt
+Stand: 2026-04-19
+
+Im nächsten Schritt wurde der vorbereitete Modell-Refactor erstmals auf bestehende Daten ausgedehnt, ohne das Legacy-Feld `viewType` schon zu entfernen.
+
+### Ziel
+- bestehende Tasks mit inkonsistenter `taskView`-/`viewType`-Belegung aktiv auf einen konsistenten Zustand ziehen
+- die Backfill-Logik zentral und testbar halten
+- den späteren Feldabbau vorbereiten, ohne das Produktivverhalten bei bestehenden Datensätzen dem Zufall zu überlassen
+
+### Umgesetzt
+- `TaskRepository` enthält jetzt eine gezielte Abfrage für inkonsistente `TaskView`-Relationen
+- `TaskService.backfillTaskViewRelations()` normalisiert diese Datensätze zentral und persistiert sie gesammelt
+- neuer Startup-Runner `src/main/java/com/example/studenttask/config/TaskViewRelationBackfillRunner.java`
+- `DataInitializer` und Backfill-Runner sind explizit geordnet, damit der Backfill nach der Initialisierung läuft
+
+### Wirkung
+- bestehende Legacy-Datensätze mit nur einer gesetzten Spalte werden jetzt beim Start proaktiv angeglichen
+- auch umgekehrte Inkonsistenzen oder auseinanderlaufende Referenzen werden zentral eingefangen
+- der spätere Abbau von `viewType` ist damit nicht mehr nur auf opportunistische Saves angewiesen
+
+### Testanpassungen
+- `TaskServiceTest` erweitert um den Backfill-Pfad für inkonsistente Tasks
+- neuer Test `src/test/java/com/example/studenttask/config/TaskViewRelationBackfillRunnerTest.java`
+- abgesichert:
+  - Service normalisiert und persistiert inkonsistente `TaskView`-Relationen gesammelt
+  - Startup-Runner delegiert den Backfill an den Service
+
+### Teststatus
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-19T15:15:23Z`
+- Ergebnis:
+  - Tests: `75`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+## TaskView-Schreibziel auf task_view_id verengt
+Stand: 2026-04-19
+
+Im nächsten vorbereitenden Schritt für den Feldabbau wurde `view_type_id` vom aktiven Schreibpfad abgekoppelt und auf einen reinen Legacy-Lesefallback reduziert.
+
+### Ziel
+- `task_view_id` als einziges kanonisches Schreibziel etablieren
+- das Altfeld `view_type_id` nicht länger künstlich weiterpflegen
+- den späteren Entfernen-Schritt für `viewType` strukturell vorbereiten
+
+### Umgesetzt
+- das Legacy-Mapping `Task.viewType` ist jetzt nur noch read-only (`insertable = false`, `updatable = false`)
+- der Startup-Backfill konzentriert sich jetzt gezielt auf den fachlich relevanten Fall:
+  - `task_view_id` fehlt
+  - `view_type_id` ist vorhanden
+- bestehende kanonische Tasks mit gesetztem `task_view_id` werden damit nicht mehr unnötig gegen das Legacy-Feld gespiegelt
+
+### Wirkung
+- neue und aktualisierte Tasks schreiben fachlich nur noch auf `task_view_id`
+- `view_type_id` bleibt nur noch zum Lesen alter Daten und für den einmaligen Backfill relevant
+- der Code nähert sich damit dem finalen Zielmodell an, ohne die Legacy-Kompatibilität abrupt zu brechen
+
+### Testanpassungen
+- `TaskServiceTest` auf den fokussierten Backfill-Fall mit fehlendem `task_view_id` angepasst
+- vollständiger Regressionstestlauf bestätigt, dass die restlichen Lese- und Schreibpfade unverändert funktionieren
+
+### Teststatus
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-19T15:17:35Z`
+- Ergebnis:
+  - Tests: `75`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+## taskView als normaler Fachzugriff etabliert
+Stand: 2026-04-19
+
+Im nächsten Schritt wurde `taskView` nicht nur als Persistenzziel, sondern auch als normaler fachlicher Lesezugriff im Anwendungscode durchgezogen.
+
+### Ziel
+- den Alltagscode von `resolvedTaskView` zurück auf `taskView` vereinfachen
+- den Legacy-Fallback direkt im kanonischen Getter kapseln
+- Controller, Services und Templates auf einen einzigen normalen Zugriffspfad bringen
+
+### Umgesetzt
+- `Task.getTaskView()` liefert jetzt auch bei Legacy-Daten den Fallback auf `viewType`
+- produktive Aufrufer wurden auf `taskView` umgestellt:
+  - `StudentController`
+  - `TaskController`
+  - `TeacherTaskQueryService`
+  - `TaskContentService`
+- Lehrer-Templates verwenden für Anzeige/Preselection jetzt ebenfalls `task.taskView`
+
+### Wirkung
+- der Fachcode arbeitet jetzt wieder mit einem normalen Modellbegriff statt mit einem Übergangs-Hilfsnamen
+- der Legacy-Fallback bleibt erhalten, ist aber an einer Stelle konzentriert
+- der finale API-Abbau wird damit deutlich kleiner
+
+### Testanpassungen
+- `TaskTest` erweitert um den Fallback-Fall für `getTaskView()`
+- gezielte Regressionstests für die betroffenen Controller- und Service-Pfade erfolgreich
+
+### Teststatus
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-19T15:26:32Z`
+- Ergebnis:
+  - Tests: `76`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+## resolvedTaskView-Alias entfernt
+Stand: 2026-04-19
+
+Im direkt folgenden Cleanup-Schritt wurde der Übergangs-Alias `getResolvedTaskView()` vollständig aus dem Modell entfernt, nachdem der Produktivcode nicht mehr darauf angewiesen war.
+
+### Ziel
+- die Übergangs-API im Modell weiter abbauen
+- die verbleibende `TaskView`-Kompatibilität auf `getTaskView()` und den Legacy-Read-Fallback beschränken
+
+### Umgesetzt
+- `Task.getResolvedTaskView()` entfernt
+- `Task.normalizeTaskViewRelation()` arbeitet jetzt direkt über `getTaskView()`
+- Modelltests auf den verbleibenden kanonischen Zugriff reduziert
+
+### Wirkung
+- das `Task`-API ist wieder kleiner und eindeutiger
+- für den verbleibenden Feldabbau existiert jetzt kein produktiver Sonderzugriff mehr auf gelöste TaskViews
+
+### Teststatus
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-19T15:27:16Z`
+- Ergebnis:
+  - Tests: `76`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
 ## Pausepunkt / Wiederanlauf
 Stand: 2026-04-19
 
-Die aktuelle Refactoring-Runde ist bis hierhin dokumentiert und mit vollständigem Testlauf abgesichert. Nach dem Verbrauch des aktuellen 5h-Fensters sind keine weiteren produktiven Codeänderungen mehr vorgenommen worden.
+Die aktuelle Refactoring-Runde ist bis hierhin dokumentiert und mit vollständigem Testlauf abgesichert. Der Abschnitt dient als komprimierter Wiedereinstieg für die nächste Session.
 
 ### Letzter stabiler Stand
 - letzter vollständiger grüner Lauf: `mvn -Dmaven.repo.local=/tmp/m2 test`
-- Zeitpunkt: `2026-04-19T10:49:03Z`
-- Ergebnis: `66` Tests, `0` Failures, `0` Errors, `0` Skipped
+- Zeitpunkt: `2026-04-19T15:27:16Z`
+- Ergebnis: `76` Tests, `0` Failures, `0` Errors, `0` Skipped
 
 ### Inhaltlich abgeschlossene Blöcke in dieser Serie
 - Teacher-Dashboard-Lesewege in `TeacherDashboardQueryService`
@@ -549,10 +926,19 @@ Die aktuelle Refactoring-Runde ist bis hierhin dokumentiert und mit vollständig
 - Teacher-Task-Schreibpfade in `TeacherTaskCommandService`
 - Teacher-Task-Formpfade und Review-POST aus `TeacherTaskController`
 - TeacherController-Altpfade auf die Teacher-Task-Services konsolidiert
+- zentraler Legacy-Fallback für `Task.viewType` vs. `Task.taskView`
+- zentraler Schreib- und Persistenz-Sync für `Task.viewType` vs. `Task.taskView`
+- TaskView-Renderpfade auf `templatePath` und konsistenten View-Kontext umgestellt
+- TaskView-Kanonisierung im Modell und in `TaskService` weitergezogen
+- TeacherController von Legacy-Task-Routen getrennt
+- Student-TaskView-Renderpfad auf direkte `resolvedTaskView`-Nutzung vereinfacht
+- Startup-Backfill für inkonsistente `TaskView`-/`viewType`-Daten ergänzt
+- `view_type_id` als Legacy-Lesefallback auf read-only reduziert, `task_view_id` ist alleiniger Schreibpfad
+- `taskView` als normaler Fachzugriff etabliert, `resolvedTaskView`-Alias entfernt
 
 ### Sinnvoller erster Wiedereinstieg nach dem Limit-Reset
 - verbleibende reine Kompatibilitätsrouten in `TeacherController` bewerten und falls möglich stilllegen oder vereinheitlichen
-- danach den größeren, aber nun sauber vorbereiteten Modell-Refactor `Task.viewType` vs. `Task.taskView` angehen
+- danach den größeren, nun vorbereiteten Modell-Refactor `Task.viewType` vs. `Task.taskView` auf Datenmigration und Feldabbau ausweiten
 
 ### Relevante Dateien für den Wiedereinstieg
 - `refactor.md`

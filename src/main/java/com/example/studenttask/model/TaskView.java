@@ -28,7 +28,7 @@ public class TaskView {
     @Column(nullable = false, columnDefinition = "boolean not null default 0")
     private Boolean submitMarksComplete = false;
     
-    @OneToMany(mappedBy = "viewType", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "taskView", cascade = CascadeType.ALL)
     private Set<Task> tasks = new HashSet<>();
     
     // Constructors

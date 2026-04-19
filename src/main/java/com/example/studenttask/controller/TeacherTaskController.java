@@ -152,6 +152,7 @@ public class TeacherTaskController {
 
         model.addAttribute("task", contentViewData.getTask());
         model.addAttribute("userTask", contentViewData.getUserTask());
+        model.addAttribute("userTaskId", contentViewData.getUserTask().getId());
         model.addAttribute("currentContent", contentViewData.getCurrentContent());
         model.addAttribute("isTeacherView", true);
         model.addAttribute("version", contentViewData.getVersion());

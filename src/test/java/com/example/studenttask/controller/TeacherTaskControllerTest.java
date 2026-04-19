@@ -184,6 +184,7 @@ class TeacherTaskControllerTest {
         assertThat(view).isEqualTo("taskviews/simple-text.html");
         assertThat(model.getAttribute("task")).isSameAs(userTask.getTask());
         assertThat(model.getAttribute("userTask")).isSameAs(userTask);
+        assertThat(model.getAttribute("userTaskId")).isEqualTo(userTask.getId());
         assertThat(model.getAttribute("currentContent")).isEqualTo("Rendered Content");
         assertThat(model.getAttribute("version")).isEqualTo(3);
         assertThat(model.getAttribute("isTeacherView")).isEqualTo(true);

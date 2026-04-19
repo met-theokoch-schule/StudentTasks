@@ -1,17 +1,24 @@
 package com.example.studenttask.controller;
 
-import com.example.studenttask.model.*;
-import com.example.studenttask.service.*;
+import com.example.studenttask.model.Task;
+import com.example.studenttask.model.TaskContent;
+import com.example.studenttask.model.TaskView;
+import com.example.studenttask.model.User;
+import com.example.studenttask.model.UserTask;
+import com.example.studenttask.service.TaskContentService;
+import com.example.studenttask.service.TaskService;
+import com.example.studenttask.service.TaskViewService;
+import com.example.studenttask.service.UserService;
+import com.example.studenttask.service.UserTaskService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Controller
@@ -31,16 +38,7 @@ public class TaskController {
     private UserService userService;
 
     @Autowired
-    private SubmissionService submissionService;
-
-    // This method was causing a conflict with StudentController#viewTask
-    // The StudentController already handles /student/tasks/{taskId}
-    // If we need teacher review functionality, we should use a different path like:
-    // @GetMapping("/teacher/tasks/{taskId}/review")
-    // public String reviewTask(@PathVariable Long taskId, @RequestParam(required = false) Long userId, Authentication authentication, Model model) {
-    //     // Teacher review implementation would go here
-    //     return "teacher/task-review";
-    // }
+    private TaskViewService taskViewService;
 
     @GetMapping("/tasks/{taskId}/iframe")
     public String viewTaskIframe(@PathVariable Long taskId, 
@@ -92,14 +90,34 @@ public class TaskController {
         String contentText = content != null ? content.getContent() : 
                 (task.getDefaultSubmission() != null ? task.getDefaultSubmission() : "");
 
+        TaskView taskView = resolveTaskView(task);
+        if (taskView == null || taskView.getTemplatePath() == null || taskView.getTemplatePath().isBlank()) {
+            return userId != null ? "redirect:/teacher/dashboard" : "redirect:/student/dashboard";
+        }
+
         model.addAttribute("task", task);
+        model.addAttribute("taskView", taskView);
         model.addAttribute("userTask", userTask);
-        model.addAttribute("content", contentText);
+        model.addAttribute("userTaskId", userTask.getId());
+        model.addAttribute("currentContent", contentText);
         model.addAttribute("renderedDescription", task.getDescription());
         model.addAttribute("isIframe", true);
         model.addAttribute("isTeacherView", userId != null);
 
-        // Return the appropriate task view template
-        return "taskviews/" + task.getTaskView().getId();
+        return taskView.getTemplatePath();
+    }
+
+    private TaskView resolveTaskView(Task task) {
+        TaskView taskView = task.getTaskView();
+        if (taskView == null) {
+            return null;
+        }
+
+        Long taskViewId = taskView.getId();
+        if (taskViewId == null) {
+            return taskView;
+        }
+
+        return taskViewService.findById(taskViewId).orElse(taskView);
     }
 }

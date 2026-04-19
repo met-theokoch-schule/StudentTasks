@@ -110,6 +110,28 @@ class TaskContentServiceTest {
         verify(userTaskRepository, never()).save(userTask);
     }
 
+    @Test
+    void saveContentSubmit_usesLegacyViewTypeWhenTaskViewMissing() {
+        TaskView legacyViewType = new TaskView();
+        legacyViewType.setSubmitMarksComplete(true);
+
+        Task task = new Task();
+        task.setViewType(legacyViewType);
+
+        UserTask userTask = new UserTask();
+        userTask.setTask(task);
+        userTask.setStatus(taskStatus("IN_BEARBEITUNG"));
+
+        when(taskContentRepository.findByUserTaskOrderByVersionDesc(userTask)).thenReturn(List.of());
+        when(userTaskService.updateStatus(userTask, TaskStatusCode.VOLLSTAENDIG)).thenReturn(true);
+        when(taskContentRepository.save(any(TaskContent.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        TaskContent saved = taskContentService.saveContent(userTask, "legacy-answer", true);
+
+        assertThat(saved.isSubmitted()).isTrue();
+        verify(userTaskService).updateStatus(userTask, TaskStatusCode.VOLLSTAENDIG);
+    }
+
     private TaskStatus taskStatus(String name) {
         return new TaskStatus(name, name, 0);
     }

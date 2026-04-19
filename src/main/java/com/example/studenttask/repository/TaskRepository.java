@@ -43,4 +43,10 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     List<Task> findByIsActiveTrueOrderByCreatedAtDesc();
     List<Task> findByIsActiveTrueAndAssignedGroupsContainsOrderByCreatedAtDesc(Group group);
     List<Task> findByAssignedGroupsContainingAndIsActiveTrue(Group group);
+
+    @Query("""
+        SELECT t FROM Task t
+        WHERE t.taskView IS NULL AND t.viewType IS NOT NULL
+        """)
+    List<Task> findTasksWithMismatchedTaskViewRelation();
 }

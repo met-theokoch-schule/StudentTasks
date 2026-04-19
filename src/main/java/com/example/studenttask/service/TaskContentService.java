@@ -233,15 +233,8 @@ public class TaskContentService {
     }
 
     private TaskStatusCode resolveSubmittedStatusCode(UserTask userTask) {
-        TaskView taskView = null;
         Task task = userTask.getTask();
-        if (task != null) {
-            if (task.getTaskView() != null) {
-                taskView = task.getTaskView();
-            } else {
-                taskView = task.getViewType();
-            }
-        }
+        TaskView taskView = task != null ? task.getTaskView() : null;
         boolean markComplete = taskView != null && Boolean.TRUE.equals(taskView.getSubmitMarksComplete());
         return markComplete ? TaskStatusCode.VOLLSTAENDIG : TaskStatusCode.ABGEGEBEN;
     }
