@@ -85,31 +85,6 @@ public class TeacherTaskController {
         return "teacher/task-submissions";
     }
 
-    @GetMapping("/tasks/{id}")
-    public String taskDetail(@PathVariable Long id, Model model, Authentication authentication, HttpServletRequest request) {
-        User teacher = userService.findByOpenIdSubject(authentication.getName()).orElse(null);
-        if (teacher == null) {
-            return "redirect:/teacher/tasks";
-        }
-
-        Optional<TeacherTaskSubmissionsDataDto> submissionsDataOpt =
-            teacherTaskQueryService.getTaskSubmissionsData(id, teacher);
-        if (submissionsDataOpt.isEmpty()) {
-            return "redirect:/teacher/tasks";
-        }
-
-        TeacherTaskSubmissionsDataDto submissionsData = submissionsDataOpt.get();
-        model.addAttribute("teacher", teacher);
-        model.addAttribute("task", submissionsData.getTask());
-        model.addAttribute("userTasks", submissionsData.getUserTasks());
-        model.addAttribute("currentUrl", buildCurrentUrl(request));
-        model.addAttribute("isOwnTask", submissionsData.isOwnTask());
-
-        return "teacher/task-submissions";
-    }
-
-
-
     @PostMapping("/submissions/{userTaskId}/review")
     public String submitReview(@PathVariable Long userTaskId,
                              @RequestParam Long statusId,

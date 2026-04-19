@@ -1,64 +1,34 @@
 package com.example.studenttask.controller;
 
-import com.example.studenttask.model.*;
-import com.example.studenttask.service.*;
-import com.example.studenttask.repository.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.example.studenttask.dto.StudentDashboardDataDto;
+import com.example.studenttask.dto.StudentTaskHistoryDataDto;
+import com.example.studenttask.dto.StudentTaskListDataDto;
+import com.example.studenttask.dto.StudentTaskVersionViewResultDto;
+import com.example.studenttask.dto.StudentTaskViewDataDto;
+import com.example.studenttask.model.User;
+import com.example.studenttask.service.StudentTaskOverviewService;
+import com.example.studenttask.service.StudentTaskQueryService;
+import com.example.studenttask.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpStatus;
 
 import java.security.Principal;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
-import com.example.studenttask.repository.*;
-import com.example.studenttask.service.UserService;
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Objects;
+import java.util.Optional;
 
 @Controller
 @RequestMapping("/student")
 public class StudentController {
 
-    private static final Logger log = LoggerFactory.getLogger(StudentController.class);
-
     @Autowired
     private UserService userService;
 
     @Autowired
-    private TaskService taskService;
+    private StudentTaskOverviewService studentTaskOverviewService;
 
     @Autowired
-    private UserTaskService userTaskService;
-
-    @Autowired
-    private TaskContentService taskContentService;
-
-    @Autowired
-    private TaskRepository taskRepository;
-
-    @Autowired
-    private UserTaskRepository userTaskRepository;
-
-    @Autowired
-    private TaskStatusService taskStatusService;
-
-    @Autowired
-    private TaskReviewService taskReviewService;
-
-    @Autowired
-    private GroupService groupService;
-
-    @Autowired
-    private TaskContentRepository taskContentRepository;
+    private StudentTaskQueryService studentTaskQueryService;
 
     /**
      * Direkte Aufgaben-Ansicht (ohne task-edit.html Wrapper)
@@ -67,68 +37,9 @@ public class StudentController {
     public String viewTask(@PathVariable Long taskId, Model model, Principal principal) {
         User student = userService.findByOpenIdSubject(principal.getName())
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-
-        Optional<Task> taskOpt = taskService.findById(taskId);
-        if (taskOpt.isEmpty()) {
-            throw new RuntimeException("Aufgabe nicht gefunden");
-        }
-        Task task = taskOpt.get();
-
-        // Check if student has access to this task
-        Optional<UserTask> userTaskOpt = userTaskService.findByUserIdAndTaskId(student.getId(), task.getId());
-        if (userTaskOpt.isEmpty()) {
-            throw new RuntimeException("Keine Berechtigung für diese Aufgabe");
-        }
-        UserTask userTask = userTaskOpt.get();
-
-        // Neuesten Content laden
-        Optional<TaskContent> latestContent = taskContentService.getLatestContent(userTask);
-
-        TaskView taskView = task.getTaskView();
-        if (taskView == null
-                || taskView.getTemplatePath() == null
-                || taskView.getTemplatePath().isBlank()) {
-            throw new RuntimeException("TaskView nicht gefunden");
-        }
-
-        log.debug("Loading task content for userTask {} and task {}", userTask.getId(), task.getId());
-        log.debug("Latest content present: {}", latestContent.isPresent());
-        if (latestContent.isPresent()) {
-            TaskContent content = latestContent.get();
-            log.debug("Content id={}, version={}, length={}",
-                    content.getId(),
-                    content.getVersion(),
-                    content.getContent() != null ? content.getContent().length() : null);
-            log.debug("Content preview: {}",
-                    content.getContent() != null && content.getContent().length() > 50
-                            ? content.getContent().substring(0, 50) + "..."
-                            : content.getContent());
-        }
-        log.debug("Default submission preview: {}",
-                task.getDefaultSubmission() != null
-                        ? task.getDefaultSubmission().substring(0, Math.min(50, task.getDefaultSubmission().length()))
-                        : "null");
-
-        model.addAttribute("task", task);
-        model.addAttribute("userTask", userTask);
-        model.addAttribute("taskView", taskView);
-        model.addAttribute("student", student);
-
-        String contentToShow;
-        if (latestContent.isPresent() && latestContent.get().getContent() != null && !latestContent.get().getContent().trim().isEmpty()) {
-            contentToShow = latestContent.get().getContent();
-            log.debug("Using saved content: {}",
-                    contentToShow.substring(0, Math.min(50, contentToShow.length())) + "...");
-        } else {
-            contentToShow = task.getDefaultSubmission() != null ? task.getDefaultSubmission() : "";
-            log.debug("Using default content: {}", contentToShow);
-        }
-
-        model.addAttribute("currentContent", contentToShow);
-        log.debug("Completed task content loading for userTask {}", userTask.getId());
-
-        // Direkt das TaskView-Template zurückgeben
-        return taskView.getTemplatePath();
+        StudentTaskViewDataDto viewData = studentTaskQueryService.getTaskViewData(student, taskId);
+        populateTaskViewModel(model, student, viewData);
+        return viewData.getTaskView().getTemplatePath();
     }
 
     /**
@@ -138,47 +49,17 @@ public class StudentController {
     public String taskHistory(@PathVariable Long taskId, Model model, Principal principal) {
         User student = userService.findByOpenIdSubject(principal.getName())
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-
-        Optional<Task> taskOpt = taskService.findById(taskId);
-        if (taskOpt.isEmpty()) {
+        Optional<StudentTaskHistoryDataDto> historyDataOpt =
+            studentTaskQueryService.getTaskHistoryData(student, taskId);
+        if (historyDataOpt.isEmpty()) {
             return "redirect:/student/dashboard";
         }
 
-        Task task = taskOpt.get();
-
-        // Check if student has access to this task
-        boolean hasAccess = task.getAssignedGroups().stream()
-            .anyMatch(group -> student.getGroups().contains(group));
-
-        if (!hasAccess) {
-            return "redirect:/student/dashboard";
-        }
-
-        // Get or create UserTask
-        Optional<UserTask> userTaskOpt = userTaskRepository.findByUserAndTask(student, task);
-        UserTask userTask;
-        if (userTaskOpt.isEmpty()) {
-            // Create new UserTask if it doesn't exist
-            userTask = new UserTask();
-            userTask.setUser(student);
-            userTask.setTask(task);
-            userTask.setStartedAt(LocalDateTime.now());
-            userTask.setStatus(taskStatusService.getDefaultStatus());
-            userTask = userTaskRepository.save(userTask);
-        } else {
-            userTask = userTaskOpt.get();
-        }
-
-        // Get all content versions
-        List<TaskContent> contentVersions = taskContentService.getAllContentVersions(userTask);
-
-        // Get all reviews for this task
-        List<TaskReview> reviews = taskReviewService.findByUserTaskOrderByReviewedAtDesc(userTask);
-
-        model.addAttribute("task", task);
-        model.addAttribute("userTask", userTask);
-        model.addAttribute("contentVersions", contentVersions);
-        model.addAttribute("reviews", reviews);
+        StudentTaskHistoryDataDto historyData = historyDataOpt.get();
+        model.addAttribute("task", historyData.getTask());
+        model.addAttribute("userTask", historyData.getUserTask());
+        model.addAttribute("contentVersions", historyData.getContentVersions());
+        model.addAttribute("reviews", historyData.getReviews());
         model.addAttribute("student", student);
 
         return "student/task-history";
@@ -192,50 +73,17 @@ public class StudentController {
                                 Model model, Principal principal) {
         User student = userService.findByOpenIdSubject(principal.getName())
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-
-        Optional<Task> taskOpt = taskService.findById(taskId);
-        if (taskOpt.isEmpty()) {
-            return "redirect:/student/dashboard";
+        StudentTaskVersionViewResultDto result =
+            studentTaskQueryService.getTaskVersionViewData(student, taskId, version);
+        if (result.isRedirect()) {
+            return result.getRedirectPath();
         }
 
-        Task task = taskOpt.get();
-
-        // Check if student has access to this task
-        boolean hasAccess = task.getAssignedGroups().stream()
-            .anyMatch(group -> student.getGroups().contains(group));
-
-        if (!hasAccess) {
-            return "redirect:/student/dashboard";
-        }
-
-        // Get UserTask
-        Optional<UserTask> userTaskOpt = userTaskRepository.findByUserAndTask(student, task);
-        if (userTaskOpt.isEmpty()) {
-            return "redirect:/student/tasks/" + taskId + "/history";
-        }
-
-        UserTask userTask = userTaskOpt.get();
-        TaskView taskView = task.getTaskView();
-        if (taskView == null) {
-            return "redirect:/student/tasks/" + taskId + "/history";
-        }
-
-        // Get specific version content
-        TaskContent versionContent = taskContentService.getContentByVersion(userTask, version);
-        if (versionContent == null) {
-            return "redirect:/student/tasks/" + taskId + "/history";
-        }
-
-        model.addAttribute("task", task);
-        model.addAttribute("userTask", userTask);
-        model.addAttribute("taskView", taskView);
-        model.addAttribute("student", student);
-        model.addAttribute("currentContent", versionContent.getContent());
-        model.addAttribute("viewingVersion", version);
-        model.addAttribute("isHistoryView", true);
-
-        // Return the appropriate task view template
-        return taskView.getTemplatePath();
+        StudentTaskViewDataDto viewData = result.getViewData();
+        populateTaskViewModel(model, student, viewData);
+        model.addAttribute("viewingVersion", viewData.getViewingVersion());
+        model.addAttribute("isHistoryView", viewData.isHistoryView());
+        return viewData.getTaskView().getTemplatePath();
     }
 
     /**
@@ -246,130 +94,18 @@ public class StudentController {
         User currentUser = userService.findByOpenIdSubject(principal.getName())
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
 
-        // UserTasks für das Dashboard erstellen/finden
-        List<UserTask> allUserTasks = getOrCreateUserTasksForStudent(currentUser);
-
-        // Nur die 3 zuletzt bearbeiteten Aufgaben für das Dashboard
-        List<UserTask> recentUserTasks = allUserTasks.stream()
-            .filter(ut -> ut.getLastModified() != null || ut.getStartedAt() != null)
-            .sorted((ut1, ut2) -> {
-                LocalDateTime time1 = ut1.getLastModified() != null ? ut1.getLastModified() : ut1.getStartedAt();
-                LocalDateTime time2 = ut2.getLastModified() != null ? ut2.getLastModified() : ut2.getStartedAt();
-                if (time1 == null && time2 == null) return 0;
-                if (time1 == null) return 1;
-                if (time2 == null) return -1;
-                return time2.compareTo(time1); // Neueste zuerst
-            })
-            .limit(3)
-            .collect(Collectors.toList());
+        StudentDashboardDataDto dashboardData = studentTaskOverviewService.getDashboardData(currentUser);
 
         model.addAttribute("student", currentUser);
-        model.addAttribute("userTasks", recentUserTasks);
-        model.addAttribute("totalTaskCount", allUserTasks.size());
-
-        // Dashboard-Statistiken berechnen
-        Map<TaskStatusCode, Long> statusCounts = TaskStatusSupport.countByCode(allUserTasks);
-
-        model.addAttribute("inProgress", statusCounts.getOrDefault(TaskStatusCode.IN_BEARBEITUNG, 0L));
-        model.addAttribute("pendingReview", statusCounts.getOrDefault(TaskStatusCode.ABGEGEBEN, 0L));
-        model.addAttribute("needsRework", statusCounts.getOrDefault(TaskStatusCode.UEBERARBEITUNG_NOETIG, 0L));
-        model.addAttribute("completed", statusCounts.getOrDefault(TaskStatusCode.VOLLSTAENDIG, 0L));
+        model.addAttribute("userTasks", dashboardData.getRecentUserTasks());
+        model.addAttribute("totalTaskCount", dashboardData.getTotalTaskCount());
+        model.addAttribute("inProgress", dashboardData.getInProgress());
+        model.addAttribute("pendingReview", dashboardData.getPendingReview());
+        model.addAttribute("needsRework", dashboardData.getNeedsRework());
+        model.addAttribute("completed", dashboardData.getCompleted());
 
         return "student/dashboard";
     }
-
-    private List<UserTask> getOrCreateUserTasksForStudent(User student) {
-        // Gruppen des Schülers ermitteln
-        Set<Group> userGroupsSet = groupService.findGroupsByUserId(student.getId());
-        List<Group> userGroups = new ArrayList<>(userGroupsSet);
-
-        // Set für eindeutige Task IDs
-        Set<Long> taskIds = new HashSet<>();
-        List<Task> relevantTasks = new ArrayList<>();
-
-        // Alle aktiven Aufgaben finden, die einer Gruppe des Benutzers zugewiesen sind
-        for (Group group : userGroups) {
-            List<Task> groupTasks = taskRepository.findByAssignedGroupsContainingAndIsActiveTrue(group);
-            for (Task task : groupTasks) {
-                if (!taskIds.contains(task.getId())) {
-                    taskIds.add(task.getId());
-                    relevantTasks.add(task);
-                }
-            }
-        }
-
-        // Zusätzlich: Alle bereits BEGONNENEN Aufgaben des Schülers finden, 
-        // auch wenn er nicht mehr in der zugewiesenen Gruppe ist
-        List<UserTask> existingUserTasks = userTaskRepository.findByUser(student);
-        for (UserTask existingUserTask : existingUserTasks) {
-            Task task = existingUserTask.getTask();
-            // Nur aktive Aufgaben berücksichtigen und nur solche, die noch nicht in der Liste sind
-            if (task.getIsActive() && !taskIds.contains(task.getId())) {
-                // Prüfen, ob der Schüler noch in mindestens einer der zugewiesenen Gruppen ist
-                boolean isStillInAssignedGroup = false;
-                for (Group assignedGroup : task.getAssignedGroups()) {
-                    if (userGroups.contains(assignedGroup)) {
-                        isStillInAssignedGroup = true;
-                        break;
-                    }
-                }
-
-                // Wenn nicht mehr in der Gruppe: Nur hinzufügen, wenn die Aufgabe wirklich begonnen wurde
-                // (erkennbar an: Status ist nicht "NICHT_BEGONNEN" oder hat Submissions)
-                if (isStillInAssignedGroup) {
-                    // Noch in der Gruppe -> Aufgabe immer anzeigen
-                    taskIds.add(task.getId());
-                    relevantTasks.add(task);
-                } else {
-                    // Nicht mehr in der Gruppe -> nur anzeigen wenn tatsächlich begonnen
-                    boolean hasReallyStarted = false;
-
-                    // Prüfen ob Status nicht "NICHT_BEGONNEN" ist
-                    if (existingUserTask.getStatus() != null
-                            && !TaskStatusSupport.hasCode(existingUserTask.getStatus(), TaskStatusCode.NICHT_BEGONNEN)) {
-                        hasReallyStarted = true;
-                    }
-
-                    // Oder prüfen ob es Submissions gibt
-                    if (!hasReallyStarted) {
-                        long submissionCount = taskContentRepository.countByUserTaskAndIsSubmittedTrue(existingUserTask);
-                        if (submissionCount > 0) {
-                            hasReallyStarted = true;
-                        }
-                    }
-
-                    if (hasReallyStarted) {
-                        taskIds.add(task.getId());
-                        relevantTasks.add(task);
-                    }
-                }
-            }
-        }
-
-        List<UserTask> result = new ArrayList<>();
-
-        // Für jede relevante Aufgabe UserTask erstellen oder finden
-        for (Task task : relevantTasks) {
-            Optional<UserTask> existingUserTask = userTaskRepository.findByUserAndTask(student, task);
-
-            if (existingUserTask.isPresent()) {
-                result.add(existingUserTask.get());
-            } else {
-                // Neue UserTask erstellen
-                UserTask userTask = new UserTask();
-                userTask.setUser(student);
-                userTask.setTask(task);
-                userTask.setStatus(taskStatusService.getDefaultStatus());
-                userTask.setStartedAt(LocalDateTime.now());
-
-                UserTask savedUserTask = userTaskRepository.save(userTask);
-                result.add(savedUserTask);
-            }
-        }
-
-        return result;
-    }
-
 
     /**
      * Aufgabenliste für Schüler
@@ -378,45 +114,18 @@ public class StudentController {
     public String taskList(Model model, Principal principal) {
        User student = userService.findByOpenIdSubject(principal.getName())
             .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-        List<UserTask> userTasks = getOrCreateUserTasksForStudent(student);
+        StudentTaskListDataDto taskListData = studentTaskOverviewService.getTaskListData(student);
 
-        // Gruppiere Aufgaben nach UnitTitle und sortiere sie
-        Map<UnitTitle, List<UserTask>> tasksByUnitTitle = new LinkedHashMap<>();
-
-        // Sammle alle UnitTitles und sortiere sie alphabetisch
-        Set<UnitTitle> unitTitles = userTasks.stream()
-            .map(ut -> ut.getTask().getUnitTitle())
-            .collect(Collectors.toSet());
-
-        List<UnitTitle> sortedUnitTitles = unitTitles.stream()
-            .sorted((ut1, ut2) -> {
-                // null-Werte (Aufgaben ohne Thema) kommen zuletzt
-                if (ut1 == null && ut2 == null) return 0;
-                if (ut1 == null) return 1;
-                if (ut2 == null) return -1;
-                // Sortierung nach weight (aufsteigend), dann nach Name
-                int weightComparison = Integer.compare(ut1.getWeight(), ut2.getWeight());
-                if (weightComparison != 0) {
-                    return weightComparison;
-                }
-                return ut1.getName().compareTo(ut2.getName());
-            })
-            .collect(Collectors.toList());
-
-        // Gruppiere Aufgaben nach UnitTitle
-        for (UnitTitle unitTitle : sortedUnitTitles) {
-            List<UserTask> tasksForUnit = userTasks.stream()
-                .filter(ut -> Objects.equals(ut.getTask().getUnitTitle(), unitTitle))
-                .sorted((ut1, ut2) -> ut1.getTask().getTitle().compareTo(ut2.getTask().getTitle()))
-                .collect(Collectors.toList());
-
-            if (!tasksForUnit.isEmpty()) {
-                tasksByUnitTitle.put(unitTitle, tasksForUnit);
-            }
-        }
-
-        model.addAttribute("tasksByUnitTitle", tasksByUnitTitle);
-        model.addAttribute("userTasks", userTasks); // Für Rückwärtskompatibilität
+        model.addAttribute("tasksByUnitTitle", taskListData.getTasksByUnitTitle());
+        model.addAttribute("userTasks", taskListData.getUserTasks());
         return "student/tasks-list";
+    }
+
+    private void populateTaskViewModel(Model model, User student, StudentTaskViewDataDto viewData) {
+        model.addAttribute("task", viewData.getTask());
+        model.addAttribute("userTask", viewData.getUserTask());
+        model.addAttribute("taskView", viewData.getTaskView());
+        model.addAttribute("student", student);
+        model.addAttribute("currentContent", viewData.getCurrentContent());
     }
 }

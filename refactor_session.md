@@ -934,6 +934,162 @@ Letzter erfolgreicher vollständiger Testlauf:
   - Errors: `0`
   - Skipped: `0`
 
+## Lehrer-Kompatibilitaetsrouten weiter reduziert
+Stand: 2026-04-19
+
+Im naechsten Schritt wurden die verbliebenen doppelten Lehrer-Routen weiter bereinigt, nachdem das aktuelle Frontend bereits vollstaendig auf den kanonischen Pfaden lief.
+
+### Ziel
+- doppelte Lehrer-Routen fuer dieselben fachlichen Ansichten abbauen
+- den separaten Legacy-Controller entfernen, wenn er im aktuellen Frontend nicht mehr referenziert wird
+- die kanonische Aufgaben-Abgabenroute im UI konsequent durchziehen
+
+### Umgesetzt
+- `TeacherTaskController` um die doppelte Alias-Route `GET /teacher/tasks/{id}` reduziert
+- `teacher/submission-review.html` verlinkt fuer den Ruecksprung zur Aufgabe jetzt direkt auf `GET /teacher/tasks/{id}/submissions`
+- `TeacherLegacyRouteController` vollstaendig entfernt
+- zugehoerige Legacy-Controller-Tests entfernt
+- `TeacherTaskControllerTest` auf den kleineren kanonischen Controller-Zuschnitt angepasst
+
+### Wirkung
+- fuer die Abgabenansicht einer Aufgabe gibt es im produktiven Controller jetzt nur noch die kanonische Lehrer-Route
+- die Web-Schicht enthaelt einen Controller weniger und damit weniger oeffentliche Altpfade
+- der Lehrerbereich ist intern stringenter auf die Query-/Command-Controllerstruktur ausgerichtet
+
+### Teststatus
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-19T18:50:37Z`
+- Ergebnis:
+  - Tests: `69`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+## Student-Dashboard und Aufgabenliste aus dem Controller geloest
+Stand: 2026-04-19
+
+Im naechsten Controller-Slice wurde die groesste verbliebene Read-Logik im `StudentController` fuer Dashboard und Aufgabenliste in einen eigenen Overview-Service verschoben.
+
+### Ziel
+- Student-Read-Flows von Repository- und Aggregationslogik entkoppeln
+- den Controller fuer Dashboard und Aufgabenliste auf Routing, Benutzeraufloesung und Model-Befuellung reduzieren
+- die bisher im Controller versteckte `UserTask`-Erzeugungs- und Sortierlogik explizit in einen eigenen Service ziehen
+
+### Umgesetzt
+- neuer `src/main/java/com/example/studenttask/service/StudentTaskOverviewService.java`
+- neue DTOs:
+  - `src/main/java/com/example/studenttask/dto/StudentDashboardDataDto.java`
+  - `src/main/java/com/example/studenttask/dto/StudentTaskListDataDto.java`
+- `StudentController.dashboard(...)` delegiert den kompletten Overview-Aufbau jetzt an den neuen Service
+- `StudentController.taskList(...)` delegiert Gruppierung, Sortierung und `UserTask`-Bereitstellung ebenfalls an den neuen Service
+- die bisherige Hilfsmethode `getOrCreateUserTasksForStudent(...)` wurde aus dem Controller entfernt
+
+### Wirkung
+- der `StudentController` enthaelt fuer diese beiden Read-Pfade keine Repository-Zugriffe und keine fachliche Aggregation mehr
+- die Logik fuer Student-Task-Uebersichten ist jetzt separat testbar und spaeter weiter zerlegbar
+- der naechste Entflechtungsschritt kann gezielt auf die verbleibenden Task-View-/Historienpfade im Controller gehen
+
+### Testanpassungen
+- `StudentControllerTest` prueft fuer Dashboard und Aufgabenliste jetzt die schlankere Controller-Grenze gegen den neuen Service
+- neuer Service-Test `src/test/java/com/example/studenttask/service/StudentTaskOverviewServiceTest.java`
+
+### Teststatus
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-19T19:22:51Z`
+- Ergebnis:
+  - Tests: `72`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+## Student-Task-Ansicht, Historie und Versionen aus dem Controller geloest
+Stand: 2026-04-19
+
+Im naechsten Controller-Slice wurden auch die verbleibenden Student-Read-Pfade fuer Task-Ansicht, Historie und Versionsansicht aus dem `StudentController` in einen eigenen Query-Service verschoben.
+
+### Ziel
+- die restliche fachliche Lese- und Berechtigungslogik aus dem `StudentController` entfernen
+- Redirect-/Lesepfade fuer Student-Task-Ansichten explizit und separat testbar machen
+- die Student-Seite an die bereits etablierte Query-Service-Struktur im Lehrerbereich angleichen
+
+### Umgesetzt
+- neuer `src/main/java/com/example/studenttask/service/StudentTaskQueryService.java`
+- neue DTOs:
+  - `src/main/java/com/example/studenttask/dto/StudentTaskViewDataDto.java`
+  - `src/main/java/com/example/studenttask/dto/StudentTaskHistoryDataDto.java`
+  - `src/main/java/com/example/studenttask/dto/StudentTaskVersionViewResultDto.java`
+- `StudentController.viewTask(...)` delegiert Content-Aufloesung, Zugriffspruefung und TaskView-Aufloesung jetzt an den neuen Query-Service
+- `StudentController.taskHistory(...)` delegiert Task-Zugriff, gegebenenfalls `UserTask`-Erzeugung sowie Laden von Versions- und Reviewdaten an den neuen Query-Service
+- `StudentController.viewTaskVersion(...)` delegiert die komplette Entscheidungslogik fuer Dashboard-/History-Redirects und Viewdaten an den neuen Query-Service
+- der `StudentController` enthaelt in diesen Pfaden jetzt nur noch Benutzeraufloesung, Model-Befuellung und die Rueckgabe des finalen Views
+
+### Wirkung
+- die verbleibende Student-Controller-Logik ist deutlich naeher an Routing als an Fachlogik
+- Redirect- und Access-Regeln fuer Student-Ansichten sind jetzt isoliert unit-testbar
+- der naechste Entflechtungsschritt kann sich eher auf `TaskController` oder auf Benutzer-/OAuth2-Synchronisationspfade konzentrieren
+
+### Testanpassungen
+- `StudentControllerTest` prueft die verbleibenden Controller-Pfade jetzt gegen den neuen Query-Service
+- neuer Service-Test `src/test/java/com/example/studenttask/service/StudentTaskQueryServiceTest.java`
+- abgesichert sind insbesondere:
+  - direkte Student-Task-Ansicht mit gespeichertem bzw. Default-Content
+  - Historienansicht mit `UserTask`-Erzeugung
+  - Versionsansicht inklusive Redirect-Faellen
+
+### Teststatus
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-19T19:31:51Z`
+- Ergebnis:
+  - Tests: `80`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+## TaskController-iframe-Pfad aus dem Controller geloest
+Stand: 2026-04-19
+
+Im naechsten Schritt wurde auch der spezialisierte iframe-Renderpfad des `TaskController` in einen eigenen Query-Service verschoben.
+
+### Ziel
+- den verbliebenen Mischpfad aus Task-Lookup, Benutzeraufloesung, `UserTask`-Erzeugung, Content-Auswahl und Redirect-Logik aus dem Controller entfernen
+- das aktuelle Verhalten des iframe-Pfads unveraendert, aber separat testbar kapseln
+- die Web-Schicht weiter auf kleine Routing-Controller plus dedizierte Read-Services ausrichten
+
+### Umgesetzt
+- neuer `src/main/java/com/example/studenttask/service/TaskIframeQueryService.java`
+- neue DTOs:
+  - `src/main/java/com/example/studenttask/dto/TaskIframeViewDataDto.java`
+  - `src/main/java/com/example/studenttask/dto/TaskIframeViewResultDto.java`
+- `TaskController.viewTaskIframe(...)` delegiert jetzt:
+  - Task-Lookup
+  - Benutzeraufloesung aus der Authentifizierung
+  - `UserTask`-Erzeugung bzw. -Laden
+  - Content-Fallback fuer Version oder Default-Submission
+  - TaskView-Aufloesung und Redirect-Entscheidungen
+- die bisherigen Model-Attribute des iframe-Pfads bleiben erhalten, damit die TaskView-Templates unveraendert weiterlaufen
+
+### Wirkung
+- `TaskController` enthaelt fuer den iframe-Pfad praktisch nur noch Routing und Model-Befuellung
+- der Sonderpfad ist jetzt isoliert testbar, statt im Controller mit mehreren Services verknotet zu sein
+- die noch bestehende fachliche Frage um den alten Lehrer-Zweig dieses Pfads kann spaeter separat bewertet und gegebenenfalls abgebaut werden
+
+### Testanpassungen
+- `TaskControllerTest` prueft jetzt die schlanke Delegationsgrenze gegen den neuen Query-Service
+- neuer Service-Test `src/test/java/com/example/studenttask/service/TaskIframeQueryServiceTest.java`
+- abgesichert sind insbesondere:
+  - Aufloesung von gespeichertem Content und Default-Submission
+  - Redirects fuer fehlenden Benutzer, fehlende Aufgabe und ungueltige TaskView
+  - konsistente Lehrer-/Schueler-Redirects im iframe-Pfad
+
+### Teststatus
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-19T20:06:39Z`
+- Ergebnis:
+  - Tests: `87`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
 ## Pausepunkt / Wiederanlauf
 Stand: 2026-04-19
 
@@ -941,8 +1097,8 @@ Die aktuelle Refactoring-Runde ist bis hierhin dokumentiert und mit vollständig
 
 ### Letzter stabiler Stand
 - letzter vollständiger grüner Lauf: `mvn -Dmaven.repo.local=/tmp/m2 test`
-- Zeitpunkt: `2026-04-19T18:45:45Z`
-- Ergebnis: `74` Tests, `0` Failures, `0` Errors, `0` Skipped
+- Zeitpunkt: `2026-04-19T20:06:39Z`
+- Ergebnis: `87` Tests, `0` Failures, `0` Errors, `0` Skipped
 
 ### Inhaltlich abgeschlossene Blöcke in dieser Serie
 - Teacher-Dashboard-Lesewege in `TeacherDashboardQueryService`
@@ -960,19 +1116,33 @@ Die aktuelle Refactoring-Runde ist bis hierhin dokumentiert und mit vollständig
 - `view_type_id` als Legacy-Lesefallback auf read-only reduziert, `task_view_id` ist alleiniger Schreibpfad
 - `taskView` als normaler Fachzugriff etabliert, `resolvedTaskView`-Alias entfernt
 - TaskView-Rueckbau inklusive aller Migrations- und Diagnosebausteine abgeschlossen
+- Lehrer-Kompatibilitaetsrouten weiter reduziert, Alias- und Legacy-Controller entfernt
+- Student-Dashboard und Aufgabenliste in `StudentTaskOverviewService` aus dem Controller geloest
+- Student-Task-Ansicht, Historie und Versionspfade in `StudentTaskQueryService` aus dem Controller geloest
+- TaskController-iframe-Pfad in `TaskIframeQueryService` aus dem Controller geloest
 
 ### Sinnvoller erster Wiedereinstieg nach dem Limit-Reset
-- verbleibende reine Kompatibilitaetsrouten in `TeacherController` bewerten und falls moeglich stilllegen oder vereinheitlichen
 - danach wieder die naechsten groesseren Punkte aus `refactor.md` unter Testschutz angehen
+- besonders naheliegend bleiben die verbleibenden Student-Task-Ansichts-/Historienpfade und danach die OAuth2-/Benutzersynchronisation
 
 ### Relevante Dateien für den Wiedereinstieg
 - `refactor.md`
 - `refactor_session.md`
+- `src/main/java/com/example/studenttask/controller/StudentController.java`
 - `src/main/java/com/example/studenttask/controller/TeacherController.java`
 - `src/main/java/com/example/studenttask/controller/TeacherTaskController.java`
 - `src/main/java/com/example/studenttask/model/Task.java`
+- `src/main/java/com/example/studenttask/controller/TaskController.java`
+- `src/main/java/com/example/studenttask/service/StudentTaskOverviewService.java`
+- `src/main/java/com/example/studenttask/service/StudentTaskQueryService.java`
+- `src/main/java/com/example/studenttask/service/TaskIframeQueryService.java`
 - `src/main/java/com/example/studenttask/service/TeacherTaskCommandService.java`
 - `src/main/java/com/example/studenttask/service/TeacherTaskQueryService.java`
+- `src/test/java/com/example/studenttask/controller/StudentControllerTest.java`
+- `src/test/java/com/example/studenttask/controller/TaskControllerTest.java`
+- `src/test/java/com/example/studenttask/service/StudentTaskOverviewServiceTest.java`
+- `src/test/java/com/example/studenttask/service/StudentTaskQueryServiceTest.java`
+- `src/test/java/com/example/studenttask/service/TaskIframeQueryServiceTest.java`
 - `src/test/java/com/example/studenttask/controller/TeacherControllerTest.java`
 - `src/test/java/com/example/studenttask/controller/TeacherTaskControllerTest.java`
 - `src/test/java/com/example/studenttask/service/TeacherTaskCommandServiceTest.java`
@@ -984,3 +1154,107 @@ Die aktuelle Refactoring-Runde ist bis hierhin dokumentiert und mit vollständig
   - Zentralisierung der Statusübergänge / Statuslogik
   - weitere Entflechtung der Controller von fachlicher Logik
   - Reduktion redundanter OAuth2-/Benutzersynchronisationspfade
+
+## Student-Task-API aus dem Controller geloest
+Stand: 2026-04-19
+
+Im naechsten REST-Slice wurde der verbliebene API-Mischcontroller fuer Student-Task-Content in Query- und Command-Services zerlegt, ohne die bestehenden HTTP-Vertraege bewusst zu aendern.
+
+### Ziel
+- `StudentTaskApiController` auf HTTP-Mapping statt Fachlogik reduzieren
+- rohe `Map<String, String>`-Bodies durch ein typisiertes Request-DTO ersetzen
+- die bisher im Controller liegende User-/Task-/UserTask-/Content-Logik separat testbar machen
+- den spaeteren Schritt zu standardisierten REST-Fehlervertraegen vorbereiten, ohne ihn in diesem Slice schon zu erzwingen
+
+### Umgesetzt
+- neues Request-DTO `src/main/java/com/example/studenttask/dto/TaskContentRequestDto.java`
+- neue kleine Result-Typen fuer API-Operationen:
+  - `src/main/java/com/example/studenttask/dto/ApiOperationStatus.java`
+  - `src/main/java/com/example/studenttask/dto/TaskContentLoadResultDto.java`
+  - `src/main/java/com/example/studenttask/dto/TaskContentCommandResultDto.java`
+- neuer `src/main/java/com/example/studenttask/service/StudentTaskApiQueryService.java`
+  - enthaelt den Leseweg fuer `GET /api/tasks/{taskId}/content`
+- neuer `src/main/java/com/example/studenttask/service/StudentTaskApiCommandService.java`
+  - enthaelt die Schreibpfade fuer:
+    - `POST /api/tasks/usertasks/{userTaskId}/content`
+    - `POST /api/tasks/{taskId}/content`
+    - `POST /api/tasks/{taskId}/submit`
+- `StudentTaskApiController` delegiert jetzt nur noch an diese Services und mappt deren Ergebnis auf die bestehenden HTTP-Statuscodes und Response-Bodies
+
+### Verhalten / Abgrenzung
+- keine Umstellung auf JSON-Fehlerobjekte in diesem Slice
+- keine globale `@RestControllerAdvice`-Einführung in diesem Slice
+- bisherige Erfolgs-/Fehlertexte und Statuscodes der API-Pfade bleiben absichtlich erhalten
+
+### Testanpassungen
+- `src/test/java/com/example/studenttask/controller/StudentTaskApiControllerTest.java`
+  - jetzt auf die schlanke Controller-Grenze gegen Query-/Command-Service umgestellt
+- neue Service-Tests:
+  - `src/test/java/com/example/studenttask/service/StudentTaskApiQueryServiceTest.java`
+  - `src/test/java/com/example/studenttask/service/StudentTaskApiCommandServiceTest.java`
+- abgesichert sind insbesondere:
+  - Unauthorized-/NotFound-Faelle der API-Lese- und Schreibpfade
+  - Student-Save ueber `findOrCreateUserTask(...)`
+  - Teacher-Save fuer bestehende `UserTask`
+  - Submit mit direktem Request-Content
+  - Submit-Fallback auf die letzte gespeicherte Version
+  - No-op-Submit bei fehlendem Inhalt
+
+### Teststatus
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-19T21:22:01Z`
+- Ergebnis:
+  - Tests: `97`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+## Weitere bereits vorhandene Worktree-Aenderungen festgehalten
+Stand: 2026-04-19
+
+Zusaetzlich zu dem in dieser Runde umgesetzten Student-Task-API-Slice lagen im aktuellen Worktree weitere uncommittete Aenderungen vor, die nicht von diesem Slice stammen, aber beim Abgleich sichtbar waren und fuer den Wiedereinstieg festgehalten werden sollen.
+
+### Inhaltlich erkennbare, bereits vorhandene Aenderungen im Quellbaum
+- Student-Read-Pfade weiter aus dem Controller geloest:
+  - `src/main/java/com/example/studenttask/controller/StudentController.java`
+  - neue DTOs:
+    - `src/main/java/com/example/studenttask/dto/StudentDashboardDataDto.java`
+    - `src/main/java/com/example/studenttask/dto/StudentTaskListDataDto.java`
+    - `src/main/java/com/example/studenttask/dto/StudentTaskHistoryDataDto.java`
+    - `src/main/java/com/example/studenttask/dto/StudentTaskViewDataDto.java`
+    - `src/main/java/com/example/studenttask/dto/StudentTaskVersionViewResultDto.java`
+  - neue/zugehoerige Services:
+    - `src/main/java/com/example/studenttask/service/StudentTaskOverviewService.java`
+    - `src/main/java/com/example/studenttask/service/StudentTaskQueryService.java`
+  - zugehoerige Tests:
+    - `src/test/java/com/example/studenttask/controller/StudentControllerTest.java`
+    - `src/test/java/com/example/studenttask/service/StudentTaskOverviewServiceTest.java`
+    - `src/test/java/com/example/studenttask/service/StudentTaskQueryServiceTest.java`
+- Task-iframe-Pfad weiter aus dem Controller geloest:
+  - `src/main/java/com/example/studenttask/controller/TaskController.java`
+  - neue DTOs:
+    - `src/main/java/com/example/studenttask/dto/TaskIframeViewDataDto.java`
+    - `src/main/java/com/example/studenttask/dto/TaskIframeViewResultDto.java`
+  - neuer Service:
+    - `src/main/java/com/example/studenttask/service/TaskIframeQueryService.java`
+  - zugehoerige Tests:
+    - `src/test/java/com/example/studenttask/controller/TaskControllerTest.java`
+    - `src/test/java/com/example/studenttask/service/TaskIframeQueryServiceTest.java`
+- Lehrer-Kompatibilitaetsrouten im Worktree bereits weiter reduziert:
+  - `src/main/java/com/example/studenttask/controller/TeacherLegacyRouteController.java` als geloescht markiert
+  - `src/test/java/com/example/studenttask/controller/TeacherLegacyRouteControllerTest.java` als geloescht markiert
+  - `src/main/java/com/example/studenttask/controller/TeacherTaskController.java` angepasst
+  - `src/test/java/com/example/studenttask/controller/TeacherTaskControllerTest.java` angepasst
+  - `src/main/resources/templates/teacher/submission-review.html` angepasst
+
+### Einordnung
+- Diese Aenderungen passen inhaltlich zu bereits frueher im Session-Protokoll beschriebenen Slices:
+  - Student-Dashboard/Aufgabenliste in `StudentTaskOverviewService`
+  - Student-Task-Ansicht/Historie/Versionen in `StudentTaskQueryService`
+  - TaskController-iframe-Pfad in `TaskIframeQueryService`
+  - Reduktion der Lehrer-Kompatibilitaetsrouten
+- Im aktuellen Git-Status sind diese Punkte jedoch weiterhin als lokale Worktree-Aenderungen sichtbar und damit nicht nur historisch dokumentiert, sondern auch tatsaechlich noch uncommittet vorhanden.
+
+### Technische Notiz zum Worktree
+- Zusaetzlich liegen generierte Build-/Testartefakte unter `target/` im Worktree.
+- Diese Artefakte sind keine eigene fachliche Refactoring-Massnahme, sondern Folge der Testlaeufe in dieser und frueheren Runden.

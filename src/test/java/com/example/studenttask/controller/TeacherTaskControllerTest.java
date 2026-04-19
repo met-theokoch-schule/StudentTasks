@@ -108,35 +108,6 @@ class TeacherTaskControllerTest {
     }
 
     @Test
-    void taskDetail_populatesModelFromQueryService() {
-        Group group = group(10L, "10A");
-        User teacher = teacher(1L, "Teacher", group);
-        UserTask userTask = userTask(student(2L, "Student", group), task(20L, "Worksheet", teacher, group, null), status("ABGEGEBEN"));
-        TeacherTaskSubmissionsDataDto submissionsData = new TeacherTaskSubmissionsDataDto(
-            userTask.getTask(),
-            List.of(userTask),
-            true
-        );
-
-        when(userService.findByOpenIdSubject("oidc-teacher")).thenReturn(Optional.of(teacher));
-        when(teacherTaskQueryService.getTaskSubmissionsData(20L, teacher)).thenReturn(Optional.of(submissionsData));
-
-        HttpServletRequest request = mock(HttpServletRequest.class);
-        when(request.getRequestURL()).thenReturn(new StringBuffer("http://localhost/teacher/tasks/20"));
-        when(request.getQueryString()).thenReturn(null);
-
-        Model model = new ExtendedModelMap();
-        String view = controller.taskDetail(20L, model, authentication("oidc-teacher"), request);
-
-        assertThat(view).isEqualTo("teacher/task-submissions");
-        assertThat(model.getAttribute("teacher")).isSameAs(teacher);
-        assertThat(model.getAttribute("task")).isSameAs(userTask.getTask());
-        assertThat(model.getAttribute("userTasks")).isEqualTo(List.of(userTask));
-        assertThat(model.getAttribute("currentUrl")).isEqualTo("http://localhost/teacher/tasks/20");
-        assertThat(model.getAttribute("isOwnTask")).isEqualTo(true);
-    }
-
-    @Test
     void reviewSubmission_usesQueryServiceAndRefererAsReturnUrlFallback() {
         Group group = group(10L, "10A");
         User teacher = teacher(1L, "Teacher", group);

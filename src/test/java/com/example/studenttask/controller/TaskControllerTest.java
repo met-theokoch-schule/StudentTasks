@@ -1,14 +1,12 @@
 package com.example.studenttask.controller;
 
+import com.example.studenttask.dto.TaskIframeViewDataDto;
+import com.example.studenttask.dto.TaskIframeViewResultDto;
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskView;
 import com.example.studenttask.model.User;
 import com.example.studenttask.model.UserTask;
-import com.example.studenttask.service.TaskContentService;
-import com.example.studenttask.service.TaskService;
-import com.example.studenttask.service.TaskViewService;
-import com.example.studenttask.service.UserService;
-import com.example.studenttask.service.UserTaskService;
+import com.example.studenttask.service.TaskIframeQueryService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,8 +16,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -28,19 +24,7 @@ import static org.mockito.Mockito.when;
 class TaskControllerTest {
 
     @Mock
-    private TaskService taskService;
-
-    @Mock
-    private UserTaskService userTaskService;
-
-    @Mock
-    private TaskContentService taskContentService;
-
-    @Mock
-    private UserService userService;
-
-    @Mock
-    private TaskViewService taskViewService;
+    private TaskIframeQueryService taskIframeQueryService;
 
     @InjectMocks
     private TaskController controller;
@@ -63,11 +47,11 @@ class TaskControllerTest {
         userTask.setTask(task);
         userTask.setUser(student);
 
-        when(taskService.findById(40L)).thenReturn(Optional.of(task));
-        when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.of(student));
-        when(userTaskService.findOrCreateUserTask(student, task)).thenReturn(userTask);
-        when(taskContentService.getLatestContent(userTask)).thenReturn(Optional.empty());
-        when(taskViewService.findById(7L)).thenReturn(Optional.of(taskView));
+        when(taskIframeQueryService.getTaskIframeViewData(40L, "oidc-subject", false, null)).thenReturn(
+            TaskIframeViewResultDto.view(
+                new TaskIframeViewDataDto(task, taskView, userTask, "", task.getDescription(), false)
+            )
+        );
 
         Model model = new ExtendedModelMap();
         String view = controller.viewTaskIframe(40L, null, null, authentication("oidc-subject"), model);
@@ -78,6 +62,18 @@ class TaskControllerTest {
         assertThat(model.getAttribute("userTask")).isSameAs(userTask);
         assertThat(model.getAttribute("userTaskId")).isEqualTo(99L);
         assertThat(model.getAttribute("currentContent")).isEqualTo("");
+    }
+
+    @Test
+    void viewTaskIframe_returnsRedirectProvidedByQueryService() {
+        when(taskIframeQueryService.getTaskIframeViewData(40L, "oidc-subject", true, 3)).thenReturn(
+            TaskIframeViewResultDto.redirect("redirect:/teacher/dashboard")
+        );
+
+        Model model = new ExtendedModelMap();
+        String view = controller.viewTaskIframe(40L, 5L, 3, authentication("oidc-subject"), model);
+
+        assertThat(view).isEqualTo("redirect:/teacher/dashboard");
     }
 
     private Authentication authentication(String name) {

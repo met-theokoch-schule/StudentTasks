@@ -32,7 +32,7 @@
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a th:href="@{/teacher/dashboard}">Dashboard</a></li>
                 <li class="breadcrumb-item"><a th:href="@{/teacher/tasks}">Aufgaben</a></li>
-                <li class="breadcrumb-item"><a th:href="@{'/teacher/tasks/' + ${userTask.task.id}}">
+                <li class="breadcrumb-item"><a th:href="@{'/teacher/tasks/' + ${userTask.task.id} + '/submissions'}">
                     <span th:text="${userTask.task.title}">Aufgabe</span>
                 </a></li>
                 <li class="breadcrumb-item active">Review</li>

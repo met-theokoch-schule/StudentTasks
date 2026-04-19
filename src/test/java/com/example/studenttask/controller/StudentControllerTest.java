@@ -1,22 +1,22 @@
 package com.example.studenttask.controller;
 
+import com.example.studenttask.dto.StudentDashboardDataDto;
+import com.example.studenttask.dto.StudentTaskHistoryDataDto;
+import com.example.studenttask.dto.StudentTaskListDataDto;
+import com.example.studenttask.dto.StudentTaskVersionViewResultDto;
+import com.example.studenttask.dto.StudentTaskViewDataDto;
 import com.example.studenttask.model.Group;
 import com.example.studenttask.model.Task;
+import com.example.studenttask.model.TaskContent;
+import com.example.studenttask.model.TaskReview;
 import com.example.studenttask.model.TaskStatus;
 import com.example.studenttask.model.TaskView;
 import com.example.studenttask.model.UnitTitle;
 import com.example.studenttask.model.User;
 import com.example.studenttask.model.UserTask;
-import com.example.studenttask.repository.TaskContentRepository;
-import com.example.studenttask.repository.TaskRepository;
-import com.example.studenttask.repository.UserTaskRepository;
-import com.example.studenttask.service.GroupService;
-import com.example.studenttask.service.TaskContentService;
-import com.example.studenttask.service.TaskReviewService;
-import com.example.studenttask.service.TaskService;
-import com.example.studenttask.service.TaskStatusService;
+import com.example.studenttask.service.StudentTaskOverviewService;
+import com.example.studenttask.service.StudentTaskQueryService;
 import com.example.studenttask.service.UserService;
-import com.example.studenttask.service.UserTaskService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -28,16 +28,14 @@ import org.springframework.ui.Model;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -47,31 +45,10 @@ class StudentControllerTest {
     private UserService userService;
 
     @Mock
-    private TaskService taskService;
+    private StudentTaskOverviewService studentTaskOverviewService;
 
     @Mock
-    private UserTaskService userTaskService;
-
-    @Mock
-    private TaskContentService taskContentService;
-
-    @Mock
-    private TaskRepository taskRepository;
-
-    @Mock
-    private UserTaskRepository userTaskRepository;
-
-    @Mock
-    private TaskStatusService taskStatusService;
-
-    @Mock
-    private TaskReviewService taskReviewService;
-
-    @Mock
-    private GroupService groupService;
-
-    @Mock
-    private TaskContentRepository taskContentRepository;
+    private StudentTaskQueryService studentTaskQueryService;
 
     @InjectMocks
     private StudentController controller;
@@ -91,9 +68,15 @@ class StudentControllerTest {
         UserTask userTask3 = userTask(student, task3, status("\u00dcBERARBEITUNG_N\u00d6TIG"), LocalDateTime.now().minusHours(3));
         UserTask userTask4 = userTask(student, task4, status("VOLLST\u00c4NDIG"), LocalDateTime.now().minusHours(4));
 
-        stubStudentTaskAggregation(student, group,
-                List.of(task1, task2, task3, task4),
-                List.of(userTask1, userTask2, userTask3, userTask4));
+        when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.of(student));
+        when(studentTaskOverviewService.getDashboardData(student)).thenReturn(new StudentDashboardDataDto(
+            List.of(userTask1, userTask2, userTask3),
+            4,
+            1,
+            1,
+            1,
+            1
+        ));
 
         Model model = new ExtendedModelMap();
         String view = controller.dashboard(model, principal("oidc-subject"));
@@ -126,9 +109,15 @@ class StudentControllerTest {
         UserTask userTaskA = userTask(student, taskA, status("ABGEGEBEN"), LocalDateTime.now().minusHours(2));
         UserTask userTaskIntro = userTask(student, taskIntro, status("VOLLST\u00c4NDIG"), LocalDateTime.now().minusHours(1));
 
-        stubStudentTaskAggregation(student, group,
-                List.of(taskB, taskA, taskIntro),
-                List.of(userTaskB, userTaskA, userTaskIntro));
+        Map<UnitTitle, List<UserTask>> tasksByUnitTitle = new LinkedHashMap<>();
+        tasksByUnitTitle.put(basics, List.of(userTaskIntro));
+        tasksByUnitTitle.put(advanced, List.of(userTaskA, userTaskB));
+
+        when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.of(student));
+        when(studentTaskOverviewService.getTaskListData(student)).thenReturn(new StudentTaskListDataDto(
+            List.of(userTaskB, userTaskA, userTaskIntro),
+            tasksByUnitTitle
+        ));
 
         Model model = new ExtendedModelMap();
         String view = controller.taskList(model, principal("oidc-subject"));
@@ -136,12 +125,12 @@ class StudentControllerTest {
         assertThat(view).isEqualTo("student/tasks-list");
 
         @SuppressWarnings("unchecked")
-        Map<UnitTitle, List<UserTask>> tasksByUnitTitle =
+        Map<UnitTitle, List<UserTask>> tasksByUnitTitleFromModel =
                 (Map<UnitTitle, List<UserTask>>) model.getAttribute("tasksByUnitTitle");
 
-        assertThat(new ArrayList<>(tasksByUnitTitle.keySet())).containsExactly(basics, advanced);
-        assertThat(tasksByUnitTitle.get(basics)).containsExactly(userTaskIntro);
-        assertThat(tasksByUnitTitle.get(advanced)).containsExactly(userTaskA, userTaskB);
+        assertThat(new ArrayList<>(tasksByUnitTitleFromModel.keySet())).containsExactly(basics, advanced);
+        assertThat(tasksByUnitTitleFromModel.get(basics)).containsExactly(userTaskIntro);
+        assertThat(tasksByUnitTitleFromModel.get(advanced)).containsExactly(userTaskA, userTaskB);
         assertThat(model.getAttribute("userTasks")).isEqualTo(List.of(userTaskB, userTaskA, userTaskIntro));
     }
 
@@ -149,26 +138,25 @@ class StudentControllerTest {
     void taskHistory_createsMissingUserTaskWithDefaultStatusFromService() {
         User student = user(1L, "Student One");
         Group group = group(11L, "10A");
-        student.setGroups(Set.of(group));
-
         Task task = task(301L, "History Task", group, null);
-        TaskStatus defaultStatus = status("NICHT_BEGONNEN");
+        UserTask userTask = userTask(student, task, status("NICHT_BEGONNEN"), LocalDateTime.now());
+        TaskContent contentVersion = new TaskContent();
+        contentVersion.setVersion(1);
+        TaskReview review = new TaskReview();
 
         when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.of(student));
-        when(taskService.findById(301L)).thenReturn(Optional.of(task));
-        when(userTaskRepository.findByUserAndTask(student, task)).thenReturn(Optional.empty());
-        when(taskStatusService.getDefaultStatus()).thenReturn(defaultStatus);
-        when(userTaskRepository.save(any(UserTask.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(taskContentService.getAllContentVersions(any(UserTask.class))).thenReturn(List.of());
-        when(taskReviewService.findByUserTaskOrderByReviewedAtDesc(any(UserTask.class))).thenReturn(List.of());
+        when(studentTaskQueryService.getTaskHistoryData(student, 301L)).thenReturn(Optional.of(
+            new StudentTaskHistoryDataDto(task, userTask, List.of(contentVersion), List.of(review))
+        ));
 
         Model model = new ExtendedModelMap();
         String view = controller.taskHistory(301L, model, principal("oidc-subject"));
 
         assertThat(view).isEqualTo("student/task-history");
-        UserTask userTask = (UserTask) model.getAttribute("userTask");
-        assertThat(userTask.getStatus()).isSameAs(defaultStatus);
-        verify(taskStatusService).getDefaultStatus();
+        assertThat(model.getAttribute("task")).isSameAs(task);
+        assertThat(model.getAttribute("userTask")).isSameAs(userTask);
+        assertThat(model.getAttribute("contentVersions")).isEqualTo(List.of(contentVersion));
+        assertThat(model.getAttribute("reviews")).isEqualTo(List.of(review));
     }
 
     @Test
@@ -185,26 +173,31 @@ class StudentControllerTest {
         UserTask userTask = userTask(student, task, status("IN_BEARBEITUNG"), LocalDateTime.now());
 
         when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.of(student));
-        when(taskService.findById(401L)).thenReturn(Optional.of(task));
-        when(userTaskService.findByUserIdAndTaskId(student.getId(), 401L)).thenReturn(Optional.of(userTask));
-        when(taskContentService.getLatestContent(userTask)).thenReturn(Optional.empty());
+        when(studentTaskQueryService.getTaskViewData(student, 401L)).thenReturn(
+            new StudentTaskViewDataDto(task, userTask, taskView, "Default content", null, false)
+        );
 
         Model model = new ExtendedModelMap();
         String view = controller.viewTask(401L, model, principal("oidc-subject"));
 
         assertThat(view).isEqualTo("taskviews/task-view");
         assertThat(model.getAttribute("taskView")).isSameAs(taskView);
+        assertThat(model.getAttribute("currentContent")).isEqualTo("Default content");
     }
 
-    private void stubStudentTaskAggregation(User student, Group group, List<Task> tasks, List<UserTask> userTasks) {
-        when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.of(student));
-        when(groupService.findGroupsByUserId(student.getId())).thenReturn(Set.of(group));
-        when(taskRepository.findByAssignedGroupsContainingAndIsActiveTrue(group)).thenReturn(tasks);
-        when(userTaskRepository.findByUser(student)).thenReturn(userTasks);
+    @Test
+    void viewTaskVersion_returnsRedirectProvidedByQueryService() {
+        User student = user(1L, "Student One");
 
-        for (int i = 0; i < tasks.size(); i++) {
-            when(userTaskRepository.findByUserAndTask(student, tasks.get(i))).thenReturn(Optional.of(userTasks.get(i)));
-        }
+        when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.of(student));
+        when(studentTaskQueryService.getTaskVersionViewData(student, 401L, 3)).thenReturn(
+            StudentTaskVersionViewResultDto.redirect("redirect:/student/tasks/401/history")
+        );
+
+        Model model = new ExtendedModelMap();
+        String view = controller.viewTaskVersion(401L, 3, model, principal("oidc-subject"));
+
+        assertThat(view).isEqualTo("redirect:/student/tasks/401/history");
     }
 
     private Principal principal(String name) {
