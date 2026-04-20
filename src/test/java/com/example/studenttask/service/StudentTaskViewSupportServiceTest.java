@@ -46,6 +46,32 @@ class StudentTaskViewSupportServiceTest {
     }
 
     @Test
+    void findAssignedTask_returnsTaskWhenUserHasAccess() {
+        User user = user(1L, "Student One");
+        Task task = task(7L, "Task 7");
+
+        when(taskService.findById(7L)).thenReturn(Optional.of(task));
+        when(taskService.hasUserAccessToTask(user, task)).thenReturn(true);
+
+        Optional<Task> result = studentTaskViewSupportService.findAssignedTask(user, 7L);
+
+        assertThat(result).contains(task);
+    }
+
+    @Test
+    void findAssignedTask_returnsEmptyWhenUserHasNoAccess() {
+        User user = user(1L, "Student One");
+        Task task = task(7L, "Task 7");
+
+        when(taskService.findById(7L)).thenReturn(Optional.of(task));
+        when(taskService.hasUserAccessToTask(user, task)).thenReturn(false);
+
+        Optional<Task> result = studentTaskViewSupportService.findAssignedTask(user, 7L);
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
     void findExistingUserTask_looksUpByUserAndTaskIds() {
         User user = user(1L, "Student One");
         Task task = task(7L, "Task 7");
@@ -101,6 +127,21 @@ class StudentTaskViewSupportServiceTest {
     }
 
     @Test
+    void getRequestedContent_fallsBackToLatestContentWhenConfiguredAndVersionIsMissing() {
+        UserTask userTask = new UserTask();
+        TaskContent latestContent = new TaskContent();
+        latestContent.setVersion(4);
+        latestContent.setContent("latest");
+
+        when(taskContentService.getContentByVersion(userTask, 3)).thenReturn(null);
+        when(taskContentService.getLatestContent(userTask)).thenReturn(Optional.of(latestContent));
+
+        TaskContent result = studentTaskViewSupportService.getRequestedContent(userTask, 3, true);
+
+        assertThat(result).isSameAs(latestContent);
+    }
+
+    @Test
     void resolveCurrentContent_fallsBackToDefaultWhenBlankContentShouldFallback() {
         Task task = task(7L, "Task 7");
         task.setDefaultSubmission("Default content");
@@ -136,6 +177,29 @@ class StudentTaskViewSupportServiceTest {
         TaskView result = studentTaskViewSupportService.resolveTaskView(task);
 
         assertThat(result).isSameAs(resolvedTaskView);
+    }
+
+    @Test
+    void resolveTemplatePath_returnsResolvedTemplatePathWhenAvailable() {
+        Task task = task(7L, "Task 7");
+        TaskView embeddedTaskView = taskView(5L, "embedded");
+        TaskView resolvedTaskView = taskView(5L, "taskviews/resolved-template");
+        task.setTaskView(embeddedTaskView);
+
+        when(taskViewService.findById(5L)).thenReturn(Optional.of(resolvedTaskView));
+
+        String result = studentTaskViewSupportService.resolveTemplatePath(task, "taskviews/simple-text.html");
+
+        assertThat(result).isEqualTo("taskviews/resolved-template");
+    }
+
+    @Test
+    void resolveTemplatePath_returnsFallbackWhenResolvedTaskViewIsMissing() {
+        Task task = task(7L, "Task 7");
+
+        String result = studentTaskViewSupportService.resolveTemplatePath(task, "taskviews/simple-text.html");
+
+        assertThat(result).isEqualTo("taskviews/simple-text.html");
     }
 
     @Test

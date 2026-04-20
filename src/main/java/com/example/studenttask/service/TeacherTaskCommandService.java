@@ -85,7 +85,7 @@ public class TeacherTaskCommandService {
     }
 
     public boolean submitReview(Long userTaskId, String reviewerSubject, Long statusId, String comment,
-            String submissionIdStr, String currentVersionStr) {
+            String currentVersionStr) {
         Optional<UserTask> userTaskOpt = userTaskService.findById(userTaskId);
         if (userTaskOpt.isEmpty()) {
             return false;
@@ -98,10 +98,9 @@ public class TeacherTaskCommandService {
 
         UserTask userTask = userTaskOpt.get();
         User reviewer = reviewerOpt.get();
-        Long submissionId = parseOptionalLong(submissionIdStr);
         Integer currentVersion = parseOptionalInteger(currentVersionStr);
 
-        taskReviewService.createReview(userTask, reviewer, statusId, comment, submissionId, currentVersion);
+        taskReviewService.createReview(userTask, reviewer, statusId, comment, currentVersion);
         userTaskService.save(userTask);
         return true;
     }
@@ -133,14 +132,6 @@ public class TeacherTaskCommandService {
         }
 
         return unitTitleService.findById(unitTitleId);
-    }
-
-    private Long parseOptionalLong(String value) {
-        if (value == null || value.trim().isEmpty()) {
-            return null;
-        }
-
-        return Long.parseLong(value);
     }
 
     private Integer parseOptionalInteger(String value) {

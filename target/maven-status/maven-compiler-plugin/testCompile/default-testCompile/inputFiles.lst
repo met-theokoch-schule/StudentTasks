@@ -1,6 +1,7 @@
 /home/runner/workspace/src/test/java/com/example/studenttask/controller/TeacherTaskControllerTest.java
 /home/runner/workspace/src/test/java/com/example/studenttask/controller/TaskControllerTest.java
 /home/runner/workspace/src/test/java/com/example/studenttask/service/TaskStatusSupportTest.java
+/home/runner/workspace/src/test/java/com/example/studenttask/service/TaskReviewServiceTest.java
 /home/runner/workspace/src/test/java/com/example/studenttask/service/StudentTaskApiAccessServiceTest.java
 /home/runner/workspace/src/test/java/com/example/studenttask/service/StudentTaskViewSupportServiceTest.java
 /home/runner/workspace/src/test/java/com/example/studenttask/controller/StudentTaskApiControllerTest.java
@@ -9,11 +10,13 @@
 /home/runner/workspace/src/test/java/com/example/studenttask/service/StudentTaskQueryServiceTest.java
 /home/runner/workspace/src/test/java/com/example/studenttask/service/StudentTaskApiQueryServiceTest.java
 /home/runner/workspace/src/test/java/com/example/studenttask/service/TeacherTaskCommandServiceTest.java
+/home/runner/workspace/src/test/java/com/example/studenttask/service/SubmissionServiceTest.java
 /home/runner/workspace/src/test/java/com/example/studenttask/service/TaskServiceTest.java
 /home/runner/workspace/src/test/java/com/example/studenttask/controller/StudentControllerTest.java
 /home/runner/workspace/src/test/java/com/example/studenttask/controller/TeacherGroupControllerTest.java
 /home/runner/workspace/src/test/java/com/example/studenttask/service/UserTaskServiceTest.java
 /home/runner/workspace/src/test/java/com/example/studenttask/controller/DashboardControllerTest.java
+/home/runner/workspace/src/test/java/com/example/studenttask/controller/DebugControllerTest.java
 /home/runner/workspace/src/test/java/com/example/studenttask/service/TaskContentServiceTest.java
 /home/runner/workspace/src/test/java/com/example/studenttask/service/StudentTaskApiCommandServiceTest.java
 /home/runner/workspace/src/test/java/com/example/studenttask/service/TaskIframeQueryServiceTest.java

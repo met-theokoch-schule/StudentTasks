@@ -187,12 +187,11 @@ class TeacherTaskCommandServiceTest {
             "oidc-teacher",
             7L,
             "Gut gemacht",
-            "15",
             "2"
         );
 
         assertThat(submitted).isTrue();
-        verify(taskReviewService).createReview(userTask, reviewer, 7L, "Gut gemacht", 15L, 2);
+        verify(taskReviewService).createReview(userTask, reviewer, 7L, "Gut gemacht", 2);
         verify(userTaskService).save(userTask);
     }
 
@@ -205,7 +204,6 @@ class TeacherTaskCommandServiceTest {
             "oidc-teacher",
             7L,
             "Kommentar",
-            null,
             null
         );
 

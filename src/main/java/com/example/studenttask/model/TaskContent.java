@@ -27,9 +27,6 @@ public class TaskContent {
     @Column(nullable = false)
     private Boolean isSubmitted = false; // false = draft, true = submitted
 
-    @OneToOne(mappedBy = "taskContent", cascade = CascadeType.ALL)
-    private Submission submission;
-
     // Constructors
     public TaskContent() {
         this.savedAt = LocalDateTime.now();
@@ -97,14 +94,6 @@ public class TaskContent {
 
     public void setSubmitted(Boolean submitted) {
         this.isSubmitted = submitted;
-    }
-
-    public Submission getSubmission() {
-        return submission;
-    }
-
-    public void setSubmission(Submission submission) {
-        this.submission = submission;
     }
 
     @Override

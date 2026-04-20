@@ -11,7 +11,6 @@ import com.example.studenttask.model.TaskStatus;
 import com.example.studenttask.model.TaskView;
 import com.example.studenttask.model.User;
 import com.example.studenttask.model.UserTask;
-import com.example.studenttask.repository.UserTaskRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,27 +24,16 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class StudentTaskQueryServiceTest {
 
     @Mock
-    private TaskService taskService;
-
-    @Mock
     private StudentTaskViewSupportService studentTaskViewSupportService;
 
     @Mock
     private TaskContentService taskContentService;
-
-    @Mock
-    private UserTaskRepository userTaskRepository;
-
-    @Mock
-    private TaskStatusService taskStatusService;
 
     @Mock
     private TaskReviewService taskReviewService;
@@ -162,17 +150,15 @@ class StudentTaskQueryServiceTest {
         student.setGroups(Set.of(group));
 
         Task task = task(201L, "History Task", group);
-        TaskStatus defaultStatus = status("NICHT_BEGONNEN");
+        UserTask userTask = userTask(student, task, status("NICHT_BEGONNEN"));
         TaskContent version = new TaskContent();
         version.setVersion(1);
         TaskReview review = new TaskReview();
 
-        when(taskService.findById(201L)).thenReturn(Optional.of(task));
-        when(userTaskRepository.findByUserAndTask(student, task)).thenReturn(Optional.empty());
-        when(taskStatusService.getDefaultStatus()).thenReturn(defaultStatus);
-        when(userTaskRepository.save(any(UserTask.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(taskContentService.getAllContentVersions(any(UserTask.class))).thenReturn(List.of(version));
-        when(taskReviewService.findByUserTaskOrderByReviewedAtDesc(any(UserTask.class))).thenReturn(List.of(review));
+        when(studentTaskViewSupportService.findAssignedTask(student, 201L)).thenReturn(Optional.of(task));
+        when(studentTaskViewSupportService.findOrCreateUserTask(student, task)).thenReturn(userTask);
+        when(taskContentService.getAllContentVersions(userTask)).thenReturn(List.of(version));
+        when(taskReviewService.findByUserTaskOrderByReviewedAtDesc(userTask)).thenReturn(List.of(review));
 
         Optional<StudentTaskHistoryDataDto> historyDataOpt = studentTaskQueryService.getTaskHistoryData(student, 201L);
 
@@ -181,19 +167,14 @@ class StudentTaskQueryServiceTest {
         assertThat(historyData.getTask()).isSameAs(task);
         assertThat(historyData.getContentVersions()).containsExactly(version);
         assertThat(historyData.getReviews()).containsExactly(review);
-        assertThat(historyData.getUserTask().getStatus()).isSameAs(defaultStatus);
-        assertThat(historyData.getUserTask().getStartedAt()).isNotNull();
-        verify(taskStatusService).getDefaultStatus();
-        verify(userTaskRepository).save(any(UserTask.class));
+        assertThat(historyData.getUserTask()).isSameAs(userTask);
     }
 
     @Test
     void getTaskHistoryData_returnsEmptyWhenStudentHasNoAccess() {
         User student = user(1L, "Student One");
         student.setGroups(Set.of(group(12L, "10B")));
-        Task task = task(202L, "History Task", group(11L, "10A"));
-
-        when(taskService.findById(202L)).thenReturn(Optional.of(task));
+        when(studentTaskViewSupportService.findAssignedTask(student, 202L)).thenReturn(Optional.empty());
 
         assertThat(studentTaskQueryService.getTaskHistoryData(student, 202L)).isEmpty();
     }
@@ -209,9 +190,9 @@ class StudentTaskQueryServiceTest {
 
         UserTask userTask = userTask(student, task, status("ABGEGEBEN"));
 
-        when(taskService.findById(301L)).thenReturn(Optional.of(task));
-        when(userTaskRepository.findByUserAndTask(student, task)).thenReturn(Optional.of(userTask));
-        when(taskContentService.getContentByVersion(userTask, 4)).thenReturn(null);
+        when(studentTaskViewSupportService.findAssignedTask(student, 301L)).thenReturn(Optional.of(task));
+        when(studentTaskViewSupportService.findExistingUserTask(student, task)).thenReturn(Optional.of(userTask));
+        when(studentTaskViewSupportService.getRequestedContent(userTask, 4)).thenReturn(null);
 
         StudentTaskVersionViewResultDto result = studentTaskQueryService.getTaskVersionViewData(student, 301L, 4);
 
@@ -235,9 +216,9 @@ class StudentTaskQueryServiceTest {
         versionContent.setVersion(2);
         versionContent.setContent("Historic content");
 
-        when(taskService.findById(302L)).thenReturn(Optional.of(task));
-        when(userTaskRepository.findByUserAndTask(student, task)).thenReturn(Optional.of(userTask));
-        when(taskContentService.getContentByVersion(userTask, 2)).thenReturn(versionContent);
+        when(studentTaskViewSupportService.findAssignedTask(student, 302L)).thenReturn(Optional.of(task));
+        when(studentTaskViewSupportService.findExistingUserTask(student, task)).thenReturn(Optional.of(userTask));
+        when(studentTaskViewSupportService.getRequestedContent(userTask, 2)).thenReturn(versionContent);
 
         StudentTaskVersionViewResultDto result = studentTaskQueryService.getTaskVersionViewData(student, 302L, 2);
 
@@ -247,6 +228,35 @@ class StudentTaskQueryServiceTest {
         assertThat(result.getViewData().getCurrentContent()).isEqualTo("Historic content");
         assertThat(result.getViewData().getViewingVersion()).isEqualTo(2);
         assertThat(result.getViewData().isHistoryView()).isTrue();
+    }
+
+    @Test
+    void getTaskVersionViewData_returnsHistoryRedirectWhenUserTaskDoesNotExist() {
+        User student = user(1L, "Student One");
+        Group group = group(11L, "10A");
+        student.setGroups(Set.of(group));
+
+        Task task = task(303L, "Version Task", group);
+        task.setTaskView(taskView(8L, "taskviews/version-view"));
+
+        when(studentTaskViewSupportService.findAssignedTask(student, 303L)).thenReturn(Optional.of(task));
+        when(studentTaskViewSupportService.findExistingUserTask(student, task)).thenReturn(Optional.empty());
+
+        StudentTaskVersionViewResultDto result = studentTaskQueryService.getTaskVersionViewData(student, 303L, 2);
+
+        assertThat(result.isRedirect()).isTrue();
+        assertThat(result.getRedirectPath()).isEqualTo("redirect:/student/tasks/303/history");
+    }
+
+    @Test
+    void getTaskVersionViewData_returnsDashboardRedirectWhenStudentHasNoTaskAccess() {
+        User student = user(1L, "Student One");
+        when(studentTaskViewSupportService.findAssignedTask(student, 304L)).thenReturn(Optional.empty());
+
+        StudentTaskVersionViewResultDto result = studentTaskQueryService.getTaskVersionViewData(student, 304L, 2);
+
+        assertThat(result.isRedirect()).isTrue();
+        assertThat(result.getRedirectPath()).isEqualTo("redirect:/student/dashboard");
     }
 
     private User user(Long id, String name) {

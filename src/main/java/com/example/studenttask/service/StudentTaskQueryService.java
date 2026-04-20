@@ -9,13 +9,11 @@ import com.example.studenttask.model.TaskReview;
 import com.example.studenttask.model.TaskView;
 import com.example.studenttask.model.User;
 import com.example.studenttask.model.UserTask;
-import com.example.studenttask.repository.UserTaskRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,16 +23,7 @@ public class StudentTaskQueryService {
     private static final Logger log = LoggerFactory.getLogger(StudentTaskQueryService.class);
 
     @Autowired
-    private TaskService taskService;
-
-    @Autowired
     private TaskContentService taskContentService;
-
-    @Autowired
-    private UserTaskRepository userTaskRepository;
-
-    @Autowired
-    private TaskStatusService taskStatusService;
 
     @Autowired
     private TaskReviewService taskReviewService;
@@ -85,13 +74,13 @@ public class StudentTaskQueryService {
     }
 
     public Optional<StudentTaskHistoryDataDto> getTaskHistoryData(User student, Long taskId) {
-        Optional<Task> taskOpt = findAssignedTask(student, taskId);
+        Optional<Task> taskOpt = studentTaskViewSupportService.findAssignedTask(student, taskId);
         if (taskOpt.isEmpty()) {
             return Optional.empty();
         }
 
         Task task = taskOpt.get();
-        UserTask userTask = findOrCreateHistoryUserTask(student, task);
+        UserTask userTask = studentTaskViewSupportService.findOrCreateUserTask(student, task);
 
         List<TaskContent> contentVersions = taskContentService.getAllContentVersions(userTask);
         List<TaskReview> reviews = taskReviewService.findByUserTaskOrderByReviewedAtDesc(userTask);
@@ -100,24 +89,23 @@ public class StudentTaskQueryService {
     }
 
     public StudentTaskVersionViewResultDto getTaskVersionViewData(User student, Long taskId, Integer version) {
-        Optional<Task> taskOpt = findAssignedTask(student, taskId);
+        Optional<Task> taskOpt = studentTaskViewSupportService.findAssignedTask(student, taskId);
         if (taskOpt.isEmpty()) {
             return StudentTaskVersionViewResultDto.redirect("redirect:/student/dashboard");
         }
 
         Task task = taskOpt.get();
-        Optional<UserTask> userTaskOpt = userTaskRepository.findByUserAndTask(student, task);
+        Optional<UserTask> userTaskOpt = studentTaskViewSupportService.findExistingUserTask(student, task);
         if (userTaskOpt.isEmpty()) {
             return StudentTaskVersionViewResultDto.redirect("redirect:/student/tasks/" + taskId + "/history");
         }
 
         UserTask userTask = userTaskOpt.get();
-        TaskView taskView = task.getTaskView();
-        if (taskView == null) {
+        if (task.getTaskView() == null) {
             return StudentTaskVersionViewResultDto.redirect("redirect:/student/tasks/" + taskId + "/history");
         }
 
-        TaskContent versionContent = taskContentService.getContentByVersion(userTask, version);
+        TaskContent versionContent = studentTaskViewSupportService.getRequestedContent(userTask, version);
         if (versionContent == null) {
             return StudentTaskVersionViewResultDto.redirect("redirect:/student/tasks/" + taskId + "/history");
         }
@@ -126,32 +114,11 @@ public class StudentTaskQueryService {
             new StudentTaskViewDataDto(
                 task,
                 userTask,
-                taskView,
+                task.getTaskView(),
                 versionContent.getContent(),
                 version,
                 true
             )
         );
     }
-
-    private Optional<Task> findAssignedTask(User student, Long taskId) {
-        return taskService.findById(taskId)
-            .filter(task -> task.getAssignedGroups().stream()
-                .anyMatch(group -> student.getGroups().contains(group)));
-    }
-
-    private UserTask findOrCreateHistoryUserTask(User student, Task task) {
-        Optional<UserTask> userTaskOpt = userTaskRepository.findByUserAndTask(student, task);
-        if (userTaskOpt.isPresent()) {
-            return userTaskOpt.get();
-        }
-
-        UserTask userTask = new UserTask();
-        userTask.setUser(student);
-        userTask.setTask(task);
-        userTask.setStartedAt(LocalDateTime.now());
-        userTask.setStatus(taskStatusService.getDefaultStatus());
-        return userTaskRepository.save(userTask);
-    }
-
 }

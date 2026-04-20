@@ -3,8 +3,6 @@ package com.example.studenttask.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "submissions")
@@ -27,12 +25,7 @@ public class Submission {
     
     @Column(nullable = false)
     private Integer version; // Reference to TaskContent.version
-    
-    // Reviews werden jetzt über Version und UserTask verknüpft, nicht mehr direkt über Submission
-    // @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    // @OrderBy("reviewedAt DESC")
-    // private List<TaskReview> reviews = new ArrayList<>();
-    
+
     // Constructors
     public Submission() {
         this.submittedAt = LocalDateTime.now();
@@ -88,21 +81,7 @@ public class Submission {
     public void setVersion(Integer version) {
         this.version = version;
     }
-    
-    // Reviews methods entfernt da TaskReview nicht mehr direkt mit Submission verknüpft ist
-    // public List<TaskReview> getReviews() {
-    //     return reviews;
-    // }
-    // 
-    // public void setReviews(List<TaskReview> reviews) {
-    //     this.reviews = reviews;
-    // }
-    // 
-    // // Helper methods
-    // public TaskReview getLatestReview() {
-    //     return reviews.isEmpty() ? null : reviews.get(0);
-    // }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;

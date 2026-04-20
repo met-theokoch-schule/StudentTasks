@@ -134,10 +134,6 @@ public class UserTask {
         return contents.isEmpty() ? null : contents.get(0);
     }
     
-    public Submission getLatestSubmission() {
-        return submissions.isEmpty() ? null : submissions.get(0);
-    }
-    
     public TaskReview getLatestReview() {
         return reviews.isEmpty() ? null : reviews.get(0);
     }

@@ -207,14 +207,13 @@ class TeacherTaskControllerTest {
     void submitReview_delegatesToCommandServiceAndRedirectsToReturnUrl() {
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getParameter("currentVersion")).thenReturn("2");
-        when(teacherTaskCommandService.submitReview(30L, "oidc-teacher", 7L, "Gut gemacht", "15", "2"))
+        when(teacherTaskCommandService.submitReview(30L, "oidc-teacher", 7L, "Gut gemacht", "2"))
             .thenReturn(true);
 
         String view = controller.submitReview(
             30L,
             7L,
             "Gut gemacht",
-            "15",
             "/teacher/tasks/20/submissions",
             authentication("oidc-teacher"),
             request
@@ -227,14 +226,13 @@ class TeacherTaskControllerTest {
     void submitReview_redirectsToTaskListWhenCommandServiceRejects() {
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getParameter("currentVersion")).thenReturn(null);
-        when(teacherTaskCommandService.submitReview(30L, "oidc-teacher", 7L, "Kommentar", null, null))
+        when(teacherTaskCommandService.submitReview(30L, "oidc-teacher", 7L, "Kommentar", null))
             .thenReturn(false);
 
         String view = controller.submitReview(
             30L,
             7L,
             "Kommentar",
-            null,
             null,
             authentication("oidc-teacher"),
             request

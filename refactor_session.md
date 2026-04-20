@@ -1457,3 +1457,540 @@ Letzter erfolgreicher vollständiger Testlauf:
   - Failures: `0`
   - Errors: `0`
   - Skipped: `0`
+
+## Lehrer-Review-Pfad auf versionsbasiertes Review verengt
+Stand: 2026-04-20
+
+Im naechsten kleinen Slice wurde der Lehrer-Review-Befehlspfad von einem inzwischen toten `submissionId`-Parameter befreit. Reviews werden in diesem Pfad jetzt explizit nur noch ueber `UserTask` und optional `currentVersion` erzeugt.
+
+### Ziel
+- alten, nicht mehr genutzten `submissionId`-Durchstich aus Controller-, Command- und Review-Service entfernen
+- den aktuellen Review-Pfad fachlich auf die bereits gelebte Versionssemantik verengen
+- die bestehende Submission-Erzeugung noch nicht anfassen, um den Slice klein und risikoarm zu halten
+
+### Umgesetzt
+- `src/main/java/com/example/studenttask/controller/TeacherTaskController.java`
+  - reicht bei `submitReview(...)` nur noch `currentVersion` an den Command-Service weiter
+- `src/main/java/com/example/studenttask/service/TeacherTaskCommandService.java`
+  - akzeptiert kein `submissionIdStr` mehr
+  - parst fuer Reviews nur noch die optionale `currentVersion`
+- `src/main/java/com/example/studenttask/service/TaskReviewService.java`
+  - `createReview(...)` wurde auf den fachlich relevanten Parameterkern reduziert:
+    - `UserTask`
+    - `reviewer`
+    - `statusId`
+    - `comment`
+    - optionale `currentVersion`
+  - die ungenutzte `SubmissionService`-Abhaengigkeit wurde entfernt
+
+### Verhalten / Abgrenzung
+- kein geaendertes Controller-Routing
+- keine Aenderung am Review-Redirect-Verhalten
+- keine Aenderung an der eigentlichen Submission-Erzeugung
+- `Submission`/`SubmissionService` bleiben weiterhin im System, weil sie ausserhalb dieses Review-Slices noch aktiv fuer Content-/Submission-Erzeugung verwendet werden
+
+### Testanpassungen
+- neuer Test `src/test/java/com/example/studenttask/service/TaskReviewServiceTest.java`
+  - prueft das Setzen von Status, Version und `lastModified` beim Review-Schreiben
+  - prueft die verfuegbaren Lehrer-Review-Statuswerte
+- `src/test/java/com/example/studenttask/service/TeacherTaskCommandServiceTest.java`
+  - auf die reduzierte `submitReview(...)`-/`createReview(...)`-Signatur umgestellt
+- `src/test/java/com/example/studenttask/controller/TeacherTaskControllerTest.java`
+  - auf die reduzierte Review-Signatur umgestellt
+  - dabei einen veralteten Testaufruf mit ueberzaehligem Parameter bereinigt
+
+### Teststatus
+Gezielter Review-/Teacher-Testlauf:
+- Befehl: `mvn -Dmaven.repo.local=/tmp/m2 -Dtest=TeacherTaskControllerTest,TeacherTaskCommandServiceTest,TeacherTaskQueryServiceTest,TaskReviewServiceTest,TaskContentServiceTest test`
+- Zeitpunkt: `2026-04-20T04:52:55Z`
+- Ergebnis:
+  - Tests: `32`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-20T04:53:15Z`
+- Ergebnis:
+  - Tests: `122`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+## Teacher-Review-Read-Pfad auf UserTask-basierte Versionsstatusabfrage umgestellt
+Stand: 2026-04-20
+
+Im naechsten kleinen Read-Slice wurde die Versionsstatus-Abfrage fuer die Lehrer-Review-Seite auf den bereits geladenen `UserTask` verengt. Der Teacher-Query-Pfad muss fuer die Dropdown-/Statusdaten damit keinen zweiten Lookup ueber `userTaskId` mehr ausloesen.
+
+### Ziel
+- unnoetige Rehydrierung derselben `UserTask` im Teacher-Review-Lesepfad entfernen
+- die Versionsstatus-Berechnung fachlich auf den bereits vorhandenen `UserTask` beziehen
+- einen kleinen Query-Helfer-Schritt im groesseren Versionierungs-/Submission-Refactoring ziehen, ohne Persistenzmodell oder HTTP-Verhalten zu aendern
+
+### Umgesetzt
+- `src/main/java/com/example/studenttask/service/TaskContentService.java`
+  - `getVersionsWithSubmissionStatus(...)` akzeptiert jetzt direkt `UserTask`
+  - die Methode erzeugt die View-Daten damit ohne erneuten Repository-Lookup der `UserTask`
+- `src/main/java/com/example/studenttask/service/TeacherTaskQueryService.java`
+  - reicht in `getSubmissionReviewData(...)` den bereits geladenen `UserTask` direkt an `TaskContentService` weiter
+
+### Verhalten / Abgrenzung
+- kein geaendertes Controller-Routing
+- keine Aenderung an den erzeugten Versionslabels oder Icons
+- keine Aenderung an Submission-Erzeugung oder Review-Schreiblogik
+- der Slice betrifft nur den internen Query-Pfad fuer die Lehrer-Review-Seite
+
+### Testanpassungen
+- `src/test/java/com/example/studenttask/service/TeacherTaskQueryServiceTest.java`
+  - auf die neue `UserTask`-basierte Signatur umgestellt
+- `src/test/java/com/example/studenttask/service/TaskContentServiceTest.java`
+  - um einen direkten Test fuer Versionsstatus-Labels erweitert
+  - prueft reviewed/pending/draft-Faelle inklusive `👁`-/`⏳`-Markierung
+
+### Teststatus
+Gezielter Teacher-/Content-Testlauf:
+- Befehl: `mvn -Dmaven.repo.local=/tmp/m2 -Dtest=TeacherTaskControllerTest,TeacherTaskQueryServiceTest,TaskContentServiceTest,TaskReviewServiceTest test`
+- Zeitpunkt: `2026-04-20T04:58:18Z`
+- Ergebnis:
+  - Tests: `25`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-20T04:58:40Z`
+- Ergebnis:
+  - Tests: `123`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+## Debug-Content-Read-Pfad auf StudentTaskViewSupportService konsolidiert
+Stand: 2026-04-20
+
+Im naechsten kleinen Read-Slice wurde die doppelte Task-/`UserTask`-/Content-Aufloesung im `DebugController` auf den bereits vorhandenen `StudentTaskViewSupportService` umgelegt. Damit verwendet auch der Debug-Pfad denselben Kern fuer Task-Lookup, bestehende `UserTask`-Aufloesung und Versions-/Latest-Content-Auswahl.
+
+### Ziel
+- doppelte Read-Logik im `DebugController` abbauen
+- den bestehenden Support-Service auch fuer den Debug-Content-Viewer nutzen
+- den Slice klein halten und nur interne Entdopplung ohne geaendertes Debug-Verhalten vornehmen
+
+### Umgesetzt
+- `src/main/java/com/example/studenttask/controller/DebugController.java`
+  - delegiert Task-Lookup jetzt an `StudentTaskViewSupportService.findTask(...)`
+  - delegiert bestehende `UserTask`-Aufloesung jetzt an `StudentTaskViewSupportService.findExistingUserTask(...)`
+  - delegiert Version-/Latest-Content-Auswahl jetzt an `StudentTaskViewSupportService.getRequestedContent(...)`
+  - entfernt dabei unnoetige direkte Abhaengigkeiten auf mehrere Fachservices
+
+### Verhalten / Abgrenzung
+- kein geaendertes Routing des Debug-Viewers
+- bestehende Fehlermeldungen fuer fehlenden Login, fehlende Aufgabe, fehlende `UserTask` und fehlende Version bleiben erhalten
+- kein Ausbau des Debug-Pfads zu einem allgemeinen Produktiv-Read-Service; es wurde nur der bereits vorhandene Support-Service wiederverwendet
+
+### Testanpassungen
+- neuer Test `src/test/java/com/example/studenttask/controller/DebugControllerTest.java`
+  - prueft erfolgreichen Versions-Read fuer den eingeloggten Benutzer
+  - prueft Fehlerfall fuer fehlende angeforderte Version
+  - prueft Fehlerfall ohne eingeloggten Benutzer
+
+### Teststatus
+Gezielter Debug-/Teacher-/Content-Testlauf:
+- Befehl: `mvn -Dmaven.repo.local=/tmp/m2 -Dtest=DebugControllerTest,TeacherTaskControllerTest,TeacherTaskQueryServiceTest,TaskContentServiceTest,StudentTaskViewSupportServiceTest test`
+- Zeitpunkt: `2026-04-20T05:01:07Z`
+- Ergebnis:
+  - Tests: `35`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-20T05:01:28Z`
+- Ergebnis:
+  - Tests: `126`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+## Student- und Teacher-Read-Pfade auf gemeinsame Versionsaufloesung verengt
+Stand: 2026-04-20
+
+Im naechsten kleinen Read-Slice wurde die Version-/Content-Aufloesung zwischen Student- und Teacher-Views weiter auf den bereits vorhandenen `StudentTaskViewSupportService` zusammengezogen. Die Fallback-Semantik ist dabei jetzt explizit im Support-Service modelliert, statt im Teacher-Query-Pfad lokal nachgebaut zu werden.
+
+### Ziel
+- doppelte Version-/Content-Aufloesung in Student- und Teacher-Read-Pfaden reduzieren
+- die unterschiedliche Fachsemantik explizit abbilden:
+  - Student-History-View: angeforderte Version strikt, kein Fallback
+  - Teacher-Submission-View: bei fehlender angeforderter Version auf letzte vorhandene Version zurueckfallen
+- keine Aenderung am HTTP-Verhalten der betroffenen Seiten
+
+### Umgesetzt
+- `src/main/java/com/example/studenttask/service/StudentTaskViewSupportService.java`
+  - `getRequestedContent(...)` wurde um eine Variante mit expliziter Fallback-Steuerung erweitert
+  - damit ist jetzt zentral modelliert, ob bei fehlender Zielversion auf die letzte Version zurueckgefallen werden soll
+- `src/main/java/com/example/studenttask/service/StudentTaskQueryService.java`
+  - nutzt fuer den History-Version-View jetzt ebenfalls den Support-Service statt direktem `TaskContentService`-Zugriff
+  - behaelt dabei die strikte Versionssemantik ohne Fallback bei
+- `src/main/java/com/example/studenttask/service/TeacherTaskQueryService.java`
+  - nutzt fuer den Submission-Content-View jetzt denselben Support-Service
+  - aktiviert dabei explizit den Teacher-spezifischen Fallback auf die letzte Version
+
+### Verhalten / Abgrenzung
+- kein geaendertes Routing
+- keine Aenderung an Redirect-Zielen im Student-History-Pfad
+- keine Aenderung an der Teacher-Submission-Anzeige:
+  - vorhandene Zielversion wird direkt verwendet
+  - fehlende Zielversion faellt weiterhin auf die letzte vorhandene Version zurueck
+- iframe- und Debug-Pfade bleiben auf der strikten bestehenden Semantik und wurden in diesem Slice nicht fachlich veraendert
+
+### Testanpassungen
+- `src/test/java/com/example/studenttask/service/StudentTaskViewSupportServiceTest.java`
+  - um einen direkten Test fuer den konfigurierbaren Fallback auf die letzte Version erweitert
+- `src/test/java/com/example/studenttask/service/StudentTaskQueryServiceTest.java`
+  - auf die zentrale Versionsaufloesung ueber den Support-Service umgestellt
+- `src/test/java/com/example/studenttask/service/TeacherTaskQueryServiceTest.java`
+  - auf die zentrale Versionsaufloesung ueber den Support-Service umgestellt
+  - prueft dabei weiter den Teacher-Fallback auf die letzte Version
+
+### Teststatus
+Gezielter Read-Pfad-Testlauf:
+- Befehl: `mvn -Dmaven.repo.local=/tmp/m2 -Dtest=StudentTaskViewSupportServiceTest,StudentTaskQueryServiceTest,TeacherTaskQueryServiceTest,TaskIframeQueryServiceTest,DebugControllerTest test`
+- Zeitpunkt: `2026-04-20T05:05:30Z`
+- Ergebnis:
+  - Tests: `36`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-20T05:05:50Z`
+- Ergebnis:
+  - Tests: `127`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+## Teacher-Template-Aufloesung auf StudentTaskViewSupportService konsolidiert
+Stand: 2026-04-20
+
+Im naechsten kleinen Teacher-Read-Slice wurde die verbliebene lokale Template-Aufloesung aus `TeacherTaskQueryService` entfernt und auf den bereits vorhandenen `StudentTaskViewSupportService` gelegt. Damit ist auch der Lehrer-Submission-View fuer TaskView-/Template-Aufloesung auf denselben Support-Kern wie die uebrigen Read-Pfade verengt.
+
+### Ziel
+- die letzte lokale TaskView-/Template-Aufloesung im Teacher-Read-Pfad abbauen
+- die Lehrer-Submission-Ansicht bei der Template-Bestimmung an die bereits zentralisierte Support-Logik anbinden
+- den bisherigen Lehrer-Fallback auf `taskviews/simple-text.html` explizit erhalten
+
+### Umgesetzt
+- `src/main/java/com/example/studenttask/service/StudentTaskViewSupportService.java`
+  - ergaenzt um `resolveTemplatePath(Task task, String fallbackTemplatePath)`
+  - nutzt intern die bereits zentrale `resolveTaskView(...)`- und `hasRenderableTemplate(...)`-Logik
+- `src/main/java/com/example/studenttask/service/TeacherTaskQueryService.java`
+  - verwendet fuer `getSubmissionContentViewData(...)` jetzt `StudentTaskViewSupportService.resolveTemplatePath(...)`
+  - die lokale `resolveTemplatePath(...)`-Hilfsmethode wurde entfernt
+
+### Verhalten / Abgrenzung
+- kein geaendertes Routing
+- kein geaendertes Lehrer-Fallback-Template:
+  - wenn keine renderbare TaskView aufloesbar ist, bleibt `taskviews/simple-text.html` der Fallback
+- die eigentliche Formdaten-Aufloesung ueber `TaskViewService.findAllActive()` bleibt unveraendert und war nicht Teil dieses Slices
+
+### Testanpassungen
+- `src/test/java/com/example/studenttask/service/StudentTaskViewSupportServiceTest.java`
+  - erweitert um direkte Tests fuer zentrale Template-Aufloesung und Fallback
+- `src/test/java/com/example/studenttask/service/TeacherTaskQueryServiceTest.java`
+  - auf die zentrale Template-Aufloesung ueber den Support-Service umgestellt
+- `src/test/java/com/example/studenttask/controller/TeacherTaskControllerTest.java`
+  - bleibt gruen und bestaetigt unveraenderte Aussenschnittstelle des Teacher-Submission-Views
+
+### Teststatus
+Gezielter Teacher-/Support-Testlauf:
+- Befehl: `mvn -Dmaven.repo.local=/tmp/m2 -Dtest=StudentTaskViewSupportServiceTest,TeacherTaskQueryServiceTest,TeacherTaskControllerTest test`
+- Zeitpunkt: `2026-04-20T05:40:40Z`
+- Ergebnis:
+  - Tests: `31`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-20T05:41:00Z`
+- Ergebnis:
+  - Tests: `129`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+## Student-Query-Pfade von lokaler UserTask-Erzeugung und Direkt-Lookups befreit
+Stand: 2026-04-20
+
+Im naechsten kleinen Student-Slice wurde die verbliebene lokale `UserTask`-Initialisierung in `StudentTaskQueryService` entfernt. Sowohl der History-Pfad als auch der Versions-View greifen jetzt fuer `UserTask`-Aufloesung konsequent auf bereits vorhandene Service-/Support-Pfade zurueck.
+
+### Ziel
+- lokale `UserTask`-Erzeugung im Student-History-Pfad entfernen
+- direkten Repository-Lookup im Student-Versionspfad abbauen
+- `StudentTaskQueryService` auf dieselbe `UserTask`-Aufloesungsrichtung bringen wie die uebrigen Read-Pfade
+
+### Umgesetzt
+- `src/main/java/com/example/studenttask/service/StudentTaskQueryService.java`
+  - `getTaskHistoryData(...)` verwendet jetzt `StudentTaskViewSupportService.findOrCreateUserTask(...)`
+  - `getTaskVersionViewData(...)` verwendet jetzt `StudentTaskViewSupportService.findExistingUserTask(...)`
+  - die lokale Hilfsmethode zur History-`UserTask`-Erzeugung wurde entfernt
+  - direkte Abhaengigkeiten auf `UserTaskRepository` und `TaskStatusService` wurden aus dem Query-Service entfernt
+
+### Verhalten / Abgrenzung
+- kein geaendertes Routing
+- keine Aenderung an Redirect-Zielen im History- oder Versionspfad
+- die fachliche Semantik bleibt gleich:
+  - History erzeugt bei Bedarf weiter eine `UserTask`
+  - Versionsansicht bleibt bei fehlender `UserTask` weiter auf Redirect zur History-Seite
+
+### Testanpassungen
+- `src/test/java/com/example/studenttask/service/StudentTaskQueryServiceTest.java`
+  - auf die Delegation an `StudentTaskViewSupportService` umgestellt
+  - um einen expliziten Redirect-Test fuer fehlende `UserTask` im Versionspfad erweitert
+- angrenzende Controller-/iframe-Tests bleiben gruen und bestaetigen unveraenderte Aussenschnittstellen:
+  - `src/test/java/com/example/studenttask/controller/StudentControllerTest.java`
+  - `src/test/java/com/example/studenttask/controller/TaskControllerTest.java`
+  - `src/test/java/com/example/studenttask/service/TaskIframeQueryServiceTest.java`
+
+### Teststatus
+Gezielter Student-/Support-Testlauf:
+- Befehl: `mvn -Dmaven.repo.local=/tmp/m2 -Dtest=StudentTaskQueryServiceTest,StudentTaskViewSupportServiceTest,StudentControllerTest,TaskControllerTest,TaskIframeQueryServiceTest test`
+- Zeitpunkt: `2026-04-20T05:44:29Z`
+- Ergebnis:
+  - Tests: `35`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-20T05:44:50Z`
+- Ergebnis:
+  - Tests: `130`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+## Student-Task-Zugriffspruefung fuer History- und Versionspfade zentralisiert
+Stand: 2026-04-20
+
+Im naechsten kleinen Student-Read-Slice wurde auch die direkte Task-/Gruppenzugriffspruefung aus `StudentTaskQueryService` entfernt. Die History- und Versionspfade delegieren die Aufloesung einer fuer den Schueler zugaenglichen Aufgabe jetzt an den bestehenden `StudentTaskViewSupportService`.
+
+### Ziel
+- die letzte lokale Student-Task-Zugriffspruefung in `StudentTaskQueryService` abbauen
+- Task-Lookup und Student-Zugriffsfilter fuer die History-/Versionspfade auf denselben Support-Kern verengen
+- Redirect- und Fehlersemantik unveraendert lassen
+
+### Umgesetzt
+- `src/main/java/com/example/studenttask/service/StudentTaskViewSupportService.java`
+  - ergaenzt um `findAssignedTask(User user, Long taskId)`
+  - delegiert intern an `TaskService.findById(...)` plus zentrale Zugriffspruefung ueber `TaskService.hasUserAccessToTask(...)`
+- `src/main/java/com/example/studenttask/service/StudentTaskQueryService.java`
+  - verwendet fuer `getTaskHistoryData(...)` und `getTaskVersionViewData(...)` jetzt `StudentTaskViewSupportService.findAssignedTask(...)`
+  - enthaelt damit keine eigene Task-/Gruppenzugriffslogik mehr
+  - die direkte Abhaengigkeit auf `TaskService` wurde aus dem Query-Service entfernt
+
+### Verhalten / Abgrenzung
+- kein geaendertes Routing
+- keine Aenderung an Redirect-Zielen:
+  - fehlender Student-Zugriff im Versionspfad bleibt `redirect:/student/dashboard`
+  - fehlende `UserTask` oder fehlende Version bleiben `redirect:/student/tasks/{id}/history`
+- der allgemeine Task-View-Pfad mit seiner separaten Fehlersemantik (`Aufgabe nicht gefunden` / `Keine Berechtigung`) wurde in diesem Slice bewusst nicht veraendert
+
+### Testanpassungen
+- `src/test/java/com/example/studenttask/service/StudentTaskViewSupportServiceTest.java`
+  - erweitert um direkte Tests fuer `findAssignedTask(...)`
+- `src/test/java/com/example/studenttask/service/StudentTaskQueryServiceTest.java`
+  - auf die zentrale Zugriffsaufloesung ueber den Support-Service umgestellt
+  - erweitert um einen expliziten Redirect-Test fuer fehlenden Student-Zugriff im Versionspfad
+- angrenzende Student-/iframe-Controller-Tests bleiben gruen:
+  - `src/test/java/com/example/studenttask/controller/StudentControllerTest.java`
+  - `src/test/java/com/example/studenttask/controller/TaskControllerTest.java`
+  - `src/test/java/com/example/studenttask/service/TaskIframeQueryServiceTest.java`
+
+### Teststatus
+Gezielter Student-/Support-Testlauf:
+- Befehl: `mvn -Dmaven.repo.local=/tmp/m2 -Dtest=StudentTaskQueryServiceTest,StudentTaskViewSupportServiceTest,StudentControllerTest,TaskControllerTest,TaskIframeQueryServiceTest test`
+- Zeitpunkt: `2026-04-20T05:48:59Z`
+- Ergebnis:
+  - Tests: `38`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-20T05:49:21Z`
+- Ergebnis:
+  - Tests: `133`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+## Tote Submission-Read-Helfer entfernt und Submission-Pfad auf Write-only verengt
+Stand: 2026-04-20
+
+Im naechsten kleinen Versionierungs-Slice wurden die ungenutzten Submission-Read-Helfer entfernt. `SubmissionService` ist damit im Anwendungscode explizit auf seine reale Restverantwortung reduziert: das Anlegen eines `Submission`-Datensatzes fuer einen bereits geschriebenen `TaskContent`.
+
+### Ziel
+- ungenutzte Submission-Read-APIs entfernen, die die alte doppelte Submission-/Content-Semantik weiter offenhalten
+- den verbleibenden Submission-Pfad klar als Write-only-Kompatibilitaetsschicht markieren
+- keinen Persistenzumbau und keine Modellmigration in diesem Slice vorwegnehmen
+
+### Umgesetzt
+- `src/main/java/com/example/studenttask/service/SubmissionService.java`
+  - auf den real genutzten Pfad `createSubmission(...)` reduziert
+  - ungenutzte Read-/Delete-Helfer entfernt
+- `src/main/java/com/example/studenttask/repository/SubmissionRepository.java`
+  - ungenutzte Custom-Query-Methoden entfernt
+  - verbleibt als schlankes `JpaRepository<Submission, Long>`
+- `src/main/java/com/example/studenttask/model/UserTask.java`
+  - den ungenutzten Helper `getLatestSubmission()` entfernt
+
+### Verhalten / Abgrenzung
+- kein geaendertes Routing
+- keine Aenderung an Submission-Erzeugung beim Abschicken eines `TaskContent`
+- keine Aenderung am Datenmodell der Tabellen oder Entity-Relationen
+- `Submission` selbst bleibt weiterhin bestehen, weil der Write-Pfad sie noch persistiert; es wurden nur tote Read-Helfer entfernt
+
+### Testanpassungen
+- neuer Test `src/test/java/com/example/studenttask/service/SubmissionServiceTest.java`
+  - prueft, dass `createSubmission(...)` die `Submission` fuer `UserTask` und `TaskContent` korrekt mit Versionsbezug persistiert
+- bestehende Write-/Review-Nachbartests bleiben gruen:
+  - `src/test/java/com/example/studenttask/service/TaskContentServiceTest.java`
+  - `src/test/java/com/example/studenttask/service/TaskReviewServiceTest.java`
+  - `src/test/java/com/example/studenttask/service/TeacherTaskQueryServiceTest.java`
+
+### Teststatus
+Gezielter Versionierungs-/Write-Testlauf:
+- Befehl: `mvn -Dmaven.repo.local=/tmp/m2 -Dtest=SubmissionServiceTest,TaskContentServiceTest,TaskReviewServiceTest,TeacherTaskQueryServiceTest test`
+- Zeitpunkt: `2026-04-20T05:53:54Z`
+- Ergebnis:
+  - Tests: `15`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-20T05:54:15Z`
+- Ergebnis:
+  - Tests: `134`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+## Tote TaskContent-/TaskReview-Read-Helfer entfernt
+Stand: 2026-04-20
+
+Im naechsten kleinen Versionierungs-Slice wurden weitere ungenutzte Read-Helfer aus dem `TaskContent`-/`TaskReview`-Umfeld entfernt. Nach dem vorherigen Submission-Slice blieben dort noch mehrere alte Hilfsmethoden und Repository-Queries zurueck, die keine produktiven Aufrufer mehr hatten und die historische Doppelmodellierung unnoetig offen hielten.
+
+### Ziel
+- ungenutzte TaskContent-/TaskReview-Read-APIs entfernen, die fachlich nicht mehr verwendet werden
+- die noch aktive Versionierungsoberflaeche auf die tatsaechlich genutzten Lesewege verengen
+- keinen Persistenzumbau und keine Aenderung der aktiven Save-/Submit-/Review-Pfade vorziehen
+
+### Umgesetzt
+- `src/main/java/com/example/studenttask/service/TaskContentService.java`
+  - auf die aktuell genutzten Kernpfade reduziert
+  - ungenutzte Read-/Count-/Delete-Helfer entfernt, darunter:
+    - `getLatestSubmittedContent(...)`
+    - `getLatestDraftContent(...)`
+    - `hasSubmittedContent(...)`
+    - `getSubmittedVersionsCount(...)`
+    - `getTotalVersionsCount(...)`
+    - `deleteAllContentForUserTask(...)`
+    - `hasAnyContent(...)`
+    - `getAllContentVersionsByDate(...)`
+    - `markAsSubmitted(...)`
+- `src/main/java/com/example/studenttask/repository/TaskContentRepository.java`
+  - auf die fuer die verbleibenden Pfade benoetigten Methoden verengt
+  - tote Spezialabfragen und ungenutzte Derived Queries entfernt, darunter auch `findLatestByUserTask(...)`
+- `src/main/java/com/example/studenttask/service/TaskReviewService.java`
+  - ungenutzte Read-Helfer `findLatestReviewForUserTask(...)`, `findByUserTask(...)` und `countReviewsForVersion(...)` entfernt
+- `src/main/java/com/example/studenttask/repository/TaskReviewRepository.java`
+  - auf die verbleibenden produktiven Review-Lesewege reduziert
+  - ungenutzte Methoden `findFirstByUserTaskOrderByReviewedAtDesc(...)` und `countByUserTaskAndVersion(...)` entfernt
+
+### Verhalten / Abgrenzung
+- keine Aenderung an Save-/Submit-Verhalten von `TaskContentService`
+- keine Aenderung am Review-Write-Pfad in `TaskReviewService.createReview(...)`
+- keine Aenderung an Tabellen, Entity-Relationen oder Datenmigrationen
+- keine Aenderung an Controller-Routing oder View-Modellen
+- die Entfernung betrifft ausschliesslich tote Service- und Repository-Oberflaechen ohne produktive Aufrufer
+
+### Testanpassungen
+- keine neuen Tests notwendig, weil der Slice ausschliesslich ungenutzte APIs entfernt
+- bestehende Nachbartests decken die verbleibenden aktiven Pfade weiterhin ab:
+  - `src/test/java/com/example/studenttask/service/SubmissionServiceTest.java`
+  - `src/test/java/com/example/studenttask/service/TaskContentServiceTest.java`
+  - `src/test/java/com/example/studenttask/service/TaskReviewServiceTest.java`
+  - `src/test/java/com/example/studenttask/service/TeacherTaskQueryServiceTest.java`
+  - `src/test/java/com/example/studenttask/service/StudentTaskQueryServiceTest.java`
+  - `src/test/java/com/example/studenttask/service/GroupQueryServiceTest.java`
+  - `src/test/java/com/example/studenttask/service/StudentTaskOverviewServiceTest.java`
+
+### Teststatus
+Gezielter Versionierungs-/Read-Bereinigungslauf:
+- Befehl: `mvn -Dmaven.repo.local=/tmp/m2 -Dtest=SubmissionServiceTest,TaskContentServiceTest,TaskReviewServiceTest,TeacherTaskQueryServiceTest,StudentTaskQueryServiceTest,GroupQueryServiceTest,StudentTaskOverviewServiceTest test`
+- Zeitpunkt: `2026-04-20T06:21:21Z`
+- Ergebnis:
+  - Tests: `32`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-20T06:21:40Z`
+- Ergebnis:
+  - Tests: `134`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+## Inverse TaskContent-zu-Submission-Kopplung entfernt
+Stand: 2026-04-20
+
+Im naechsten sehr kleinen Versionierungs-Slice wurde die verbliebene inverse Entity-Kopplung von `TaskContent` zu `Submission` entfernt. Nach den vorherigen Bereinigungsschritten war diese Rueckreferenz im Anwendungscode komplett ungenutzt und hielt die doppelte Submission-/Content-Semantik nur noch auf Modellebene offen.
+
+### Ziel
+- die verbleibende ungenutzte Rueckreferenz `TaskContent -> Submission` entfernen
+- die aktive Richtung des Legacy-Submission-Pfads auf `Submission -> TaskContent` verengen
+- keine Delete-Kaskaden ueber `UserTask.submissions` und keine Persistenzmigration anfassen
+
+### Umgesetzt
+- `src/main/java/com/example/studenttask/model/TaskContent.java`
+  - das ungenutzte inverse Feld `submission` entfernt
+  - die zugehoerigen Getter/Setter `getSubmission()` und `setSubmission(...)` entfernt
+- `src/main/java/com/example/studenttask/model/Submission.java`
+  - tote Altkommentare zur frueheren direkten Review-Kopplung entfernt
+  - ungenutzte Collection-Imports entfernt
+
+### Verhalten / Abgrenzung
+- keine Aenderung am Write-Pfad `SubmissionService.createSubmission(...)`
+- keine Aenderung am aktiven JPA-Besitzverhaeltnis `Submission.taskContent`
+- keine Aenderung an `UserTask.submissions`; diese Kette bleibt bewusst unberuehrt, um bestehende Cascade-/Delete-Semantik nicht in diesem Slice mitzubewegen
+- keine Aenderung an Tabellen, Spalten oder Migrationen
+
+### Testanpassungen
+- keine neuen Tests notwendig, weil keine produktiv genutzte API erweitert wurde
+- bestehende Nachbartests decken den verbleibenden Pfad weiter ab:
+  - `src/test/java/com/example/studenttask/service/SubmissionServiceTest.java`
+  - `src/test/java/com/example/studenttask/service/TaskContentServiceTest.java`
+  - `src/test/java/com/example/studenttask/service/TeacherTaskQueryServiceTest.java`
+  - `src/test/java/com/example/studenttask/service/StudentTaskQueryServiceTest.java`
+
+### Teststatus
+Gezielter Versionierungs-/Model-Testlauf:
+- Befehl: `mvn -Dmaven.repo.local=/tmp/m2 -Dtest=SubmissionServiceTest,TaskContentServiceTest,TeacherTaskQueryServiceTest,StudentTaskQueryServiceTest test`
+- Zeitpunkt: `2026-04-20T06:48:45Z`
+- Ergebnis:
+  - Tests: `24`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`
+
+Letzter erfolgreicher vollständiger Testlauf:
+- Zeitpunkt: `2026-04-20T06:49:06Z`
+- Ergebnis:
+  - Tests: `134`
+  - Failures: `0`
+  - Errors: `0`
+  - Skipped: `0`

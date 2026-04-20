@@ -1,5 +1,6 @@
 package com.example.studenttask.service;
 
+import com.example.studenttask.dto.VersionWithSubmissionStatus;
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskContent;
 import com.example.studenttask.model.TaskStatus;
@@ -15,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -130,6 +132,48 @@ class TaskContentServiceTest {
 
         assertThat(saved.isSubmitted()).isTrue();
         verify(userTaskService).updateStatus(userTask, TaskStatusCode.VOLLSTAENDIG);
+    }
+
+    @Test
+    void getVersionsWithSubmissionStatus_marksReviewedAndPendingSubmittedVersions() {
+        UserTask userTask = new UserTask();
+
+        TaskContent reviewedVersion = new TaskContent();
+        reviewedVersion.setUserTask(userTask);
+        reviewedVersion.setVersion(3);
+        reviewedVersion.setSavedAt(LocalDateTime.of(2026, 4, 20, 9, 30));
+        reviewedVersion.setSubmitted(true);
+
+        TaskContent pendingVersion = new TaskContent();
+        pendingVersion.setUserTask(userTask);
+        pendingVersion.setVersion(2);
+        pendingVersion.setSavedAt(LocalDateTime.of(2026, 4, 19, 8, 0));
+        pendingVersion.setSubmitted(true);
+
+        TaskContent draftVersion = new TaskContent();
+        draftVersion.setUserTask(userTask);
+        draftVersion.setVersion(1);
+        draftVersion.setSavedAt(LocalDateTime.of(2026, 4, 18, 7, 15));
+        draftVersion.setSubmitted(false);
+
+        when(taskContentRepository.findByUserTaskOrderByVersionDesc(userTask))
+            .thenReturn(List.of(reviewedVersion, pendingVersion, draftVersion));
+        when(taskReviewService.hasReviewsForVersion(userTask, 3)).thenReturn(true);
+        when(taskReviewService.hasReviewsForVersion(userTask, 2)).thenReturn(false);
+
+        List<VersionWithSubmissionStatus> versions =
+            taskContentService.getVersionsWithSubmissionStatus(userTask);
+
+        assertThat(versions).hasSize(3);
+        assertThat(versions.get(0).getVersion()).isEqualTo(3);
+        assertThat(versions.get(0).getIsSubmitted()).isTrue();
+        assertThat(versions.get(0).getDisplayText()).isEqualTo("v3 20.04.26 09:30 👁");
+        assertThat(versions.get(1).getVersion()).isEqualTo(2);
+        assertThat(versions.get(1).getIsSubmitted()).isTrue();
+        assertThat(versions.get(1).getDisplayText()).isEqualTo("v2 19.04.26 08:00 ⏳");
+        assertThat(versions.get(2).getVersion()).isEqualTo(1);
+        assertThat(versions.get(2).getIsSubmitted()).isFalse();
+        assertThat(versions.get(2).getDisplayText()).isEqualTo("v1 18.04.26 07:15");
     }
 
     private TaskStatus taskStatus(String name) {

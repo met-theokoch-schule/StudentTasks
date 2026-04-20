@@ -25,16 +25,12 @@ public class TaskReviewService {
     private final TaskReviewRepository taskReviewRepository;
     private final UserTaskRepository userTaskRepository;
     private final TaskStatusService taskStatusService;
-    private final SubmissionService submissionService;
-
     public TaskReviewService(TaskReviewRepository taskReviewRepository,
                            UserTaskRepository userTaskRepository,
-                           TaskStatusService taskStatusService,
-                           SubmissionService submissionService) {
+                           TaskStatusService taskStatusService) {
         this.taskReviewRepository = taskReviewRepository;
         this.userTaskRepository = userTaskRepository;
         this.taskStatusService = taskStatusService;
-        this.submissionService = submissionService;
     }
 
     /**
@@ -66,24 +62,11 @@ public class TaskReviewService {
     }
 
     /**
-     * Find the latest review for a user task
-     */
-    public Optional<TaskReview> findLatestReviewForUserTask(UserTask userTask) {
-        return taskReviewRepository.findFirstByUserTaskOrderByReviewedAtDesc(userTask);
-    }
-
-    /**
-     * Find all reviews for a user task
-     */
-    public List<TaskReview> findByUserTask(UserTask userTask) {
-        return taskReviewRepository.findByUserTaskOrderByReviewedAtDesc(userTask);
-    }
-
-    /**
-     * Create a new review for a user task with version and debug output
+     * Create a new review for a user task and optionally bind it to a specific content version.
      */
     @Transactional
-    public TaskReview createReview(UserTask userTask, User reviewer, Long statusId, String comment, Long submissionId, Integer currentVersion) {
+    public TaskReview createReview(UserTask userTask, User reviewer, Long statusId, String comment,
+            Integer currentVersion) {
         log.debug("Creating review for userTask {} by reviewer {} with status {} and version {}",
                 userTask.getId(), reviewer.getId(), statusId, currentVersion);
 
@@ -132,9 +115,5 @@ public class TaskReviewService {
 
     public boolean hasReviewsForVersion(UserTask userTask, Integer version) {
         return taskReviewRepository.existsByUserTaskAndVersion(userTask, version);
-    }
-
-    public long countReviewsForVersion(UserTask userTask, Integer version) {
-        return taskReviewRepository.countByUserTaskAndVersion(userTask, version);
     }
 }

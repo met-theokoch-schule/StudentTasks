@@ -4,11 +4,8 @@ import com.example.studenttask.model.Task;
 import com.example.studenttask.model.User;
 import com.example.studenttask.model.UserTask;
 import com.example.studenttask.model.TaskContent;
-import com.example.studenttask.service.TaskService;
-import com.example.studenttask.service.UserService;
-import com.example.studenttask.service.UserTaskService;
-import com.example.studenttask.service.TaskContentService;
 import com.example.studenttask.service.AuthenticationService;
+import com.example.studenttask.service.StudentTaskViewSupportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Optional;
-import java.util.List;
 
 /**
  * Debug Controller - nur für Entwicklungszwecke
@@ -30,16 +26,7 @@ import java.util.List;
 public class DebugController {
 
     @Autowired
-    private TaskService taskService;
-
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private UserTaskService userTaskService;
-
-    @Autowired
-    private TaskContentService taskContentService;
+    private StudentTaskViewSupportService studentTaskViewSupportService;
 
     @Autowired
     private AuthenticationService authenticationService;
@@ -65,7 +52,7 @@ public class DebugController {
             User currentUser = currentUserOpt.get();
 
             // Überprüfung ob Task existiert
-            Optional<Task> taskOpt = taskService.findById(taskId);
+            Optional<Task> taskOpt = studentTaskViewSupportService.findTask(taskId);
             if (taskOpt.isEmpty()) {
                 model.addAttribute("error", "Aufgabe mit ID " + taskId + " nicht gefunden");
                 return "debug/content-viewer";
@@ -74,11 +61,7 @@ public class DebugController {
             Task task = taskOpt.get();
 
             // UserTask für aktuellen Benutzer und Task finden
-            List<UserTask> userTasks = userTaskService.findByUser(currentUser);
-            Optional<UserTask> userTaskOpt = userTasks.stream()
-                .filter(ut -> ut.getTask().getId().equals(taskId))
-                .findFirst();
-
+            Optional<UserTask> userTaskOpt = studentTaskViewSupportService.findExistingUserTask(currentUser, task);
             if (userTaskOpt.isEmpty()) {
                 model.addAttribute("error", "Keine UserTask für Benutzer " + currentUser.getName() + " und Task " + taskId + " gefunden");
                 return "debug/content-viewer";
@@ -87,23 +70,14 @@ public class DebugController {
             UserTask userTask = userTaskOpt.get();
 
             // TaskContent basierend auf Version abrufen
-            TaskContent taskContent = null;
-
-            if (version != null) {
-                // Spezifische Version suchen
-                taskContent = taskContentService.getContentByVersion(userTask, version);
-                if (taskContent == null) {
+            TaskContent taskContent = studentTaskViewSupportService.getRequestedContent(userTask, version);
+            if (taskContent == null) {
+                if (version != null) {
                     model.addAttribute("error", "Version " + version + " für Task " + taskId + " nicht gefunden");
-                    return "debug/content-viewer";
-                }
-            } else {
-                // Neueste Version
-                Optional<TaskContent> latestContentOpt = taskContentService.getLatestContent(userTask);
-                if (latestContentOpt.isEmpty()) {
+                } else {
                     model.addAttribute("error", "Keine TaskContent für Task " + taskId + " gefunden");
-                    return "debug/content-viewer";
                 }
-                taskContent = latestContentOpt.get();
+                return "debug/content-viewer";
             }
 
             // Informationen für Template vorbereiten

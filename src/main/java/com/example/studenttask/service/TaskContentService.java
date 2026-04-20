@@ -90,13 +90,6 @@ public class TaskContentService {
     }
 
     /**
-     * Get latest submitted content for a user task
-     */
-    public Optional<TaskContent> getLatestSubmittedContent(UserTask userTask) {
-        return taskContentRepository.findTopByUserTaskAndIsSubmittedOrderByVersionDesc(userTask, true);
-    }
-
-    /**
      * Get all content versions for a user task
      */
     public List<TaskContent> getAllContentVersions(UserTask userTask) {
@@ -116,60 +109,13 @@ public class TaskContentService {
     }
 
     /**
-     * Get the latest draft (non-submitted) content for a user task
-     */
-    public Optional<TaskContent> getLatestDraftContent(UserTask userTask) {
-        List<TaskContent> contents = taskContentRepository.findByUserTaskAndIsSubmittedOrderByVersionDesc(userTask, false);
-        return contents.isEmpty() ? Optional.empty() : Optional.of(contents.get(0));
-    }
-
-    /**
-     * Check if user task has any submitted content
-     */
-    public boolean hasSubmittedContent(UserTask userTask) {
-        return taskContentRepository.existsByUserTaskAndIsSubmittedTrue(userTask);
-    }
-
-    /**
-     * Get count of submitted versions for a user task
-     */
-    public int getSubmittedVersionsCount(UserTask userTask) {
-        return taskContentRepository.countByUserTaskAndIsSubmittedTrue(userTask);
-    }
-
-    /**
-     * Get total count of all versions for a user task
-     */
-    public long getTotalVersionsCount(UserTask userTask) {
-        return taskContentRepository.countByUserTask(userTask);
-    }
-
-    /**
-     * Delete all content for a user task
-     */
-    public void deleteAllContentForUserTask(UserTask userTask) {
-        taskContentRepository.deleteByUserTask(userTask);
-    }
-
-
-
-    /**
-     * Check if user task has any content
-     */
-    public boolean hasAnyContent(UserTask userTask) {
-        return taskContentRepository.existsByUserTask(userTask);
-    }
-
-    /**
      * Get versions with submission status for dropdown
      */
-    public List<VersionWithSubmissionStatus> getVersionsWithSubmissionStatus(Long userTaskId) {
-        Optional<UserTask> userTaskOpt = userTaskRepository.findById(userTaskId);
-        if (userTaskOpt.isEmpty()) {
+    public List<VersionWithSubmissionStatus> getVersionsWithSubmissionStatus(UserTask userTask) {
+        if (userTask == null) {
             return new ArrayList<>();
         }
 
-        UserTask userTask = userTaskOpt.get();
         List<TaskContent> allVersions = taskContentRepository.findByUserTaskOrderByVersionDesc(userTask);
         List<VersionWithSubmissionStatus> versionsWithStatus = new ArrayList<>();
 
@@ -204,13 +150,6 @@ public class TaskContentService {
     }
 
     /**
-     * Get all content versions ordered by saved date
-     */
-    public List<TaskContent> getAllContentVersionsByDate(UserTask userTask) {
-        return taskContentRepository.findByUserTaskOrderBySavedAtDesc(userTask);
-    }
-
-    /**
      * Save draft content (not submitted)
      */
     public TaskContent saveDraft(UserTask userTask, String content) {
@@ -222,14 +161,6 @@ public class TaskContentService {
      */
     public TaskContent submitContent(UserTask userTask, String content) {
         return saveContent(userTask, content, true);
-    }
-
-    /**
-     * Mark existing content as submitted
-     */
-    public void markAsSubmitted(TaskContent taskContent) {
-        taskContent.setSubmitted(true);
-        taskContentRepository.save(taskContent);
     }
 
     private TaskStatusCode resolveSubmittedStatusCode(UserTask userTask) {

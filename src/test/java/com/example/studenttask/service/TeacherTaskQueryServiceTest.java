@@ -46,6 +46,9 @@ class TeacherTaskQueryServiceTest {
     private TaskContentService taskContentService;
 
     @Mock
+    private StudentTaskViewSupportService studentTaskViewSupportService;
+
+    @Mock
     private TaskViewService taskViewService;
 
     @Mock
@@ -108,7 +111,7 @@ class TeacherTaskQueryServiceTest {
         when(userTaskService.findById(30L)).thenReturn(Optional.of(userTask));
         when(taskReviewService.findByUserTaskOrderByReviewedAtDesc(userTask)).thenReturn(List.of(review));
         when(taskReviewService.getTeacherReviewStatuses()).thenReturn(List.of(complete));
-        when(taskContentService.getVersionsWithSubmissionStatus(30L)).thenReturn(List.of(versionStatus));
+        when(taskContentService.getVersionsWithSubmissionStatus(userTask)).thenReturn(List.of(versionStatus));
 
         Optional<TeacherSubmissionReviewDataDto> reviewDataOpt =
             teacherTaskQueryService.getSubmissionReviewData(30L);
@@ -134,7 +137,9 @@ class TeacherTaskQueryServiceTest {
         content.setVersion(4);
 
         when(userTaskService.findById(30L)).thenReturn(Optional.of(userTask));
-        when(taskContentService.getContentByVersion(userTask, 4)).thenReturn(content);
+        when(studentTaskViewSupportService.getRequestedContent(userTask, 4, true)).thenReturn(content);
+        when(studentTaskViewSupportService.resolveTemplatePath(task, "taskviews/simple-text.html"))
+            .thenReturn("taskviews/simple-text.html");
 
         Optional<TeacherSubmissionContentViewDto> contentViewOpt =
             teacherTaskQueryService.getSubmissionContentViewData(30L, 4);
@@ -163,10 +168,12 @@ class TeacherTaskQueryServiceTest {
         latestContent.setVersion(2);
 
         when(userTaskService.findById(30L)).thenReturn(Optional.of(userTask));
-        when(taskContentService.getLatestContent(userTask)).thenReturn(Optional.of(latestContent));
+        when(studentTaskViewSupportService.getRequestedContent(userTask, 9, true)).thenReturn(latestContent);
+        when(studentTaskViewSupportService.resolveTemplatePath(task, "taskviews/simple-text.html"))
+            .thenReturn("taskviews/custom-template");
 
         Optional<TeacherSubmissionContentViewDto> contentViewOpt =
-            teacherTaskQueryService.getSubmissionContentViewData(30L, null);
+            teacherTaskQueryService.getSubmissionContentViewData(30L, 9);
 
         assertThat(contentViewOpt).isPresent();
         TeacherSubmissionContentViewDto contentView = contentViewOpt.get();
@@ -186,7 +193,9 @@ class TeacherTaskQueryServiceTest {
         UserTask userTask = userTask(student(2L, "Student", group), task, status("ABGEGEBEN"));
 
         when(userTaskService.findById(30L)).thenReturn(Optional.of(userTask));
-        when(taskContentService.getLatestContent(userTask)).thenReturn(Optional.empty());
+        when(studentTaskViewSupportService.getRequestedContent(userTask, null, true)).thenReturn(null);
+        when(studentTaskViewSupportService.resolveTemplatePath(task, "taskviews/simple-text.html"))
+            .thenReturn("taskviews/task-template");
 
         Optional<TeacherSubmissionContentViewDto> contentViewOpt =
             teacherTaskQueryService.getSubmissionContentViewData(30L, null);

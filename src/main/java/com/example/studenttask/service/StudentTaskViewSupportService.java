@@ -29,6 +29,11 @@ public class StudentTaskViewSupportService {
         return taskService.findById(taskId);
     }
 
+    public Optional<Task> findAssignedTask(User user, Long taskId) {
+        return taskService.findById(taskId)
+            .filter(task -> taskService.hasUserAccessToTask(user, task));
+    }
+
     public Optional<UserTask> findExistingUserTask(User user, Task task) {
         return userTaskService.findByUserIdAndTaskId(user.getId(), task.getId());
     }
@@ -38,9 +43,18 @@ public class StudentTaskViewSupportService {
     }
 
     public TaskContent getRequestedContent(UserTask userTask, Integer version) {
+        return getRequestedContent(userTask, version, false);
+    }
+
+    public TaskContent getRequestedContent(UserTask userTask, Integer version,
+            boolean fallBackToLatestWhenVersionIsMissing) {
         if (version != null) {
-            return taskContentService.getContentByVersion(userTask, version);
+            TaskContent versionContent = taskContentService.getContentByVersion(userTask, version);
+            if (versionContent != null || !fallBackToLatestWhenVersionIsMissing) {
+                return versionContent;
+            }
         }
+
         return taskContentService.getLatestContent(userTask).orElse(null);
     }
 
@@ -66,6 +80,15 @@ public class StudentTaskViewSupportService {
         }
 
         return taskViewService.findById(taskViewId).orElse(taskView);
+    }
+
+    public String resolveTemplatePath(Task task, String fallbackTemplatePath) {
+        TaskView taskView = resolveTaskView(task);
+        if (hasRenderableTemplate(taskView)) {
+            return taskView.getTemplatePath();
+        }
+
+        return fallbackTemplatePath;
     }
 
     public boolean hasRenderableTemplate(TaskView taskView) {

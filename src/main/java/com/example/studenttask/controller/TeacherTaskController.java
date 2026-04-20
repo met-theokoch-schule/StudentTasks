@@ -89,7 +89,6 @@ public class TeacherTaskController {
     public String submitReview(@PathVariable Long userTaskId,
                              @RequestParam Long statusId,
                              @RequestParam(required = false) String comment,
-                             @RequestParam(required = false) String submissionIdStr,
                              @RequestParam(required = false) String returnUrl,
                              Authentication authentication,
                              HttpServletRequest request) {
@@ -98,7 +97,6 @@ public class TeacherTaskController {
             authentication.getName(),
             statusId,
             comment,
-            submissionIdStr,
             request.getParameter("currentVersion")
         );
         if (!submitted) {

@@ -8,7 +8,6 @@ import com.example.studenttask.dto.TeacherTaskSubmissionsDataDto;
 import com.example.studenttask.model.Group;
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskContent;
-import com.example.studenttask.model.TaskView;
 import com.example.studenttask.model.UnitTitle;
 import com.example.studenttask.model.User;
 import com.example.studenttask.model.UserTask;
@@ -35,6 +34,9 @@ public class TeacherTaskQueryService {
 
     @Autowired
     private TaskContentService taskContentService;
+
+    @Autowired
+    private StudentTaskViewSupportService studentTaskViewSupportService;
 
     @Autowired
     private TaskViewService taskViewService;
@@ -68,7 +70,7 @@ public class TeacherTaskQueryService {
                 userTask,
                 taskReviewService.findByUserTaskOrderByReviewedAtDesc(userTask),
                 taskReviewService.getTeacherReviewStatuses(),
-                taskContentService.getVersionsWithSubmissionStatus(userTaskId)
+                taskContentService.getVersionsWithSubmissionStatus(userTask)
             ));
     }
 
@@ -76,7 +78,7 @@ public class TeacherTaskQueryService {
         return userTaskService.findById(userTaskId)
             .map(userTask -> {
                 Task task = userTask.getTask();
-                TaskContent content = resolveContent(userTask, version);
+                TaskContent content = studentTaskViewSupportService.getRequestedContent(userTask, version, true);
 
                 String currentContent = content != null
                     ? content.getContent()
@@ -88,7 +90,7 @@ public class TeacherTaskQueryService {
                     userTask,
                     currentContent,
                     resolvedVersion,
-                    resolveTemplatePath(task)
+                    studentTaskViewSupportService.resolveTemplatePath(task, "taskviews/simple-text.html")
                 );
             });
     }
@@ -120,22 +122,6 @@ public class TeacherTaskQueryService {
         }
 
         return tasksByUnitTitle;
-    }
-
-    private TaskContent resolveContent(UserTask userTask, Integer version) {
-        if (version != null) {
-            TaskContent versionContent = taskContentService.getContentByVersion(userTask, version);
-            if (versionContent != null) {
-                return versionContent;
-            }
-        }
-
-        return taskContentService.getLatestContent(userTask).orElse(null);
-    }
-
-    private String resolveTemplatePath(Task task) {
-        TaskView taskView = task.getTaskView();
-        return taskView != null ? taskView.getTemplatePath() : "taskviews/simple-text.html";
     }
 
     private TeacherTaskFormDataDto buildTaskFormData(Task task) {

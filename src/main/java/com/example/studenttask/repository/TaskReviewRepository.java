@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface TaskReviewRepository extends JpaRepository<TaskReview, Long> {
@@ -18,16 +17,9 @@ public interface TaskReviewRepository extends JpaRepository<TaskReview, Long> {
     List<TaskReview> findByUserTaskOrderByReviewedAtDesc(UserTask userTask);
     
     boolean existsByUserTaskAndVersion(UserTask userTask, Integer version);
-    
-    long countByUserTaskAndVersion(UserTask userTask, Integer version);
 
     /**
      * Find all reviews by a specific reviewer ordered by review date descending
      */
     List<TaskReview> findByReviewerOrderByReviewedAtDesc(User reviewer);
-
-    /**
-     * Find the latest review for a user task
-     */
-    Optional<TaskReview> findFirstByUserTaskOrderByReviewedAtDesc(UserTask userTask);
 }
