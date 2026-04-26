@@ -3,8 +3,9 @@ package com.example.studenttask.controller;
 import com.example.studenttask.dto.StudentDashboardDataDto;
 import com.example.studenttask.dto.StudentTaskHistoryDataDto;
 import com.example.studenttask.dto.StudentTaskListDataDto;
-import com.example.studenttask.dto.StudentTaskVersionViewResultDto;
 import com.example.studenttask.dto.StudentTaskViewDataDto;
+import com.example.studenttask.exception.StudentResourceNotFoundException;
+import com.example.studenttask.exception.UserAuthenticationRequiredException;
 import com.example.studenttask.model.Group;
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskContent;
@@ -35,6 +36,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -145,9 +147,9 @@ class StudentControllerTest {
         TaskReview review = new TaskReview();
 
         when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.of(student));
-        when(studentTaskQueryService.getTaskHistoryData(student, 301L)).thenReturn(Optional.of(
+        when(studentTaskQueryService.getTaskHistoryData(student, 301L)).thenReturn(
             new StudentTaskHistoryDataDto(task, userTask, List.of(contentVersion), List.of(review))
-        ));
+        );
 
         Model model = new ExtendedModelMap();
         String view = controller.taskHistory(301L, model, principal("oidc-subject"));
@@ -186,18 +188,52 @@ class StudentControllerTest {
     }
 
     @Test
-    void viewTaskVersion_returnsRedirectProvidedByQueryService() {
+    void viewTaskVersion_usesTaskViewTemplateWhenVersionExists() {
         User student = user(1L, "Student One");
+        Group group = group(11L, "10A");
+        TaskView taskView = new TaskView();
+        taskView.setId(8L);
+        taskView.setTemplatePath("taskviews/history-view");
+        Task task = task(401L, "History Task", group, null);
+        task.setTaskView(taskView);
+        UserTask userTask = userTask(student, task, status("ABGEGEBEN"), LocalDateTime.now());
 
         when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.of(student));
         when(studentTaskQueryService.getTaskVersionViewData(student, 401L, 3)).thenReturn(
-            StudentTaskVersionViewResultDto.redirect("redirect:/student/tasks/401/history")
+            new StudentTaskViewDataDto(task, userTask, taskView, "Historic content", 3, true)
         );
 
         Model model = new ExtendedModelMap();
         String view = controller.viewTaskVersion(401L, 3, model, principal("oidc-subject"));
 
-        assertThat(view).isEqualTo("redirect:/student/tasks/401/history");
+        assertThat(view).isEqualTo("taskviews/history-view");
+        assertThat(model.getAttribute("task")).isSameAs(task);
+        assertThat(model.getAttribute("userTask")).isSameAs(userTask);
+        assertThat(model.getAttribute("currentContent")).isEqualTo("Historic content");
+        assertThat(model.getAttribute("viewingVersion")).isEqualTo(3);
+        assertThat(model.getAttribute("isHistoryView")).isEqualTo(true);
+    }
+
+    @Test
+    void dashboard_throwsAuthenticationExceptionWhenStudentCannotBeResolved() {
+        when(userService.findByOpenIdSubject("missing-student")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> controller.dashboard(new ExtendedModelMap(), principal("missing-student")))
+            .isInstanceOf(UserAuthenticationRequiredException.class)
+            .hasMessage("Benutzer nicht gefunden");
+    }
+
+    @Test
+    void taskHistory_throwsNotFoundExceptionWhenTaskIsUnavailable() {
+        User student = user(1L, "Student One");
+
+        when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.of(student));
+        when(studentTaskQueryService.getTaskHistoryData(student, 999L))
+            .thenThrow(new StudentResourceNotFoundException("Aufgabe nicht gefunden"));
+
+        assertThatThrownBy(() -> controller.taskHistory(999L, new ExtendedModelMap(), principal("oidc-subject")))
+            .isInstanceOf(StudentResourceNotFoundException.class)
+            .hasMessage("Aufgabe nicht gefunden");
     }
 
     private Principal principal(String name) {

@@ -1,5 +1,7 @@
 package com.example.studenttask.controller;
 
+import com.example.studenttask.config.OAuthConfigurationStatusService;
+import com.example.studenttask.exception.UserAuthenticationRequiredException;
 import com.example.studenttask.model.Group;
 import com.example.studenttask.model.Role;
 import com.example.studenttask.model.User;
@@ -28,6 +30,9 @@ public class HomeController {
     @Autowired
     private GroupService groupService;
 
+    @Autowired
+    private OAuthConfigurationStatusService oauthConfigurationStatusService;
+
     @GetMapping("/")
     public String home() {
         return "home";
@@ -38,13 +43,24 @@ public class HomeController {
         return "login";
     }
 
+    @GetMapping("/oauth/setup")
+    public String oauthSetup(Model model) {
+        model.addAttribute("oauthMissingSettings", oauthConfigurationStatusService.getMissingSettings());
+        model.addAttribute("oauthRequiredSettings", oauthConfigurationStatusService.getRequiredSettings());
+        model.addAttribute("oauthOptionalSettings", oauthConfigurationStatusService.getOptionalSettings());
+        model.addAttribute("redirectUriExample", oauthConfigurationStatusService.getResolvedRedirectUriExample());
+        model.addAttribute("providerBaseUrlExample", oauthConfigurationStatusService.getResolvedProviderBaseUrlExample());
+        model.addAttribute("activeProfiles", oauthConfigurationStatusService.getActiveProfileLabel());
+        return "oauth-setup-required";
+    }
+
     @GetMapping("/debug")
     public String debug(Model model, OAuth2AuthenticationToken token) {
         log.debug("Debug controller invoked");
 
         if (token == null) {
             log.warn("Debug page called without OAuth2 token");
-            return "redirect:/login";
+            throw new UserAuthenticationRequiredException("Benutzer nicht gefunden");
         }
 
         OAuth2User principal = token.getPrincipal();
@@ -54,6 +70,10 @@ public class HomeController {
         log.debug("OAuth2 user loaded for debug page: name={}, email={}", name, email);
 
         String openIdSubject = principal.getAttribute("sub");
+        if (openIdSubject == null || openIdSubject.isBlank()) {
+            log.warn("Debug page OAuth2 token does not contain a subject");
+            throw new UserAuthenticationRequiredException("Benutzer nicht gefunden");
+        }
         User user = userService.findByOpenIdSubject(openIdSubject).orElse(null);
 
         if (user != null) {
@@ -83,6 +103,7 @@ public class HomeController {
 
             model.addAttribute("user", user);
             model.addAttribute("roles", roles);
+            model.addAttribute("groups", groups);
             model.addAttribute("isTeacher", isTeacher);
             model.addAttribute("isStudent", isStudent);
 

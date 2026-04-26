@@ -1,7 +1,7 @@
 package com.example.studenttask.controller;
 
 import com.example.studenttask.dto.TaskIframeViewDataDto;
-import com.example.studenttask.dto.TaskIframeViewResultDto;
+import com.example.studenttask.exception.StudentResourceNotFoundException;
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskView;
 import com.example.studenttask.model.User;
@@ -17,6 +17,7 @@ import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -48,9 +49,7 @@ class TaskControllerTest {
         userTask.setUser(student);
 
         when(taskIframeQueryService.getTaskIframeViewData(40L, "oidc-subject", false, null)).thenReturn(
-            TaskIframeViewResultDto.view(
-                new TaskIframeViewDataDto(task, taskView, userTask, "", task.getDescription(), false)
-            )
+            new TaskIframeViewDataDto(task, taskView, userTask, "", task.getDescription(), false)
         );
 
         Model model = new ExtendedModelMap();
@@ -65,15 +64,19 @@ class TaskControllerTest {
     }
 
     @Test
-    void viewTaskIframe_returnsRedirectProvidedByQueryService() {
-        when(taskIframeQueryService.getTaskIframeViewData(40L, "oidc-subject", true, 3)).thenReturn(
-            TaskIframeViewResultDto.redirect("redirect:/teacher/dashboard")
-        );
+    void viewTaskIframe_throwsNotFoundWhenQueryServiceRejectsPath() {
+        when(taskIframeQueryService.getTaskIframeViewData(40L, "oidc-subject", true, 3))
+            .thenThrow(new StudentResourceNotFoundException("Aufgabe nicht gefunden"));
 
-        Model model = new ExtendedModelMap();
-        String view = controller.viewTaskIframe(40L, 5L, 3, authentication("oidc-subject"), model);
-
-        assertThat(view).isEqualTo("redirect:/teacher/dashboard");
+        assertThatThrownBy(() -> controller.viewTaskIframe(
+            40L,
+            5L,
+            3,
+            authentication("oidc-subject"),
+            new ExtendedModelMap()
+        ))
+            .isInstanceOf(StudentResourceNotFoundException.class)
+            .hasMessage("Aufgabe nicht gefunden");
     }
 
     private Authentication authentication(String name) {

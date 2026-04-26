@@ -1,5 +1,6 @@
 package com.example.studenttask.service;
 
+import com.example.studenttask.exception.TaskStatusNotFoundException;
 import com.example.studenttask.model.TaskStatusCode;
 import com.example.studenttask.model.TaskStatus;
 import com.example.studenttask.repository.TaskStatusRepository;
@@ -14,6 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -47,6 +49,7 @@ class TaskStatusServiceTest {
         assertThat(taskStatusService.isTransitionAllowed(notStarted, inProgress)).isTrue();
         assertThat(taskStatusService.isTransitionAllowed(notStarted, submitted)).isTrue();
         assertThat(taskStatusService.isTransitionAllowed(notStarted, complete)).isTrue();
+        assertThat(taskStatusService.isTransitionAllowed(complete, submitted)).isTrue();
     }
 
     @Test
@@ -74,5 +77,14 @@ class TaskStatusServiceTest {
         Optional<TaskStatus> result = taskStatusService.findByName(TaskStatusCode.UEBERARBEITUNG_NOETIG.name());
 
         assertThat(result).containsSame(needsRework);
+    }
+
+    @Test
+    void requireStatus_throwsTaskStatusNotFoundExceptionWhenMissing() {
+        when(taskStatusRepository.findByName("ABGEGEBEN")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> taskStatusService.requireStatus(TaskStatusCode.ABGEGEBEN))
+            .isInstanceOf(TaskStatusNotFoundException.class)
+            .hasMessage("Status ABGEGEBEN not found");
     }
 }

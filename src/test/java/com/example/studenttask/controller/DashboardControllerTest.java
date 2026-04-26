@@ -1,5 +1,7 @@
 package com.example.studenttask.controller;
 
+import com.example.studenttask.exception.OAuth2IdentityResolutionException;
+import com.example.studenttask.exception.UserAuthenticationRequiredException;
 import com.example.studenttask.model.Role;
 import com.example.studenttask.model.User;
 import com.example.studenttask.service.IdentitySyncService;
@@ -23,6 +25,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -70,19 +73,31 @@ class DashboardControllerTest {
     }
 
     @Test
-    void dashboard_redirectsToLoginWhenNonOauthUserIsMissing() {
+    void dashboard_throwsAuthenticationExceptionWhenNonOauthUserIsMissing() {
         when(userService.findByOpenIdSubject("missing-subject")).thenReturn(Optional.empty());
 
-        Model model = new ExtendedModelMap();
-        String view = controller.dashboard(new TestingAuthenticationToken("principal", "credentials", "ROLE_USER") {
+        assertThatThrownBy(() -> controller.dashboard(new TestingAuthenticationToken("principal", "credentials", "ROLE_USER") {
             @Override
             public String getName() {
                 return "missing-subject";
             }
-        }, model);
-
-        assertThat(view).isEqualTo("redirect:/login");
+        }, new ExtendedModelMap()))
+            .isInstanceOf(UserAuthenticationRequiredException.class)
+            .hasMessage("Benutzer nicht gefunden");
         verifyNoInteractions(identitySyncService);
+    }
+
+    @Test
+    void dashboard_throwsAuthenticationExceptionWhenOauthIdentityCannotBeSynchronized() {
+        OAuth2AuthenticationToken authentication = oauthAuthentication("oidc-broken");
+
+        when(userService.findByOpenIdSubject("oidc-broken")).thenReturn(Optional.empty());
+        when(identitySyncService.syncFromOAuth2User(authentication.getPrincipal()))
+            .thenThrow(new OAuth2IdentityResolutionException("OAuth2 user does not contain a subject"));
+
+        assertThatThrownBy(() -> controller.dashboard(authentication, new ExtendedModelMap()))
+            .isInstanceOf(UserAuthenticationRequiredException.class)
+            .hasMessage("Benutzer nicht gefunden");
     }
 
     private OAuth2AuthenticationToken oauthAuthentication(String subject) {

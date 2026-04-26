@@ -1,5 +1,5 @@
 compile = "javac -classpath .:target/dependency/* -d . $(find . -type f -name '*.java')"
-run = "mvn clean spring-boot:run -Dspring-boot.run.arguments='--spring.config.additional-location=classpath:application-replit.properties'"
+run = "mvn clean spring-boot:run -Dspring-boot.run.profiles=staging"
 entrypoint = "src/main/java/Main.java"
 hidden = ["**/*.class"]
 modules = ["python-3.11", "nodejs-22"]
@@ -81,7 +81,7 @@ author = 12297667
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "mvn spring-boot:run -Dspring-boot.run.arguments='--spring.config.additional-location=classpath:application-replit.properties'"
+args = "mvn spring-boot:run -Dspring-boot.run.profiles=staging"
 
 [[workflows.workflow]]
 name = "Build WAR (External Tomcat)"
@@ -94,7 +94,7 @@ args = "mvn clean package -Pwar"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "curl -u REMOVED -T target/informatik.war \"https://services-new.theokoch.schule/manager/text/deploy?path=/informatik&update=true\""
+args = "curl -u \"$TOMCAT_DEPLOY_USER:$TOMCAT_DEPLOY_PASSWORD\" -T target/informatik.war \"$TOMCAT_DEPLOY_URL\""
 
 [[workflows.workflow]]
 name = "Project"
@@ -153,6 +153,11 @@ externalPort = 8000
 [[ports]]
 localPort = 8080
 externalPort = 8080
+exposeLocalhost = true
 
 [agent]
 expertMode = true
+
+[userenv]
+
+[userenv.shared]

@@ -2,20 +2,24 @@ package com.example.studenttask.controller;
 
 import com.example.studenttask.dto.TeacherSubmissionContentViewDto;
 import com.example.studenttask.dto.TeacherTaskFormDataDto;
+import com.example.studenttask.dto.TeacherTaskFormDto;
 import com.example.studenttask.dto.TeacherSubmissionReviewDataDto;
 import com.example.studenttask.dto.TeacherTaskListDataDto;
 import com.example.studenttask.dto.TeacherTaskSubmissionsDataDto;
-import com.example.studenttask.model.Task;
+import com.example.studenttask.exception.TeacherAuthenticationRequiredException;
+import com.example.studenttask.exception.TeacherResourceNotFoundException;
 import com.example.studenttask.model.User;
 import com.example.studenttask.service.TeacherTaskCommandService;
 import com.example.studenttask.service.TeacherTaskQueryService;
 import com.example.studenttask.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -48,8 +52,7 @@ public class TeacherTaskController {
     @GetMapping("/tasks")
     public String listTasks(@RequestParam(value = "filter", defaultValue = "own") String filter,
                            Model model, Principal principal) {
-        User teacher = userService.findByOpenIdSubject(principal.getName())
-                .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+        User teacher = requireTeacher(principal.getName());
 
         TeacherTaskListDataDto taskListData = teacherTaskQueryService.getTaskListData(teacher, filter);
 
@@ -65,16 +68,10 @@ public class TeacherTaskController {
      */
     @GetMapping("/tasks/{taskId}/submissions")
     public String viewTaskSubmissions(@PathVariable Long taskId, Model model, Principal principal, HttpServletRequest request) {
-        User teacher = userService.findByOpenIdSubject(principal.getName())
-                .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+        User teacher = requireTeacher(principal.getName());
 
-        Optional<TeacherTaskSubmissionsDataDto> submissionsDataOpt =
-            teacherTaskQueryService.getTaskSubmissionsData(taskId, teacher);
-        if (submissionsDataOpt.isEmpty()) {
-            return "redirect:/teacher/tasks";
-        }
-
-        TeacherTaskSubmissionsDataDto submissionsData = submissionsDataOpt.get();
+        TeacherTaskSubmissionsDataDto submissionsData = teacherTaskQueryService.getTaskSubmissionsData(taskId, teacher)
+            .orElseThrow(() -> new TeacherResourceNotFoundException("Aufgabe nicht gefunden"));
 
         model.addAttribute("teacher", teacher);
         model.addAttribute("task", submissionsData.getTask());
@@ -92,16 +89,13 @@ public class TeacherTaskController {
                              @RequestParam(required = false) String returnUrl,
                              Authentication authentication,
                              HttpServletRequest request) {
-        boolean submitted = teacherTaskCommandService.submitReview(
+        teacherTaskCommandService.submitReview(
             userTaskId,
             authentication.getName(),
             statusId,
             comment,
             request.getParameter("currentVersion")
         );
-        if (!submitted) {
-            return "redirect:/teacher/tasks";
-        }
 
         // Redirect back to the original page if returnUrl is provided
         if (returnUrl != null && !returnUrl.trim().isEmpty()) {
@@ -115,13 +109,9 @@ public class TeacherTaskController {
     public String viewSubmissionInTaskView(@PathVariable Long userTaskId,
             @RequestParam(required = false) Integer version,
             Model model) {
-        Optional<TeacherSubmissionContentViewDto> contentViewDataOpt =
-            teacherTaskQueryService.getSubmissionContentViewData(userTaskId, version);
-        if (contentViewDataOpt.isEmpty()) {
-            return "error/404";
-        }
-
-        TeacherSubmissionContentViewDto contentViewData = contentViewDataOpt.get();
+        TeacherSubmissionContentViewDto contentViewData =
+            teacherTaskQueryService.getSubmissionContentViewData(userTaskId, version)
+                .orElseThrow(() -> new TeacherResourceNotFoundException("Abgabe nicht gefunden"));
 
         model.addAttribute("task", contentViewData.getTask());
         model.addAttribute("userTask", contentViewData.getUserTask());
@@ -136,7 +126,7 @@ public class TeacherTaskController {
     @GetMapping("/tasks/create")
     public String showCreateTaskForm(Model model) {
         TeacherTaskFormDataDto formData = teacherTaskQueryService.getCreateTaskFormData();
-        model.addAttribute("task", formData.getTask());
+        model.addAttribute("taskForm", formData.getTaskForm());
         model.addAttribute("taskViews", formData.getTaskViews());
         model.addAttribute("groups", formData.getGroups());
         model.addAttribute("unitTitles", formData.getUnitTitles());
@@ -144,28 +134,28 @@ public class TeacherTaskController {
     }
 
     @PostMapping("/tasks")
-    public String createTask(@ModelAttribute Task task,
-            @RequestParam String taskViewId,
-            @RequestParam(required = false) String unitTitleId,
-            @RequestParam(required = false) List<Long> selectedGroups,
-            Authentication authentication) {
+    public String createTask(@Valid @ModelAttribute("taskForm") TeacherTaskFormDto taskForm,
+            BindingResult bindingResult,
+            Authentication authentication,
+            Model model) {
+        validateTaskForm(taskForm, bindingResult, true);
+        if (bindingResult.hasErrors()) {
+            populateCreateTaskFormModel(model, taskForm);
+            return "teacher/task-create";
+        }
 
-        User teacher = userService.findByOpenIdSubject(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-        teacherTaskCommandService.createTask(task, teacher, taskViewId, unitTitleId, selectedGroups);
+        User teacher = requireTeacher(authentication.getName());
+        teacherTaskCommandService.createTask(teacher, taskForm);
 
         return "redirect:/teacher/tasks";
     }
 
     @GetMapping("/tasks/{id}/edit")
     public String showEditTaskForm(@PathVariable Long id, Model model) {
-        Optional<TeacherTaskFormDataDto> formDataOpt = teacherTaskQueryService.getEditTaskFormData(id);
-        if (formDataOpt.isEmpty()) {
-            return "redirect:/teacher/tasks";
-        }
-
-        TeacherTaskFormDataDto formData = formDataOpt.get();
+        TeacherTaskFormDataDto formData = teacherTaskQueryService.getEditTaskFormData(id)
+            .orElseThrow(() -> new TeacherResourceNotFoundException("Aufgabe nicht gefunden"));
         model.addAttribute("task", formData.getTask());
+        model.addAttribute("taskForm", formData.getTaskForm());
         model.addAttribute("taskViews", formData.getTaskViews());
         model.addAttribute("groups", formData.getGroups());
         model.addAttribute("unitTitles", formData.getUnitTitles());
@@ -175,27 +165,23 @@ public class TeacherTaskController {
 
     @PostMapping("/tasks/{id}/edit")
     public String updateTask(@PathVariable Long id,
-            @ModelAttribute Task task,
-            @RequestParam(required = false) List<Long> selectedGroups,
-            @RequestParam String taskViewId,
-            @RequestParam String unitTitleId,
-            @RequestParam(required = false) String tutorial) {
-        teacherTaskCommandService.updateTask(id, task, taskViewId, unitTitleId, selectedGroups, tutorial);
+            @Valid @ModelAttribute("taskForm") TeacherTaskFormDto taskForm,
+            BindingResult bindingResult,
+            Model model) {
+        validateTaskForm(taskForm, bindingResult, false);
+        if (bindingResult.hasErrors()) {
+            populateEditTaskFormModel(id, model, taskForm);
+            return "teacher/task-edit";
+        }
+
+        teacherTaskCommandService.updateTask(id, taskForm);
         return "redirect:/teacher/tasks";
     }
 
     @DeleteMapping("/tasks/{id}")
     public String deleteTask(@PathVariable Long id, Authentication authentication) {
-        User teacher = userService.findByOpenIdSubject(authentication.getName()).orElse(null);
-        if (teacher == null) {
-            return "redirect:/teacher/tasks";
-        }
-
-        try {
-            teacherTaskCommandService.deleteTask(id, teacher);
-        } catch (RuntimeException e) {
-            return "redirect:/teacher/tasks";
-        }
+        User teacher = requireTeacher(authentication.getName());
+        teacherTaskCommandService.deleteTask(id, teacher);
 
         return "redirect:/teacher/tasks";
     }
@@ -206,13 +192,8 @@ public class TeacherTaskController {
                                  @RequestParam(required = false) String returnUrl,
                                  Model model,
                                  HttpServletRequest request) {
-        Optional<TeacherSubmissionReviewDataDto> reviewDataOpt =
-            teacherTaskQueryService.getSubmissionReviewData(userTaskId);
-        if (reviewDataOpt.isEmpty()) {
-            return "redirect:/teacher/tasks";
-        }
-
-        TeacherSubmissionReviewDataDto reviewData = reviewDataOpt.get();
+        TeacherSubmissionReviewDataDto reviewData = teacherTaskQueryService.getSubmissionReviewData(userTaskId)
+            .orElseThrow(() -> new TeacherResourceNotFoundException("Abgabe nicht gefunden"));
         model.addAttribute("userTask", reviewData.getUserTask());
 
         // If no returnUrl is provided as parameter, get it from the HTTP Referer header
@@ -237,5 +218,50 @@ public class TeacherTaskController {
             currentUrl += "?" + request.getQueryString();
         }
         return currentUrl;
+    }
+
+    private void validateTaskForm(
+            TeacherTaskFormDto taskForm,
+            BindingResult bindingResult,
+            boolean requireTaskView) {
+        if (requireTaskView && taskForm.getTaskViewId() == null) {
+            bindingResult.rejectValue("taskViewId", "required", "Bitte wählen Sie einen Aufgabentyp aus.");
+        } else if (taskForm.getTaskViewId() != null
+                && !teacherTaskQueryService.hasTaskView(taskForm.getTaskViewId())) {
+            bindingResult.rejectValue("taskViewId", "notFound", "Der gewählte Aufgabentyp existiert nicht.");
+        }
+
+        if (taskForm.getUnitTitleId() != null
+                && !taskForm.getUnitTitleId().trim().isEmpty()
+                && !teacherTaskQueryService.hasUnitTitle(taskForm.getUnitTitleId())) {
+            bindingResult.rejectValue("unitTitleId", "notFound", "Das gewählte Thema existiert nicht.");
+        }
+
+        if (!teacherTaskQueryService.hasAllGroups(taskForm.getSelectedGroups())) {
+            bindingResult.rejectValue("selectedGroups", "notFound", "Eine oder mehrere gewählte Gruppen existieren nicht.");
+        }
+    }
+
+    private void populateCreateTaskFormModel(Model model, TeacherTaskFormDto taskForm) {
+        TeacherTaskFormDataDto formData = teacherTaskQueryService.getCreateTaskFormData();
+        model.addAttribute("taskForm", taskForm);
+        model.addAttribute("taskViews", formData.getTaskViews());
+        model.addAttribute("groups", formData.getGroups());
+        model.addAttribute("unitTitles", formData.getUnitTitles());
+    }
+
+    private void populateEditTaskFormModel(Long id, Model model, TeacherTaskFormDto taskForm) {
+        TeacherTaskFormDataDto formData = teacherTaskQueryService.getEditTaskFormData(id)
+            .orElseThrow(() -> new TeacherResourceNotFoundException("Aufgabe nicht gefunden"));
+        model.addAttribute("task", formData.getTask());
+        model.addAttribute("taskForm", taskForm);
+        model.addAttribute("taskViews", formData.getTaskViews());
+        model.addAttribute("groups", formData.getGroups());
+        model.addAttribute("unitTitles", formData.getUnitTitles());
+    }
+
+    private User requireTeacher(String openIdSubject) {
+        return userService.findByOpenIdSubject(openIdSubject)
+            .orElseThrow(() -> new TeacherAuthenticationRequiredException("Benutzer nicht gefunden"));
     }
 }

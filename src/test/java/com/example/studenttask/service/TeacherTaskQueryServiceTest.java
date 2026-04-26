@@ -2,6 +2,7 @@ package com.example.studenttask.service;
 
 import com.example.studenttask.dto.TeacherSubmissionContentViewDto;
 import com.example.studenttask.dto.TeacherTaskFormDataDto;
+import com.example.studenttask.dto.TeacherTaskFormDto;
 import com.example.studenttask.dto.TeacherSubmissionReviewDataDto;
 import com.example.studenttask.dto.TeacherTaskListDataDto;
 import com.example.studenttask.dto.TeacherTaskSubmissionsDataDto;
@@ -217,7 +218,8 @@ class TeacherTaskQueryServiceTest {
 
         TeacherTaskFormDataDto formData = teacherTaskQueryService.getCreateTaskFormData();
 
-        assertThat(formData.getTask()).isNotNull();
+        assertThat(formData.getTask()).isNull();
+        assertThat(formData.getTaskForm()).isNotNull();
         assertThat(formData.getTaskViews()).containsExactly(taskView);
         assertThat(formData.getGroups()).containsExactly(group);
         assertThat(formData.getUnitTitles()).containsExactly(unitTitle);
@@ -231,6 +233,13 @@ class TeacherTaskQueryServiceTest {
         TaskView taskView = new TaskView();
         taskView.setId(5L);
         UnitTitle unitTitle = new UnitTitle("sql", "SQL", "desc", 10);
+        task.setTaskView(taskView);
+        task.setUnitTitle(unitTitle);
+        task.setDescription("Beschreibung");
+        task.setTutorial("Tutorial");
+        task.setDefaultSubmission("Default");
+        task.setIsActive(false);
+        task.setDueDate(java.time.LocalDateTime.of(2026, 4, 26, 14, 30));
 
         when(taskService.findById(20L)).thenReturn(Optional.of(task));
         when(taskViewService.findAllActive()).thenReturn(List.of(taskView));
@@ -242,6 +251,16 @@ class TeacherTaskQueryServiceTest {
         assertThat(formDataOpt).isPresent();
         TeacherTaskFormDataDto formData = formDataOpt.get();
         assertThat(formData.getTask()).isSameAs(task);
+        TeacherTaskFormDto taskForm = formData.getTaskForm();
+        assertThat(taskForm.getTitle()).isEqualTo("Worksheet");
+        assertThat(taskForm.getDescription()).isEqualTo("Beschreibung");
+        assertThat(taskForm.getTutorial()).isEqualTo("Tutorial");
+        assertThat(taskForm.getDefaultSubmission()).isEqualTo("Default");
+        assertThat(taskForm.getTaskViewId()).isEqualTo(5L);
+        assertThat(taskForm.getUnitTitleId()).isEqualTo("sql");
+        assertThat(taskForm.getSelectedGroups()).containsExactly(10L);
+        assertThat(taskForm.getIsActive()).isFalse();
+        assertThat(taskForm.getDueDate()).isEqualTo(java.time.LocalDateTime.of(2026, 4, 26, 14, 30));
         assertThat(formData.getTaskViews()).containsExactly(taskView);
         assertThat(formData.getGroups()).containsExactly(group);
         assertThat(formData.getUnitTitles()).containsExactly(unitTitle);

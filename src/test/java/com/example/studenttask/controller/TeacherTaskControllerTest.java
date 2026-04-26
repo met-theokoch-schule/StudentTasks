@@ -2,10 +2,13 @@ package com.example.studenttask.controller;
 
 import com.example.studenttask.dto.TeacherSubmissionContentViewDto;
 import com.example.studenttask.dto.TeacherTaskFormDataDto;
+import com.example.studenttask.dto.TeacherTaskFormDto;
 import com.example.studenttask.dto.TeacherSubmissionReviewDataDto;
 import com.example.studenttask.dto.TeacherTaskListDataDto;
 import com.example.studenttask.dto.TeacherTaskSubmissionsDataDto;
 import com.example.studenttask.dto.VersionWithSubmissionStatus;
+import com.example.studenttask.exception.TeacherAuthenticationRequiredException;
+import com.example.studenttask.exception.TeacherResourceNotFoundException;
 import com.example.studenttask.model.Group;
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskReview;
@@ -24,6 +27,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.BindingResult;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
 
@@ -35,8 +40,11 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -167,7 +175,8 @@ class TeacherTaskControllerTest {
         TaskView taskView = new TaskView();
         taskView.setId(5L);
         UnitTitle unitTitle = new UnitTitle("sql", "SQL", "desc", 10);
-        TeacherTaskFormDataDto formData = new TeacherTaskFormDataDto(new Task(), List.of(taskView), List.of(group), List.of(unitTitle));
+        TeacherTaskFormDto taskForm = new TeacherTaskFormDto();
+        TeacherTaskFormDataDto formData = new TeacherTaskFormDataDto(null, taskForm, List.of(taskView), List.of(group), List.of(unitTitle));
 
         when(teacherTaskQueryService.getCreateTaskFormData()).thenReturn(formData);
 
@@ -175,7 +184,7 @@ class TeacherTaskControllerTest {
         String view = controller.showCreateTaskForm(model);
 
         assertThat(view).isEqualTo("teacher/task-create");
-        assertThat(model.getAttribute("task")).isSameAs(formData.getTask());
+        assertThat(model.getAttribute("taskForm")).isSameAs(taskForm);
         assertThat(model.getAttribute("taskViews")).isEqualTo(List.of(taskView));
         assertThat(model.getAttribute("groups")).isEqualTo(List.of(group));
         assertThat(model.getAttribute("unitTitles")).isEqualTo(List.of(unitTitle));
@@ -189,7 +198,9 @@ class TeacherTaskControllerTest {
         TaskView taskView = new TaskView();
         taskView.setId(5L);
         UnitTitle unitTitle = new UnitTitle("sql", "SQL", "desc", 10);
-        TeacherTaskFormDataDto formData = new TeacherTaskFormDataDto(task, List.of(taskView), List.of(group), List.of(unitTitle));
+        TeacherTaskFormDto taskForm = new TeacherTaskFormDto();
+        taskForm.setTitle("Worksheet");
+        TeacherTaskFormDataDto formData = new TeacherTaskFormDataDto(task, taskForm, List.of(taskView), List.of(group), List.of(unitTitle));
 
         when(teacherTaskQueryService.getEditTaskFormData(20L)).thenReturn(Optional.of(formData));
 
@@ -198,6 +209,7 @@ class TeacherTaskControllerTest {
 
         assertThat(view).isEqualTo("teacher/task-edit");
         assertThat(model.getAttribute("task")).isSameAs(task);
+        assertThat(model.getAttribute("taskForm")).isSameAs(taskForm);
         assertThat(model.getAttribute("taskViews")).isEqualTo(List.of(taskView));
         assertThat(model.getAttribute("groups")).isEqualTo(List.of(group));
         assertThat(model.getAttribute("unitTitles")).isEqualTo(List.of(unitTitle));
@@ -207,8 +219,6 @@ class TeacherTaskControllerTest {
     void submitReview_delegatesToCommandServiceAndRedirectsToReturnUrl() {
         HttpServletRequest request = mock(HttpServletRequest.class);
         when(request.getParameter("currentVersion")).thenReturn("2");
-        when(teacherTaskCommandService.submitReview(30L, "oidc-teacher", 7L, "Gut gemacht", "2"))
-            .thenReturn(true);
 
         String view = controller.submitReview(
             30L,
@@ -220,50 +230,103 @@ class TeacherTaskControllerTest {
         );
 
         assertThat(view).isEqualTo("redirect:/teacher/tasks/20/submissions");
-    }
-
-    @Test
-    void submitReview_redirectsToTaskListWhenCommandServiceRejects() {
-        HttpServletRequest request = mock(HttpServletRequest.class);
-        when(request.getParameter("currentVersion")).thenReturn(null);
-        when(teacherTaskCommandService.submitReview(30L, "oidc-teacher", 7L, "Kommentar", null))
-            .thenReturn(false);
-
-        String view = controller.submitReview(
-            30L,
-            7L,
-            "Kommentar",
-            null,
-            authentication("oidc-teacher"),
-            request
-        );
-
-        assertThat(view).isEqualTo("redirect:/teacher/tasks");
+        verify(teacherTaskCommandService).submitReview(30L, "oidc-teacher", 7L, "Gut gemacht", "2");
     }
 
     @Test
     void createTask_delegatesToCommandService() {
         Group group = group(10L, "10A");
         User teacher = teacher(1L, "Teacher", group);
-        Task task = new Task();
+        TeacherTaskFormDto taskForm = new TeacherTaskFormDto();
+        taskForm.setTitle("Worksheet");
+        taskForm.setTaskViewId(5L);
+        taskForm.setUnitTitleId("sql");
+        taskForm.setSelectedGroups(List.of(10L));
 
         when(userService.findByOpenIdSubject("oidc-teacher")).thenReturn(Optional.of(teacher));
+        when(teacherTaskQueryService.hasTaskView(5L)).thenReturn(true);
+        when(teacherTaskQueryService.hasUnitTitle("sql")).thenReturn(true);
+        when(teacherTaskQueryService.hasAllGroups(List.of(10L))).thenReturn(true);
 
-        String view = controller.createTask(task, "5", "sql", List.of(10L), authentication("oidc-teacher"));
+        BindingResult bindingResult = new BeanPropertyBindingResult(taskForm, "taskForm");
+        String view = controller.createTask(taskForm, bindingResult, authentication("oidc-teacher"), new ExtendedModelMap());
 
         assertThat(view).isEqualTo("redirect:/teacher/tasks");
-        verify(teacherTaskCommandService).createTask(task, teacher, "5", "sql", List.of(10L));
+        verify(teacherTaskCommandService).createTask(teacher, taskForm);
     }
 
     @Test
     void updateTask_delegatesToCommandService() {
-        Task task = new Task();
-        task.setTitle("Updated");
+        TeacherTaskFormDto taskForm = new TeacherTaskFormDto();
+        taskForm.setTitle("Updated");
+        taskForm.setTaskViewId(5L);
+        taskForm.setUnitTitleId("sql");
+        taskForm.setSelectedGroups(List.of(10L));
+        taskForm.setTutorial("Tutorial");
 
-        String view = controller.updateTask(20L, task, List.of(10L), "5", "sql", "Tutorial");
+        when(teacherTaskQueryService.hasTaskView(5L)).thenReturn(true);
+        when(teacherTaskQueryService.hasUnitTitle("sql")).thenReturn(true);
+        when(teacherTaskQueryService.hasAllGroups(List.of(10L))).thenReturn(true);
+
+        BindingResult bindingResult = new BeanPropertyBindingResult(taskForm, "taskForm");
+        String view = controller.updateTask(20L, taskForm, bindingResult, new ExtendedModelMap());
 
         assertThat(view).isEqualTo("redirect:/teacher/tasks");
-        verify(teacherTaskCommandService).updateTask(20L, task, "5", "sql", List.of(10L), "Tutorial");
+        verify(teacherTaskCommandService).updateTask(20L, taskForm);
+    }
+
+    @Test
+    void createTask_rendersFormAgainWhenTaskViewIsInvalid() {
+        TeacherTaskFormDto taskForm = new TeacherTaskFormDto();
+        taskForm.setTitle("Worksheet");
+        taskForm.setTaskViewId(999L);
+
+        TeacherTaskFormDataDto formData = new TeacherTaskFormDataDto(
+            null,
+            new TeacherTaskFormDto(),
+            List.of(),
+            List.of(),
+            List.of()
+        );
+        when(teacherTaskQueryService.hasTaskView(999L)).thenReturn(false);
+        when(teacherTaskQueryService.hasAllGroups(List.of())).thenReturn(true);
+        when(teacherTaskQueryService.getCreateTaskFormData()).thenReturn(formData);
+
+        BindingResult bindingResult = new BeanPropertyBindingResult(taskForm, "taskForm");
+        Model model = new ExtendedModelMap();
+        String view = controller.createTask(taskForm, bindingResult, mock(Authentication.class), model);
+
+        assertThat(view).isEqualTo("teacher/task-create");
+        assertThat(bindingResult.getFieldError("taskViewId")).isNotNull();
+        assertThat(model.getAttribute("taskForm")).isSameAs(taskForm);
+        verifyNoInteractions(userService);
+        verify(teacherTaskCommandService, never()).createTask(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void updateTask_rendersFormAgainWhenUnitTitleIsInvalid() {
+        TeacherTaskFormDto taskForm = new TeacherTaskFormDto();
+        taskForm.setTitle("Updated");
+        taskForm.setUnitTitleId("missing");
+
+        Group group = group(10L, "10A");
+        User teacher = teacher(1L, "Teacher", group);
+        Task task = task(20L, "Worksheet", teacher, group, null);
+        TeacherTaskFormDataDto formData = new TeacherTaskFormDataDto(task, new TeacherTaskFormDto(), List.of(), List.of(), List.of());
+
+        when(teacherTaskQueryService.hasUnitTitle("missing")).thenReturn(false);
+        when(teacherTaskQueryService.hasAllGroups(List.of())).thenReturn(true);
+        when(teacherTaskQueryService.getEditTaskFormData(20L)).thenReturn(Optional.of(formData));
+
+        BindingResult bindingResult = new BeanPropertyBindingResult(taskForm, "taskForm");
+        Model model = new ExtendedModelMap();
+        String view = controller.updateTask(20L, taskForm, bindingResult, model);
+
+        assertThat(view).isEqualTo("teacher/task-edit");
+        assertThat(bindingResult.getFieldError("unitTitleId")).isNotNull();
+        assertThat(model.getAttribute("task")).isSameAs(task);
+        assertThat(model.getAttribute("taskForm")).isSameAs(taskForm);
+        verify(teacherTaskCommandService, never()).updateTask(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -277,6 +340,24 @@ class TeacherTaskControllerTest {
 
         assertThat(view).isEqualTo("redirect:/teacher/tasks");
         verify(teacherTaskCommandService).deleteTask(20L, teacher);
+    }
+
+    @Test
+    void listTasks_throwsAuthenticationExceptionWhenTeacherCannotBeResolved() {
+        when(userService.findByOpenIdSubject("missing-teacher")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> controller.listTasks("own", new ExtendedModelMap(), principal("missing-teacher")))
+            .isInstanceOf(TeacherAuthenticationRequiredException.class)
+            .hasMessage("Benutzer nicht gefunden");
+    }
+
+    @Test
+    void viewSubmissionInTaskView_throwsNotFoundExceptionWhenSubmissionDoesNotExist() {
+        when(teacherTaskQueryService.getSubmissionContentViewData(30L, 3)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> controller.viewSubmissionInTaskView(30L, 3, new ExtendedModelMap()))
+            .isInstanceOf(TeacherResourceNotFoundException.class)
+            .hasMessage("Abgabe nicht gefunden");
     }
 
     private Principal principal(String name) {

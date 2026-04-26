@@ -15,19 +15,39 @@
                         <h3>Anmeldung</h3>
                     </div>
                     <div class="card-body text-center">
-                        <div th:if="${param.error}" class="alert alert-danger">
+                        <div th:if="${param.required}" class="alert alert-info">
+                            Bitte melden Sie sich an, um die angeforderte Seite aufzurufen.
+                        </div>
+
+                        <div th:if="${param.expired}" class="alert alert-warning">
+                            Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.
+                        </div>
+
+                        <div th:if="${param.oauthIdentityError}" class="alert alert-danger text-start">
+                            Die Rueckmeldung von IServ konnte nicht verarbeitet werden.
+                            Bitte pruefen Sie die OAuth-Konfiguration oder wenden Sie sich an Ihren Administrator.
+                        </div>
+
+                        <div th:if="${param.error and !param.oauthIdentityError}" class="alert alert-danger">
                             Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.
+                        </div>
+
+                        <div th:unless="${oauthConfigurationReady}" class="alert alert-warning text-start">
+                            Die IServ-Anmeldung ist auf diesem System noch nicht vollständig konfiguriert.
+                            <a th:href="${oauthLoginPath}">Setup-Anleitung öffnen</a>
                         </div>
 
                         <p class="mb-4">Melden Sie sich mit Ihrem IServ-Account an:</p>
 
-                        <a class="btn btn-primary btn-lg" href="/dashboard">
-                            Mit IServ anmelden
+                        <a class="btn btn-primary btn-lg" th:href="${oauthLoginPath}">
+                            <span th:text="${oauthConfigurationReady} ? 'Mit IServ anmelden' : 'IServ-Konfiguration anzeigen'">Mit IServ anmelden</span>
                         </a>
 
                         <div class="mt-4">
                             <small class="text-muted">
-                                Sie werden zur IServ-Anmeldeseite weitergeleitet.
+                                <span th:text="${oauthConfigurationReady} ? 'Sie werden zur IServ-Anmeldeseite weitergeleitet.' : 'Solange die Konfiguration fehlt, wird stattdessen die Setup-Seite angezeigt.'">
+                                    Sie werden zur IServ-Anmeldeseite weitergeleitet.
+                                </span>
                             </small>
                         </div>
                     </div>

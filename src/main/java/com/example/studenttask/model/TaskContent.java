@@ -4,7 +4,18 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "task_contents")
+@Table(
+    name = "task_contents",
+    indexes = @Index(
+        name = "uk_task_contents_user_task_id_version",
+        columnList = "user_task_id, version",
+        unique = true
+    ),
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_task_contents_user_task_id_version",
+        columnNames = {"user_task_id", "version"}
+    )
+)
 public class TaskContent {
 
     @Id

@@ -1,5 +1,6 @@
 package com.example.studenttask.service;
 
+import com.example.studenttask.exception.OAuth2IdentityResolutionException;
 import com.example.studenttask.model.Group;
 import com.example.studenttask.model.Role;
 import com.example.studenttask.model.User;
@@ -21,6 +22,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -121,6 +123,18 @@ class IdentitySyncServiceTest {
         assertThat(savedUser.getGroups()).containsExactly(newGroup);
         assertThat(savedUser.getRoles()).doesNotContain(oldRole);
         assertThat(savedUser.getGroups()).doesNotContain(oldGroup);
+    }
+
+    @Test
+    void syncFromOAuth2User_throwsIdentityResolutionExceptionWhenSubjectIsMissing() {
+        OAuth2User oauth2User = oauth2User(Map.of(
+            "name", "Broken User",
+            "email", "broken@example.com"
+        ));
+
+        assertThatThrownBy(() -> identitySyncService.syncFromOAuth2User(oauth2User))
+            .isInstanceOf(OAuth2IdentityResolutionException.class)
+            .hasMessage("OAuth2 user does not contain a subject");
     }
 
     private OAuth2User oauth2User(Map<String, Object> attributes) {

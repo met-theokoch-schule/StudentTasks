@@ -1,10 +1,13 @@
 package com.example.studenttask.service;
 
+import com.example.studenttask.exception.TaskContentVersionNotFoundException;
+import com.example.studenttask.exception.TaskStatusNotFoundException;
 import com.example.studenttask.model.TaskReview;
 import com.example.studenttask.model.TaskStatus;
 import com.example.studenttask.model.TaskStatusCode;
 import com.example.studenttask.model.User;
 import com.example.studenttask.model.UserTask;
+import com.example.studenttask.repository.TaskContentRepository;
 import com.example.studenttask.repository.TaskReviewRepository;
 import com.example.studenttask.repository.UserTaskRepository;
 import org.slf4j.Logger;
@@ -22,12 +25,17 @@ public class TaskReviewService {
 
     private static final Logger log = LoggerFactory.getLogger(TaskReviewService.class);
 
+    private static final String REVIEW_VERSION_NOT_FOUND_MESSAGE = "Abgabeversion nicht gefunden";
+
+    private final TaskContentRepository taskContentRepository;
     private final TaskReviewRepository taskReviewRepository;
     private final UserTaskRepository userTaskRepository;
     private final TaskStatusService taskStatusService;
-    public TaskReviewService(TaskReviewRepository taskReviewRepository,
+    public TaskReviewService(TaskContentRepository taskContentRepository,
+                           TaskReviewRepository taskReviewRepository,
                            UserTaskRepository userTaskRepository,
                            TaskStatusService taskStatusService) {
+        this.taskContentRepository = taskContentRepository;
         this.taskReviewRepository = taskReviewRepository;
         this.userTaskRepository = userTaskRepository;
         this.taskStatusService = taskStatusService;
@@ -75,14 +83,15 @@ public class TaskReviewService {
         review.setReviewer(reviewer);
 
         TaskStatus status = taskStatusService.findById(statusId)
-            .orElseThrow(() -> new RuntimeException("Status not found"));
+            .orElseThrow(() -> new TaskStatusNotFoundException("Status not found"));
         review.setStatus(status);
         log.debug("Resolved review status {}", status.getName());
 
         review.setComment(comment);
         review.setReviewedAt(LocalDateTime.now());
 
-        if (currentVersion != null && currentVersion > 0) {
+        if (currentVersion != null) {
+            validateRequestedVersion(userTask, currentVersion);
             review.setVersion(currentVersion);
             log.debug("Assigned review version {}", currentVersion);
         } else {
@@ -99,6 +108,13 @@ public class TaskReviewService {
                 savedReview.getId(), userTask.getId(), status.getName());
 
         return savedReview;
+    }
+
+    private void validateRequestedVersion(UserTask userTask, Integer currentVersion) {
+        if (currentVersion <= 0 || !taskContentRepository.existsByUserTaskAndVersion(userTask, currentVersion)) {
+            log.warn("Rejected review for missing content version {} on userTask {}", currentVersion, userTask.getId());
+            throw new TaskContentVersionNotFoundException(REVIEW_VERSION_NOT_FOUND_MESSAGE);
+        }
     }
 
     /**

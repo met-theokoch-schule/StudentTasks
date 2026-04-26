@@ -2,6 +2,7 @@ package com.example.studenttask.service;
 
 import com.example.studenttask.exception.ApiNotFoundException;
 import com.example.studenttask.exception.ApiUnauthorizedException;
+import com.example.studenttask.exception.TaskStatusNotFoundException;
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskContent;
 import com.example.studenttask.model.User;
@@ -98,6 +99,19 @@ class StudentTaskApiCommandServiceTest {
     }
 
     @Test
+    void saveTaskContent_propagatesMissingStatusAsTypedNotFoundException() {
+        UserTask userTask = userTask(100L, 1L, 7L);
+
+        when(studentTaskApiAccessService.findOrCreateUserTask(7L, "oidc-subject")).thenReturn(userTask);
+        when(taskContentService.saveContent(userTask, "print('ok')", false))
+            .thenThrow(new TaskStatusNotFoundException("Status in_bearbeitung not found"));
+
+        assertThatThrownBy(() -> studentTaskApiCommandService.saveTaskContent(7L, "oidc-subject", "print('ok')"))
+            .isInstanceOf(TaskStatusNotFoundException.class)
+            .hasMessage("Status in_bearbeitung not found");
+    }
+
+    @Test
     void submitTask_throwsUnauthorizedWhenUserCannotBeResolved() {
         when(studentTaskApiAccessService.findOrCreateUserTask(7L, "oidc-subject"))
             .thenThrow(new ApiUnauthorizedException("Benutzer nicht gefunden"));
@@ -117,6 +131,19 @@ class StudentTaskApiCommandServiceTest {
 
         verify(taskContentService).submitContent(userTask, "submitted-solution");
         verify(taskContentService, never()).getLatestContent(userTask);
+    }
+
+    @Test
+    void submitTask_propagatesMissingStatusAsTypedNotFoundException() {
+        UserTask userTask = userTask(100L, 1L, 7L);
+
+        when(studentTaskApiAccessService.findOrCreateUserTask(7L, "oidc-subject")).thenReturn(userTask);
+        when(taskContentService.submitContent(userTask, "submitted-solution"))
+            .thenThrow(new TaskStatusNotFoundException("Status abgegeben not found"));
+
+        assertThatThrownBy(() -> studentTaskApiCommandService.submitTask(7L, "oidc-subject", "submitted-solution"))
+            .isInstanceOf(TaskStatusNotFoundException.class)
+            .hasMessage("Status abgegeben not found");
     }
 
     @Test

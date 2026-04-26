@@ -2,6 +2,7 @@ package com.example.studenttask.service;
 
 import com.example.studenttask.model.TaskStatus;
 import com.example.studenttask.model.TaskStatusCode;
+import com.example.studenttask.exception.TaskStatusNotFoundException;
 import com.example.studenttask.repository.TaskStatusRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,7 +37,10 @@ public class TaskStatusService {
                     TaskStatusCode.ABGEGEBEN,
                     TaskStatusCode.VOLLSTAENDIG
             ),
-            TaskStatusCode.VOLLSTAENDIG, Set.of(TaskStatusCode.UEBERARBEITUNG_NOETIG)
+            TaskStatusCode.VOLLSTAENDIG, Set.of(
+                    TaskStatusCode.ABGEGEBEN,
+                    TaskStatusCode.UEBERARBEITUNG_NOETIG
+            )
     );
 
     @Autowired
@@ -64,7 +68,9 @@ public class TaskStatusService {
 
     public TaskStatus requireStatus(TaskStatusCode code) {
         return findByCode(code)
-                .orElseThrow(() -> new RuntimeException("Status " + code.getDatabaseName() + " not found"));
+                .orElseThrow(() -> new TaskStatusNotFoundException(
+                    "Status " + code.getDatabaseName() + " not found"
+                ));
     }
 
     /**

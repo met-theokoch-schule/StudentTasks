@@ -1,9 +1,11 @@
 package com.example.studenttask.controller;
 
+import com.example.studenttask.exception.StudentResourceNotFoundException;
+import com.example.studenttask.exception.UserAuthenticationRequiredException;
 import com.example.studenttask.model.Task;
+import com.example.studenttask.model.TaskContent;
 import com.example.studenttask.model.User;
 import com.example.studenttask.model.UserTask;
-import com.example.studenttask.model.TaskContent;
 import com.example.studenttask.service.AuthenticationService;
 import com.example.studenttask.service.StudentTaskViewSupportService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,8 +15,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import java.util.Optional;
 
 /**
  * Debug Controller - nur für Entwicklungszwecke
@@ -40,60 +40,32 @@ public class DebugController {
             @PathVariable Long taskId,
             @RequestParam(required = false) Integer version,
             Model model) {
+        User currentUser = authenticationService.getCurrentUser()
+            .orElseThrow(() -> new UserAuthenticationRequiredException("Benutzer nicht gefunden"));
 
-        try {
-            // Aktuellen Benutzer abrufen
-            Optional<User> currentUserOpt = authenticationService.getCurrentUser();
-            if (currentUserOpt.isEmpty()) {
-                model.addAttribute("error", "Kein Benutzer eingeloggt");
-                return "debug/content-viewer";
-            }
+        Task task = studentTaskViewSupportService.findAssignedTask(currentUser, taskId)
+            .orElseThrow(() -> new StudentResourceNotFoundException("Aufgabe nicht gefunden"));
 
-            User currentUser = currentUserOpt.get();
+        UserTask userTask = studentTaskViewSupportService.findExistingUserTask(currentUser, task)
+            .orElseThrow(() -> new StudentResourceNotFoundException("Keine gespeicherten Inhalte für diese Aufgabe gefunden"));
 
-            // Überprüfung ob Task existiert
-            Optional<Task> taskOpt = studentTaskViewSupportService.findTask(taskId);
-            if (taskOpt.isEmpty()) {
-                model.addAttribute("error", "Aufgabe mit ID " + taskId + " nicht gefunden");
-                return "debug/content-viewer";
-            }
-
-            Task task = taskOpt.get();
-
-            // UserTask für aktuellen Benutzer und Task finden
-            Optional<UserTask> userTaskOpt = studentTaskViewSupportService.findExistingUserTask(currentUser, task);
-            if (userTaskOpt.isEmpty()) {
-                model.addAttribute("error", "Keine UserTask für Benutzer " + currentUser.getName() + " und Task " + taskId + " gefunden");
-                return "debug/content-viewer";
-            }
-
-            UserTask userTask = userTaskOpt.get();
-
-            // TaskContent basierend auf Version abrufen
-            TaskContent taskContent = studentTaskViewSupportService.getRequestedContent(userTask, version);
-            if (taskContent == null) {
-                if (version != null) {
-                    model.addAttribute("error", "Version " + version + " für Task " + taskId + " nicht gefunden");
-                } else {
-                    model.addAttribute("error", "Keine TaskContent für Task " + taskId + " gefunden");
-                }
-                return "debug/content-viewer";
-            }
-
-            // Informationen für Template vorbereiten
-            model.addAttribute("taskId", taskId);
-            model.addAttribute("taskTitle", task.getTitle());
-            model.addAttribute("username", currentUser.getName());
-            model.addAttribute("content", taskContent.getContent());
-            model.addAttribute("version", taskContent.getVersion());
-            model.addAttribute("savedAt", taskContent.getSavedAt());
-            model.addAttribute("isSubmitted", taskContent.isSubmitted());
-
-            return "debug/content-viewer";
-
-        } catch (Exception e) {
-            model.addAttribute("error", "Fehler beim Laden der Daten: " + e.getMessage());
-            return "debug/content-viewer";
+        TaskContent taskContent = studentTaskViewSupportService.getRequestedContent(userTask, version);
+        if (taskContent == null) {
+            throw new StudentResourceNotFoundException(
+                version != null
+                    ? "Version " + version + " für diese Aufgabe nicht gefunden"
+                    : "Kein gespeicherter Inhalt für diese Aufgabe gefunden"
+            );
         }
+
+        model.addAttribute("taskId", taskId);
+        model.addAttribute("taskTitle", task.getTitle());
+        model.addAttribute("username", currentUser.getName());
+        model.addAttribute("content", taskContent.getContent());
+        model.addAttribute("version", taskContent.getVersion());
+        model.addAttribute("savedAt", taskContent.getSavedAt());
+        model.addAttribute("isSubmitted", taskContent.isSubmitted());
+
+        return "debug/content-viewer";
     }
 }

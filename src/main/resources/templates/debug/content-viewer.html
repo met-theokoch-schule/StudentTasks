@@ -23,13 +23,6 @@
             border-radius: 0.375rem;
             margin-bottom: 1rem;
         }
-        .error-message {
-            background-color: #f8d7da;
-            color: #721c24;
-            padding: 1rem;
-            border-radius: 0.375rem;
-            border: 1px solid #f5c6cb;
-        }
     </style>
 </head>
 <body>
@@ -38,41 +31,32 @@
             <div class="col-12">
                 <h1 class="h2 mb-4">🐛 Debug: Content Viewer</h1>
 
-                <!-- Fehlermeldung -->
-                <div th:if="${error}" class="error-message mb-4">
-                    <h5>❌ Fehler</h5>
-                    <p th:text="${error}">Fehlermeldung</p>
+                <!-- Metadaten -->
+                <div class="metadata">
+                    <h5>📋 Metadaten</h5>
+                    <ul class="mb-0">
+                        <li><strong>Task ID:</strong> <span th:text="${taskId}">-</span></li>
+                        <li><strong>Task Titel:</strong> <span th:text="${taskTitle}">-</span></li>
+                        <li><strong>Benutzer:</strong> <span th:text="${username}">-</span></li>
+                        <li><strong>Version:</strong> <span th:text="${version}">-</span></li>
+                        <li><strong>Gespeichert am:</strong> <span th:text="${savedAt}">-</span></li>
+                        <li><strong>Abgegeben:</strong> <span th:text="${isSubmitted} ? 'Ja' : 'Nein'">-</span></li>
+                    </ul>
                 </div>
 
-                <!-- Content Anzeige -->
-                <div th:unless="${error}">
-                    <!-- Metadaten -->
-                    <div class="metadata">
-                        <h5>📋 Metadaten</h5>
-                        <ul class="mb-0">
-                            <li><strong>Task ID:</strong> <span th:text="${taskId}">-</span></li>
-                            <li><strong>Task Titel:</strong> <span th:text="${taskTitle}">-</span></li>
-                            <li><strong>Benutzer:</strong> <span th:text="${username}">-</span></li>
-                            <li><strong>Version:</strong> <span th:text="${version}">-</span></li>
-                            <li><strong>Gespeichert am:</strong> <span th:text="${savedAt}">-</span></li>
-                            <li><strong>Abgegeben:</strong> <span th:text="${isSubmitted} ? 'Ja' : 'Nein'">-</span></li>
-                        </ul>
+                <!-- Content -->
+                <div class="mb-4">
+                    <h5>📄 Gespeicherter Content</h5>
+                    <div class="content-display" th:text="${content}">
+                        Content wird hier angezeigt...
                     </div>
+                </div>
 
-                    <!-- Content -->
-                    <div class="mb-4">
-                        <h5>📄 Gespeicherter Content</h5>
-                        <div class="content-display" th:text="${content}">
-                            Content wird hier angezeigt...
-                        </div>
-                    </div>
-
-                    <!-- Copy Button -->
-                    <div class="mb-4">
-                        <button class="btn btn-secondary" onclick="copyContent()">
-                            📋 Content kopieren
-                        </button>
-                    </div>
+                <!-- Copy Button -->
+                <div class="mb-4">
+                    <button class="btn btn-secondary" onclick="copyContent()">
+                        📋 Content kopieren
+                    </button>
                 </div>
 
                 <!-- Dokumentation -->
@@ -97,7 +81,6 @@
                             <li>✅ Versions-Support</li>
                             <li>✅ Metadaten-Anzeige</li>
                             <li>✅ Copy-to-Clipboard Funktion</li>
-                            <li>✅ Error Handling</li>
                         </ul>
                         <div class="alert alert-warning mt-3">
                             <strong>⚠️ Hinweis:</strong> Diese Debug-Funktion ist nur für Entwicklungszwecke gedacht!

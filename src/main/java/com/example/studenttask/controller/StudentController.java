@@ -3,8 +3,8 @@ package com.example.studenttask.controller;
 import com.example.studenttask.dto.StudentDashboardDataDto;
 import com.example.studenttask.dto.StudentTaskHistoryDataDto;
 import com.example.studenttask.dto.StudentTaskListDataDto;
-import com.example.studenttask.dto.StudentTaskVersionViewResultDto;
 import com.example.studenttask.dto.StudentTaskViewDataDto;
+import com.example.studenttask.exception.UserAuthenticationRequiredException;
 import com.example.studenttask.model.User;
 import com.example.studenttask.service.StudentTaskOverviewService;
 import com.example.studenttask.service.StudentTaskQueryService;
@@ -15,8 +15,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.Optional;
-
 @Controller
 @RequestMapping("/student")
 public class StudentController {
@@ -35,8 +33,7 @@ public class StudentController {
      */
     @GetMapping("/tasks/{taskId}")
     public String viewTask(@PathVariable Long taskId, Model model, Principal principal) {
-        User student = userService.findByOpenIdSubject(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+        User student = requireStudent(principal.getName());
         StudentTaskViewDataDto viewData = studentTaskQueryService.getTaskViewData(student, taskId);
         populateTaskViewModel(model, student, viewData);
         return viewData.getTaskView().getTemplatePath();
@@ -47,15 +44,8 @@ public class StudentController {
      */
     @GetMapping("/tasks/{taskId}/history")
     public String taskHistory(@PathVariable Long taskId, Model model, Principal principal) {
-        User student = userService.findByOpenIdSubject(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-        Optional<StudentTaskHistoryDataDto> historyDataOpt =
-            studentTaskQueryService.getTaskHistoryData(student, taskId);
-        if (historyDataOpt.isEmpty()) {
-            return "redirect:/student/dashboard";
-        }
-
-        StudentTaskHistoryDataDto historyData = historyDataOpt.get();
+        User student = requireStudent(principal.getName());
+        StudentTaskHistoryDataDto historyData = studentTaskQueryService.getTaskHistoryData(student, taskId);
         model.addAttribute("task", historyData.getTask());
         model.addAttribute("userTask", historyData.getUserTask());
         model.addAttribute("contentVersions", historyData.getContentVersions());
@@ -71,15 +61,8 @@ public class StudentController {
     @GetMapping("/tasks/{taskId}/version/{version}")
     public String viewTaskVersion(@PathVariable Long taskId, @PathVariable Integer version, 
                                 Model model, Principal principal) {
-        User student = userService.findByOpenIdSubject(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
-        StudentTaskVersionViewResultDto result =
-            studentTaskQueryService.getTaskVersionViewData(student, taskId, version);
-        if (result.isRedirect()) {
-            return result.getRedirectPath();
-        }
-
-        StudentTaskViewDataDto viewData = result.getViewData();
+        User student = requireStudent(principal.getName());
+        StudentTaskViewDataDto viewData = studentTaskQueryService.getTaskVersionViewData(student, taskId, version);
         populateTaskViewModel(model, student, viewData);
         model.addAttribute("viewingVersion", viewData.getViewingVersion());
         model.addAttribute("isHistoryView", viewData.isHistoryView());
@@ -91,8 +74,7 @@ public class StudentController {
      */
     @GetMapping("/dashboard")
     public String dashboard(Model model, Principal principal) {
-        User currentUser = userService.findByOpenIdSubject(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+        User currentUser = requireStudent(principal.getName());
 
         StudentDashboardDataDto dashboardData = studentTaskOverviewService.getDashboardData(currentUser);
 
@@ -112,8 +94,7 @@ public class StudentController {
      */
     @GetMapping("/tasks")
     public String taskList(Model model, Principal principal) {
-       User student = userService.findByOpenIdSubject(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+       User student = requireStudent(principal.getName());
         StudentTaskListDataDto taskListData = studentTaskOverviewService.getTaskListData(student);
 
         model.addAttribute("tasksByUnitTitle", taskListData.getTasksByUnitTitle());
@@ -127,5 +108,10 @@ public class StudentController {
         model.addAttribute("taskView", viewData.getTaskView());
         model.addAttribute("student", student);
         model.addAttribute("currentContent", viewData.getCurrentContent());
+    }
+
+    private User requireStudent(String openIdSubject) {
+        return userService.findByOpenIdSubject(openIdSubject)
+            .orElseThrow(() -> new UserAuthenticationRequiredException("Benutzer nicht gefunden"));
     }
 }

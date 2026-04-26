@@ -1,25 +1,25 @@
 package com.example.studenttask.service;
 
+import com.example.studenttask.dto.TeacherTaskFormDto;
+import com.example.studenttask.exception.TeacherAccessDeniedException;
+import com.example.studenttask.exception.TeacherAuthenticationRequiredException;
+import com.example.studenttask.exception.TeacherResourceNotFoundException;
 import com.example.studenttask.model.Group;
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskView;
 import com.example.studenttask.model.UnitTitle;
 import com.example.studenttask.model.User;
 import com.example.studenttask.model.UserTask;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
 import java.util.Set;
 
 @Service
 public class TeacherTaskCommandService {
-
-    private static final Logger log = LoggerFactory.getLogger(TeacherTaskCommandService.class);
 
     @Autowired
     private TaskService taskService;
@@ -42,67 +42,60 @@ public class TeacherTaskCommandService {
     @Autowired
     private TaskReviewService taskReviewService;
 
-    public Task createTask(Task task, User teacher, String taskViewId, String unitTitleId, List<Long> selectedGroupIds) {
+    public Task createTask(User teacher, TeacherTaskFormDto taskForm) {
+        Task task = new Task();
         task.setCreatedBy(teacher);
-        task.setAssignedGroups(resolveAssignedGroups(selectedGroupIds));
-        resolveTaskView(taskViewId).ifPresent(task::setTaskView);
-        task.setUnitTitle(resolveUnitTitle(unitTitleId));
+        applyTaskForm(task, taskForm, false);
         return taskService.save(task);
     }
 
-    public Task updateTask(Long id, Task taskUpdates, String taskViewId, String unitTitleId,
-            List<Long> selectedGroupIds, String tutorial) {
+    public Task updateTask(Long id, TeacherTaskFormDto taskForm) {
         Task existingTask = taskService.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Invalid task Id:" + id));
+            .orElseThrow(() -> new TeacherResourceNotFoundException("Aufgabe nicht gefunden"));
 
-        existingTask.setTitle(taskUpdates.getTitle());
-        existingTask.setDescription(taskUpdates.getDescription());
-        existingTask.setDefaultSubmission(taskUpdates.getDefaultSubmission());
-        existingTask.setTutorial(tutorial);
-        existingTask.setIsActive(taskUpdates.getIsActive());
-        existingTask.setAssignedGroups(resolveAssignedGroups(selectedGroupIds));
-        resolveTaskView(taskViewId).ifPresent(existingTask::setTaskView);
-        existingTask.setUnitTitle(resolveUnitTitle(unitTitleId));
-
+        applyTaskForm(existingTask, taskForm, true);
         return taskService.save(existingTask);
-    }
-
-    public void deleteTask(Long id) {
-        Task task = taskService.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Invalid task Id:" + id));
-        taskService.delete(task);
     }
 
     public void deleteTask(Long id, User teacher) {
         Task task = taskService.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Invalid task Id:" + id));
+            .orElseThrow(() -> new TeacherResourceNotFoundException("Aufgabe nicht gefunden"));
 
         if (teacher == null || task.getCreatedBy() == null || !task.getCreatedBy().equals(teacher)) {
-            throw new IllegalStateException("Zugriff verweigert");
+            throw new TeacherAccessDeniedException("Zugriff auf diese Aufgabe verweigert");
         }
 
         taskService.delete(task);
     }
 
-    public boolean submitReview(Long userTaskId, String reviewerSubject, Long statusId, String comment,
+    public void submitReview(Long userTaskId, String reviewerSubject, Long statusId, String comment,
             String currentVersionStr) {
-        Optional<UserTask> userTaskOpt = userTaskService.findById(userTaskId);
-        if (userTaskOpt.isEmpty()) {
-            return false;
-        }
-
-        Optional<User> reviewerOpt = userService.findByOpenIdSubject(reviewerSubject);
-        if (reviewerOpt.isEmpty()) {
-            return false;
-        }
-
-        UserTask userTask = userTaskOpt.get();
-        User reviewer = reviewerOpt.get();
+        UserTask userTask = userTaskService.findById(userTaskId)
+            .orElseThrow(() -> new TeacherResourceNotFoundException("Abgabe nicht gefunden"));
+        User reviewer = userService.findByOpenIdSubject(reviewerSubject)
+            .orElseThrow(() -> new TeacherAuthenticationRequiredException("Benutzer nicht gefunden"));
         Integer currentVersion = parseOptionalInteger(currentVersionStr);
 
         taskReviewService.createReview(userTask, reviewer, statusId, comment, currentVersion);
         userTaskService.save(userTask);
-        return true;
+    }
+
+    private void applyTaskForm(Task task, TeacherTaskFormDto taskForm, boolean preserveExistingTaskViewOnMissingValue) {
+        task.setTitle(taskForm.getTitle());
+        task.setDescription(taskForm.getDescription());
+        task.setDefaultSubmission(taskForm.getDefaultSubmission());
+        task.setTutorial(taskForm.getTutorial());
+        task.setDueDate(taskForm.getDueDate());
+        task.setIsActive(Boolean.TRUE.equals(taskForm.getIsActive()));
+        task.setAssignedGroups(resolveAssignedGroups(taskForm.getSelectedGroups()));
+
+        if (taskForm.getTaskViewId() != null) {
+            task.setTaskView(requireTaskView(taskForm.getTaskViewId()));
+        } else if (!preserveExistingTaskViewOnMissingValue) {
+            task.setTaskView(null);
+        }
+
+        task.setUnitTitle(requireUnitTitle(taskForm.getUnitTitleId()));
     }
 
     private Set<Group> resolveAssignedGroups(List<Long> selectedGroupIds) {
@@ -110,28 +103,37 @@ public class TeacherTaskCommandService {
             return new HashSet<>();
         }
 
-        return new HashSet<>(groupService.findAllById(selectedGroupIds));
-    }
-
-    private Optional<TaskView> resolveTaskView(String taskViewId) {
-        if (taskViewId == null || taskViewId.trim().isEmpty()) {
-            return Optional.empty();
+        long distinctGroupCount = selectedGroupIds.stream()
+            .filter(Objects::nonNull)
+            .distinct()
+            .count();
+        if (distinctGroupCount != selectedGroupIds.size()) {
+            throw new TeacherResourceNotFoundException("Eine oder mehrere Gruppen wurden nicht gefunden");
         }
 
-        try {
-            return taskViewService.findById(Long.parseLong(taskViewId));
-        } catch (NumberFormatException e) {
-            log.warn("Invalid taskViewId format: {}", taskViewId);
-            return Optional.empty();
+        List<Group> resolvedGroups = groupService.findAllById(selectedGroupIds);
+        if (resolvedGroups.size() != distinctGroupCount) {
+            throw new TeacherResourceNotFoundException("Eine oder mehrere Gruppen wurden nicht gefunden");
         }
+
+        return new HashSet<>(resolvedGroups);
     }
 
-    private UnitTitle resolveUnitTitle(String unitTitleId) {
+    private TaskView requireTaskView(Long taskViewId) {
+        return taskViewService.findById(taskViewId)
+            .orElseThrow(() -> new TeacherResourceNotFoundException("Aufgabentyp nicht gefunden"));
+    }
+
+    private UnitTitle requireUnitTitle(String unitTitleId) {
         if (unitTitleId == null || unitTitleId.trim().isEmpty()) {
             return null;
         }
 
-        return unitTitleService.findById(unitTitleId);
+        UnitTitle unitTitle = unitTitleService.findById(unitTitleId);
+        if (unitTitle == null) {
+            throw new TeacherResourceNotFoundException("Thema nicht gefunden");
+        }
+        return unitTitle;
     }
 
     private Integer parseOptionalInteger(String value) {

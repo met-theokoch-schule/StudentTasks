@@ -4,6 +4,8 @@ import com.example.studenttask.dto.GroupOverviewDto;
 import com.example.studenttask.dto.GroupStatisticsDto;
 import com.example.studenttask.dto.StudentTaskMatrixDto;
 import com.example.studenttask.dto.StudentTaskStatusDto;
+import com.example.studenttask.exception.TeacherAuthenticationRequiredException;
+import com.example.studenttask.exception.TeacherResourceNotFoundException;
 import com.example.studenttask.model.Group;
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskStatus;
@@ -28,6 +30,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -99,6 +102,28 @@ class TeacherGroupControllerTest {
         assertThat(matrix.getStatus(student.getId(), task.getId())).isNotNull();
         assertThat(matrix.getStatus(student.getId(), task.getId()).getStatusIcon())
             .isEqualTo("fas fa-hourglass-half text-warning");
+    }
+
+    @Test
+    void listGroups_throwsAuthenticationExceptionWhenTeacherCannotBeResolved() {
+        when(userService.findByOpenIdSubject("missing-teacher")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> controller.listGroups(new ExtendedModelMap(), principal("missing-teacher")))
+            .isInstanceOf(TeacherAuthenticationRequiredException.class)
+            .hasMessage("Benutzer nicht gefunden");
+    }
+
+    @Test
+    void showGroupDetail_throwsNotFoundExceptionWhenGroupIsMissing() {
+        Group group = group(10L, "10A");
+        User teacher = teacher(1L, "Teacher", group);
+
+        when(userService.findByOpenIdSubject("oidc-teacher")).thenReturn(Optional.of(teacher));
+        when(groupService.findById(99L)).thenReturn(null);
+
+        assertThatThrownBy(() -> controller.showGroupDetail(99L, new ExtendedModelMap(), principal("oidc-teacher")))
+            .isInstanceOf(TeacherResourceNotFoundException.class)
+            .hasMessage("Gruppe nicht gefunden");
     }
 
     private Principal principal(String name) {

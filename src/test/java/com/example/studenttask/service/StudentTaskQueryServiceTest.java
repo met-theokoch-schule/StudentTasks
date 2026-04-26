@@ -1,8 +1,9 @@
 package com.example.studenttask.service;
 
 import com.example.studenttask.dto.StudentTaskHistoryDataDto;
-import com.example.studenttask.dto.StudentTaskVersionViewResultDto;
 import com.example.studenttask.dto.StudentTaskViewDataDto;
+import com.example.studenttask.exception.StudentAccessDeniedException;
+import com.example.studenttask.exception.StudentResourceNotFoundException;
 import com.example.studenttask.model.Group;
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskContent;
@@ -107,7 +108,7 @@ class StudentTaskQueryServiceTest {
         when(studentTaskViewSupportService.findTask(103L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> studentTaskQueryService.getTaskViewData(student, 103L))
-            .isInstanceOf(RuntimeException.class)
+            .isInstanceOf(StudentResourceNotFoundException.class)
             .hasMessage("Aufgabe nicht gefunden");
     }
 
@@ -119,7 +120,7 @@ class StudentTaskQueryServiceTest {
         when(studentTaskViewSupportService.findExistingUserTask(student, task)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> studentTaskQueryService.getTaskViewData(student, 103L))
-            .isInstanceOf(RuntimeException.class)
+            .isInstanceOf(StudentAccessDeniedException.class)
             .hasMessage("Keine Berechtigung für diese Aufgabe");
     }
 
@@ -139,8 +140,8 @@ class StudentTaskQueryServiceTest {
         when(studentTaskViewSupportService.hasRenderableTemplate(taskView)).thenReturn(false);
 
         assertThatThrownBy(() -> studentTaskQueryService.getTaskViewData(student, 104L))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("TaskView nicht gefunden");
+            .isInstanceOf(StudentResourceNotFoundException.class)
+            .hasMessage("Aufgabenansicht nicht gefunden");
     }
 
     @Test
@@ -160,10 +161,7 @@ class StudentTaskQueryServiceTest {
         when(taskContentService.getAllContentVersions(userTask)).thenReturn(List.of(version));
         when(taskReviewService.findByUserTaskOrderByReviewedAtDesc(userTask)).thenReturn(List.of(review));
 
-        Optional<StudentTaskHistoryDataDto> historyDataOpt = studentTaskQueryService.getTaskHistoryData(student, 201L);
-
-        assertThat(historyDataOpt).isPresent();
-        StudentTaskHistoryDataDto historyData = historyDataOpt.get();
+        StudentTaskHistoryDataDto historyData = studentTaskQueryService.getTaskHistoryData(student, 201L);
         assertThat(historyData.getTask()).isSameAs(task);
         assertThat(historyData.getContentVersions()).containsExactly(version);
         assertThat(historyData.getReviews()).containsExactly(review);
@@ -171,16 +169,18 @@ class StudentTaskQueryServiceTest {
     }
 
     @Test
-    void getTaskHistoryData_returnsEmptyWhenStudentHasNoAccess() {
+    void getTaskHistoryData_throwsWhenStudentHasNoAccess() {
         User student = user(1L, "Student One");
         student.setGroups(Set.of(group(12L, "10B")));
         when(studentTaskViewSupportService.findAssignedTask(student, 202L)).thenReturn(Optional.empty());
 
-        assertThat(studentTaskQueryService.getTaskHistoryData(student, 202L)).isEmpty();
+        assertThatThrownBy(() -> studentTaskQueryService.getTaskHistoryData(student, 202L))
+            .isInstanceOf(StudentResourceNotFoundException.class)
+            .hasMessage("Aufgabe nicht gefunden");
     }
 
     @Test
-    void getTaskVersionViewData_returnsHistoryRedirectWhenVersionDoesNotExist() {
+    void getTaskVersionViewData_throwsWhenVersionDoesNotExist() {
         User student = user(1L, "Student One");
         Group group = group(11L, "10A");
         student.setGroups(Set.of(group));
@@ -192,12 +192,13 @@ class StudentTaskQueryServiceTest {
 
         when(studentTaskViewSupportService.findAssignedTask(student, 301L)).thenReturn(Optional.of(task));
         when(studentTaskViewSupportService.findExistingUserTask(student, task)).thenReturn(Optional.of(userTask));
+        when(studentTaskViewSupportService.resolveTaskView(task)).thenReturn(task.getTaskView());
+        when(studentTaskViewSupportService.hasRenderableTemplate(task.getTaskView())).thenReturn(true);
         when(studentTaskViewSupportService.getRequestedContent(userTask, 4)).thenReturn(null);
 
-        StudentTaskVersionViewResultDto result = studentTaskQueryService.getTaskVersionViewData(student, 301L, 4);
-
-        assertThat(result.isRedirect()).isTrue();
-        assertThat(result.getRedirectPath()).isEqualTo("redirect:/student/tasks/301/history");
+        assertThatThrownBy(() -> studentTaskQueryService.getTaskVersionViewData(student, 301L, 4))
+            .isInstanceOf(StudentResourceNotFoundException.class)
+            .hasMessage("Version nicht gefunden");
     }
 
     @Test
@@ -218,20 +219,20 @@ class StudentTaskQueryServiceTest {
 
         when(studentTaskViewSupportService.findAssignedTask(student, 302L)).thenReturn(Optional.of(task));
         when(studentTaskViewSupportService.findExistingUserTask(student, task)).thenReturn(Optional.of(userTask));
+        when(studentTaskViewSupportService.resolveTaskView(task)).thenReturn(taskView);
+        when(studentTaskViewSupportService.hasRenderableTemplate(taskView)).thenReturn(true);
         when(studentTaskViewSupportService.getRequestedContent(userTask, 2)).thenReturn(versionContent);
 
-        StudentTaskVersionViewResultDto result = studentTaskQueryService.getTaskVersionViewData(student, 302L, 2);
+        StudentTaskViewDataDto viewData = studentTaskQueryService.getTaskVersionViewData(student, 302L, 2);
 
-        assertThat(result.isRedirect()).isFalse();
-        assertThat(result.getViewData()).isNotNull();
-        assertThat(result.getViewData().getTaskView()).isSameAs(taskView);
-        assertThat(result.getViewData().getCurrentContent()).isEqualTo("Historic content");
-        assertThat(result.getViewData().getViewingVersion()).isEqualTo(2);
-        assertThat(result.getViewData().isHistoryView()).isTrue();
+        assertThat(viewData.getTaskView()).isSameAs(taskView);
+        assertThat(viewData.getCurrentContent()).isEqualTo("Historic content");
+        assertThat(viewData.getViewingVersion()).isEqualTo(2);
+        assertThat(viewData.isHistoryView()).isTrue();
     }
 
     @Test
-    void getTaskVersionViewData_returnsHistoryRedirectWhenUserTaskDoesNotExist() {
+    void getTaskVersionViewData_throwsWhenUserTaskDoesNotExist() {
         User student = user(1L, "Student One");
         Group group = group(11L, "10A");
         student.setGroups(Set.of(group));
@@ -242,21 +243,41 @@ class StudentTaskQueryServiceTest {
         when(studentTaskViewSupportService.findAssignedTask(student, 303L)).thenReturn(Optional.of(task));
         when(studentTaskViewSupportService.findExistingUserTask(student, task)).thenReturn(Optional.empty());
 
-        StudentTaskVersionViewResultDto result = studentTaskQueryService.getTaskVersionViewData(student, 303L, 2);
-
-        assertThat(result.isRedirect()).isTrue();
-        assertThat(result.getRedirectPath()).isEqualTo("redirect:/student/tasks/303/history");
+        assertThatThrownBy(() -> studentTaskQueryService.getTaskVersionViewData(student, 303L, 2))
+            .isInstanceOf(StudentResourceNotFoundException.class)
+            .hasMessage("Version nicht gefunden");
     }
 
     @Test
-    void getTaskVersionViewData_returnsDashboardRedirectWhenStudentHasNoTaskAccess() {
+    void getTaskVersionViewData_throwsWhenStudentHasNoTaskAccess() {
         User student = user(1L, "Student One");
         when(studentTaskViewSupportService.findAssignedTask(student, 304L)).thenReturn(Optional.empty());
 
-        StudentTaskVersionViewResultDto result = studentTaskQueryService.getTaskVersionViewData(student, 304L, 2);
+        assertThatThrownBy(() -> studentTaskQueryService.getTaskVersionViewData(student, 304L, 2))
+            .isInstanceOf(StudentResourceNotFoundException.class)
+            .hasMessage("Aufgabe nicht gefunden");
+    }
 
-        assertThat(result.isRedirect()).isTrue();
-        assertThat(result.getRedirectPath()).isEqualTo("redirect:/student/dashboard");
+    @Test
+    void getTaskVersionViewData_throwsWhenTaskViewTemplateIsMissing() {
+        User student = user(1L, "Student One");
+        Group group = group(11L, "10A");
+        student.setGroups(Set.of(group));
+
+        Task task = task(305L, "Version Task", group);
+        TaskView taskView = taskView(8L, " ");
+        task.setTaskView(taskView);
+
+        UserTask userTask = userTask(student, task, status("ABGEGEBEN"));
+
+        when(studentTaskViewSupportService.findAssignedTask(student, 305L)).thenReturn(Optional.of(task));
+        when(studentTaskViewSupportService.findExistingUserTask(student, task)).thenReturn(Optional.of(userTask));
+        when(studentTaskViewSupportService.resolveTaskView(task)).thenReturn(taskView);
+        when(studentTaskViewSupportService.hasRenderableTemplate(taskView)).thenReturn(false);
+
+        assertThatThrownBy(() -> studentTaskQueryService.getTaskVersionViewData(student, 305L, 2))
+            .isInstanceOf(StudentResourceNotFoundException.class)
+            .hasMessage("Aufgabenansicht nicht gefunden");
     }
 
     private User user(Long id, String name) {

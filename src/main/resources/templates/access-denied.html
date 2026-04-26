@@ -16,12 +16,13 @@
                     <h1 class="display-4"><i class="fas fa-exclamation-triangle"></i></h1>
                     <h2>Zugriff verweigert</h2>
                     <p class="lead">Sie haben keine Berechtigung, diese Seite aufzurufen.</p>
-                    <p>Diese Seite ist nur für Lehrer zugänglich. Bitte wenden Sie sich an Ihren Administrator, falls Sie der Meinung sind, dass Sie Zugriff haben sollten.</p>
+                    <p th:if="${message}" th:text="${message}">Zusätzliche Fehlermeldung</p>
+                    <p>Falls Sie Zugriff erwarten, pruefen Sie bitte Ihre Rolle oder wenden Sie sich an Ihren Administrator.</p>
                 </div>
                 
                 <div class="mt-4">
-                    <a th:href="@{/dashboard}" class="btn btn-primary">
-                        <i class="fas fa-home"></i> Zurück zum Dashboard
+                    <a th:href="${returnUrl ?: '/dashboard'}" class="btn btn-primary">
+                        <i class="fas fa-home"></i> <span th:text="${returnLabel ?: 'Zurueck zum Dashboard'}">Zurueck zum Dashboard</span>
                     </a>
                 </div>
             </div>

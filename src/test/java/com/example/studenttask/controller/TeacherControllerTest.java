@@ -1,6 +1,7 @@
 package com.example.studenttask.controller;
 
 import com.example.studenttask.dto.TeacherDashboardDataDto;
+import com.example.studenttask.exception.TeacherAuthenticationRequiredException;
 import com.example.studenttask.model.Group;
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskStatus;
@@ -27,6 +28,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -104,6 +106,24 @@ class TeacherControllerTest {
         Map<Task, List<UserTask>> byTask = groupedPendingReviewsFromModel.get(unitTitle);
         assertThat(byTask).isNotNull();
         assertThat(byTask.get(task)).containsExactly(submittedMatching);
+    }
+
+    @Test
+    void dashboard_throwsAuthenticationExceptionWhenTeacherCannotBeResolved() {
+        when(userService.findByOpenIdSubject("missing-teacher")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> controller.dashboard(new ExtendedModelMap(), principal("missing-teacher")))
+            .isInstanceOf(TeacherAuthenticationRequiredException.class)
+            .hasMessage("Benutzer nicht gefunden");
+    }
+
+    @Test
+    void pendingReviews_throwsAuthenticationExceptionWhenTeacherCannotBeResolved() {
+        when(userService.findByOpenIdSubject("missing-teacher")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> controller.pendingReviews(new ExtendedModelMap(), authentication("missing-teacher")))
+            .isInstanceOf(TeacherAuthenticationRequiredException.class)
+            .hasMessage("Benutzer nicht gefunden");
     }
 
     private Principal principal(String name) {

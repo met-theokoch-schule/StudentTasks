@@ -1,10 +1,13 @@
 package com.example.studenttask.service;
 
+import com.example.studenttask.exception.TaskContentVersionNotFoundException;
+import com.example.studenttask.exception.TaskStatusNotFoundException;
 import com.example.studenttask.model.TaskReview;
 import com.example.studenttask.model.TaskStatus;
 import com.example.studenttask.model.TaskStatusCode;
 import com.example.studenttask.model.User;
 import com.example.studenttask.model.UserTask;
+import com.example.studenttask.repository.TaskContentRepository;
 import com.example.studenttask.repository.TaskReviewRepository;
 import com.example.studenttask.repository.UserTaskRepository;
 import org.junit.jupiter.api.Test;
@@ -17,7 +20,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -26,6 +31,9 @@ class TaskReviewServiceTest {
 
     @Mock
     private TaskReviewRepository taskReviewRepository;
+
+    @Mock
+    private TaskContentRepository taskContentRepository;
 
     @Mock
     private UserTaskRepository userTaskRepository;
@@ -47,6 +55,7 @@ class TaskReviewServiceTest {
         TaskStatus status = new TaskStatus("VOLLSTAENDIG", "VOLLSTAENDIG", 0);
         status.setId(7L);
 
+        when(taskContentRepository.existsByUserTaskAndVersion(userTask, 2)).thenReturn(true);
         when(taskStatusService.findById(7L)).thenReturn(Optional.of(status));
         when(taskReviewRepository.save(any(TaskReview.class))).thenAnswer(invocation -> {
             TaskReview review = invocation.getArgument(0);
@@ -80,5 +89,45 @@ class TaskReviewServiceTest {
         when(taskStatusService.findByCode(TaskStatusCode.UEBERARBEITUNG_NOETIG)).thenReturn(Optional.of(needsRework));
 
         assertThat(taskReviewService.getTeacherReviewStatuses()).containsExactly(complete, needsRework);
+    }
+
+    @Test
+    void createReview_rejectsUnknownRequestedVersion() {
+        UserTask userTask = new UserTask();
+        userTask.setId(30L);
+
+        User reviewer = new User();
+        reviewer.setId(5L);
+
+        TaskStatus status = new TaskStatus("VOLLSTAENDIG", "VOLLSTAENDIG", 0);
+        status.setId(7L);
+
+        when(taskStatusService.findById(7L)).thenReturn(Optional.of(status));
+        when(taskContentRepository.existsByUserTaskAndVersion(userTask, 4)).thenReturn(false);
+
+        assertThatThrownBy(() -> taskReviewService.createReview(userTask, reviewer, 7L, "Kommentar", 4))
+            .isInstanceOf(TaskContentVersionNotFoundException.class)
+            .hasMessage("Abgabeversion nicht gefunden");
+
+        verify(taskReviewRepository, never()).save(any(TaskReview.class));
+        verify(userTaskRepository, never()).save(any(UserTask.class));
+    }
+
+    @Test
+    void createReview_throwsTaskStatusNotFoundExceptionWhenStatusIsMissing() {
+        UserTask userTask = new UserTask();
+        userTask.setId(30L);
+
+        User reviewer = new User();
+        reviewer.setId(5L);
+
+        when(taskStatusService.findById(7L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> taskReviewService.createReview(userTask, reviewer, 7L, "Kommentar", null))
+            .isInstanceOf(TaskStatusNotFoundException.class)
+            .hasMessage("Status not found");
+
+        verify(taskReviewRepository, never()).save(any(TaskReview.class));
+        verify(userTaskRepository, never()).save(any(UserTask.class));
     }
 }

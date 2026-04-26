@@ -2,6 +2,7 @@ package com.example.studenttask.service;
 
 import com.example.studenttask.dto.TeacherSubmissionContentViewDto;
 import com.example.studenttask.dto.TeacherTaskFormDataDto;
+import com.example.studenttask.dto.TeacherTaskFormDto;
 import com.example.studenttask.dto.TeacherSubmissionReviewDataDto;
 import com.example.studenttask.dto.TeacherTaskListDataDto;
 import com.example.studenttask.dto.TeacherTaskSubmissionsDataDto;
@@ -15,10 +16,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class TeacherTaskQueryService {
@@ -96,12 +100,35 @@ public class TeacherTaskQueryService {
     }
 
     public TeacherTaskFormDataDto getCreateTaskFormData() {
-        return buildTaskFormData(new Task());
+        return buildTaskFormData(null);
     }
 
     public Optional<TeacherTaskFormDataDto> getEditTaskFormData(Long taskId) {
         return taskService.findById(taskId)
             .map(this::buildTaskFormData);
+    }
+
+    public boolean hasTaskView(Long taskViewId) {
+        return taskViewId != null && taskViewService.findById(taskViewId).isPresent();
+    }
+
+    public boolean hasUnitTitle(String unitTitleId) {
+        return unitTitleId != null
+            && !unitTitleId.trim().isEmpty()
+            && unitTitleService.findById(unitTitleId) != null;
+    }
+
+    public boolean hasAllGroups(List<Long> groupIds) {
+        if (groupIds == null || groupIds.isEmpty()) {
+            return true;
+        }
+
+        Set<Long> distinctGroupIds = new HashSet<>(groupIds);
+        if (distinctGroupIds.contains(null)) {
+            return false;
+        }
+
+        return groupService.findAllById(groupIds).size() == distinctGroupIds.size();
     }
 
     private Map<UnitTitle, List<Task>> groupTasksByUnitTitle(List<Task> tasks) {
@@ -127,9 +154,31 @@ public class TeacherTaskQueryService {
     private TeacherTaskFormDataDto buildTaskFormData(Task task) {
         return new TeacherTaskFormDataDto(
             task,
+            toTaskForm(task),
             taskViewService.findAllActive(),
             groupService.findAll(),
             unitTitleService.findAllActive()
         );
+    }
+
+    private TeacherTaskFormDto toTaskForm(Task task) {
+        TeacherTaskFormDto taskForm = new TeacherTaskFormDto();
+        if (task == null) {
+            return taskForm;
+        }
+
+        taskForm.setTitle(task.getTitle());
+        taskForm.setDescription(task.getDescription());
+        taskForm.setTutorial(task.getTutorial());
+        taskForm.setDefaultSubmission(task.getDefaultSubmission());
+        taskForm.setDueDate(task.getDueDate());
+        taskForm.setIsActive(task.getIsActive());
+        taskForm.setTaskViewId(task.getTaskView() != null ? task.getTaskView().getId() : null);
+        taskForm.setUnitTitleId(task.getUnitTitle() != null ? task.getUnitTitle().getId() : null);
+        taskForm.setSelectedGroups(task.getAssignedGroups().stream()
+            .map(Group::getId)
+            .collect(Collectors.toList()));
+
+        return taskForm;
     }
 }

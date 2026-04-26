@@ -1,5 +1,6 @@
 package com.example.studenttask.service;
 
+import com.example.studenttask.exception.TaskInvariantViolationException;
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskStatus;
 import com.example.studenttask.model.TaskStatusCode;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -122,5 +124,77 @@ class UserTaskServiceTest {
         assertThat(userTask.getStatus()).isSameAs(toStatus);
         assertThat(userTask.getStartedAt()).isNotNull();
         verify(userTaskRepository).save(userTask);
+    }
+
+    @Test
+    void updateStatus_allowsSameSubmittedStatusAsNoOpResubmitTransition() {
+        UserTask userTask = new UserTask();
+        TaskStatus submitted = new TaskStatus("ABGEGEBEN", "submitted", 3);
+        userTask.setStatus(submitted);
+
+        boolean updated = userTaskService.updateStatus(userTask, submitted);
+
+        assertThat(updated).isTrue();
+        assertThat(userTask.getStatus()).isSameAs(submitted);
+        verify(userTaskRepository).save(userTask);
+        verify(taskStatusService, never()).canTransitionTo(any(TaskStatus.class), any(TaskStatus.class));
+    }
+
+    @Test
+    void updateStatus_allowsSameSubmittedStatusWhenCurrentStatusIsProxyLikeSubclass() {
+        UserTask userTask = new UserTask();
+        TaskStatus currentStatus = new ProxyLikeTaskStatus("ABGEGEBEN", "submitted", 3);
+        TaskStatus newStatus = new TaskStatus("ABGEGEBEN", "submitted", 3);
+        userTask.setStatus(currentStatus);
+
+        boolean updated = userTaskService.updateStatus(userTask, newStatus);
+
+        assertThat(updated).isTrue();
+        assertThat(userTask.getStatus()).isSameAs(currentStatus);
+        verify(userTaskRepository).save(userTask);
+        verify(taskStatusService, never()).canTransitionTo(any(TaskStatus.class), any(TaskStatus.class));
+    }
+
+    @Test
+    void delete_delegatesDirectlyToRepository() {
+        UserTask userTask = new UserTask();
+        userTask.setId(15L);
+
+        userTaskService.delete(userTask);
+
+        verify(userTaskRepository).delete(userTask);
+    }
+
+    @Test
+    void save_rejectsDuplicateAssignmentForAnotherUserTask() {
+        User user = new User();
+        user.setId(1L);
+        Task task = new Task();
+        task.setId(2L);
+
+        UserTask existingUserTask = new UserTask();
+        existingUserTask.setId(10L);
+        existingUserTask.setUser(user);
+        existingUserTask.setTask(task);
+
+        UserTask duplicateUserTask = new UserTask();
+        duplicateUserTask.setId(11L);
+        duplicateUserTask.setUser(user);
+        duplicateUserTask.setTask(task);
+
+        when(userTaskRepository.findByUserAndTask(user, task)).thenReturn(Optional.of(existingUserTask));
+
+        assertThatThrownBy(() -> userTaskService.save(duplicateUserTask))
+            .isInstanceOf(TaskInvariantViolationException.class)
+            .hasMessage("UserTask exists already for this user and task");
+
+        verify(userTaskRepository, never()).save(duplicateUserTask);
+    }
+
+    private static final class ProxyLikeTaskStatus extends TaskStatus {
+
+        private ProxyLikeTaskStatus(String name, String description, Integer order) {
+            super(name, description, order);
+        }
     }
 }

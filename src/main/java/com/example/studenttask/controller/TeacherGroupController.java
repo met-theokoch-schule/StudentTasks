@@ -3,6 +3,8 @@ package com.example.studenttask.controller;
 import com.example.studenttask.dto.GroupOverviewDto;
 import com.example.studenttask.dto.GroupStatisticsDto;
 import com.example.studenttask.dto.StudentTaskMatrixDto;
+import com.example.studenttask.exception.TeacherAuthenticationRequiredException;
+import com.example.studenttask.exception.TeacherResourceNotFoundException;
 import com.example.studenttask.model.Group;
 import com.example.studenttask.model.User;
 import com.example.studenttask.service.GroupQueryService;
@@ -38,8 +40,7 @@ public class TeacherGroupController {
      */
     @GetMapping
     public String listGroups(Model model, Principal principal) {
-        User teacher = userService.findByOpenIdSubject(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+        User teacher = requireTeacher(principal.getName());
 
         // Lade Gruppen mit aktiven Aufgaben des Lehrers
         List<GroupOverviewDto> groups = groupQueryService.getGroupsWithActiveTasksByTeacher(teacher);
@@ -56,13 +57,12 @@ public class TeacherGroupController {
     @GetMapping("/{groupId}")
     @PreAuthorize("@userService.hasTeacherRole(authentication.name)")
     public String showGroupDetail(@PathVariable Long groupId, Model model, Principal principal) {
-        User teacher = userService.findByOpenIdSubject(principal.getName())
-            .orElseThrow(() -> new RuntimeException("Benutzer nicht gefunden"));
+        User teacher = requireTeacher(principal.getName());
 
         // Lade Gruppe
         Group group = groupService.findById(groupId);
         if (group == null) {
-            throw new RuntimeException("Gruppe nicht gefunden");
+            throw new TeacherResourceNotFoundException("Gruppe nicht gefunden");
         }
 
         // Lade Statistiken für die Gruppe
@@ -76,5 +76,10 @@ public class TeacherGroupController {
         model.addAttribute("matrix", matrix);
 
         return "teacher/group-detail";
+    }
+
+    private User requireTeacher(String openIdSubject) {
+        return userService.findByOpenIdSubject(openIdSubject)
+            .orElseThrow(() -> new TeacherAuthenticationRequiredException("Benutzer nicht gefunden"));
     }
 }

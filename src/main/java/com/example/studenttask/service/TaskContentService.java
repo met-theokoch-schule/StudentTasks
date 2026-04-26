@@ -6,6 +6,7 @@ import com.example.studenttask.model.TaskStatusCode;
 import com.example.studenttask.model.TaskView;
 import com.example.studenttask.model.UserTask;
 import com.example.studenttask.dto.VersionWithSubmissionStatus;
+import com.example.studenttask.exception.TaskInvariantViolationException;
 import com.example.studenttask.repository.TaskContentRepository;
 import com.example.studenttask.repository.UserTaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,9 +29,6 @@ public class TaskContentService {
     private TaskStatusService taskStatusService;
 
     @Autowired
-    private SubmissionService submissionService;
-
-    @Autowired
     private UserTaskRepository userTaskRepository;
 
     @Autowired
@@ -45,6 +43,11 @@ public class TaskContentService {
     public TaskContent saveContent(UserTask userTask, String content, boolean isSubmitted) {
         // Get the latest version number for this user task
         int nextVersion = getNextVersionNumber(userTask);
+        if (taskContentRepository.existsByUserTaskAndVersion(userTask, nextVersion)) {
+            throw new TaskInvariantViolationException(
+                "TaskContent version " + nextVersion + " exists already for UserTask " + userTask.getId()
+            );
+        }
 
         TaskContent taskContent = new TaskContent();
         taskContent.setUserTask(userTask);
@@ -65,14 +68,19 @@ public class TaskContentService {
         if (isSubmitted) {
             TaskStatusCode submittedStatusCode = resolveSubmittedStatusCode(userTask);
             if (!userTaskService.updateStatus(userTask, submittedStatusCode)) {
-                throw new IllegalStateException("Status transition to " + submittedStatusCode + " is not allowed");
+                throw new TaskInvariantViolationException("Status transition from "
+                    + currentStatusName(userTask)
+                    + " to "
+                    + submittedStatusCode
+                    + " is not allowed");
             }
-            submissionService.createSubmission(userTask, saved);
         } else {
             if (userTask.getStatus() == null
                     || taskStatusService.isStatus(userTask.getStatus(), TaskStatusCode.NICHT_BEGONNEN)) {
                 if (!userTaskService.updateStatus(userTask, TaskStatusCode.IN_BEARBEITUNG)) {
-                    throw new IllegalStateException("Status transition to IN_BEARBEITUNG is not allowed");
+                    throw new TaskInvariantViolationException("Status transition from "
+                        + currentStatusName(userTask)
+                        + " to IN_BEARBEITUNG is not allowed");
                 }
             } else {
                 userTaskRepository.save(userTask);
@@ -168,5 +176,12 @@ public class TaskContentService {
         TaskView taskView = task != null ? task.getTaskView() : null;
         boolean markComplete = taskView != null && Boolean.TRUE.equals(taskView.getSubmitMarksComplete());
         return markComplete ? TaskStatusCode.VOLLSTAENDIG : TaskStatusCode.ABGEGEBEN;
+    }
+
+    private String currentStatusName(UserTask userTask) {
+        if (userTask.getStatus() == null) {
+            return "null";
+        }
+        return userTask.getStatus().getName();
     }
 }

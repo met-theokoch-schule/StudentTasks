@@ -14,12 +14,17 @@
                 <h1 class="display-4">Willkommen zum Aufgaben-System</h1>
                 <p class="lead">Verwalten Sie Aufgaben für Schülergruppen mit OpenID Connect Authentifizierung</p>
                 
+                <div class="alert alert-warning mt-4 text-start" th:unless="${oauthConfigurationReady}">
+                    Die IServ-Anmeldung ist noch nicht konfiguriert.
+                    <a th:href="${oauthLoginPath}">Kurze Setup-Anleitung anzeigen</a>
+                </div>
+
                 <div class="mt-4">
-                    <a class="btn btn-primary btn-lg" th:href="@{/oauth2/authorization/iserv}">
-                        Mit IServ anmelden
+                    <a class="btn btn-primary btn-lg" th:href="${oauthLoginPath}">
+                        <span th:text="${oauthConfigurationReady} ? 'Mit IServ anmelden' : 'IServ-Konfiguration anzeigen'">Mit IServ anmelden</span>
                     </a>
                 </div>
-                <div class="mt-4">
+                <div class="mt-4" th:if="${oauthConfigurationReady}">
                     <a class="btn btn-primary btn-lg" th:href="@{/teacher/dashboard}">
                         Direkt zum Dashboard
                     </a>

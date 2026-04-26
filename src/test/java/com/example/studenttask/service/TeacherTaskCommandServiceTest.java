@@ -1,5 +1,9 @@
 package com.example.studenttask.service;
 
+import com.example.studenttask.dto.TeacherTaskFormDto;
+import com.example.studenttask.exception.TeacherAccessDeniedException;
+import com.example.studenttask.exception.TeacherAuthenticationRequiredException;
+import com.example.studenttask.exception.TeacherResourceNotFoundException;
 import com.example.studenttask.model.Group;
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskReview;
@@ -19,6 +23,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -55,21 +60,24 @@ class TeacherTaskCommandServiceTest {
         User teacher = teacher(1L, "Teacher", group);
         TaskView taskView = taskView(5L, "Editor");
         UnitTitle unitTitle = new UnitTitle("sql", "SQL", "desc", 10);
-        Task task = new Task();
-        task.setTitle("Worksheet");
+        TeacherTaskFormDto taskForm = new TeacherTaskFormDto();
+        taskForm.setTitle("Worksheet");
+        taskForm.setTaskViewId(5L);
+        taskForm.setUnitTitleId("sql");
+        taskForm.setSelectedGroups(List.of(10L));
 
         when(groupService.findAllById(List.of(10L))).thenReturn(List.of(group));
         when(taskViewService.findById(5L)).thenReturn(Optional.of(taskView));
         when(unitTitleService.findById("sql")).thenReturn(unitTitle);
-        when(taskService.save(task)).thenReturn(task);
+        when(taskService.save(any(Task.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Task savedTask = teacherTaskCommandService.createTask(task, teacher, "5", "sql", List.of(10L));
+        Task savedTask = teacherTaskCommandService.createTask(teacher, taskForm);
 
-        assertThat(savedTask).isSameAs(task);
-        assertThat(task.getCreatedBy()).isSameAs(teacher);
-        assertThat(task.getAssignedGroups()).containsExactly(group);
-        assertThat(task.getTaskView()).isSameAs(taskView);
-        assertThat(task.getUnitTitle()).isSameAs(unitTitle);
+        assertThat(savedTask.getCreatedBy()).isSameAs(teacher);
+        assertThat(savedTask.getTitle()).isEqualTo("Worksheet");
+        assertThat(savedTask.getAssignedGroups()).containsExactly(group);
+        assertThat(savedTask.getTaskView()).isSameAs(taskView);
+        assertThat(savedTask.getUnitTitle()).isSameAs(unitTitle);
     }
 
     @Test
@@ -84,18 +92,22 @@ class TeacherTaskCommandServiceTest {
         existingTask.setTutorial("Old Tutorial");
         existingTask.setIsActive(true);
 
-        Task updates = new Task();
+        TeacherTaskFormDto updates = new TeacherTaskFormDto();
         updates.setTitle("New");
         updates.setDescription("New Description");
         updates.setDefaultSubmission("New Draft");
+        updates.setTutorial("New Tutorial");
         updates.setIsActive(false);
+        updates.setTaskViewId(9L);
+        updates.setUnitTitleId("");
+        updates.setSelectedGroups(List.of(11L));
 
         when(taskService.findById(20L)).thenReturn(Optional.of(existingTask));
         when(groupService.findAllById(List.of(11L))).thenReturn(List.of(newGroup));
         when(taskViewService.findById(9L)).thenReturn(Optional.of(taskView));
         when(taskService.save(existingTask)).thenReturn(existingTask);
 
-        Task savedTask = teacherTaskCommandService.updateTask(20L, updates, "9", "", List.of(11L), "New Tutorial");
+        Task savedTask = teacherTaskCommandService.updateTask(20L, updates);
 
         assertThat(savedTask).isSameAs(existingTask);
         assertThat(existingTask.getTitle()).isEqualTo("New");
@@ -109,38 +121,59 @@ class TeacherTaskCommandServiceTest {
     }
 
     @Test
-    void updateTask_keepsExistingTaskViewWhenTaskViewIdIsInvalid() {
+    void updateTask_throwsNotFoundWhenTaskViewDoesNotExist() {
         Group group = group(10L, "10A");
         User teacher = teacher(1L, "Teacher", group);
         TaskView existingTaskView = taskView(5L, "Existing");
         Task existingTask = task(20L, "Task", teacher, group, null);
         existingTask.setTaskView(existingTaskView);
 
-        Task updates = new Task();
+        TeacherTaskFormDto updates = new TeacherTaskFormDto();
         updates.setTitle("Task");
         updates.setDescription("Desc");
         updates.setDefaultSubmission("Draft");
         updates.setIsActive(true);
+        updates.setTaskViewId(999L);
 
         when(taskService.findById(20L)).thenReturn(Optional.of(existingTask));
-        when(taskService.save(existingTask)).thenReturn(existingTask);
 
-        teacherTaskCommandService.updateTask(20L, updates, "not-a-number", null, null, null);
-
+        assertThatThrownBy(() -> teacherTaskCommandService.updateTask(20L, updates))
+            .isInstanceOf(TeacherResourceNotFoundException.class)
+            .hasMessage("Aufgabentyp nicht gefunden");
         assertThat(existingTask.getTaskView()).isSameAs(existingTaskView);
     }
 
     @Test
-    void deleteTask_deletesResolvedTask() {
+    void createTask_throwsNotFoundWhenSelectedGroupDoesNotExist() {
         Group group = group(10L, "10A");
         User teacher = teacher(1L, "Teacher", group);
-        Task task = task(20L, "Task", teacher, group, null);
+        TeacherTaskFormDto taskForm = new TeacherTaskFormDto();
+        taskForm.setTitle("Worksheet");
+        taskForm.setSelectedGroups(List.of(10L, 11L));
 
-        when(taskService.findById(20L)).thenReturn(Optional.of(task));
+        when(groupService.findAllById(List.of(10L, 11L))).thenReturn(List.of(group));
 
-        teacherTaskCommandService.deleteTask(20L);
+        assertThatThrownBy(() -> teacherTaskCommandService.createTask(teacher, taskForm))
+            .isInstanceOf(TeacherResourceNotFoundException.class)
+            .hasMessage("Eine oder mehrere Gruppen wurden nicht gefunden");
+    }
 
-        verify(taskService).delete(task);
+    @Test
+    void updateTask_throwsNotFoundWhenUnitTitleDoesNotExist() {
+        Group group = group(10L, "10A");
+        User teacher = teacher(1L, "Teacher", group);
+        Task existingTask = task(20L, "Task", teacher, group, null);
+        TeacherTaskFormDto updates = new TeacherTaskFormDto();
+        updates.setTitle("Task");
+        updates.setUnitTitleId("missing");
+        updates.setIsActive(true);
+
+        when(taskService.findById(20L)).thenReturn(Optional.of(existingTask));
+        when(unitTitleService.findById("missing")).thenReturn(null);
+
+        assertThatThrownBy(() -> teacherTaskCommandService.updateTask(20L, updates))
+            .isInstanceOf(TeacherResourceNotFoundException.class)
+            .hasMessage("Thema nicht gefunden");
     }
 
     @Test
@@ -166,8 +199,8 @@ class TeacherTaskCommandServiceTest {
         when(taskService.findById(20L)).thenReturn(Optional.of(task));
 
         assertThatThrownBy(() -> teacherTaskCommandService.deleteTask(20L, otherTeacher))
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessage("Zugriff verweigert");
+            .isInstanceOf(TeacherAccessDeniedException.class)
+            .hasMessage("Zugriff auf diese Aufgabe verweigert");
     }
 
     @Test
@@ -182,7 +215,7 @@ class TeacherTaskCommandServiceTest {
         when(userTaskService.findById(30L)).thenReturn(Optional.of(userTask));
         when(userService.findByOpenIdSubject("oidc-teacher")).thenReturn(Optional.of(reviewer));
 
-        boolean submitted = teacherTaskCommandService.submitReview(
+        teacherTaskCommandService.submitReview(
             30L,
             "oidc-teacher",
             7L,
@@ -190,24 +223,46 @@ class TeacherTaskCommandServiceTest {
             "2"
         );
 
-        assertThat(submitted).isTrue();
         verify(taskReviewService).createReview(userTask, reviewer, 7L, "Gut gemacht", 2);
         verify(userTaskService).save(userTask);
     }
 
     @Test
-    void submitReview_returnsFalseWhenUserTaskDoesNotExist() {
+    void submitReview_throwsNotFoundWhenUserTaskDoesNotExist() {
         when(userTaskService.findById(30L)).thenReturn(Optional.empty());
 
-        boolean submitted = teacherTaskCommandService.submitReview(
+        assertThatThrownBy(() -> teacherTaskCommandService.submitReview(
             30L,
             "oidc-teacher",
             7L,
             "Kommentar",
             null
-        );
+        ))
+            .isInstanceOf(TeacherResourceNotFoundException.class)
+            .hasMessage("Abgabe nicht gefunden");
+    }
 
-        assertThat(submitted).isFalse();
+    @Test
+    void submitReview_throwsAuthenticationExceptionWhenReviewerDoesNotExist() {
+        Group group = group(10L, "10A");
+        User reviewer = teacher(1L, "Teacher", group);
+        Task task = task(20L, "Task", reviewer, group, null);
+        UserTask userTask = new UserTask();
+        userTask.setId(30L);
+        userTask.setTask(task);
+
+        when(userTaskService.findById(30L)).thenReturn(Optional.of(userTask));
+        when(userService.findByOpenIdSubject("missing-teacher")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> teacherTaskCommandService.submitReview(
+            30L,
+            "missing-teacher",
+            7L,
+            "Kommentar",
+            null
+        ))
+            .isInstanceOf(TeacherAuthenticationRequiredException.class)
+            .hasMessage("Benutzer nicht gefunden");
     }
 
     private User teacher(Long id, String name, Group group) {

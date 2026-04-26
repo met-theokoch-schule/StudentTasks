@@ -1,5 +1,6 @@
 package com.example.studenttask.service;
 
+import com.example.studenttask.exception.OAuth2IdentityResolutionException;
 import com.example.studenttask.model.Group;
 import com.example.studenttask.model.Role;
 import com.example.studenttask.model.User;
@@ -36,7 +37,7 @@ public class IdentitySyncService {
     public User syncFromOAuth2User(OAuth2User oauth2User) {
         String openIdSubject = oauth2User.getAttribute("sub");
         if (openIdSubject == null || openIdSubject.isBlank()) {
-            throw new IllegalArgumentException("OAuth2 user does not contain a subject");
+            throw new OAuth2IdentityResolutionException("OAuth2 user does not contain a subject");
         }
 
         User user = userRepository.findByOpenIdSubject(openIdSubject)

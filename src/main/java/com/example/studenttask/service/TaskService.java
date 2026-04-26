@@ -1,5 +1,6 @@
 package com.example.studenttask.service;
 
+import com.example.studenttask.exception.TaskNotFoundException;
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskView;
 import com.example.studenttask.model.User;
@@ -59,7 +60,7 @@ public class TaskService {
 
             return persist(task);
         }
-        throw new RuntimeException("Task not found with ID: " + taskId);
+        throw new TaskNotFoundException("Task not found with ID: " + taskId);
     }
 
     /**
@@ -155,6 +156,12 @@ public class TaskService {
      * Delete task
      */
     public void deleteTask(Long taskId) {
+        Optional<Task> taskOpt = taskRepository.findById(taskId);
+        if (taskOpt.isPresent()) {
+            delete(taskOpt.get());
+            return;
+        }
+
         taskRepository.deleteById(taskId);
     }
 
@@ -209,19 +216,6 @@ public class TaskService {
         return taskRepository.findByCreatedByOrderByCreatedAtDesc(creator);
     }
 
-    public Task createTask(Task task, List<Long> groupIds) {
-        // Erst die Task speichern
-        Task savedTask = persist(task);
-
-        // Dann die Gruppen zuweisen (wird später implementiert)
-        // TODO: Implement group assignment
-
-        return savedTask;
-    }
-
-    /**
-     * Save a task
-     */
     public Task save(Task task) {
         return persist(task);
     }
@@ -259,6 +253,12 @@ public class TaskService {
      * Delete a task by id
      */
     public void deleteById(Long id) {
+        Optional<Task> taskOpt = taskRepository.findById(id);
+        if (taskOpt.isPresent()) {
+            delete(taskOpt.get());
+            return;
+        }
+
         taskRepository.deleteById(id);
     }
 

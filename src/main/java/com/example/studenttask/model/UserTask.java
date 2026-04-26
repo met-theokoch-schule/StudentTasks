@@ -7,7 +7,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "user_tasks")
+@Table(
+    name = "user_tasks",
+    indexes = @Index(
+        name = "uk_user_tasks_user_id_task_id",
+        columnList = "user_id, task_id",
+        unique = true
+    ),
+    uniqueConstraints = @UniqueConstraint(
+        name = "uk_user_tasks_user_id_task_id",
+        columnNames = {"user_id", "task_id"}
+    )
+)
 public class UserTask {
     
     @Id
@@ -34,11 +45,7 @@ public class UserTask {
     @OneToMany(mappedBy = "userTask", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @OrderBy("version DESC")
     private List<TaskContent> contents = new ArrayList<>();
-    
-    @OneToMany(mappedBy = "userTask", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @OrderBy("submittedAt DESC")
-    private List<Submission> submissions = new ArrayList<>();
-    
+
     @OneToMany(mappedBy = "userTask", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @OrderBy("reviewedAt DESC")
     private List<TaskReview> reviews = new ArrayList<>();
@@ -111,14 +118,6 @@ public class UserTask {
     
     public void setContents(List<TaskContent> contents) {
         this.contents = contents;
-    }
-    
-    public List<Submission> getSubmissions() {
-        return submissions;
-    }
-    
-    public void setSubmissions(List<Submission> submissions) {
-        this.submissions = submissions;
     }
     
     public List<TaskReview> getReviews() {

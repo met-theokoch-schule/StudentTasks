@@ -1,5 +1,7 @@
 package com.example.studenttask.controller;
 
+import com.example.studenttask.exception.StudentResourceNotFoundException;
+import com.example.studenttask.exception.UserAuthenticationRequiredException;
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskContent;
 import com.example.studenttask.model.User;
@@ -18,7 +20,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verifyNoInteractions;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,7 +47,7 @@ class DebugControllerTest {
         content.setSubmitted(true);
 
         when(authenticationService.getCurrentUser()).thenReturn(Optional.of(user));
-        when(studentTaskViewSupportService.findTask(7L)).thenReturn(Optional.of(task));
+        when(studentTaskViewSupportService.findAssignedTask(user, 7L)).thenReturn(Optional.of(task));
         when(studentTaskViewSupportService.findExistingUserTask(user, task)).thenReturn(Optional.of(userTask));
         when(studentTaskViewSupportService.getRequestedContent(userTask, 3)).thenReturn(content);
 
@@ -63,33 +65,40 @@ class DebugControllerTest {
     }
 
     @Test
-    void viewSubmissionContent_returnsVersionErrorWhenContentIsMissing() {
+    void viewSubmissionContent_throwsNotFoundWhenRequestedVersionIsMissing() {
         User user = user(1L, "Alice");
         Task task = task(7L, "Worksheet");
         UserTask userTask = new UserTask();
 
         when(authenticationService.getCurrentUser()).thenReturn(Optional.of(user));
-        when(studentTaskViewSupportService.findTask(7L)).thenReturn(Optional.of(task));
+        when(studentTaskViewSupportService.findAssignedTask(user, 7L)).thenReturn(Optional.of(task));
         when(studentTaskViewSupportService.findExistingUserTask(user, task)).thenReturn(Optional.of(userTask));
         when(studentTaskViewSupportService.getRequestedContent(userTask, 4)).thenReturn(null);
 
-        Model model = new ExtendedModelMap();
-        String view = controller.viewSubmissionContent(7L, 4, model);
-
-        assertThat(view).isEqualTo("debug/content-viewer");
-        assertThat(model.getAttribute("error")).isEqualTo("Version 4 f\u00FCr Task 7 nicht gefunden");
+        assertThatThrownBy(() -> controller.viewSubmissionContent(7L, 4, new ExtendedModelMap()))
+            .isInstanceOf(StudentResourceNotFoundException.class)
+            .hasMessage("Version 4 für diese Aufgabe nicht gefunden");
     }
 
     @Test
-    void viewSubmissionContent_returnsLoginErrorWhenNoUserIsAuthenticated() {
+    void viewSubmissionContent_throwsAuthenticationExceptionWhenNoUserIsAuthenticated() {
         when(authenticationService.getCurrentUser()).thenReturn(Optional.empty());
 
-        Model model = new ExtendedModelMap();
-        String view = controller.viewSubmissionContent(7L, null, model);
+        assertThatThrownBy(() -> controller.viewSubmissionContent(7L, null, new ExtendedModelMap()))
+            .isInstanceOf(UserAuthenticationRequiredException.class)
+            .hasMessage("Benutzer nicht gefunden");
+    }
 
-        assertThat(view).isEqualTo("debug/content-viewer");
-        assertThat(model.getAttribute("error")).isEqualTo("Kein Benutzer eingeloggt");
-        verifyNoInteractions(studentTaskViewSupportService);
+    @Test
+    void viewSubmissionContent_throwsNotFoundWhenTaskIsNotAssigned() {
+        User user = user(1L, "Alice");
+
+        when(authenticationService.getCurrentUser()).thenReturn(Optional.of(user));
+        when(studentTaskViewSupportService.findAssignedTask(user, 7L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> controller.viewSubmissionContent(7L, null, new ExtendedModelMap()))
+            .isInstanceOf(StudentResourceNotFoundException.class)
+            .hasMessage("Aufgabe nicht gefunden");
     }
 
     private User user(Long id, String name) {

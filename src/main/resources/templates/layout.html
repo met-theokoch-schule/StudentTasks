@@ -19,7 +19,7 @@
             </div>
             
             <div class="navbar-nav ms-auto" sec:authorize="!isAuthenticated()">
-                <a class="btn btn-outline-light" th:href="@{/oauth2/authorization/iserv}">Anmelden</a>
+                <a class="btn btn-outline-light" th:href="${oauthLoginPath}" th:text="${oauthConfigurationReady} ? 'Anmelden' : 'Setup'">Anmelden</a>
             </div>
         </div>
     </nav>

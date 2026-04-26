@@ -1,5 +1,6 @@
 package com.example.studenttask.service;
 
+import com.example.studenttask.exception.TaskInvariantViolationException;
 import com.example.studenttask.model.*;
 import com.example.studenttask.repository.UserTaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -53,7 +55,7 @@ public class UserTaskService {
             userTask.setStatus(currentStatus);
         }
 
-        if (currentStatus.equals(newStatus)) {
+        if (isSameLogicalStatus(currentStatus, newStatus)) {
             userTask.setLastModified(LocalDateTime.now());
             userTaskRepository.save(userTask);
             return true;
@@ -104,6 +106,7 @@ public class UserTaskService {
      * UserTask speichern
      */
     public UserTask save(UserTask userTask) {
+        assertNoDuplicateAssignment(userTask);
         userTask.setLastModified(LocalDateTime.now());
         return userTaskRepository.save(userTask);
     }
@@ -121,6 +124,39 @@ public class UserTaskService {
 
     public Optional<UserTask> findByUserIdAndTaskId(Long userId, Long taskId) {
         return userTaskRepository.findByUserIdAndTaskId(userId, taskId);
+    }
+
+    private boolean isSameLogicalStatus(TaskStatus currentStatus, TaskStatus newStatus) {
+        if (currentStatus == newStatus) {
+            return true;
+        }
+        if (currentStatus == null || newStatus == null) {
+            return false;
+        }
+
+        Optional<TaskStatusCode> currentCode = TaskStatusSupport.getCode(currentStatus);
+        Optional<TaskStatusCode> newCode = TaskStatusSupport.getCode(newStatus);
+        if (currentCode.isPresent() && newCode.isPresent()) {
+            return currentCode.get() == newCode.get();
+        }
+
+        if (currentStatus.getId() != null && currentStatus.getId().equals(newStatus.getId())) {
+            return true;
+        }
+
+        return Objects.equals(currentStatus.getName(), newStatus.getName());
+    }
+
+    private void assertNoDuplicateAssignment(UserTask userTask) {
+        if (userTask == null || userTask.getUser() == null || userTask.getTask() == null) {
+            return;
+        }
+
+        Optional<UserTask> existingUserTask =
+            userTaskRepository.findByUserAndTask(userTask.getUser(), userTask.getTask());
+        if (existingUserTask.isPresent() && !Objects.equals(existingUserTask.get().getId(), userTask.getId())) {
+            throw new TaskInvariantViolationException("UserTask exists already for this user and task");
+        }
     }
 
 }

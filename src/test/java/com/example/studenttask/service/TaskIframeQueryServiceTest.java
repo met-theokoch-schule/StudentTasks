@@ -1,6 +1,8 @@
 package com.example.studenttask.service;
 
-import com.example.studenttask.dto.TaskIframeViewResultDto;
+import com.example.studenttask.dto.TaskIframeViewDataDto;
+import com.example.studenttask.exception.StudentResourceNotFoundException;
+import com.example.studenttask.exception.UserAuthenticationRequiredException;
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskContent;
 import com.example.studenttask.model.TaskView;
@@ -15,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,8 +44,8 @@ class TaskIframeQueryServiceTest {
         TaskContent latestContent = new TaskContent();
         latestContent.setContent("Saved content");
 
-        when(studentTaskViewSupportService.findTask(40L)).thenReturn(Optional.of(task));
         when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.of(student));
+        when(studentTaskViewSupportService.findAssignedTask(student, 40L)).thenReturn(Optional.of(task));
         when(studentTaskViewSupportService.findOrCreateUserTask(student, task)).thenReturn(userTask);
         when(studentTaskViewSupportService.getRequestedContent(userTask, null)).thenReturn(latestContent);
         when(studentTaskViewSupportService.resolveCurrentContent(task, latestContent, false))
@@ -50,17 +53,15 @@ class TaskIframeQueryServiceTest {
         when(studentTaskViewSupportService.resolveTaskView(task)).thenReturn(taskView);
         when(studentTaskViewSupportService.hasRenderableTemplate(taskView)).thenReturn(true);
 
-        TaskIframeViewResultDto result =
+        TaskIframeViewDataDto result =
             taskIframeQueryService.getTaskIframeViewData(40L, "oidc-subject", false, null);
 
-        assertThat(result.isRedirect()).isFalse();
-        assertThat(result.getViewData()).isNotNull();
-        assertThat(result.getViewData().getTask()).isSameAs(task);
-        assertThat(result.getViewData().getTaskView()).isSameAs(taskView);
-        assertThat(result.getViewData().getUserTask()).isSameAs(userTask);
-        assertThat(result.getViewData().getCurrentContent()).isEqualTo("Saved content");
-        assertThat(result.getViewData().getRenderedDescription()).isEqualTo("Task description");
-        assertThat(result.getViewData().isTeacherView()).isFalse();
+        assertThat(result.getTask()).isSameAs(task);
+        assertThat(result.getTaskView()).isSameAs(taskView);
+        assertThat(result.getUserTask()).isSameAs(userTask);
+        assertThat(result.getCurrentContent()).isEqualTo("Saved content");
+        assertThat(result.getRenderedDescription()).isEqualTo("Task description");
+        assertThat(result.isTeacherView()).isFalse();
     }
 
     @Test
@@ -71,81 +72,81 @@ class TaskIframeQueryServiceTest {
         User student = user(1L);
         UserTask userTask = userTask(100L, student, task);
 
-        when(studentTaskViewSupportService.findTask(41L)).thenReturn(Optional.of(task));
         when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.of(student));
+        when(studentTaskViewSupportService.findAssignedTask(student, 41L)).thenReturn(Optional.of(task));
         when(studentTaskViewSupportService.findOrCreateUserTask(student, task)).thenReturn(userTask);
         when(studentTaskViewSupportService.getRequestedContent(userTask, 3)).thenReturn(null);
         when(studentTaskViewSupportService.resolveCurrentContent(task, null, false)).thenReturn("Default content");
         when(studentTaskViewSupportService.resolveTaskView(task)).thenReturn(task.getTaskView());
         when(studentTaskViewSupportService.hasRenderableTemplate(task.getTaskView())).thenReturn(true);
 
-        TaskIframeViewResultDto result =
+        TaskIframeViewDataDto result =
             taskIframeQueryService.getTaskIframeViewData(41L, "oidc-subject", false, 3);
 
-        assertThat(result.isRedirect()).isFalse();
-        assertThat(result.getViewData().getCurrentContent()).isEqualTo("Default content");
+        assertThat(result.getCurrentContent()).isEqualTo("Default content");
     }
 
     @Test
-    void getTaskIframeViewData_redirectsToLoginWhenStudentUserMissing() {
-        Task task = task(42L, "Task description", null);
-
-        when(studentTaskViewSupportService.findTask(42L)).thenReturn(Optional.of(task));
+    void getTaskIframeViewData_throwsAuthenticationExceptionWhenUserMissing() {
         when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.empty());
 
-        TaskIframeViewResultDto result =
-            taskIframeQueryService.getTaskIframeViewData(42L, "oidc-subject", false, null);
-
-        assertThat(result.isRedirect()).isTrue();
-        assertThat(result.getRedirectPath()).isEqualTo("redirect:/login");
+        assertThatThrownBy(() -> taskIframeQueryService.getTaskIframeViewData(42L, "oidc-subject", false, null))
+            .isInstanceOf(UserAuthenticationRequiredException.class)
+            .hasMessage("Benutzer nicht gefunden");
     }
 
     @Test
-    void getTaskIframeViewData_redirectsToTeacherDashboardWhenTeacherUserMissing() {
-        Task task = task(43L, "Task description", null);
+    void getTaskIframeViewData_throwsNotFoundWhenTaskIsMissingOrNotAssigned() {
+        User student = user(1L);
 
-        when(studentTaskViewSupportService.findTask(43L)).thenReturn(Optional.of(task));
-        when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.empty());
+        when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.of(student));
+        when(studentTaskViewSupportService.findAssignedTask(student, 43L)).thenReturn(Optional.empty());
 
-        TaskIframeViewResultDto result =
-            taskIframeQueryService.getTaskIframeViewData(43L, "oidc-subject", true, null);
-
-        assertThat(result.isRedirect()).isTrue();
-        assertThat(result.getRedirectPath()).isEqualTo("redirect:/teacher/dashboard");
+        assertThatThrownBy(() -> taskIframeQueryService.getTaskIframeViewData(43L, "oidc-subject", true, null))
+            .isInstanceOf(StudentResourceNotFoundException.class)
+            .hasMessage("Aufgabe nicht gefunden");
     }
 
     @Test
-    void getTaskIframeViewData_redirectsWhenTaskViewTemplateIsBlank() {
+    void getTaskIframeViewData_throwsWhenTaskViewTemplateIsBlank() {
         Task task = task(44L, "Task description", null);
         task.setTaskView(taskView(9L, " "));
 
         User student = user(1L);
         UserTask userTask = userTask(101L, student, task);
 
-        when(studentTaskViewSupportService.findTask(44L)).thenReturn(Optional.of(task));
         when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.of(student));
+        when(studentTaskViewSupportService.findAssignedTask(student, 44L)).thenReturn(Optional.of(task));
         when(studentTaskViewSupportService.findOrCreateUserTask(student, task)).thenReturn(userTask);
         when(studentTaskViewSupportService.getRequestedContent(userTask, null)).thenReturn(null);
         when(studentTaskViewSupportService.resolveCurrentContent(task, null, false)).thenReturn("");
         when(studentTaskViewSupportService.resolveTaskView(task)).thenReturn(task.getTaskView());
         when(studentTaskViewSupportService.hasRenderableTemplate(task.getTaskView())).thenReturn(false);
 
-        TaskIframeViewResultDto result =
-            taskIframeQueryService.getTaskIframeViewData(44L, "oidc-subject", true, null);
-
-        assertThat(result.isRedirect()).isTrue();
-        assertThat(result.getRedirectPath()).isEqualTo("redirect:/teacher/dashboard");
+        assertThatThrownBy(() -> taskIframeQueryService.getTaskIframeViewData(44L, "oidc-subject", true, null))
+            .isInstanceOf(StudentResourceNotFoundException.class)
+            .hasMessage("Aufgabenansicht nicht gefunden");
     }
 
     @Test
-    void getTaskIframeViewData_redirectsToStudentDashboardWhenTaskIsMissing() {
-        when(studentTaskViewSupportService.findTask(45L)).thenReturn(Optional.empty());
+    void getTaskIframeViewData_preservesTeacherViewFlagInResponse() {
+        Task task = task(45L, "Task description", null);
+        task.setTaskView(taskView(10L, "taskviews/task-view"));
+        User student = user(1L);
+        UserTask userTask = userTask(102L, student, task);
 
-        TaskIframeViewResultDto result =
-            taskIframeQueryService.getTaskIframeViewData(45L, "oidc-subject", false, null);
+        when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.of(student));
+        when(studentTaskViewSupportService.findAssignedTask(student, 45L)).thenReturn(Optional.of(task));
+        when(studentTaskViewSupportService.findOrCreateUserTask(student, task)).thenReturn(userTask);
+        when(studentTaskViewSupportService.getRequestedContent(userTask, null)).thenReturn(null);
+        when(studentTaskViewSupportService.resolveCurrentContent(task, null, false)).thenReturn("");
+        when(studentTaskViewSupportService.resolveTaskView(task)).thenReturn(task.getTaskView());
+        when(studentTaskViewSupportService.hasRenderableTemplate(task.getTaskView())).thenReturn(true);
 
-        assertThat(result.isRedirect()).isTrue();
-        assertThat(result.getRedirectPath()).isEqualTo("redirect:/student/dashboard");
+        TaskIframeViewDataDto result =
+            taskIframeQueryService.getTaskIframeViewData(45L, "oidc-subject", true, null);
+
+        assertThat(result.isTeacherView()).isTrue();
     }
 
     private Task task(Long id, String description, String defaultSubmission) {

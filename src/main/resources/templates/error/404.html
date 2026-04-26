@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nicht gefunden - Schüler-Aufgaben-Verwaltung</title>
+    <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/custom.css}" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8 text-center">
+                <div class="alert alert-warning">
+                    <h1 class="display-4">404</h1>
+                    <h2>Seite oder Inhalt nicht gefunden</h2>
+                    <p class="lead" th:text="${message ?: 'Der angeforderte Inhalt existiert nicht oder ist nicht mehr verfügbar.'}">
+                        Der angeforderte Inhalt existiert nicht oder ist nicht mehr verfügbar.
+                    </p>
+                </div>
+
+                <div class="mt-4">
+                    <a th:href="${returnUrl ?: '/dashboard'}" class="btn btn-primary">
+                        <span th:text="${returnLabel ?: 'Zurueck zum Dashboard'}">Zurueck zum Dashboard</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</body>
+</html>

@@ -15,6 +15,8 @@ public interface TaskContentRepository extends JpaRepository<TaskContent, Long> 
     
     TaskContent findByUserTaskAndVersion(UserTask userTask, Integer version);
 
+    boolean existsByUserTaskAndVersion(UserTask userTask, Integer version);
+
     Optional<TaskContent> findTopByUserTaskOrderByVersionDesc(UserTask userTask);
     
     int countByUserTaskAndIsSubmittedTrue(UserTask userTask);

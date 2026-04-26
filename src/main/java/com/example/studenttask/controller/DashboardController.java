@@ -1,5 +1,7 @@
 package com.example.studenttask.controller;
 
+import com.example.studenttask.exception.OAuth2IdentityResolutionException;
+import com.example.studenttask.exception.UserAuthenticationRequiredException;
 import com.example.studenttask.model.User;
 import com.example.studenttask.service.IdentitySyncService;
 import com.example.studenttask.service.UserService;
@@ -29,11 +31,6 @@ public class DashboardController {
         log.debug("Dashboard request started");
 
         User user = resolveAuthenticatedUser(authentication);
-        if (user == null) {
-            log.warn("User resolution failed, redirecting to login");
-            return "redirect:/login";
-        }
-
         log.debug("User processed: id={}, name={}", user.getId(), user.getName());
 
         boolean isTeacher = userService.hasTeacherRole(user);
@@ -58,7 +55,7 @@ public class DashboardController {
     private User resolveAuthenticatedUser(Authentication authentication) {
         if (authentication == null) {
             log.warn("Dashboard called without authentication");
-            return null;
+            throw new UserAuthenticationRequiredException("Benutzer nicht gefunden");
         }
 
         String openIdSubject = authentication.getName();
@@ -71,12 +68,17 @@ public class DashboardController {
 
         if (authentication.getPrincipal() instanceof OAuth2User oauth2User) {
             log.info("User with subject {} not found in database, synchronizing from OAuth2", openIdSubject);
-            return identitySyncService.syncFromOAuth2User(oauth2User);
+            try {
+                return identitySyncService.syncFromOAuth2User(oauth2User);
+            } catch (OAuth2IdentityResolutionException exception) {
+                log.warn("OAuth2 principal could not be synchronized for dashboard access: {}", exception.getMessage());
+                throw new UserAuthenticationRequiredException("Benutzer nicht gefunden");
+            }
         }
 
         log.warn("Authentication principal is not an OAuth2User: {}",
                 authentication.getPrincipal() != null ? authentication.getPrincipal().getClass().getName() : "null");
-        return null;
+        throw new UserAuthenticationRequiredException("Benutzer nicht gefunden");
     }
 
     private void logAuthenticationSummary(Authentication authentication) {

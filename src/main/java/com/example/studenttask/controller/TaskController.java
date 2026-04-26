@@ -1,7 +1,6 @@
 package com.example.studenttask.controller;
 
 import com.example.studenttask.dto.TaskIframeViewDataDto;
-import com.example.studenttask.dto.TaskIframeViewResultDto;
 import com.example.studenttask.service.TaskIframeQueryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -24,17 +23,12 @@ public class TaskController {
                                 @RequestParam(required = false) Long userId,
                                 @RequestParam(required = false) Integer version,
                                 Authentication authentication, Model model) {
-        TaskIframeViewResultDto result = taskIframeQueryService.getTaskIframeViewData(
+        TaskIframeViewDataDto viewData = taskIframeQueryService.getTaskIframeViewData(
             taskId,
             authentication.getName(),
             userId != null,
             version
         );
-        if (result.isRedirect()) {
-            return result.getRedirectPath();
-        }
-
-        TaskIframeViewDataDto viewData = result.getViewData();
         model.addAttribute("task", viewData.getTask());
         model.addAttribute("taskView", viewData.getTaskView());
         model.addAttribute("userTask", viewData.getUserTask());

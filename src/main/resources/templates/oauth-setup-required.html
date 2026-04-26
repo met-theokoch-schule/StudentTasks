@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IServ-Konfiguration erforderlich</title>
+    <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-9">
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <h3 class="mb-0">IServ-Anmeldung ist noch nicht konfiguriert</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="lead">
+                            Die Anwendung ist gestartet, aber für den Login fehlen noch OAuth-Zugangsdaten oder eine passende Provider-Konfiguration.
+                        </p>
+
+                        <div class="alert alert-warning" th:if="${!oauthMissingSettings.isEmpty()}">
+                            <strong>Aktuell nicht gesetzt oder nicht aufgelöst:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li th:each="setting : ${oauthMissingSettings}">
+                                    <code th:text="${setting.environmentName}">ISERV_CLIENT_SECRET</code>
+                                    <span th:text="${setting.description}">Beschreibung</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <h5>Welches IServ wird benutzt?</h5>
+                        <p>
+                            Der OAuth-Provider wird über <code>ISERV_BASE_URL</code> festgelegt.
+                            Standardmäßig ist aktuell
+                            <code th:text="${providerBaseUrlExample}">https://theokoch.schule</code>
+                            eingetragen.
+                        </p>
+                        <p>
+                            Wenn ein anderes IServ verwendet werden soll, setze <code>ISERV_BASE_URL</code>
+                            auf die Basisadresse des Servers, zum Beispiel <code>https://schule.example</code>
+                            ohne abschließenden Slash.
+                        </p>
+
+                        <h5>Kurzanleitung für Ubuntu mit Tomcat</h5>
+                        <ol>
+                            <li>Systemd-Override für den Tomcat-Service anlegen. Meist heißt der Dienst <code>tomcat10</code>, ggf. <code>tomcat9</code>.</li>
+                            <li>Die Umgebungsvariablen <code>ISERV_BASE_URL</code>, <code>ISERV_CLIENT_ID</code> und <code>ISERV_CLIENT_SECRET</code> dort setzen.</li>
+                            <li>Tomcat neu laden und neu starten.</li>
+                        </ol>
+
+                        <pre class="bg-light border rounded p-3"><code>sudo systemctl edit tomcat10
+
+[Service]
+Environment="ISERV_BASE_URL=[[${providerBaseUrlExample}]]"
+Environment="ISERV_CLIENT_ID=deine-client-id"
+Environment="ISERV_CLIENT_SECRET=dein-client-secret"
+Environment="ISERV_REDIRECT_URI=[[${redirectUriExample}]]"
+
+sudo systemctl daemon-reload
+sudo systemctl restart tomcat10</code></pre>
+
+                        <p class="mb-2">
+                            Aktives Spring-Profil:
+                            <code th:text="${activeProfiles}">prod</code>
+                        </p>
+                        <p class="mb-2">
+                            Erwartete Redirect-URI:
+                            <code th:text="${redirectUriExample}">https://services-new.theokoch.schule/informatik/login/oauth2/code/iserv</code>
+                        </p>
+                        <p class="mb-2">
+                            Effektive IServ-Basis-URL:
+                            <code th:text="${providerBaseUrlExample}">https://theokoch.schule</code>
+                        </p>
+                        <p class="text-muted mb-0">
+                            Nach dem Neustart kann die Anmeldung erneut über <code>/login</code> oder die Startseite getestet werden.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

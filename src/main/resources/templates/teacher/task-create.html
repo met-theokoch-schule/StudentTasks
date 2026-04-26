@@ -56,27 +56,39 @@
                         <h5 class="card-title mb-0">Aufgabendetails</h5>
                     </div>
                     <div class="card-body">
-                        <form th:action="@{/teacher/tasks}" method="post" th:object="${task}">
+                        <form th:action="@{/teacher/tasks}" method="post" th:object="${taskForm}">
+                            <div th:if="${#fields.hasAnyErrors()}" class="alert alert-danger">
+                                Bitte korrigieren Sie die markierten Felder.
+                            </div>
+
                             <!-- Titel -->
                             <div class="mb-3">
                                 <label for="title" class="form-label">Aufgabentitel *</label>
                                 <input type="text" class="form-control" id="title" th:field="*{title}" required
+                                       th:classappend="${#fields.hasErrors('title')} ? ' is-invalid' : ''"
                                        placeholder="Geben Sie hier den Titel der Aufgabe ein...">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('title')}" th:errors="*{title}">
+                                    Bitte geben Sie einen Aufgabentitel ein.
+                                </div>
                                 <div class="form-text">Ein aussagekräftiger Titel für die Aufgabe.</div>
                             </div>
 
                             <!-- Aufgabentyp -->
                             <div class="mb-3">
                                 <label for="taskViewId" class="form-label">Aufgabentyp *</label>
-                                <select class="form-select" id="taskViewId" name="taskViewId" required>
+                                <select class="form-select" id="taskViewId" th:field="*{taskViewId}" required
+                                        th:classappend="${#fields.hasErrors('taskViewId')} ? ' is-invalid' : ''">
                                     <option value="">-- Aufgabentyp wählen --</option>
                                     <option th:each="view : ${taskViews}" 
                                             th:value="${view.id}" 
                                             th:text="${view.name}"
-                                            th:attr="data-description=${view.description},data-template-path=${view.templatePath}">
+                                            th:attr="data-description=${view.description},data-template-path=${view.templatePath},data-taskview-key=${#strings.replace(view.templatePath, '.html', '')}">
                                         TaskView Name
                                     </option>
                                 </select>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('taskViewId')}" th:errors="*{taskViewId}">
+                                    Bitte wählen Sie einen Aufgabentyp aus.
+                                </div>
                                 <div class="form-text" id="taskViewDescription">
                                     Wählen Sie den Typ der Aufgabe aus.
                                 </div>
@@ -85,7 +97,8 @@
                              <!-- Thema der Unterrichtseinheit -->
                             <div class="mb-3">
                                 <label for="unitTitleId" class="form-label">Thema der Unterrichtseinheit</label>
-                                <select id="unitTitleId" name="unitTitleId" class="form-select" th:field="*{unitTitle}">
+                                <select id="unitTitleId" class="form-select" th:field="*{unitTitleId}"
+                                        th:classappend="${#fields.hasErrors('unitTitleId')} ? ' is-invalid' : ''">
                                     <option value="">Kein Thema zuweisen</option>
                                     <option th:each="unitTitle : ${unitTitles}" 
                                             th:value="${unitTitle.id}" 
@@ -93,6 +106,9 @@
                                         UnitTitle Name
                                     </option>
                                 </select>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('unitTitleId')}" th:errors="*{unitTitleId}">
+                                    Das gewählte Thema existiert nicht.
+                                </div>
                                 <div class="form-text">
                                     Optional: Wählen Sie das Thema der Unterrichtseinheit für diese Aufgabe.
                                 </div>
@@ -138,13 +154,17 @@
                             <!-- Gruppen-Auswahl -->
                             <div class="mb-3">
                                 <label for="selectedGroups" class="form-label">Zugewiesene Gruppen (optional)</label>
-                                <select id="selectedGroups" name="selectedGroups" class="form-select" multiple>
+                                <select id="selectedGroups" class="form-select" th:field="*{selectedGroups}" multiple
+                                        th:classappend="${#fields.hasErrors('selectedGroups')} ? ' is-invalid' : ''">
                                     <option th:each="group : ${groups}" 
                                             th:value="${group.id}" 
                                             th:text="${group.name}">
                                         Gruppe
                                     </option>
                                 </select>
+                                <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('selectedGroups')}" th:errors="*{selectedGroups}">
+                                    Eine oder mehrere gewählte Gruppen existieren nicht.
+                                </div>
                                 <div class="form-text">
                                     Wählen Sie optional die Gruppen aus, die diese Aufgabe bearbeiten sollen. Wenn keine Gruppe ausgewählt wird, ist die Aufgabe für alle verfügbar.
                                 </div>
@@ -159,6 +179,28 @@
                                     </label>
                                 </div>
                                 <div class="form-text">Nur aktive Aufgaben sind für Schüler sichtbar.</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">Aufgabe importieren / exportieren</label>
+                                <div id="taskTransferFeedback" class="alert d-none" role="alert"></div>
+                                <div id="uploadTaskXmlDropzone" class="border rounded p-3 bg-body-tertiary">
+                                    <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+                                        <button type="button" class="btn btn-outline-secondary" id="downloadTaskXml">
+                                            <i class="fas fa-download"></i> XML herunterladen
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary" id="uploadTaskXmlTrigger">
+                                            <i class="fas fa-upload"></i> XML hochladen
+                                        </button>
+                                        <input type="file" id="uploadTaskXmlInput" accept=".xml,text/xml" class="d-none">
+                                    </div>
+                                    <div class="small text-muted mt-2">
+                                        Oder eine XML-Datei hierher ziehen und ablegen.
+                                    </div>
+                                </div>
+                                <div class="form-text">
+                                    Export und Import arbeiten nur mit dem aktuellen Stand im Browser. Speichern müssen Sie danach weiterhin selbst.
+                                </div>
                             </div>
 
                             <!-- Buttons -->
@@ -372,6 +414,187 @@
                         showDefaultHelp();
                     });
             }
+
+            function showTaskTransferFeedback(level, message) {
+                $('#taskTransferFeedback')
+                    .removeClass('d-none alert-success alert-danger')
+                    .addClass(`alert-${level}`)
+                    .text(message);
+            }
+
+            function clearTaskTransferFeedback() {
+                $('#taskTransferFeedback')
+                    .addClass('d-none')
+                    .removeClass('alert-success alert-danger')
+                    .text('');
+            }
+
+            function appendTextElement(doc, parent, name, value) {
+                const element = doc.createElement(name);
+                element.textContent = value ?? '';
+                parent.appendChild(element);
+            }
+
+            function findSelectOption(selectId, value) {
+                return Array.from(document.querySelectorAll(`#${selectId} option`))
+                    .find((option) => option.value === value);
+            }
+
+            function slugifyFilenamePart(value) {
+                const normalized = String(value || '')
+                    .trim()
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/^-+|-+$/g, '');
+                return normalized || 'aufgabe';
+            }
+
+            function buildTaskXml() {
+                const doc = document.implementation.createDocument('', 'task-export', null);
+                const root = doc.documentElement;
+                root.setAttribute('version', '1');
+
+                const selectedTaskView = document.querySelector('#taskViewId option:checked');
+                const taskView = doc.createElement('taskView');
+                taskView.setAttribute('key', selectedTaskView ? (selectedTaskView.getAttribute('data-taskview-key') || '') : '');
+                taskView.setAttribute('name', selectedTaskView ? (selectedTaskView.textContent || '').trim() : '');
+                root.appendChild(taskView);
+
+                appendTextElement(doc, root, 'title', $('#title').val());
+                appendTextElement(doc, root, 'description', $('#description').val());
+                appendTextElement(doc, root, 'tutorial', $('#tutorial').val());
+                appendTextElement(doc, root, 'defaultSubmission', $('#defaultSubmission').val());
+
+                return new XMLSerializer().serializeToString(doc);
+            }
+
+            function readXml(doc, selector, message) {
+                const element = doc.querySelector(selector);
+                if (!element) {
+                    throw new Error(message);
+                }
+                return element.textContent || '';
+            }
+
+            function readOptionalXml(doc, selector) {
+                const element = doc.querySelector(selector);
+                return element ? (element.textContent || '') : '';
+            }
+
+            function parseTaskXml(xmlText) {
+                const doc = new DOMParser().parseFromString(xmlText, 'application/xml');
+                if (doc.querySelector('parsererror')) {
+                    throw new Error('Die XML-Datei konnte nicht gelesen werden.');
+                }
+
+                const root = doc.querySelector('task-export');
+                if (!root) {
+                    throw new Error('Die XML-Datei hat kein unterstütztes Aufgabenformat.');
+                }
+
+                const taskView = root.querySelector('taskView');
+                const taskViewKey = taskView ? (taskView.getAttribute('key') || '') : '';
+                if (!taskViewKey) {
+                    throw new Error('Die XML-Datei enthält keinen Aufgabentyp.');
+                }
+
+                return {
+                    taskViewKey,
+                    title: readXml(root, 'title', 'Der Aufgabentitel fehlt in der XML-Datei.'),
+                    description: readOptionalXml(root, 'description'),
+                    tutorial: readOptionalXml(root, 'tutorial'),
+                    defaultSubmission: readOptionalXml(root, 'defaultSubmission')
+                };
+            }
+
+            function applyImportedTask(importedTask) {
+                const matchingTaskView = Array.from(document.querySelectorAll('#taskViewId option'))
+                    .find((option) => option.getAttribute('data-taskview-key') === importedTask.taskViewKey);
+                if (!matchingTaskView) {
+                    throw new Error('Der Aufgabentyp aus der XML-Datei ist in diesem System nicht verfügbar.');
+                }
+
+                $('#taskViewId').val(matchingTaskView.value).trigger('change');
+                $('#title').val(importedTask.title);
+                $('#description').val(importedTask.description);
+                $('#tutorial').val(importedTask.tutorial);
+                $('#defaultSubmission').val(importedTask.defaultSubmission);
+            }
+
+            function importTaskXml(file) {
+                clearTaskTransferFeedback();
+                if (!file) {
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    try {
+                        const importedTask = parseTaskXml(String(event.target?.result || ''));
+                        applyImportedTask(importedTask);
+                        showTaskTransferFeedback('success', 'Die Aufgabe wurde in das Formular geladen. Bitte speichern Sie die Änderungen noch manuell.');
+                    } catch (error) {
+                        showTaskTransferFeedback('danger', error instanceof Error ? error.message : 'Die XML-Datei konnte nicht importiert werden.');
+                    } finally {
+                        $('#uploadTaskXmlInput').val('');
+                    }
+                };
+                reader.onerror = function() {
+                    showTaskTransferFeedback('danger', 'Die XML-Datei konnte nicht gelesen werden.');
+                    $('#uploadTaskXmlInput').val('');
+                };
+                reader.readAsText(file, 'UTF-8');
+            }
+
+            function setDropzoneActive(isActive) {
+                $('#uploadTaskXmlDropzone').toggleClass('border-primary bg-primary-subtle', isActive);
+            }
+
+            $('#downloadTaskXml').on('click', function() {
+                clearTaskTransferFeedback();
+                const blob = new Blob([buildTaskXml()], { type: 'application/xml;charset=utf-8' });
+                const downloadUrl = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = `${slugifyFilenamePart($('#title').val())}.xml`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(downloadUrl);
+            });
+
+            $('#uploadTaskXmlTrigger').on('click', function() {
+                clearTaskTransferFeedback();
+                $('#uploadTaskXmlInput').trigger('click');
+            });
+
+            $('#uploadTaskXmlInput').on('change', function() {
+                importTaskXml(this.files && this.files[0]);
+            });
+
+            $('#uploadTaskXmlDropzone').on('dragenter dragover', function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                setDropzoneActive(true);
+            });
+
+            $('#uploadTaskXmlDropzone').on('dragleave', function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                if (event.target === this) {
+                    setDropzoneActive(false);
+                }
+            });
+
+            $('#uploadTaskXmlDropzone').on('drop', function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                setDropzoneActive(false);
+                const files = event.originalEvent && event.originalEvent.dataTransfer
+                    ? event.originalEvent.dataTransfer.files
+                    : null;
+                importTaskXml(files && files[0]);
+            });
 
             updateTaskHelp();
         });

@@ -1,8 +1,9 @@
 package com.example.studenttask.service;
 
 import com.example.studenttask.dto.StudentTaskHistoryDataDto;
-import com.example.studenttask.dto.StudentTaskVersionViewResultDto;
 import com.example.studenttask.dto.StudentTaskViewDataDto;
+import com.example.studenttask.exception.StudentAccessDeniedException;
+import com.example.studenttask.exception.StudentResourceNotFoundException;
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskContent;
 import com.example.studenttask.model.TaskReview;
@@ -33,15 +34,15 @@ public class StudentTaskQueryService {
 
     public StudentTaskViewDataDto getTaskViewData(User student, Long taskId) {
         Task task = studentTaskViewSupportService.findTask(taskId)
-            .orElseThrow(() -> new RuntimeException("Aufgabe nicht gefunden"));
+            .orElseThrow(() -> new StudentResourceNotFoundException("Aufgabe nicht gefunden"));
 
         UserTask userTask = studentTaskViewSupportService.findExistingUserTask(student, task)
-            .orElseThrow(() -> new RuntimeException("Keine Berechtigung für diese Aufgabe"));
+            .orElseThrow(() -> new StudentAccessDeniedException("Keine Berechtigung für diese Aufgabe"));
 
         TaskContent latestContent = studentTaskViewSupportService.getRequestedContent(userTask, null);
         TaskView taskView = studentTaskViewSupportService.resolveTaskView(task);
         if (!studentTaskViewSupportService.hasRenderableTemplate(taskView)) {
-            throw new RuntimeException("TaskView nicht gefunden");
+            throw new StudentResourceNotFoundException("Aufgabenansicht nicht gefunden");
         }
 
         log.debug("Loading task content for userTask {} and task {}", userTask.getId(), task.getId());
@@ -73,52 +74,43 @@ public class StudentTaskQueryService {
         return new StudentTaskViewDataDto(task, userTask, taskView, currentContent, null, false);
     }
 
-    public Optional<StudentTaskHistoryDataDto> getTaskHistoryData(User student, Long taskId) {
-        Optional<Task> taskOpt = studentTaskViewSupportService.findAssignedTask(student, taskId);
-        if (taskOpt.isEmpty()) {
-            return Optional.empty();
-        }
-
-        Task task = taskOpt.get();
+    public StudentTaskHistoryDataDto getTaskHistoryData(User student, Long taskId) {
+        Task task = studentTaskViewSupportService.findAssignedTask(student, taskId)
+            .orElseThrow(() -> new StudentResourceNotFoundException("Aufgabe nicht gefunden"));
         UserTask userTask = studentTaskViewSupportService.findOrCreateUserTask(student, task);
 
         List<TaskContent> contentVersions = taskContentService.getAllContentVersions(userTask);
         List<TaskReview> reviews = taskReviewService.findByUserTaskOrderByReviewedAtDesc(userTask);
 
-        return Optional.of(new StudentTaskHistoryDataDto(task, userTask, contentVersions, reviews));
+        return new StudentTaskHistoryDataDto(task, userTask, contentVersions, reviews);
     }
 
-    public StudentTaskVersionViewResultDto getTaskVersionViewData(User student, Long taskId, Integer version) {
-        Optional<Task> taskOpt = studentTaskViewSupportService.findAssignedTask(student, taskId);
-        if (taskOpt.isEmpty()) {
-            return StudentTaskVersionViewResultDto.redirect("redirect:/student/dashboard");
-        }
-
-        Task task = taskOpt.get();
+    public StudentTaskViewDataDto getTaskVersionViewData(User student, Long taskId, Integer version) {
+        Task task = studentTaskViewSupportService.findAssignedTask(student, taskId)
+            .orElseThrow(() -> new StudentResourceNotFoundException("Aufgabe nicht gefunden"));
         Optional<UserTask> userTaskOpt = studentTaskViewSupportService.findExistingUserTask(student, task);
         if (userTaskOpt.isEmpty()) {
-            return StudentTaskVersionViewResultDto.redirect("redirect:/student/tasks/" + taskId + "/history");
+            throw new StudentResourceNotFoundException("Version nicht gefunden");
         }
 
         UserTask userTask = userTaskOpt.get();
-        if (task.getTaskView() == null) {
-            return StudentTaskVersionViewResultDto.redirect("redirect:/student/tasks/" + taskId + "/history");
+        TaskView taskView = studentTaskViewSupportService.resolveTaskView(task);
+        if (!studentTaskViewSupportService.hasRenderableTemplate(taskView)) {
+            throw new StudentResourceNotFoundException("Aufgabenansicht nicht gefunden");
         }
 
         TaskContent versionContent = studentTaskViewSupportService.getRequestedContent(userTask, version);
         if (versionContent == null) {
-            return StudentTaskVersionViewResultDto.redirect("redirect:/student/tasks/" + taskId + "/history");
+            throw new StudentResourceNotFoundException("Version nicht gefunden");
         }
 
-        return StudentTaskVersionViewResultDto.view(
-            new StudentTaskViewDataDto(
-                task,
-                userTask,
-                task.getTaskView(),
-                versionContent.getContent(),
-                version,
-                true
-            )
+        return new StudentTaskViewDataDto(
+            task,
+            userTask,
+            taskView,
+            versionContent.getContent(),
+            version,
+            true
         );
     }
 }

@@ -1,6 +1,7 @@
 package com.example.studenttask.service;
 
 import com.example.studenttask.dto.VersionWithSubmissionStatus;
+import com.example.studenttask.exception.TaskInvariantViolationException;
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskContent;
 import com.example.studenttask.model.TaskStatus;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -32,9 +34,6 @@ class TaskContentServiceTest {
 
     @Mock
     private TaskStatusService taskStatusService;
-
-    @Mock
-    private SubmissionService submissionService;
 
     @Mock
     private UserTaskRepository userTaskRepository;
@@ -77,12 +76,11 @@ class TaskContentServiceTest {
         assertThat(saved.getContent()).isEqualTo("draft-content");
         assertThat(userTask.getStartedAt()).isNotNull();
         verify(userTaskService).updateStatus(userTask, TaskStatusCode.IN_BEARBEITUNG);
-        verify(submissionService, never()).createSubmission(any(UserTask.class), any(TaskContent.class));
         verify(userTaskRepository, never()).save(userTask);
     }
 
     @Test
-    void saveContentSubmit_marksAutoCompleteTasksAsCompleteAndCreatesSubmission() {
+    void saveContentSubmit_marksAutoCompleteTasksAsComplete() {
         TaskView taskView = new TaskView();
         taskView.setSubmitMarksComplete(true);
 
@@ -108,7 +106,6 @@ class TaskContentServiceTest {
         assertThat(saved.isSubmitted()).isTrue();
         assertThat(saved.getContent()).isEqualTo("final-answer");
         verify(userTaskService).updateStatus(userTask, TaskStatusCode.VOLLSTAENDIG);
-        verify(submissionService).createSubmission(userTask, saved);
         verify(userTaskRepository, never()).save(userTask);
     }
 
@@ -132,6 +129,51 @@ class TaskContentServiceTest {
 
         assertThat(saved.isSubmitted()).isTrue();
         verify(userTaskService).updateStatus(userTask, TaskStatusCode.VOLLSTAENDIG);
+    }
+
+    @Test
+    void saveContentSubmit_allowsResubmissionWhileAlreadySubmitted() {
+        Task task = new Task();
+
+        UserTask userTask = new UserTask();
+        userTask.setTask(task);
+        userTask.setStatus(taskStatus("ABGEGEBEN"));
+
+        TaskContent existingContent = new TaskContent();
+        existingContent.setVersion(2);
+
+        when(taskContentRepository.findByUserTaskOrderByVersionDesc(userTask)).thenReturn(List.of(existingContent));
+        when(userTaskService.updateStatus(userTask, TaskStatusCode.ABGEGEBEN)).thenReturn(true);
+        when(taskContentRepository.save(any(TaskContent.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        TaskContent saved = taskContentService.saveContent(userTask, "re-submitted-answer", true);
+
+        assertThat(saved.getVersion()).isEqualTo(3);
+        assertThat(saved.isSubmitted()).isTrue();
+        assertThat(saved.getContent()).isEqualTo("re-submitted-answer");
+        verify(userTaskService).updateStatus(userTask, TaskStatusCode.ABGEGEBEN);
+    }
+
+    @Test
+    void saveContentSubmit_allowsResubmissionAfterCompletedReview() {
+        Task task = new Task();
+
+        UserTask userTask = new UserTask();
+        userTask.setTask(task);
+        userTask.setStatus(taskStatus("VOLLSTÄNDIG"));
+
+        TaskContent existingContent = new TaskContent();
+        existingContent.setVersion(2);
+
+        when(taskContentRepository.findByUserTaskOrderByVersionDesc(userTask)).thenReturn(List.of(existingContent));
+        when(userTaskService.updateStatus(userTask, TaskStatusCode.ABGEGEBEN)).thenReturn(true);
+        when(taskContentRepository.save(any(TaskContent.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        TaskContent saved = taskContentService.saveContent(userTask, "re-submitted-answer", true);
+
+        assertThat(saved.getVersion()).isEqualTo(3);
+        assertThat(saved.isSubmitted()).isTrue();
+        verify(userTaskService).updateStatus(userTask, TaskStatusCode.ABGEGEBEN);
     }
 
     @Test
@@ -174,6 +216,27 @@ class TaskContentServiceTest {
         assertThat(versions.get(2).getVersion()).isEqualTo(1);
         assertThat(versions.get(2).getIsSubmitted()).isFalse();
         assertThat(versions.get(2).getDisplayText()).isEqualTo("v1 18.04.26 07:15");
+    }
+
+    @Test
+    void saveContent_rejectsDuplicateComputedVersion() {
+        UserTask userTask = new UserTask();
+        userTask.setId(30L);
+        userTask.setStatus(taskStatus("IN_BEARBEITUNG"));
+
+        TaskContent existingContent = new TaskContent();
+        existingContent.setVersion(2);
+
+        when(taskContentRepository.findByUserTaskOrderByVersionDesc(userTask)).thenReturn(List.of(existingContent));
+        when(taskContentRepository.existsByUserTaskAndVersion(userTask, 3)).thenReturn(true);
+
+        assertThatThrownBy(() -> taskContentService.saveContent(userTask, "conflict", false))
+            .isInstanceOf(TaskInvariantViolationException.class)
+            .hasMessage("TaskContent version 3 exists already for UserTask 30");
+
+        verify(taskContentRepository, never()).save(any(TaskContent.class));
+        verify(userTaskService, never()).updateStatus(any(UserTask.class), any(TaskStatusCode.class));
+        verify(userTaskRepository, never()).save(any(UserTask.class));
     }
 
     private TaskStatus taskStatus(String name) {
