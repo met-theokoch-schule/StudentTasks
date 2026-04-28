@@ -69,7 +69,7 @@ public class TeacherGroupController {
         GroupStatisticsDto statistics = groupQueryService.getGroupStatistics(group, teacher);
 
         // Matrix-Daten erstellen
-        StudentTaskMatrixDto matrix = groupQueryService.getStudentTaskMatrix(group);
+        StudentTaskMatrixDto matrix = groupQueryService.getStudentTaskMatrix(group, teacher);
 
         model.addAttribute("group", group);
         model.addAttribute("statistics", statistics);

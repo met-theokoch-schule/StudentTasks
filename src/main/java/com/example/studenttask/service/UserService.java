@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -50,14 +51,18 @@ public class UserService {
      * Get all teachers
      */
     public List<User> getAllTeachers() {
-        return userRepository.findByRoleName("TEACHER");
+        return userRepository.findAll().stream()
+                .filter(this::hasTeacherRole)
+                .collect(Collectors.toList());
     }
 
     /**
      * Get all students
      */
     public List<User> getAllStudents() {
-        return userRepository.findByRoleName("STUDENT");
+        return userRepository.findAll().stream()
+                .filter(this::hasStudentRole)
+                .collect(Collectors.toList());
     }
 
     /**

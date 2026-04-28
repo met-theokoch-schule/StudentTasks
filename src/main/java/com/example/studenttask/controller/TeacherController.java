@@ -42,6 +42,8 @@ public class TeacherController {
         TeacherDashboardDataDto dashboardData = teacherDashboardQueryService.getDashboardData(teacher);
         model.addAttribute("pendingReviews", dashboardData.getPendingReviews());
         model.addAttribute("recentTasks", dashboardData.getRecentTasks());
+        model.addAttribute("showReviewReminder", dashboardData.isShowReviewReminder());
+        model.addAttribute("reviewReminderMessage", dashboardData.getReviewReminderMessage());
 
         return "teacher/dashboard";
     }

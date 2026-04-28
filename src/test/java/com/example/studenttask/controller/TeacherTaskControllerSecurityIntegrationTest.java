@@ -91,8 +91,7 @@ class TeacherTaskControllerSecurityIntegrationTest {
         TeacherTaskFormDto taskForm = new TeacherTaskFormDto();
         taskForm.setTitle("Worksheet");
 
-        when(teacherIdentityService.requireTeacher("oidc-teacher")).thenReturn(new com.example.studenttask.model.User());
-        when(teacherTaskQueryService.getEditTaskFormData(org.mockito.ArgumentMatchers.eq(20L), org.mockito.ArgumentMatchers.any()))
+        when(teacherTaskQueryService.getEditTaskFormData(20L))
             .thenReturn(Optional.of(new TeacherTaskFormDataDto(
                 task,
                 taskForm,

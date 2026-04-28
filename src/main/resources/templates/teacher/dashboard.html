@@ -57,9 +57,9 @@
             </div>
 
             <!-- Hauptstatistik -->
-            <div class="row mt-4">
-                <div class="col-md-4 mx-auto">
-                    <div class="card bg-warning text-white h-100">
+            <div class="row mt-4 justify-content-center g-4">
+                <div class="col-md-4">
+                    <div class="card bg-warning text-white h-100 dashboard-highlight-card">
                         <div class="card-body d-flex flex-column">
                             <div class="d-flex align-items-center flex-grow-1">
                                 <div class="flex-grow-1">
@@ -90,6 +90,36 @@
                                 >
                                     <i class="fas fa-arrow-right"></i> Zur
                                     Bewertung
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="col-md-4"
+                    th:if="${showReviewReminder}"
+                >
+                    <div class="card teacher-review-reminder-card text-white h-100 dashboard-highlight-card">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex align-items-center flex-grow-1">
+                                <div class="flex-grow-1">
+                                    <p
+                                        class="mb-0 review-reminder-message"
+                                        th:text="${reviewReminderMessage}"
+                                    >
+                                        Deine Rückmeldung hilft den Lernenden beim nächsten Schritt.
+                                    </p>
+                                </div>
+                                <div class="ms-3 flex-shrink-0">
+                                    <i class="fas fa-comments fa-3x"></i>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <a
+                                    th:href="@{/teacher/reviews/pending}"
+                                    class="btn btn-light btn-sm"
+                                >
+                                    <i class="fas fa-arrow-right"></i> Jetzt bearbeiten
                                 </a>
                             </div>
                         </div>

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -25,17 +26,85 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class TeacherDashboardQueryServiceTest {
 
+    private static final List<String> REVIEW_REMINDER_MESSAGES = List.of(
+        "Feedback first - diese Reviews wollen heute noch dein Star-Moment sein.",
+        "Einmal kurz bewerten, zweimal Wirkung entfalten.",
+        "Dein Feedback called - und diese Abgaben gehen direkt ran.",
+        "Mach aus offenen Reviews einfach erledigte Glücksmomente.",
+        "Ein kleiner Klick für dich, ein großes Update für die Lernenden.",
+        "Bewerte jetzt, bevor sich die offenen Reviews für wichtig halten.",
+        "Dein Feedback-Finger hat heute definitiv noch Kapazität.",
+        "Diese Reviews stehen Schlange für ein bisschen Lehrkraft-Magie.",
+        "Kurz reingehen, klar bewerten, gut aussehen.",
+        "Offene Reviews? Zeit für deinen souveränen Aufräum-Move.",
+        "Dein nächster Bewertungs-Sprint ist nur einen Klick entfernt.",
+        "Hier wartet kein Papierstapel, sondern deine nächste Feedback-Show.",
+        "Gib den Abgaben das Upgrade, auf das sie heimlich hoffen.",
+        "Ein paar Bewertungen jetzt und später fühlt sich alles leichter an.",
+        "Heute schon brillant bewertet? Diese Reviews hätten da Interesse.",
+        "Diese Reviews fahren nicht von allein ins Ziel.",
+        "Noch offen? Dann wird’s Zeit für deinen Bewertungs-Endspurt.",
+        "Mehr Feedback, weniger Vielleicht.",
+        "Steig ein in die nächste Runde guter Rückmeldungen.",
+        "Diese Abgaben warten nicht auf Wunder, sondern auf dich.",
+        "Einmal kurz bewerten. Wirkt länger als jeder Kaffee.",
+        "Heute schon Wissen bewegt? Dann ab an die Reviews.",
+        "Offene Bewertungen sind auch nur To-dos mit Aufmerksamkeitshunger.",
+        "Deine Rückmeldung bringt hier gerade mehr voran als jedes Update.",
+        "Wer bewertet, führt. Wer aufschiebt, sammelt nur Spannungsbogen.",
+        "Diese Reviews entern sich nicht von selbst, Käpt’n.",
+        "Noch offene Bewertungen? Dann ran ans Steuer und Kurs auf erledigt.",
+        "Wer Feedback bunkert, hat bald Meuterei im Postfach.",
+        "Setz die Segel, sonst treibt der Review-Stapel davon.",
+        "Ein guter Käpt’n lässt keine Abgabe über Bord gehen.",
+        "Diese Reviews warten schon ungeduldiger als eine Crew ohne Rum.",
+        "Klar zum Bewerten, sonst wird aus Ordnung schnell hohe See.",
+        "Hol dir die Beute: zehn Minuten Ruhe durch ein paar erledigte Reviews.",
+        "Wer jetzt bewertet, muss später keine Wrackbergung betreiben.",
+        "Ran an die Reviews, bevor aus einem kleinen Wellenhüpfer ein Sturm wird.",
+        "Keine Panik. Es sind nur Reviews. Leider deine.",
+        "Im großen Maßstab des Universums sind das wenige Reviews. Im Dashboard eher nicht.",
+        "Diese Abgaben warten mit der Ruhe eines Problems, das nicht von selbst verschwindet.",
+        "Statistisch gesehen fühlt sich Bewerten besser an, als es weiter aufzuschieben.",
+        "Irgendwo im Kosmos wäre das schon erledigt. Hier braucht es noch deinen Klick.",
+        "Die gute Nachricht: Es sind nur Reviews. Die andere kennst du bereits.",
+        "Das Universum ist chaotisch genug. Diese Bewertungen müssen es nicht auch noch sein.",
+        "Wer jetzt bewertet, spart sich später eine philosophische Krise im Dashboard.",
+        "Zwischen Sternenstaub und To-do-Liste ist dein Feedback überraschend relevant.",
+        "Manche Fragen sind unendlich kompliziert. Diese Reviews gehören nicht dazu.",
+        "Hast du schon versucht, diese Reviews einfach zu erledigen?",
+        "Die gute Nachricht: Es ist kein Serverproblem. Die schlechte: Du musst wirklich selbst ran.",
+        "Diese Reviews sind jetzt offiziell ein Fall für den Support der höchsten Eskalationsstufe: dich.",
+        "Ich würde helfen, aber ich bin nur eine auffällig passive Erinnerungsbox.",
+        "Die Reviews sind noch da. Sie haben also offenbar nicht von allein aufgelegt.",
+        "Technisch gesehen wäre Bewerten jetzt die überraschend kompetente Entscheidung.",
+        "Diese offenen Reviews fühlen sich schon ein bisschen zu wohl in deinem Dashboard.",
+        "Es ist ein ganz normaler Arbeitstag, bis man die Zahl offener Bewertungen sieht.",
+        "Gute Neuigkeiten aus der IT: Das Problem sitzt diesmal nicht unter dem Schreibtisch, sondern direkt hier.",
+        "Diese Reviews könnten dringend jemanden mit Autorität und Mauszeiger gebrauchen.",
+        "Niemand sagt, dass es glamourös ist. Aber sehr zufriedenstellend wäre es schon.",
+        "Du bist nur ein paar Klicks davon entfernt, so zu wirken, als hättest du alles im Griff.",
+        "Die Lage ist beherrschbar. Unnötig dramatisch, aber beherrschbar.",
+        "Diese Bewertungen lösen sich nicht in Luft auf. Das wäre auch zu benutzerfreundlich.",
+        "Ein kurzer Review-Block jetzt spart dir später dieses stille Anstarren der Zahl."
+    );
+
     @Mock
     private TaskService taskService;
 
     @Mock
     private UserTaskService userTaskService;
 
+    @Mock
+    private UserService userService;
+
     @InjectMocks
     private TeacherDashboardQueryService teacherDashboardQueryService;
 
     @Test
     void getDashboardData_returnsPendingReviewCountAndRecentTaskLimit() {
+        ReflectionTestUtils.setField(teacherDashboardQueryService, "reviewReminderThreshold", 5);
+
         Group sharedGroup = group(51L, "Q2");
         User teacher = teacher(1L, "Teacher", sharedGroup);
         User student = student(10L, "Student", sharedGroup);
@@ -51,11 +120,43 @@ class TeacherDashboardQueryServiceTest {
         when(taskService.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher)).thenReturn(List.of(pendingTask));
         when(userTaskService.findByTask(pendingTask)).thenReturn(List.of(submittedUserTask));
         when(taskService.findByCreatedByOrderByCreatedAtDesc(teacher)).thenReturn(recentTasks);
+        when(userService.hasStudentRole(student)).thenReturn(true);
 
         TeacherDashboardDataDto dashboardData = teacherDashboardQueryService.getDashboardData(teacher);
 
         assertThat(dashboardData.getPendingReviews()).isEqualTo(1);
         assertThat(dashboardData.getRecentTasks()).containsExactlyElementsOf(recentTasks.subList(0, 5));
+        assertThat(dashboardData.isShowReviewReminder()).isFalse();
+        assertThat(dashboardData.getReviewReminderMessage()).isNull();
+    }
+
+    @Test
+    void getDashboardData_enablesRandomReviewReminderAboveThreshold() {
+        ReflectionTestUtils.setField(teacherDashboardQueryService, "reviewReminderThreshold", 5);
+
+        Group sharedGroup = group(51L, "Q2");
+        User teacher = teacher(1L, "Teacher", sharedGroup);
+        User student = student(10L, "Student", sharedGroup);
+
+        Task pendingTask = task(101L, "Pending Task", teacher, sharedGroup, null);
+        List<UserTask> submittedUserTasks = List.of(
+            userTask(student, pendingTask, status("ABGEGEBEN")),
+            userTask(student, pendingTask, status("ABGEGEBEN")),
+            userTask(student, pendingTask, status("ABGEGEBEN")),
+            userTask(student, pendingTask, status("ABGEGEBEN")),
+            userTask(student, pendingTask, status("ABGEGEBEN")),
+            userTask(student, pendingTask, status("ABGEGEBEN"))
+        );
+
+        when(taskService.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher)).thenReturn(List.of(pendingTask));
+        when(userTaskService.findByTask(pendingTask)).thenReturn(submittedUserTasks);
+        when(taskService.findByCreatedByOrderByCreatedAtDesc(teacher)).thenReturn(List.of(pendingTask));
+        when(userService.hasStudentRole(student)).thenReturn(true);
+
+        TeacherDashboardDataDto dashboardData = teacherDashboardQueryService.getDashboardData(teacher);
+
+        assertThat(dashboardData.isShowReviewReminder()).isTrue();
+        assertThat(REVIEW_REMINDER_MESSAGES).contains(dashboardData.getReviewReminderMessage());
     }
 
     @Test
@@ -75,6 +176,8 @@ class TeacherDashboardQueryServiceTest {
 
         when(taskService.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher)).thenReturn(List.of(task));
         when(userTaskService.findByTask(task)).thenReturn(List.of(submittedMatching, submittedNonMatching, inProgressMatching));
+        when(userService.hasStudentRole(matchingStudent)).thenReturn(true);
+        when(userService.hasStudentRole(nonMatchingStudent)).thenReturn(true);
 
         Map<UnitTitle, Map<Task, List<UserTask>>> groupedPendingReviews =
             teacherDashboardQueryService.getGroupedPendingReviews(teacher);
@@ -107,8 +210,29 @@ class TeacherDashboardQueryServiceTest {
             userTask(secondSharedStudent, taskTwo, status("ABGEGEBEN")),
             userTask(sharedStudent, taskTwo, status("IN_BEARBEITUNG"))
         ));
+        when(userService.hasStudentRole(sharedStudent)).thenReturn(true);
+        when(userService.hasStudentRole(secondSharedStudent)).thenReturn(true);
+        when(userService.hasStudentRole(foreignStudent)).thenReturn(true);
 
         assertThat(teacherDashboardQueryService.countPendingReviews(teacher)).isEqualTo(2);
+    }
+
+    @Test
+    void countPendingReviews_includesTeacherMembersWhenConfiguredForLocalViews() {
+        Group sharedGroup = group(51L, "Q2");
+        User teacher = teacher(1L, "Teacher", sharedGroup);
+
+        Task task = task(301L, "Task 1", teacher, sharedGroup, null);
+        UserTask submittedTeacherTask = userTask(teacher, task, status("ABGEGEBEN"));
+
+        ReflectionTestUtils.setField(teacherDashboardQueryService, "includeTeachersInTeacherViews", true);
+
+        when(taskService.findByCreatedByAndIsActiveTrueOrderByCreatedAtDesc(teacher)).thenReturn(List.of(task));
+        when(userTaskService.findByTask(task)).thenReturn(List.of(submittedTeacherTask));
+        when(userService.hasStudentRole(teacher)).thenReturn(false);
+        when(userService.hasTeacherRole(teacher)).thenReturn(true);
+
+        assertThat(teacherDashboardQueryService.countPendingReviews(teacher)).isEqualTo(1);
     }
 
     private User teacher(Long id, String name, Group... groups) {

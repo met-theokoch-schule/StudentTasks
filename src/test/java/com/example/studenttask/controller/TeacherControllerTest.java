@@ -60,13 +60,15 @@ class TeacherControllerTest {
 
         when(userService.findByOpenIdSubject("oidc-teacher")).thenReturn(Optional.of(teacher));
         when(teacherDashboardQueryService.getDashboardData(teacher))
-            .thenReturn(new TeacherDashboardDataDto(1, recentTasks.subList(0, 5)));
+            .thenReturn(new TeacherDashboardDataDto(1, recentTasks.subList(0, 5), false, null));
 
         Model model = new ExtendedModelMap();
         String view = controller.dashboard(model, principal("oidc-teacher"));
 
         assertThat(view).isEqualTo("teacher/dashboard");
         assertThat(model.getAttribute("pendingReviews")).isEqualTo(1);
+        assertThat(model.getAttribute("showReviewReminder")).isEqualTo(false);
+        assertThat(model.getAttribute("reviewReminderMessage")).isNull();
 
         @SuppressWarnings("unchecked")
         List<Task> recentTasksFromModel = (List<Task>) model.getAttribute("recentTasks");

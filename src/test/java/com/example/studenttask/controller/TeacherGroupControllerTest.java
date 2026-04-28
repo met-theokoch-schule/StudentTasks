@@ -90,7 +90,7 @@ class TeacherGroupControllerTest {
         when(userService.findByOpenIdSubject("oidc-teacher")).thenReturn(Optional.of(teacher));
         when(groupService.findById(10L)).thenReturn(group);
         when(groupQueryService.getGroupStatistics(group, teacher)).thenReturn(statistics);
-        when(groupQueryService.getStudentTaskMatrix(group)).thenReturn(matrix);
+        when(groupQueryService.getStudentTaskMatrix(group, teacher)).thenReturn(matrix);
 
         Model model = new ExtendedModelMap();
         String view = controller.showGroupDetail(10L, model, principal("oidc-teacher"));

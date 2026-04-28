@@ -15,6 +15,7 @@ import com.example.studenttask.repository.TaskContentRepository;
 import com.example.studenttask.repository.TaskRepository;
 import com.example.studenttask.repository.UserRepository;
 import com.example.studenttask.repository.UserTaskRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,19 +46,27 @@ public class GroupQueryService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private UserService userService;
+
+    @Value("${app.teacher.views.include-teachers:false}")
+    private boolean includeTeachersInTeacherViews;
+
     public List<GroupOverviewDto> getGroupsWithActiveTasksByTeacher(User teacher) {
         List<GroupOverviewDto> result = new ArrayList<>();
-        List<Task> allActiveTasks = taskRepository.findByIsActiveTrueOrderByCreatedAtDesc();
+        List<Task> teacherActiveTasks = taskRepository.findByCreatedByAndIsActiveOrderByCreatedAtDesc(teacher, true);
         List<Group> teacherGroups = new ArrayList<>(teacher.getGroups());
 
         for (Group group : teacherGroups) {
-            List<Task> groupActiveTasks = sortTasksForGroup(group, allActiveTasks);
+            List<User> students = getStudentsForGroup(group);
+            List<Task> groupActiveTasks = sortTasksForGroup(group, teacherActiveTasks);
 
             if (!groupActiveTasks.isEmpty()) {
-                int studentCount = userRepository.countByGroupsContaining(group);
+                GroupStatisticsDto statistics = buildGroupStatistics(students, groupActiveTasks);
+                int studentCount = students.size();
                 int activeTaskCount = groupActiveTasks.size();
-                int pendingSubmissions = countPendingSubmissionsForGroup(group, groupActiveTasks);
-                LocalDateTime lastActivity = getLastActivityForGroup(group, groupActiveTasks);
+                int pendingSubmissions = statistics.getSubmittedTasks();
+                LocalDateTime lastActivity = getLastActivityForGroup(students, groupActiveTasks);
 
                 result.add(new GroupOverviewDto(group, studentCount, activeTaskCount, pendingSubmissions, lastActivity));
             }
@@ -66,8 +75,8 @@ public class GroupQueryService {
         return result;
     }
 
-    public StudentTaskMatrixDto getStudentTaskMatrix(Group group) {
-        List<User> students = userRepository.findByGroupsContaining(group)
+    public StudentTaskMatrixDto getStudentTaskMatrix(Group group, User teacher) {
+        List<User> students = getStudentsForGroup(group)
             .stream()
             .sorted((s1, s2) -> {
                 String name1 = s1.getFamilyName() != null ? s1.getFamilyName() : s1.getName();
@@ -76,7 +85,10 @@ public class GroupQueryService {
             })
             .collect(Collectors.toList());
 
-        List<Task> activeTasks = sortTasksForGroup(group, taskRepository.findByIsActiveTrue());
+        List<Task> activeTasks = sortTasksForGroup(
+            group,
+            taskRepository.findByCreatedByAndIsActiveOrderByCreatedAtDesc(teacher, true)
+        );
         Map<String, StudentTaskStatusDto> statusMap = new HashMap<>();
 
         for (User student : students) {
@@ -126,33 +138,12 @@ public class GroupQueryService {
     }
 
     public GroupStatisticsDto getGroupStatistics(Group group, User teacher) {
-        int totalStudents = userRepository.countByGroupsContaining(group);
-        List<Task> activeTasks = taskRepository.findByCreatedByAndIsActiveOrderByCreatedAtDesc(teacher, true);
-        List<User> groupUsers = userRepository.findByGroupsContaining(group);
-
-        int submittedTasks = 0;
-        int needsRevisionTasks = 0;
-        int completedTasks = 0;
-
-        for (Task task : activeTasks) {
-            if (task.getAssignedGroups().contains(group)) {
-                for (User user : groupUsers) {
-                    Optional<UserTask> userTaskOpt = userTaskRepository.findByUserAndTask(user, task);
-                    if (userTaskOpt.isPresent()) {
-                        UserTask userTask = userTaskOpt.get();
-                        if (TaskStatusSupport.hasCode(userTask.getStatus(), TaskStatusCode.ABGEGEBEN)) {
-                            submittedTasks++;
-                        } else if (TaskStatusSupport.hasCode(userTask.getStatus(), TaskStatusCode.UEBERARBEITUNG_NOETIG)) {
-                            needsRevisionTasks++;
-                        } else if (TaskStatusSupport.hasCode(userTask.getStatus(), TaskStatusCode.VOLLSTAENDIG)) {
-                            completedTasks++;
-                        }
-                    }
-                }
-            }
-        }
-
-        return new GroupStatisticsDto(totalStudents, submittedTasks, needsRevisionTasks, completedTasks);
+        List<User> students = getStudentsForGroup(group);
+        List<Task> activeTasks = sortTasksForGroup(
+            group,
+            taskRepository.findByCreatedByAndIsActiveOrderByCreatedAtDesc(teacher, true)
+        );
+        return buildGroupStatistics(students, activeTasks);
     }
 
     private List<Task> sortTasksForGroup(Group group, List<Task> tasks) {
@@ -182,25 +173,7 @@ public class GroupQueryService {
             .collect(Collectors.toList());
     }
 
-    private int countPendingSubmissionsForGroup(Group group, List<Task> tasks) {
-        List<User> students = userRepository.findByGroupsContaining(group);
-        int pendingCount = 0;
-
-        for (User student : students) {
-            for (Task task : tasks) {
-                Optional<UserTask> userTaskOpt = userTaskRepository.findByUserAndTask(student, task);
-                if (userTaskOpt.isEmpty()
-                    || TaskStatusSupport.hasCode(userTaskOpt.map(UserTask::getStatus).orElse(null), TaskStatusCode.NICHT_BEGONNEN)) {
-                    pendingCount++;
-                }
-            }
-        }
-
-        return pendingCount;
-    }
-
-    private LocalDateTime getLastActivityForGroup(Group group, List<Task> tasks) {
-        List<User> students = userRepository.findByGroupsContaining(group);
+    private LocalDateTime getLastActivityForGroup(List<User> students, List<Task> tasks) {
         LocalDateTime lastActivity = null;
 
         for (User student : students) {
@@ -217,5 +190,42 @@ public class GroupQueryService {
         }
 
         return lastActivity;
+    }
+
+    private List<User> getStudentsForGroup(Group group) {
+        return userRepository.findByGroupsContaining(group).stream()
+            .filter(this::shouldIncludeGroupMember)
+            .collect(Collectors.toList());
+    }
+
+    private boolean shouldIncludeGroupMember(User user) {
+        return userService.hasStudentRole(user)
+            || (includeTeachersInTeacherViews && userService.hasTeacherRole(user));
+    }
+
+    private GroupStatisticsDto buildGroupStatistics(List<User> students, List<Task> activeTasks) {
+        int submittedTasks = 0;
+        int needsRevisionTasks = 0;
+        int completedTasks = 0;
+
+        for (Task task : activeTasks) {
+            for (User student : students) {
+                Optional<UserTask> userTaskOpt = userTaskRepository.findByUserAndTask(student, task);
+                if (userTaskOpt.isEmpty()) {
+                    continue;
+                }
+
+                UserTask userTask = userTaskOpt.get();
+                if (TaskStatusSupport.hasCode(userTask.getStatus(), TaskStatusCode.ABGEGEBEN)) {
+                    submittedTasks++;
+                } else if (TaskStatusSupport.hasCode(userTask.getStatus(), TaskStatusCode.UEBERARBEITUNG_NOETIG)) {
+                    needsRevisionTasks++;
+                } else if (TaskStatusSupport.hasCode(userTask.getStatus(), TaskStatusCode.VOLLSTAENDIG)) {
+                    completedTasks++;
+                }
+            }
+        }
+
+        return new GroupStatisticsDto(students.size(), submittedTasks, needsRevisionTasks, completedTasks);
     }
 }
