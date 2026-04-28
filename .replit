@@ -94,7 +94,7 @@ args = "mvn clean package -Pwar"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "curl -u \"$TOMCAT_DEPLOY_USER:$TOMCAT_DEPLOY_PASSWORD\" -T target/informatik.war \"$TOMCAT_DEPLOY_URL\""
+args = "curl -u \"$TOMCAT_DEPLOY_USER:$TOMCAT_DEPLOY_PASSWORD\" -T target/informatik.war \"https://services-new.theokoch.schule/manager/text/deploy?path=/informatik&update=true\""
 
 [[workflows.workflow]]
 name = "Project"
