@@ -96,6 +96,10 @@ args = "mvn clean package -Pwar"
 task = "shell.exec"
 args = "curl -u \"$TOMCAT_DEPLOY_USER:$TOMCAT_DEPLOY_PASSWORD\" -T target/informatik.war \"https://services-new.theokoch.schule/manager/text/deploy?path=/informatik&update=true\""
 
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mv target/informatik.war dist/"
+
 [[workflows.workflow]]
 name = "Project"
 mode = "parallel"
