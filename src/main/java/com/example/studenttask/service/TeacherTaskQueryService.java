@@ -3,12 +3,14 @@ package com.example.studenttask.service;
 import com.example.studenttask.dto.TeacherSubmissionContentViewDto;
 import com.example.studenttask.dto.TeacherTaskFormDataDto;
 import com.example.studenttask.dto.TeacherTaskFormDto;
+import com.example.studenttask.dto.TeacherTaskListItemDto;
 import com.example.studenttask.dto.TeacherSubmissionReviewDataDto;
 import com.example.studenttask.dto.TeacherTaskListDataDto;
 import com.example.studenttask.dto.TeacherTaskSubmissionsDataDto;
 import com.example.studenttask.model.Group;
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskContent;
+import com.example.studenttask.model.TaskStatusCode;
 import com.example.studenttask.model.UnitTitle;
 import com.example.studenttask.model.User;
 import com.example.studenttask.model.UserTask;
@@ -55,8 +57,11 @@ public class TeacherTaskQueryService {
         List<Task> tasks = "all".equals(filter)
             ? taskService.findAllOrderByCreatedAtDesc()
             : taskService.findByCreatedByOrderByCreatedAtDesc(teacher);
+        List<TeacherTaskListItemDto> taskItems = tasks.stream()
+            .map(this::toTaskListItem)
+            .toList();
 
-        return new TeacherTaskListDataDto(tasks, groupTasksByUnitTitle(tasks));
+        return new TeacherTaskListDataDto(taskItems, groupTasksByUnitTitle(taskItems));
     }
 
     public Optional<TeacherTaskSubmissionsDataDto> getTaskSubmissionsData(Long taskId, User teacher) {
@@ -131,11 +136,12 @@ public class TeacherTaskQueryService {
         return groupService.findAllById(groupIds).size() == distinctGroupIds.size();
     }
 
-    private Map<UnitTitle, List<Task>> groupTasksByUnitTitle(List<Task> tasks) {
-        Map<UnitTitle, List<Task>> tasksByUnitTitle = new LinkedHashMap<>();
+    private Map<UnitTitle, List<TeacherTaskListItemDto>> groupTasksByUnitTitle(List<TeacherTaskListItemDto> tasks) {
+        Map<UnitTitle, List<TeacherTaskListItemDto>> tasksByUnitTitle = new LinkedHashMap<>();
         UnitTitle noUnitTitle = null;
 
-        for (Task task : tasks) {
+        for (TeacherTaskListItemDto taskItem : tasks) {
+            Task task = taskItem.getTask();
             UnitTitle key = task.getUnitTitle();
             if (key == null) {
                 if (noUnitTitle == null) {
@@ -145,10 +151,19 @@ public class TeacherTaskQueryService {
                 }
                 key = noUnitTitle;
             }
-            tasksByUnitTitle.computeIfAbsent(key, ignored -> new ArrayList<>()).add(task);
+            tasksByUnitTitle.computeIfAbsent(key, ignored -> new ArrayList<>()).add(taskItem);
         }
 
         return tasksByUnitTitle;
+    }
+
+    private TeacherTaskListItemDto toTaskListItem(Task task) {
+        List<UserTask> userTasks = userTaskService.findByTask(task);
+        boolean hasSubmissions = !userTasks.isEmpty();
+        boolean hasPendingReviews = userTasks.stream()
+            .anyMatch(userTask -> TaskStatusSupport.hasCode(userTask.getStatus(), TaskStatusCode.ABGEGEBEN));
+
+        return new TeacherTaskListItemDto(task, hasSubmissions, hasPendingReviews);
     }
 
     private TeacherTaskFormDataDto buildTaskFormData(Task task) {
@@ -169,6 +184,7 @@ public class TeacherTaskQueryService {
 
         taskForm.setTitle(task.getTitle());
         taskForm.setDescription(task.getDescription());
+        taskForm.setHoursDescription(task.getHoursDescription());
         taskForm.setTutorial(task.getTutorial());
         taskForm.setDefaultSubmission(task.getDefaultSubmission());
         taskForm.setDueDate(task.getDueDate());

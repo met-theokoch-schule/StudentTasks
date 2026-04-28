@@ -9,9 +9,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -112,6 +114,35 @@ public class UserService {
 
     public User findByPreferredUsername(String preferredUsername) {
         return userRepository.findByPreferredUsername(preferredUsername);
+    }
+
+    public Set<String> getStudentTaskListExpandedUnits(User user) {
+        if (user == null || user.getStudentTaskListExpandedUnits() == null
+                || user.getStudentTaskListExpandedUnits().isBlank()) {
+            return new LinkedHashSet<>();
+        }
+
+        return java.util.Arrays.stream(user.getStudentTaskListExpandedUnits().split(","))
+                .map(String::trim)
+                .filter(value -> !value.isEmpty())
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    public void saveStudentTaskListExpandedUnits(User user, Set<String> expandedUnitIds) {
+        if (user == null) {
+            return;
+        }
+
+        Set<String> sanitizedUnitIds = expandedUnitIds == null
+                ? new LinkedHashSet<>()
+                : expandedUnitIds.stream()
+                    .filter(Objects::nonNull)
+                    .map(String::trim)
+                    .filter(value -> !value.isEmpty())
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        user.setStudentTaskListExpandedUnits(String.join(",", sanitizedUnitIds));
+        userRepository.save(user);
     }
 
     private boolean hasRoleMatching(User user, java.util.function.Predicate<String> matcher) {

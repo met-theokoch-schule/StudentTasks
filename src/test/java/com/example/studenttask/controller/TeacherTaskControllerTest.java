@@ -3,6 +3,7 @@ package com.example.studenttask.controller;
 import com.example.studenttask.dto.TeacherSubmissionContentViewDto;
 import com.example.studenttask.dto.TeacherTaskFormDataDto;
 import com.example.studenttask.dto.TeacherTaskFormDto;
+import com.example.studenttask.dto.TeacherTaskListItemDto;
 import com.example.studenttask.dto.TeacherSubmissionReviewDataDto;
 import com.example.studenttask.dto.TeacherTaskListDataDto;
 import com.example.studenttask.dto.TeacherTaskSubmissionsDataDto;
@@ -67,22 +68,23 @@ class TeacherTaskControllerTest {
         Group group = group(10L, "10A");
         User teacher = teacher(1L, "Teacher", group);
         Task task = task(20L, "Worksheet", teacher, group, null);
+        TeacherTaskListItemDto taskItem = new TeacherTaskListItemDto(task, false, false);
         UnitTitle noUnitTitle = new UnitTitle();
         noUnitTitle.setName("Aufgaben ohne Thema");
 
-        Map<UnitTitle, List<Task>> tasksByUnitTitle = new LinkedHashMap<>();
-        tasksByUnitTitle.put(noUnitTitle, List.of(task));
+        Map<UnitTitle, List<TeacherTaskListItemDto>> tasksByUnitTitle = new LinkedHashMap<>();
+        tasksByUnitTitle.put(noUnitTitle, List.of(taskItem));
 
         when(userService.findByOpenIdSubject("oidc-teacher")).thenReturn(Optional.of(teacher));
         when(teacherTaskQueryService.getTaskListData(teacher, "own"))
-            .thenReturn(new TeacherTaskListDataDto(List.of(task), tasksByUnitTitle));
+            .thenReturn(new TeacherTaskListDataDto(List.of(taskItem), tasksByUnitTitle));
 
         Model model = new ExtendedModelMap();
         String view = controller.listTasks("own", model, principal("oidc-teacher"));
 
         assertThat(view).isEqualTo("teacher/tasks-list");
         assertThat(model.getAttribute("teacher")).isSameAs(teacher);
-        assertThat(model.getAttribute("tasks")).isEqualTo(List.of(task));
+        assertThat(model.getAttribute("tasks")).isEqualTo(List.of(taskItem));
         assertThat(model.getAttribute("tasksByUnitTitle")).isEqualTo(tasksByUnitTitle);
         assertThat(model.getAttribute("currentFilter")).isEqualTo("own");
     }

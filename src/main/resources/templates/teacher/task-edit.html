@@ -144,6 +144,15 @@
                                 </div>
                             </div>
 
+                            <div class="mb-3">
+                                <label for="hoursDescription" class="form-label">Stundenbeschreibung (optional)</label>
+                                <textarea class="form-control" id="hoursDescription" th:field="*{hoursDescription}" rows="6"
+                                          placeholder="Geben Sie hier die Stundenbeschreibung ein..."></textarea>
+                                <div class="form-text">
+                                    Optional: Interne Notiz für Lehrkräfte. Dieser Text ist für SuS nicht sichtbar und wird in der Aufgabenübersicht als Markdown angezeigt.
+                                </div>
+                            </div>
+
                             <!-- Fälligkeitsdatum -->
                             <div class="mb-3">
                                 <label for="dueDate" class="form-label">Fälligkeitsdatum (optional)</label>
@@ -481,6 +490,7 @@
 
                 appendTextElement(doc, root, 'title', $('#title').val());
                 appendTextElement(doc, root, 'description', $('#description').val());
+                appendTextElement(doc, root, 'hoursDescription', $('#hoursDescription').val());
                 appendTextElement(doc, root, 'tutorial', $('#tutorial').val());
                 appendTextElement(doc, root, 'defaultSubmission', $('#defaultSubmission').val());
 
@@ -521,6 +531,7 @@
                     taskViewKey,
                     title: readXml(root, 'title', 'Der Aufgabentitel fehlt in der XML-Datei.'),
                     description: readOptionalXml(root, 'description'),
+                    hoursDescription: readOptionalXml(root, 'hoursDescription'),
                     tutorial: readOptionalXml(root, 'tutorial'),
                     defaultSubmission: readOptionalXml(root, 'defaultSubmission')
                 };
@@ -535,6 +546,7 @@
 
                 $('#title').val(importedTask.title);
                 $('#description').val(importedTask.description);
+                $('#hoursDescription').val(importedTask.hoursDescription);
                 $('#tutorial').val(importedTask.tutorial);
                 $('#defaultSubmission').val(importedTask.defaultSubmission);
             }

@@ -1,9 +1,12 @@
 package com.example.studenttask.controller;
 
+import com.example.studenttask.dto.StudentTaskListStateRequestDto;
 import com.example.studenttask.dto.TaskContentRequestDto;
 import com.example.studenttask.model.TaskContent;
+import com.example.studenttask.model.User;
 import com.example.studenttask.service.StudentTaskApiCommandService;
 import com.example.studenttask.service.StudentTaskApiQueryService;
+import com.example.studenttask.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.LinkedHashSet;
+
 @RestController
 @RequestMapping("/api/tasks")
 public class StudentTaskApiController {
@@ -24,6 +29,9 @@ public class StudentTaskApiController {
 
     @Autowired
     private StudentTaskApiCommandService studentTaskApiCommandService;
+
+    @Autowired
+    private UserService userService;
 
     @GetMapping("/{taskId}/content")
     public ResponseEntity<String> getTaskContent(@PathVariable Long taskId, Authentication authentication) {
@@ -67,6 +75,18 @@ public class StudentTaskApiController {
             taskId,
             authentication.getName(),
             request != null ? request.getContent() : null
+        );
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/list-state")
+    public ResponseEntity<Void> saveTaskListState(@RequestBody StudentTaskListStateRequestDto request,
+            Authentication authentication) {
+        User student = userService.findByOpenIdSubject(authentication.getName())
+            .orElseThrow(() -> new IllegalStateException("Benutzer nicht gefunden"));
+        userService.saveStudentTaskListExpandedUnits(
+            student,
+            new LinkedHashSet<>(request.getExpandedUnitIds())
         );
         return ResponseEntity.ok().build();
     }

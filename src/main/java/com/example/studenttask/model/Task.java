@@ -19,6 +19,9 @@ public class Task {
     @Column(columnDefinition = "TEXT")
     private String description; // Markdown-formatted task description
 
+    @Column(columnDefinition = "TEXT")
+    private String hoursDescription; // Markdown-formatted hours description
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_id", nullable = false)
     private User createdBy;
@@ -92,6 +95,14 @@ public class Task {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getHoursDescription() {
+        return hoursDescription;
+    }
+
+    public void setHoursDescription(String hoursDescription) {
+        this.hoursDescription = hoursDescription;
     }
 
     public User getCreatedBy() {

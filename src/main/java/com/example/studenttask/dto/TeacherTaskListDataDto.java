@@ -7,30 +7,31 @@ import java.util.List;
 import java.util.Map;
 
 public class TeacherTaskListDataDto {
-    private List<Task> tasks;
-    private Map<UnitTitle, List<Task>> tasksByUnitTitle;
+    private List<TeacherTaskListItemDto> tasks;
+    private Map<UnitTitle, List<TeacherTaskListItemDto>> tasksByUnitTitle;
 
     public TeacherTaskListDataDto() {
     }
 
-    public TeacherTaskListDataDto(List<Task> tasks, Map<UnitTitle, List<Task>> tasksByUnitTitle) {
+    public TeacherTaskListDataDto(List<TeacherTaskListItemDto> tasks,
+                                  Map<UnitTitle, List<TeacherTaskListItemDto>> tasksByUnitTitle) {
         this.tasks = tasks;
         this.tasksByUnitTitle = tasksByUnitTitle;
     }
 
-    public List<Task> getTasks() {
+    public List<TeacherTaskListItemDto> getTasks() {
         return tasks;
     }
 
-    public void setTasks(List<Task> tasks) {
+    public void setTasks(List<TeacherTaskListItemDto> tasks) {
         this.tasks = tasks;
     }
 
-    public Map<UnitTitle, List<Task>> getTasksByUnitTitle() {
+    public Map<UnitTitle, List<TeacherTaskListItemDto>> getTasksByUnitTitle() {
         return tasksByUnitTitle;
     }
 
-    public void setTasksByUnitTitle(Map<UnitTitle, List<Task>> tasksByUnitTitle) {
+    public void setTasksByUnitTitle(Map<UnitTitle, List<TeacherTaskListItemDto>> tasksByUnitTitle) {
         this.tasksByUnitTitle = tasksByUnitTitle;
     }
 }

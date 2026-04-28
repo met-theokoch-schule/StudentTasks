@@ -118,7 +118,8 @@ class StudentControllerTest {
         when(userService.findByOpenIdSubject("oidc-subject")).thenReturn(Optional.of(student));
         when(studentTaskOverviewService.getTaskListData(student)).thenReturn(new StudentTaskListDataDto(
             List.of(userTaskB, userTaskA, userTaskIntro),
-            tasksByUnitTitle
+            tasksByUnitTitle,
+            Set.of()
         ));
 
         Model model = new ExtendedModelMap();
@@ -134,6 +135,7 @@ class StudentControllerTest {
         assertThat(tasksByUnitTitleFromModel.get(basics)).containsExactly(userTaskIntro);
         assertThat(tasksByUnitTitleFromModel.get(advanced)).containsExactly(userTaskA, userTaskB);
         assertThat(model.getAttribute("userTasks")).isEqualTo(List.of(userTaskB, userTaskA, userTaskIntro));
+        assertThat(model.getAttribute("expandedUnitIds")).isEqualTo(Set.of());
     }
 
     @Test

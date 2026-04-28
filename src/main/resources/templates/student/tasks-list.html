@@ -9,6 +9,21 @@
     <link th:href="@{/css/custom.css}" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        .tasks-table {
+            table-layout: fixed;
+        }
+        .tasks-table .status-column {
+            width: 11rem;
+        }
+        .tasks-table .due-date-column {
+            width: 10rem;
+        }
+        .tasks-table .last-modified-column {
+            width: 12rem;
+        }
+        .tasks-table .actions-column {
+            width: 12rem;
+        }
         .unit-header {
             cursor: pointer;
             background-color: #f8f9fa;
@@ -30,6 +45,11 @@
             border-top: none;
             border-radius: 0 0 8px 8px;
             margin-bottom: 15px;
+            overflow: hidden;
+            background-color: #fff;
+        }
+        .unit-content .table-responsive {
+            margin-bottom: 0;
         }
         .collapse-icon {
             transition: transform 0.2s;
@@ -39,9 +59,6 @@
         }
         .task-row {
             border-bottom: 1px solid #f1f3f4;
-        }
-        .task-row:last-child {
-            border-bottom: none;
         }
     </style>
 </head>
@@ -82,16 +99,19 @@
                     </div>
                 </div>
                 
-                <div class="unit-content collapse show" th:id="'unit-' + ${entry.key?.id ?: 'no-unit'}">
+                <div th:with="unitId=${entry.key?.id ?: 'no-unit'},
+                              expanded=${expandedUnitIds != null and expandedUnitIds.contains(unitId)}"
+                     th:id="'unit-' + ${unitId}"
+                     th:class="'unit-content collapse' + (${expanded} ? ' show' : '')">
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0">
+                        <table class="table table-hover mb-0 tasks-table">
                             <thead class="table-light">
                                 <tr>
                                     <th>Aufgabe</th>
-                                    <th>Status</th>
-                                    <th>Fälligkeitsdatum</th>
-                                    <th>Letzte Bearbeitung</th>
-                                    <th>Aktionen</th>
+                                    <th class="status-column">Status</th>
+                                    <th class="due-date-column">Fälligkeitsdatum</th>
+                                    <th class="last-modified-column">Letzte Bearbeitung</th>
+                                    <th class="actions-column">Aktionen</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -129,7 +149,7 @@
                                         </a>
                                         <a th:href="@{'/student/tasks/' + ${userTask.task.id} + '/history'}" 
                                            class="btn btn-outline-info btn-sm">
-                                            <i class="fas fa-history"></i> Historie
+                                            <i class="fas fa-history"></i>
                                         </a>
                                     </td>
                                 </tr>
@@ -150,55 +170,52 @@
         </div>
     </div>
 
-    <script>
-        // LocalStorage-Schlüssel für die Unit-Zustände
-        const STORAGE_KEY = 'student-tasks-unit-states';
-        
-        // Initialisierung beim Laden der Seite
+    <script th:inline="javascript">
+        const saveTaskListStateUrl = /*[[@{/api/tasks/list-state}]]*/ '';
+
         document.addEventListener('DOMContentLoaded', function() {
-            // Gespeicherte Zustände aus localStorage laden
-            const savedStates = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-            
-            // Alle Unit-Header finden und Zustände anwenden
             document.querySelectorAll('.unit-header').forEach(header => {
                 const unitId = header.getAttribute('data-unit-id');
                 const content = document.getElementById('unit-' + unitId);
-                
-                if (content) {
-                    // Standardmäßig aufgeklappt, außer gespeicherter Zustand sagt etwas anderes
-                    const isCollapsed = savedStates[unitId] === 'collapsed';
-                    
-                    if (isCollapsed) {
-                        header.classList.add('collapsed');
-                        content.classList.remove('show');
-                    }
+
+                if (content && !content.classList.contains('show')) {
+                    header.classList.add('collapsed');
                 }
             });
         });
-        
-        // Funktion zum Ein-/Ausklappen einer Unit
+
         function toggleUnit(header) {
             const unitId = header.getAttribute('data-unit-id');
             const content = document.getElementById('unit-' + unitId);
-            
+
             if (content) {
                 const isCurrentlyCollapsed = header.classList.contains('collapsed');
-                
+
                 if (isCurrentlyCollapsed) {
-                    // Aufklappen
                     header.classList.remove('collapsed');
                     content.classList.add('show');
                 } else {
-                    // Einklappen
                     header.classList.add('collapsed');
                     content.classList.remove('show');
                 }
-                
-                // Zustand in localStorage speichern
-                const savedStates = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-                savedStates[unitId] = isCurrentlyCollapsed ? 'expanded' : 'collapsed';
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(savedStates));
+
+                persistExpandedUnits();
             }
+        }
+
+        function persistExpandedUnits() {
+            const expandedUnitIds = Array.from(document.querySelectorAll('.unit-header'))
+                .filter(header => !header.classList.contains('collapsed'))
+                .map(header => header.getAttribute('data-unit-id'));
+
+            fetch(saveTaskListStateUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ expandedUnitIds })
+            }).catch(() => {
+            });
         }
     </script>
 

@@ -27,6 +27,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -47,6 +48,9 @@ class StudentTaskOverviewServiceTest {
 
     @Mock
     private TaskContentRepository taskContentRepository;
+
+    @Mock
+    private UserService userService;
 
     @InjectMocks
     private StudentTaskOverviewService studentTaskOverviewService;
@@ -100,6 +104,7 @@ class StudentTaskOverviewServiceTest {
             List.of(taskB, taskA, taskIntro),
             List.of(userTaskB, userTaskA, userTaskIntro)
         );
+        when(userService.getStudentTaskListExpandedUnits(student)).thenReturn(Set.of());
 
         StudentTaskListDataDto taskListData = studentTaskOverviewService.getTaskListData(student);
 
@@ -108,6 +113,7 @@ class StudentTaskOverviewServiceTest {
         assertThat(tasksByUnitTitle.get(basics)).containsExactly(userTaskIntro);
         assertThat(tasksByUnitTitle.get(advanced)).containsExactly(userTaskA, userTaskB);
         assertThat(taskListData.getUserTasks()).isEqualTo(List.of(userTaskB, userTaskA, userTaskIntro));
+        assertThat(taskListData.getExpandedUnitIds()).isEmpty();
     }
 
     @Test
@@ -123,6 +129,7 @@ class StudentTaskOverviewServiceTest {
         when(userTaskRepository.findByUserAndTask(student, task)).thenReturn(Optional.empty());
         when(taskStatusService.getDefaultStatus()).thenReturn(defaultStatus);
         when(userTaskRepository.save(any(UserTask.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userService.getStudentTaskListExpandedUnits(student)).thenReturn(Set.of());
 
         StudentTaskListDataDto taskListData = studentTaskOverviewService.getTaskListData(student);
 
@@ -132,6 +139,7 @@ class StudentTaskOverviewServiceTest {
         assertThat(createdUserTask.getUser()).isSameAs(student);
         assertThat(createdUserTask.getStatus()).isSameAs(defaultStatus);
         assertThat(createdUserTask.getStartedAt()).isNotNull();
+        assertThat(taskListData.getExpandedUnitIds()).isEmpty();
         verify(taskStatusService).getDefaultStatus();
         verify(userTaskRepository).save(any(UserTask.class));
     }
@@ -142,7 +150,8 @@ class StudentTaskOverviewServiceTest {
         when(userTaskRepository.findByUser(student)).thenReturn(userTasks);
 
         for (int i = 0; i < tasks.size(); i++) {
-            when(userTaskRepository.findByUserAndTask(student, tasks.get(i))).thenReturn(Optional.of(userTasks.get(i)));
+            lenient().when(userTaskRepository.findByUserAndTask(student, tasks.get(i)))
+                .thenReturn(Optional.of(userTasks.get(i)));
         }
     }
 

@@ -26,6 +26,9 @@ public class User {
 
     private String familyName; // aus "family_name" Claim (Nachname)
 
+    @Column(columnDefinition = "TEXT")
+    private String studentTaskListExpandedUnits;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
@@ -120,6 +123,14 @@ public class User {
 
     public void setFamilyName(String familyName) {
         this.familyName = familyName;
+    }
+
+    public String getStudentTaskListExpandedUnits() {
+        return studentTaskListExpandedUnits;
+    }
+
+    public void setStudentTaskListExpandedUnits(String studentTaskListExpandedUnits) {
+        this.studentTaskListExpandedUnits = studentTaskListExpandedUnits;
     }
 
     public LocalDateTime getCreatedAt() {

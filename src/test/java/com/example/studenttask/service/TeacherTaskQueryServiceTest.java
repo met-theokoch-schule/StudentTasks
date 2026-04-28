@@ -3,6 +3,7 @@ package com.example.studenttask.service;
 import com.example.studenttask.dto.TeacherSubmissionContentViewDto;
 import com.example.studenttask.dto.TeacherTaskFormDataDto;
 import com.example.studenttask.dto.TeacherTaskFormDto;
+import com.example.studenttask.dto.TeacherTaskListItemDto;
 import com.example.studenttask.dto.TeacherSubmissionReviewDataDto;
 import com.example.studenttask.dto.TeacherTaskListDataDto;
 import com.example.studenttask.dto.TeacherTaskSubmissionsDataDto;
@@ -70,12 +71,18 @@ class TeacherTaskQueryServiceTest {
         Task taskWithoutUnit = task(21L, "Freeform", teacher, group, null);
 
         when(taskService.findByCreatedByOrderByCreatedAtDesc(teacher)).thenReturn(List.of(taskWithUnit, taskWithoutUnit));
+        when(userTaskService.findByTask(taskWithUnit)).thenReturn(List.of());
+        when(userTaskService.findByTask(taskWithoutUnit)).thenReturn(List.of());
 
         TeacherTaskListDataDto taskListData = teacherTaskQueryService.getTaskListData(teacher, "own");
 
-        assertThat(taskListData.getTasks()).containsExactly(taskWithUnit, taskWithoutUnit);
+        assertThat(taskListData.getTasks())
+            .extracting(TeacherTaskListItemDto::getTask)
+            .containsExactly(taskWithUnit, taskWithoutUnit);
         assertThat(taskListData.getTasksByUnitTitle()).hasSize(2);
-        assertThat(taskListData.getTasksByUnitTitle().get(basics)).containsExactly(taskWithUnit);
+        assertThat(taskListData.getTasksByUnitTitle().get(basics))
+            .extracting(TeacherTaskListItemDto::getTask)
+            .containsExactly(taskWithUnit);
         assertThat(taskListData.getTasksByUnitTitle().keySet())
             .anySatisfy(unitTitle -> assertThat(unitTitle.getName()).isEqualTo("Aufgaben ohne Thema"));
     }

@@ -99,6 +99,7 @@ public class StudentController {
 
         model.addAttribute("tasksByUnitTitle", taskListData.getTasksByUnitTitle());
         model.addAttribute("userTasks", taskListData.getUserTasks());
+        model.addAttribute("expandedUnitIds", taskListData.getExpandedUnitIds());
         return "student/tasks-list";
     }
 

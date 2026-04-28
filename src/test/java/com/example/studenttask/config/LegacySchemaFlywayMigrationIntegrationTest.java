@@ -88,7 +88,7 @@ class LegacySchemaFlywayMigrationIntegrationTest {
             "SELECT version FROM flyway_schema_history WHERE success = 1 ORDER BY installed_rank",
             (resultSet, rowNum) -> resultSet.getString("version")
         );
-        assertThat(appliedVersions).containsExactly("0", "1", "2", "3", "4", "5");
+        assertThat(appliedVersions).containsExactly("0", "1", "2", "3", "4", "5", "6", "7");
     }
 
     private boolean columnExists(String tableName, String columnName) {

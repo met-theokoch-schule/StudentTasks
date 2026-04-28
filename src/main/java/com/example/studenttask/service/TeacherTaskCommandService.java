@@ -83,6 +83,7 @@ public class TeacherTaskCommandService {
     private void applyTaskForm(Task task, TeacherTaskFormDto taskForm, boolean preserveExistingTaskViewOnMissingValue) {
         task.setTitle(taskForm.getTitle());
         task.setDescription(taskForm.getDescription());
+        task.setHoursDescription(taskForm.getHoursDescription());
         task.setDefaultSubmission(taskForm.getDefaultSubmission());
         task.setTutorial(taskForm.getTutorial());
         task.setDueDate(taskForm.getDueDate());

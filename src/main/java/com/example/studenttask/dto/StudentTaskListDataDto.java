@@ -5,17 +5,22 @@ import com.example.studenttask.model.UserTask;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class StudentTaskListDataDto {
     private List<UserTask> userTasks;
     private Map<UnitTitle, List<UserTask>> tasksByUnitTitle;
+    private Set<String> expandedUnitIds;
 
     public StudentTaskListDataDto() {
     }
 
-    public StudentTaskListDataDto(List<UserTask> userTasks, Map<UnitTitle, List<UserTask>> tasksByUnitTitle) {
+    public StudentTaskListDataDto(List<UserTask> userTasks,
+                                  Map<UnitTitle, List<UserTask>> tasksByUnitTitle,
+                                  Set<String> expandedUnitIds) {
         this.userTasks = userTasks;
         this.tasksByUnitTitle = tasksByUnitTitle;
+        this.expandedUnitIds = expandedUnitIds;
     }
 
     public List<UserTask> getUserTasks() {
@@ -32,5 +37,13 @@ public class StudentTaskListDataDto {
 
     public void setTasksByUnitTitle(Map<UnitTitle, List<UserTask>> tasksByUnitTitle) {
         this.tasksByUnitTitle = tasksByUnitTitle;
+    }
+
+    public Set<String> getExpandedUnitIds() {
+        return expandedUnitIds;
+    }
+
+    public void setExpandedUnitIds(Set<String> expandedUnitIds) {
+        this.expandedUnitIds = expandedUnitIds;
     }
 }

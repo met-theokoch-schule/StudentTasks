@@ -44,6 +44,9 @@ public class StudentTaskOverviewService {
     @Autowired
     private TaskContentRepository taskContentRepository;
 
+    @Autowired
+    private UserService userService;
+
     public StudentDashboardDataDto getDashboardData(User student) {
         List<UserTask> allUserTasks = getOrCreateUserTasksForStudent(student);
         List<UserTask> recentUserTasks = allUserTasks.stream()
@@ -66,7 +69,11 @@ public class StudentTaskOverviewService {
 
     public StudentTaskListDataDto getTaskListData(User student) {
         List<UserTask> userTasks = getOrCreateUserTasksForStudent(student);
-        return new StudentTaskListDataDto(userTasks, groupTasksByUnitTitle(userTasks));
+        return new StudentTaskListDataDto(
+            userTasks,
+            groupTasksByUnitTitle(userTasks),
+            userService.getStudentTaskListExpandedUnits(student)
+        );
     }
 
     private List<UserTask> getOrCreateUserTasksForStudent(User student) {

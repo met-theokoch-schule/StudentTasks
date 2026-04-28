@@ -7,6 +7,101 @@
     <link th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
     <link th:href="@{/css/custom.css}" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .tasks-table {
+            table-layout: fixed;
+        }
+
+        .tasks-table .task-view-column {
+            width: 15rem;
+        }
+
+        .tasks-table .due-date-column {
+            width: 10rem;
+        }
+
+        .tasks-table .status-column {
+            width: 5rem;
+        }
+
+        .tasks-table .actions-column {
+            width: 7rem;
+        }
+
+        .tasks-table .creator-column {
+            width: 12rem;
+        }
+
+        .task-action-group .btn {
+            border-color: #0d6efd;
+            background-color: #e7f1ff;
+            color: #0d6efd;
+        }
+
+        .task-action-group .btn.task-action-alert {
+            border-color: #0d6efd;
+            background-color: #fff3cd;
+            color: #997404;
+        }
+
+        .task-action-group .btn:hover,
+        .task-action-group .btn:focus,
+        .task-action-group .btn:active,
+        .task-action-group .btn.active {
+            border-color: #0a58ca;
+            background-color: #d0e3ff;
+            color: #0a58ca;
+        }
+
+        .task-action-group .btn.task-action-alert:hover,
+        .task-action-group .btn.task-action-alert:focus,
+        .task-action-group .btn.task-action-alert:active,
+        .task-action-group .btn.task-action-alert.active {
+            border-color: #0a58ca;
+            background-color: #ffe69c;
+            color: #664d03;
+        }
+
+        .task-action-group .btn:disabled,
+        .task-action-group .btn.disabled {
+            border-color: #0d6efd;
+            background-color: #f8f9fa;
+            color: #adb5bd;
+            opacity: 1;
+        }
+
+        .tasks-table td:first-child,
+        .tasks-table th:first-child {
+            width: auto;
+            min-width: 15rem;
+        }
+
+        .task-action-group > .task-action-tooltip {
+            display: inline-flex;
+            margin-left: -1px;
+        }
+
+        .task-action-group > :not(:first-child):not(.dropdown-menu) > .btn,
+        .task-action-group > .btn:nth-child(n + 2) {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        .task-action-group > :not(:last-child):not(.dropdown-menu) > .btn,
+        .task-action-group > .btn:not(:last-child) {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .hours-description-content pre {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .task-action-group .btn i {
+            margin-right: 0;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -67,40 +162,62 @@
                             </div>
                             <div class="card-body p-0">
                                 <div class="table-responsive">
-                                    <table class="table table-striped mb-0">
+                                    <table class="table table-striped mb-0 tasks-table">
                                         <thead>
                                             <tr>
                                                 <th>Titel</th>
-                                                <th>Task View</th>
-                                                <th>Fälligkeitsdatum</th>
-                                                <th>Status</th>
-                                                <th th:if="${currentFilter == 'all'}">Ersteller</th>
-                                                <th>Aktionen</th>
+                                                <th class="task-view-column">Task View</th>
+                                                <th class="due-date-column">Fälligkeitsdatum</th>
+                                                <th class="status-column">Status</th>
+                                                <th th:if="${currentFilter == 'all'}" class="creator-column">Ersteller</th>
+                                                <th class="actions-column">Aktionen</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr th:each="task : ${unitEntry.value}">
+                                            <tr th:each="taskItem : ${unitEntry.value}">
                                                 <td>
-                                                    <strong th:text="${task.title}">Aufgabentitel</strong>
+                                                    <strong th:text="${taskItem.task.title}">Aufgabentitel</strong>
                                                 </td>
-                                                <td th:text="${task.taskView?.name ?: 'Kein View'}">Task View</td>
-                                                <td th:text="${task.dueDate != null ? #temporals.format(task.dueDate, 'dd.MM.yyyy') : 'Kein Datum'}">31.12.2024</td>
+                                                <td th:text="${taskItem.task.taskView?.name ?: 'Kein View'}">Task View</td>
+                                                <td th:text="${taskItem.task.dueDate != null ? #temporals.format(taskItem.task.dueDate, 'dd.MM.yyyy') : 'Kein Datum'}">31.12.2024</td>
                                                 <td>
-                                                    <span class="badge bg-success" th:if="${task.isActive}">Aktiv</span>
-                                                    <span class="badge bg-secondary" th:unless="${task.isActive}">Inaktiv</span>
+                                                    <span class="badge bg-success" th:if="${taskItem.task.isActive}">Aktiv</span>
+                                                    <span class="badge bg-secondary" th:unless="${taskItem.task.isActive}">Inaktiv</span>
                                                 </td>
                                                 <td th:if="${currentFilter == 'all'}">
-                                                    <span th:text="${task.createdBy?.name ?: 'Unbekannt'}" class="text-muted">Ersteller</span>
+                                                    <span th:text="${taskItem.task.createdBy?.name ?: 'Unbekannt'}" class="text-muted">Ersteller</span>
                                                 </td>
                                                 <td>
-                                                    <div class="btn-group" role="group">
-                                                        <a th:href="@{'/teacher/tasks/' + ${task.id} + '/edit'}" 
-                                                           class="btn btn-sm btn-outline-secondary">
-                                                            <i class="fas fa-edit"></i> Bearbeiten
+                                                    <div class="btn-group task-action-group" role="group" aria-label="Aufgabenaktionen">
+                                                        <a th:href="@{'/teacher/tasks/' + ${taskItem.task.id} + '/edit'}" 
+                                                           class="btn btn-sm"
+                                                           data-bs-toggle="tooltip"
+                                                           data-bs-title="Bearbeiten">
+                                                            <i class="fas fa-edit"></i>
                                                         </a>
-                                                        <a th:href="@{'/teacher/tasks/' + ${task.id} + '/submissions'}" class="btn btn-sm btn-primary">
-                                                            <i class="fas fa-clipboard-list"></i> Abgaben
-                                                        </a>
+                                                        <span class="d-inline-block task-action-tooltip"
+                                                              data-bs-toggle="tooltip"
+                                                              th:attr="data-bs-title=${!taskItem.hasSubmissions ? 'Keine Bearbeitungen vorhanden' : (taskItem.hasPendingReviews ? 'Bearbeitungen ansehen - offene Reviews vorhanden' : 'Bearbeitungen ansehen')}">
+                                                            <button type="button"
+                                                                    class="btn btn-sm"
+                                                                    th:classappend="${taskItem.hasPendingReviews ? ' task-action-alert' : ''}"
+                                                                    th:disabled="${!taskItem.hasSubmissions}"
+                                                                    th:attr="data-submissions-url=${taskItem.hasSubmissions ? '/teacher/tasks/' + taskItem.task.id + '/submissions' : null}">
+                                                                <i class="fas fa-clipboard-list"></i>
+                                                            </button>
+                                                        </span>
+                                                        <span class="d-inline-block task-action-tooltip"
+                                                              data-bs-toggle="tooltip"
+                                                              th:attr="data-bs-title=${taskItem.task.hoursDescription == null or #strings.isEmpty(#strings.trim(taskItem.task.hoursDescription)) ? 'Keine Stundenbeschreibung vorhanden' : 'Stundenbeschreibung anzeigen'}">
+                                                            <button type="button"
+                                                                    class="btn btn-sm"
+                                                                    th:attr="data-task-title=${taskItem.task.title},data-hours-description=${taskItem.task.hoursDescription ?: ''}"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#hoursDescriptionModal"
+                                                                    th:disabled="${taskItem.task.hoursDescription == null or #strings.isEmpty(#strings.trim(taskItem.task.hoursDescription))}">
+                                                                <i class="fas fa-search"></i>
+                                                            </button>
+                                                        </span>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -128,6 +245,60 @@
         </div>
     </div>
 
+    <div class="modal fade" id="hoursDescriptionModal" tabindex="-1" aria-labelledby="hoursDescriptionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="hoursDescriptionModalLabel">Stundenbeschreibung</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="hoursDescriptionModalContent" class="hours-description-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
     <script th:src="@{/webjars/bootstrap/js/bootstrap.bundle.min.js}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('hoursDescriptionModal');
+            const title = document.getElementById('hoursDescriptionModalLabel');
+            const content = document.getElementById('hoursDescriptionModalContent');
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            const submissionsButtons = document.querySelectorAll('[data-submissions-url]');
+
+            tooltipTriggerList.forEach(function(tooltipTriggerEl) {
+                new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            submissionsButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const submissionsUrl = button.getAttribute('data-submissions-url');
+                    if (submissionsUrl) {
+                        window.location.href = submissionsUrl;
+                    }
+                });
+            });
+
+            modal.addEventListener('show.bs.modal', function(event) {
+                const trigger = event.relatedTarget;
+                const taskTitle = trigger?.getAttribute('data-task-title') || 'Stundenbeschreibung';
+                const markdown = trigger?.getAttribute('data-hours-description') || '';
+
+                title.textContent = `Stundenbeschreibung: ${taskTitle}`;
+
+                if (!markdown.trim()) {
+                    content.innerHTML = '<p class="text-muted mb-0">Keine Stundenbeschreibung hinterlegt.</p>';
+                    return;
+                }
+
+                content.innerHTML = typeof marked !== 'undefined'
+                    ? marked.parse(markdown)
+                    : markdown;
+            });
+        });
+    </script>
 </body>
 </html>

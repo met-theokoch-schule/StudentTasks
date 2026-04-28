@@ -12,6 +12,7 @@ public class TeacherTaskFormDto {
     @NotBlank(message = "Bitte geben Sie einen Aufgabentitel ein.")
     private String title;
     private String description;
+    private String hoursDescription;
     private String tutorial;
     private String defaultSubmission;
 
@@ -37,6 +38,14 @@ public class TeacherTaskFormDto {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getHoursDescription() {
+        return hoursDescription;
+    }
+
+    public void setHoursDescription(String hoursDescription) {
+        this.hoursDescription = hoursDescription;
     }
 
     public String getTutorial() {

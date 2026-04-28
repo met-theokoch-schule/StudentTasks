@@ -241,6 +241,27 @@ class TaskRepositoryDataJpaTest {
             );
     }
 
+    @Test
+    void save_persistsHoursDescription() {
+        User teacher = persistUser("teacher-hours-description");
+        Task task = task(
+            "Mit Stundenbeschreibung",
+            teacher,
+            LocalDateTime.of(2026, 4, 28, 9, 0),
+            null,
+            true,
+            Set.of()
+        );
+        task.setHoursDescription("## Doppelstunde\n\n- Einstieg\n- Sicherung");
+
+        Task persistedTask = taskRepository.saveAndFlush(task);
+
+        assertThat(taskRepository.findById(persistedTask.getId()))
+            .get()
+            .extracting(Task::getHoursDescription)
+            .isEqualTo("## Doppelstunde\n\n- Einstieg\n- Sicherung");
+    }
+
     private User persistUser(String openIdSubject) {
         return userRepository.saveAndFlush(new User(openIdSubject, openIdSubject, openIdSubject + "@example.invalid"));
     }
