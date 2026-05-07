@@ -146,6 +146,15 @@ author = 12297667
 task = "shell.exec"
 args = "cd src/main/resources && python3 -m http.server 8080"
 
+[[workflows.workflow]]
+name = "Run App in Dev Mode"
+mode = "sequential"
+author = 12297667
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "./dev.sh"
+
 [[ports]]
 localPort = 5000
 externalPort = 80

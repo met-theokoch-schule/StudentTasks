@@ -5,10 +5,13 @@ import com.example.studenttask.config.OAuthConfigurationStatusService;
 import com.example.studenttask.config.SecurityConfig;
 import com.example.studenttask.dto.TeacherTaskFormDataDto;
 import com.example.studenttask.dto.TeacherTaskFormDto;
+import com.example.studenttask.dto.TeacherTaskListDataDto;
+import com.example.studenttask.dto.TeacherTaskListItemDto;
 import com.example.studenttask.model.Group;
 import com.example.studenttask.model.Task;
 import com.example.studenttask.model.TaskView;
 import com.example.studenttask.model.UnitTitle;
+import com.example.studenttask.model.User;
 import com.example.studenttask.service.IdentitySyncService;
 import com.example.studenttask.service.RedirectTargetService;
 import com.example.studenttask.service.TeacherIdentityService;
@@ -23,7 +26,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.mockito.Mockito.when;
@@ -66,6 +71,34 @@ class TeacherTaskControllerSecurityIntegrationTest {
 
     @MockBean
     private OAuthConfigurationStatusService oauthConfigurationStatusService;
+
+    @Test
+    void listTasks_rendersSubmissionsUrlWithContextPath() throws Exception {
+        User teacher = new User("oidc-teacher", "Teacher", "teacher@example.test");
+        teacher.setId(1L);
+
+        UnitTitle unitTitle = new UnitTitle("sql", "SQL", "desc", 10);
+        Task task = task(20L, "Worksheet");
+        task.setCreatedBy(teacher);
+        task.setTaskView(taskView(5L, "Editor"));
+        task.setUnitTitle(unitTitle);
+
+        TeacherTaskListItemDto taskItem = new TeacherTaskListItemDto(task, true, false);
+        Map<UnitTitle, List<TeacherTaskListItemDto>> tasksByUnitTitle = new LinkedHashMap<>();
+        tasksByUnitTitle.put(unitTitle, List.of(taskItem));
+
+        when(userService.findByOpenIdSubject("oidc-teacher")).thenReturn(Optional.of(teacher));
+        when(teacherTaskQueryService.getTaskListData(teacher, "own"))
+            .thenReturn(new TeacherTaskListDataDto(List.of(taskItem), tasksByUnitTitle));
+
+        mockMvc.perform(get("/app/teacher/tasks")
+                .contextPath("/app")
+                .with(oauth2Login().attributes(attrs -> attrs.put("sub", "oidc-teacher")).authorities(() -> "ROLE_TEACHER")))
+            .andExpect(status().isOk())
+            .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                "data-submissions-url=\"/app/teacher/tasks/20/submissions\""
+            )));
+    }
 
     @Test
     void showCreateTaskForm_rendersCsrfToken() throws Exception {

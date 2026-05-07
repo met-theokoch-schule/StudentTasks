@@ -114,7 +114,16 @@
                             <!-- Hidden field for return URL -->
                             <input type="hidden" name="returnUrl" th:value="${returnUrl}">
 
-                            <button type="submit" class="btn btn-primary">Bewertung speichern</button>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button type="submit" class="btn btn-primary">Bewertung speichern</button>
+                                <button type="submit"
+                                        name="continueToNext"
+                                        value="true"
+                                        th:class="${hasNextReview} ? 'btn btn-outline-primary' : 'btn btn-secondary'"
+                                        th:disabled="${!hasNextReview}">
+                                    Speichern und weiter
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>

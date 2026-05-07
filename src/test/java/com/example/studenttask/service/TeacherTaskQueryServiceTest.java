@@ -59,6 +59,9 @@ class TeacherTaskQueryServiceTest {
     @Mock
     private UnitTitleService unitTitleService;
 
+    @Mock
+    private UserService userService;
+
     @InjectMocks
     private TeacherTaskQueryService teacherTaskQueryService;
 
@@ -130,6 +133,75 @@ class TeacherTaskQueryServiceTest {
         assertThat(reviewData.getReviews()).containsExactly(review);
         assertThat(reviewData.getStatuses()).containsExactly(complete);
         assertThat(reviewData.getVersionsWithStatus()).containsExactly(versionStatus);
+    }
+
+    @Test
+    void findNextReviewForTask_returnsNextSubmittedUserTaskInSharedAssignedGroup() {
+        Group sharedGroup = group(10L, "10A");
+        Group otherGroup = group(11L, "11A");
+        User teacher = teacher(1L, "Teacher", sharedGroup);
+        Task task = task(20L, "Worksheet", teacher, sharedGroup, null);
+
+        UserTask current = userTask(student(2L, "Current", sharedGroup), task, status("ABGEGEBEN"));
+        current.setId(30L);
+        UserTask nextMatching = userTask(student(3L, "Next", sharedGroup), task, status("ABGEGEBEN"));
+        nextMatching.setId(31L);
+        UserTask foreignStudent = userTask(student(4L, "Foreign", otherGroup), task, status("ABGEGEBEN"));
+        foreignStudent.setId(32L);
+        UserTask completed = userTask(student(5L, "Completed", sharedGroup), task, status("VOLLSTAENDIG"));
+        completed.setId(33L);
+
+        when(userTaskService.findById(30L)).thenReturn(Optional.of(current));
+        when(userTaskService.findByTask(task)).thenReturn(List.of(current, foreignStudent, completed, nextMatching));
+        when(userService.hasStudentRole(nextMatching.getUser())).thenReturn(true);
+        when(userService.hasStudentRole(foreignStudent.getUser())).thenReturn(true);
+
+        Optional<UserTask> nextReview = teacherTaskQueryService.findNextReviewForTask(30L, teacher);
+
+        assertThat(nextReview).contains(nextMatching);
+    }
+
+    @Test
+    void findNextReviewForTask_wrapsToFirstSubmittedUserTaskWhenCurrentIsLast() {
+        Group sharedGroup = group(10L, "10A");
+        User teacher = teacher(1L, "Teacher", sharedGroup);
+        Task task = task(20L, "Worksheet", teacher, sharedGroup, null);
+
+        UserTask firstMatching = userTask(student(2L, "First", sharedGroup), task, status("ABGEGEBEN"));
+        firstMatching.setId(30L);
+        UserTask current = userTask(student(3L, "Current", sharedGroup), task, status("ABGEGEBEN"));
+        current.setId(50L);
+
+        when(userTaskService.findById(50L)).thenReturn(Optional.of(current));
+        when(userTaskService.findByTask(task)).thenReturn(List.of(current, firstMatching));
+        when(userService.hasStudentRole(firstMatching.getUser())).thenReturn(true);
+
+        Optional<UserTask> nextReview = teacherTaskQueryService.findNextReviewForTask(50L, teacher);
+
+        assertThat(nextReview).contains(firstMatching);
+    }
+
+    @Test
+    void findNextReviewForTask_returnsEmptyWhenNoOtherSubmittedUserTaskMatchesTeacherGroup() {
+        Group sharedGroup = group(10L, "10A");
+        Group otherGroup = group(11L, "11A");
+        User teacher = teacher(1L, "Teacher", sharedGroup);
+        Task task = task(20L, "Worksheet", teacher, sharedGroup, null);
+
+        UserTask current = userTask(student(2L, "Current", sharedGroup), task, status("ABGEGEBEN"));
+        current.setId(30L);
+        UserTask foreignStudent = userTask(student(3L, "Foreign", otherGroup), task, status("ABGEGEBEN"));
+        foreignStudent.setId(31L);
+        UserTask completed = userTask(student(4L, "Completed", sharedGroup), task, status("VOLLSTAENDIG"));
+        completed.setId(32L);
+
+        when(userTaskService.findById(30L)).thenReturn(Optional.of(current));
+        when(userTaskService.findByTask(task)).thenReturn(List.of(current, foreignStudent, completed));
+        when(userService.hasStudentRole(foreignStudent.getUser())).thenReturn(true);
+
+        Optional<UserTask> nextReview = teacherTaskQueryService.findNextReviewForTask(30L, teacher);
+
+        assertThat(nextReview).isEmpty();
     }
 
     @Test

@@ -15,11 +15,15 @@ import com.example.studenttask.model.UnitTitle;
 import com.example.studenttask.model.User;
 import com.example.studenttask.model.UserTask;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -53,6 +57,12 @@ public class TeacherTaskQueryService {
     @Autowired
     private UnitTitleService unitTitleService;
 
+    @Autowired
+    private UserService userService;
+
+    @Value("${app.teacher.views.include-teachers:false}")
+    private boolean includeTeachersInTeacherViews;
+
     public TeacherTaskListDataDto getTaskListData(User teacher, String filter) {
         List<Task> tasks = "all".equals(filter)
             ? taskService.findAllOrderByCreatedAtDesc()
@@ -74,13 +84,23 @@ public class TeacherTaskQueryService {
     }
 
     public Optional<TeacherSubmissionReviewDataDto> getSubmissionReviewData(Long userTaskId) {
+        return getSubmissionReviewData(userTaskId, null);
+    }
+
+    public Optional<TeacherSubmissionReviewDataDto> getSubmissionReviewData(Long userTaskId, User teacher) {
         return userTaskService.findById(userTaskId)
             .map(userTask -> new TeacherSubmissionReviewDataDto(
                 userTask,
                 taskReviewService.findByUserTaskOrderByReviewedAtDesc(userTask),
                 taskReviewService.getTeacherReviewStatuses(),
-                taskContentService.getVersionsWithSubmissionStatus(userTask)
+                taskContentService.getVersionsWithSubmissionStatus(userTask),
+                findNextReviewForTask(userTask, teacher).orElse(null)
             ));
+    }
+
+    public Optional<UserTask> findNextReviewForTask(Long currentUserTaskId, User teacher) {
+        return userTaskService.findById(currentUserTaskId)
+            .flatMap(userTask -> findNextReviewForTask(userTask, teacher));
     }
 
     public Optional<TeacherSubmissionContentViewDto> getSubmissionContentViewData(Long userTaskId, Integer version) {
@@ -164,6 +184,87 @@ public class TeacherTaskQueryService {
             .anyMatch(userTask -> TaskStatusSupport.hasCode(userTask.getStatus(), TaskStatusCode.ABGEGEBEN));
 
         return new TeacherTaskListItemDto(task, hasSubmissions, hasPendingReviews);
+    }
+
+    private Optional<UserTask> findNextReviewForTask(UserTask currentUserTask, User teacher) {
+        if (currentUserTask == null || currentUserTask.getTask() == null || teacher == null) {
+            return Optional.empty();
+        }
+
+        Task task = currentUserTask.getTask();
+        List<UserTask> reviewCandidates = userTaskService.findByTask(task).stream()
+            .filter(userTask -> !isSameUserTask(userTask, currentUserTask))
+            .filter(userTask -> isEligibleNextReview(userTask, teacher, task))
+            .sorted(userTaskReviewOrder())
+            .toList();
+
+        if (reviewCandidates.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Long currentUserTaskId = currentUserTask.getId();
+        if (currentUserTaskId != null) {
+            Optional<UserTask> nextAfterCurrent = reviewCandidates.stream()
+                .filter(userTask -> userTask.getId() != null && userTask.getId() > currentUserTaskId)
+                .findFirst();
+            if (nextAfterCurrent.isPresent()) {
+                return nextAfterCurrent;
+            }
+        }
+
+        return Optional.of(reviewCandidates.get(0));
+    }
+
+    private boolean isEligibleNextReview(UserTask userTask, User teacher, Task task) {
+        if (!TaskStatusSupport.hasCode(userTask.getStatus(), TaskStatusCode.ABGEGEBEN)) {
+            return false;
+        }
+
+        if (!shouldIncludePendingReviewUser(userTask.getUser())) {
+            return false;
+        }
+
+        return sharesAssignedGroup(safeGroups(teacher), safeGroups(userTask.getUser()), safeGroups(task.getAssignedGroups()));
+    }
+
+    private boolean sharesAssignedGroup(Set<Group> teacherGroups, Set<Group> studentGroups, Set<Group> assignedGroups) {
+        for (Group assignedGroup : assignedGroups) {
+            if (teacherGroups.contains(assignedGroup) && studentGroups.contains(assignedGroup)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private Set<Group> safeGroups(User user) {
+        return user == null ? Collections.emptySet() : safeGroups(user.getGroups());
+    }
+
+    private Set<Group> safeGroups(Set<Group> groups) {
+        return groups == null ? Collections.emptySet() : new LinkedHashSet<>(groups);
+    }
+
+    private boolean shouldIncludePendingReviewUser(User user) {
+        if (user == null) {
+            return false;
+        }
+        return userService.hasStudentRole(user)
+            || (includeTeachersInTeacherViews && userService.hasTeacherRole(user));
+    }
+
+    private Comparator<UserTask> userTaskReviewOrder() {
+        return Comparator
+            .comparing(UserTask::getId, Comparator.nullsLast(Comparator.naturalOrder()));
+    }
+
+    private boolean isSameUserTask(UserTask first, UserTask second) {
+        if (first == second) {
+            return true;
+        }
+        if (first == null || second == null || first.getId() == null || second.getId() == null) {
+            return false;
+        }
+        return first.getId().equals(second.getId());
     }
 
     private TeacherTaskFormDataDto buildTaskFormData(Task task) {

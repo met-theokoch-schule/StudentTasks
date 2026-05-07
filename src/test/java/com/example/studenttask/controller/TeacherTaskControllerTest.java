@@ -126,7 +126,8 @@ class TeacherTaskControllerTest {
         TaskStatus complete = status("VOLLSTAENDIG");
         VersionWithSubmissionStatus versionStatus = new VersionWithSubmissionStatus(2, true, "v2 19.04.26 09:00 👁");
 
-        when(teacherTaskQueryService.getSubmissionReviewData(30L)).thenReturn(Optional.of(
+        when(userService.findByOpenIdSubject("oidc-teacher")).thenReturn(Optional.of(teacher));
+        when(teacherTaskQueryService.getSubmissionReviewData(30L, teacher)).thenReturn(Optional.of(
             new TeacherSubmissionReviewDataDto(userTask, List.of(review), List.of(complete), List.of(versionStatus))
         ));
 
@@ -134,7 +135,7 @@ class TeacherTaskControllerTest {
         when(request.getHeader("Referer")).thenReturn("http://localhost/teacher/tasks/20/submissions");
 
         Model model = new ExtendedModelMap();
-        String view = controller.reviewSubmission(30L, null, model, request);
+        String view = controller.reviewSubmission(30L, null, model, principal("oidc-teacher"), request);
 
         assertThat(view).isEqualTo("teacher/submission-review");
         assertThat(model.getAttribute("userTask")).isSameAs(userTask);
@@ -142,6 +143,7 @@ class TeacherTaskControllerTest {
         assertThat(model.getAttribute("statuses")).isEqualTo(List.of(complete));
         assertThat(model.getAttribute("versionsWithStatus")).isEqualTo(List.of(versionStatus));
         assertThat(model.getAttribute("returnUrl")).isEqualTo("http://localhost/teacher/tasks/20/submissions");
+        assertThat(model.getAttribute("hasNextReview")).isEqualTo(false);
     }
 
     @Test
@@ -227,11 +229,40 @@ class TeacherTaskControllerTest {
             7L,
             "Gut gemacht",
             "/teacher/tasks/20/submissions",
+            false,
             authentication("oidc-teacher"),
             request
         );
 
         assertThat(view).isEqualTo("redirect:/teacher/tasks/20/submissions");
+        verify(teacherTaskCommandService).submitReview(30L, "oidc-teacher", 7L, "Gut gemacht", "2");
+    }
+
+    @Test
+    void submitReviewWithContinueToNext_redirectsToNextMatchingReview() {
+        Group group = group(10L, "10A");
+        User teacher = teacher(1L, "Teacher", group);
+        Task task = task(20L, "Worksheet", teacher, group, null);
+        UserTask nextUserTask = userTask(student(2L, "Student", group), task, status("ABGEGEBEN"));
+        nextUserTask.setId(31L);
+
+        when(userService.findByOpenIdSubject("oidc-teacher")).thenReturn(Optional.of(teacher));
+        when(teacherTaskQueryService.findNextReviewForTask(30L, teacher)).thenReturn(Optional.of(nextUserTask));
+
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getParameter("currentVersion")).thenReturn("2");
+
+        String view = controller.submitReview(
+            30L,
+            7L,
+            "Gut gemacht",
+            null,
+            true,
+            authentication("oidc-teacher"),
+            request
+        );
+
+        assertThat(view).isEqualTo("redirect:/teacher/submissions/31");
         verify(teacherTaskCommandService).submitReview(30L, "oidc-teacher", 7L, "Gut gemacht", "2");
     }
 

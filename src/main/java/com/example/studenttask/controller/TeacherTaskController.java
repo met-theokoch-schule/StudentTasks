@@ -9,6 +9,7 @@ import com.example.studenttask.dto.TeacherTaskSubmissionsDataDto;
 import com.example.studenttask.exception.TeacherAuthenticationRequiredException;
 import com.example.studenttask.exception.TeacherResourceNotFoundException;
 import com.example.studenttask.model.User;
+import com.example.studenttask.model.UserTask;
 import com.example.studenttask.service.TeacherTaskCommandService;
 import com.example.studenttask.service.TeacherTaskQueryService;
 import com.example.studenttask.service.UserService;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.security.Principal;
 import java.util.List;
@@ -87,8 +89,11 @@ public class TeacherTaskController {
                              @RequestParam Long statusId,
                              @RequestParam(required = false) String comment,
                              @RequestParam(required = false) String returnUrl,
+                             @RequestParam(value = "continueToNext", defaultValue = "false") boolean continueToNext,
                              Authentication authentication,
                              HttpServletRequest request) {
+        User teacher = continueToNext ? requireTeacher(authentication.getName()) : null;
+
         teacherTaskCommandService.submitReview(
             userTaskId,
             authentication.getName(),
@@ -96,6 +101,13 @@ public class TeacherTaskController {
             comment,
             request.getParameter("currentVersion")
         );
+
+        if (continueToNext) {
+            Optional<UserTask> nextReview = teacherTaskQueryService.findNextReviewForTask(userTaskId, teacher);
+            if (nextReview.isPresent()) {
+                return redirectToSubmissionReview(nextReview.get().getId(), returnUrl);
+            }
+        }
 
         // Redirect back to the original page if returnUrl is provided
         if (returnUrl != null && !returnUrl.trim().isEmpty()) {
@@ -191,8 +203,10 @@ public class TeacherTaskController {
     public String reviewSubmission(@PathVariable Long userTaskId,
                                  @RequestParam(required = false) String returnUrl,
                                  Model model,
+                                 Principal principal,
                                  HttpServletRequest request) {
-        TeacherSubmissionReviewDataDto reviewData = teacherTaskQueryService.getSubmissionReviewData(userTaskId)
+        User teacher = requireTeacher(principal.getName());
+        TeacherSubmissionReviewDataDto reviewData = teacherTaskQueryService.getSubmissionReviewData(userTaskId, teacher)
             .orElseThrow(() -> new TeacherResourceNotFoundException("Abgabe nicht gefunden"));
         model.addAttribute("userTask", reviewData.getUserTask());
 
@@ -208,8 +222,21 @@ public class TeacherTaskController {
         model.addAttribute("reviews", reviewData.getReviews());
         model.addAttribute("statuses", reviewData.getStatuses());
         model.addAttribute("versionsWithStatus", reviewData.getVersionsWithStatus());
+        model.addAttribute("nextReviewUserTask", reviewData.getNextReviewUserTask());
+        model.addAttribute("hasNextReview", reviewData.getNextReviewUserTask() != null);
 
         return "teacher/submission-review";
+    }
+
+    private String redirectToSubmissionReview(Long userTaskId, String returnUrl) {
+        UriComponentsBuilder redirectBuilder = UriComponentsBuilder
+            .fromPath("/teacher/submissions/{userTaskId}");
+
+        if (returnUrl != null && !returnUrl.trim().isEmpty()) {
+            redirectBuilder.queryParam("returnUrl", returnUrl);
+        }
+
+        return "redirect:" + redirectBuilder.buildAndExpand(userTaskId).encode().toUriString();
     }
 
     private String buildCurrentUrl(HttpServletRequest request) {

@@ -11,16 +11,24 @@ public class TeacherSubmissionReviewDataDto {
     private List<TaskReview> reviews;
     private List<TaskStatus> statuses;
     private List<VersionWithSubmissionStatus> versionsWithStatus;
+    private UserTask nextReviewUserTask;
 
     public TeacherSubmissionReviewDataDto() {
     }
 
     public TeacherSubmissionReviewDataDto(UserTask userTask, List<TaskReview> reviews, List<TaskStatus> statuses,
                                           List<VersionWithSubmissionStatus> versionsWithStatus) {
+        this(userTask, reviews, statuses, versionsWithStatus, null);
+    }
+
+    public TeacherSubmissionReviewDataDto(UserTask userTask, List<TaskReview> reviews, List<TaskStatus> statuses,
+                                          List<VersionWithSubmissionStatus> versionsWithStatus,
+                                          UserTask nextReviewUserTask) {
         this.userTask = userTask;
         this.reviews = reviews;
         this.statuses = statuses;
         this.versionsWithStatus = versionsWithStatus;
+        this.nextReviewUserTask = nextReviewUserTask;
     }
 
     public UserTask getUserTask() {
@@ -53,5 +61,13 @@ public class TeacherSubmissionReviewDataDto {
 
     public void setVersionsWithStatus(List<VersionWithSubmissionStatus> versionsWithStatus) {
         this.versionsWithStatus = versionsWithStatus;
+    }
+
+    public UserTask getNextReviewUserTask() {
+        return nextReviewUserTask;
+    }
+
+    public void setNextReviewUserTask(UserTask nextReviewUserTask) {
+        this.nextReviewUserTask = nextReviewUserTask;
     }
 }

@@ -98,6 +98,23 @@
             word-break: break-word;
         }
 
+        .hours-description-content table {
+            width: 100%;
+            margin-bottom: 1rem;
+            border-collapse: collapse;
+        }
+
+        .hours-description-content th,
+        .hours-description-content td {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #dee2e6;
+            vertical-align: top;
+        }
+
+        .hours-description-content thead th {
+            background-color: #f8f9fa;
+        }
+
         .task-action-group .btn i {
             margin-right: 0;
         }
@@ -202,7 +219,7 @@
                                                                     class="btn btn-sm"
                                                                     th:classappend="${taskItem.hasPendingReviews ? ' task-action-alert' : ''}"
                                                                     th:disabled="${!taskItem.hasSubmissions}"
-                                                                    th:attr="data-submissions-url=${taskItem.hasSubmissions ? '/teacher/tasks/' + taskItem.task.id + '/submissions' : null}">
+                                                                    th:attr="data-submissions-url=${taskItem.hasSubmissions} ? @{/teacher/tasks/{id}/submissions(id=${taskItem.task.id})} : null">
                                                                 <i class="fas fa-clipboard-list"></i>
                                                             </button>
                                                         </span>

@@ -64,55 +64,40 @@ public class DataInitializer implements ApplicationRunner {
     private void initializeTaskViews() {
         // Initialize or update task views based on unique templatePath
 
-        String htmlCssEditor = "taskviews/html-css-editor";
-
-        createOrUpdateTaskView("HTML+CSS Editor", htmlCssEditor,
+        createOrUpdateTaskView("HTML+CSS Editor", "taskviews/html-css-editor",
                 "Erstellen von HTML-Seiten mit CSS und Bildern!", false);
 
-        String struktogEditor = "taskviews/struktog";
-
-        createOrUpdateTaskView("Struktogramm Editor", struktogEditor,
+        createOrUpdateTaskView("Struktogramm Editor", "taskviews/struktog",
                 "Erstellen von Struktogrammen!", false);
 
-        String pythonEditor = "taskviews/python-editor";
+        createOrUpdateTaskView("UML-Diagramm Editor", "taskviews/apollon-uml",
+                    "Erstellen von UML-Diagrammen!", false);
 
-        createOrUpdateTaskView("Python Editor", pythonEditor,
+        createOrUpdateTaskView("Python Editor", "taskviews/python-editor",
                 "Erstellen von Python Konsolenprogrammen!", false);
 
-        String pythonHtmlEditor = "taskviews/python-html-editor";
-
-        createOrUpdateTaskView("Python HTML Editor", pythonHtmlEditor,
+        createOrUpdateTaskView("Python HTML Editor", "taskviews/python-html-editor",
                 "Erstellen von Pythonprogrammen mit HTML als GUI!", false);
 
-        String pythonHamsterEditor = "taskviews/python-hamster-editor";
-
-        createOrUpdateTaskView("Python Hamster Editor", pythonHamsterEditor,
+        createOrUpdateTaskView("Python Hamster Editor", "taskviews/python-hamster-editor",
                 "Erstellen von Python-Hamster-Programmen!", false);
 
         createOrUpdateTaskView("Python Turtle Editor", "taskviews/python-turtle-editor",
                 "Erstellen von Python-Turtle-Programmen!", false);
 
-        String pythonSortingEditor = "taskviews/python-sorting-editor";
-
-        createOrUpdateTaskView("Python Sortier-Editor", pythonSortingEditor,
+        createOrUpdateTaskView("Python Sortier-Editor", "taskviews/python-sorting-editor",
                 "Visualisierung von Sortieralgorithmen", false);
 
         createOrUpdateTaskView("Python Lückentext-Editor", "taskviews/python-fillgap-editor",
                 "Programmcode Lückentexte, die ausführbar sind", false);
 
-        String codemainia = "taskviews/code-mainia-python";
-
-        createOrUpdateTaskView("Code Mainia Python", codemainia,
+        createOrUpdateTaskView("Code Mainia Python", "taskviews/code-mainia-python",
                 "Single Player Version des Hopp Foundations Spiels", true);
 
-        String sqlTaskView = "taskviews/sql-task-view";
-
-        createOrUpdateTaskView("SQL Aufgaben", sqlTaskView,
+        createOrUpdateTaskView("SQL Aufgaben", "taskviews/sql-task-view",
                 "Interaktive SQL Aufgaben stellen", false);
 
-        String raTaskView = "taskviews/ra-task-view";
-
-        createOrUpdateTaskView("Relationen Algebra Aufgaben", raTaskView,
+        createOrUpdateTaskView("Relationen Algebra Aufgaben", "taskviews/ra-task-view",
                 "Interaktive RA Aufgaben stellen", false);
 
         createOrUpdateTaskView("ER-Diagramm", "taskviews/erd",
@@ -134,9 +119,7 @@ public class DataInitializer implements ApplicationRunner {
         createOrUpdateTaskView("Turingmaschine", "taskviews/turingmaschine",
                         "Turingmaschinen simulieren", false);
 
-        String h5pTaskView = "taskviews/h5p";
-
-        createOrUpdateTaskView("H5P Aufgaben", h5pTaskView,
+        createOrUpdateTaskView("H5P Aufgaben", "taskviews/h5p",
                 "Einbetten von H5P-Inhalten per iframe", true);
 
         // Hier können weitere TaskViews hinzugefügt werden

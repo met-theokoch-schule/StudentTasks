@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title th:text="${task.title} ?: 'Apollon TaskView'">
+      Apollon TaskView
+    </title>
+    <script type="module" crossorigin src="./apollon-uml-assets/apollon-uml-B3jVZKH0.js" th:src="@{/apollon-uml-assets/apollon-uml-B3jVZKH0.js}"></script>
+    <link rel="stylesheet" crossorigin href="./apollon-uml-assets/apollon-uml-B8qAVwM2.css" th:href="@{/apollon-uml-assets/apollon-uml-B8qAVwM2.css}">
+  </head>
+  <body>
+    <a
+      id="default-link"
+      style="display: none"
+      href="/static/"
+      th:href="@{/}"
+    ></a>
+    <div
+      id="task-save-url"
+      style="display: none"
+      th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? 'api/tasks/usertasks/' + userTaskId + '/content' : 'api/tasks/' + task.id + '/content'}"
+      data-url="/dev/save"
+    ></div>
+    <div
+      id="task-submit-url"
+      style="display: none"
+      th:attr="data-url=${(isTeacherView ?: false) and (userTaskId != null) ? '' : 'api/tasks/' + task.id + '/submit'}"
+      data-url="/dev/submit"
+    ></div>
+
+    <div id="currentContent" style="display: none" th:text="${currentContent}"></div>
+    <div
+      id="defaultSubmission"
+      style="display: none"
+      th:text="${task.defaultSubmission}"
+    ></div>
+    <div id="description" style="display: none" th:text="${task.description}"></div>
+    <div id="tutorial" style="display: none" th:utext="${task.tutorial}"></div>
+
+    <div id="task-title" style="display: none" th:text="${task.title}">
+      UML-Diagramm Editor
+    </div>
+    <div id="can-edit" style="display: none" th:text="${canEdit}">true</div>
+    <div id="is-submitted" style="display: none" th:text="${isSubmitted}">
+      false
+    </div>
+    <div id="is-history-view" style="display: none" th:text="${isHistoryView}">
+      false
+    </div>
+    <div id="is-teacher-view" style="display: none" th:text="${isTeacherView}">
+      false
+    </div>
+
+    <main class="apollon-uml-taskview">
+      <header class="apollon-uml-taskview__header">
+        <div class="apollon-uml-taskview__title">
+          <h1 id="task-title-display">UML-Diagramm Editor</h1>
+        </div>
+        <div class="controls" aria-label="Speicheraktionen">
+          <span
+            id="save-status"
+            class="fas fa-circle text-muted"
+            data-title="Bereit zum Speichern"
+            title="Bereit zum Speichern"
+            aria-label="Bereit zum Speichern"
+            aria-live="polite"
+            role="status"
+          ></span>
+          <button id="saveButton" type="button" class="btn btn-success btn-sm">
+            <i class="fas fa-save" aria-hidden="true"></i>
+            Speichern
+          </button>
+          <button id="submitButton" type="button" class="btn btn-primary btn-sm">
+            <i class="fas fa-paper-plane" aria-hidden="true"></i>
+            Abgeben
+          </button>
+          <button
+            id="downloadPngButton"
+            type="button"
+            class="btn btn-secondary btn-sm"
+          >
+            <i class="fas fa-download" aria-hidden="true"></i>
+            PNG
+          </button>
+          <a
+            href="/dashboard"
+            th:href="@{/dashboard}"
+            class="btn btn-secondary btn-sm"
+            title="Zurueck zum Dashboard"
+            aria-label="Zurueck zum Dashboard"
+          >
+            <i class="fas fa-house" aria-hidden="true"></i>
+          </a>
+        </div>
+      </header>
+
+      <section id="task-info" class="apollon-uml-taskview__info" hidden>
+        <div id="task-description-content"></div>
+        <div id="task-tutorial-content"></div>
+      </section>
+
+      <section class="apollon-uml-taskview__editor" aria-label="Apollon Editor">
+        <div id="apollon-uml-taskview-root"></div>
+      </section>
+    </main>
+  </body>
+</html>
